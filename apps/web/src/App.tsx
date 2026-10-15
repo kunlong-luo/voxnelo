@@ -18,6 +18,7 @@ import { LibraryView, type View } from './LibraryView';
 import { SettingsView } from './SettingsView';
 import { DesktopTitlebar } from './DesktopTitlebar';
 import { applyAppearance, readAppearance, saveAppearance, type AppearanceTheme } from './appearance';
+import { I18nProvider, readLanguageSetting, resolveLocale, saveLanguageSetting, setDocumentLocale, useI18n, type LanguageSetting } from './i18n';
 
 const menu: { id: View; label: string; accessibleLabel: string; icon: LucideIcon }[] = [
   { id: 'practice', label: '练习', accessibleLabel: '开始练习', icon: MessageCircle },
@@ -27,8 +28,36 @@ const menu: { id: View; label: string; accessibleLabel: string; icon: LucideIcon
   { id: 'settings', label: '设置', accessibleLabel: '设置', icon: Settings2 },
 ];
 
-/** 应用壳：侧边导航、视图切换与句子游走；数据读写在 useLearningData，视图在各 View 组件。 */
+/** Default locale follows OS; explicit user choice is stored locally. */
 export function App() {
+  const [languageSetting, setLanguageSetting] = useState<LanguageSetting>(readLanguageSetting);
+  const [systemLanguage, setSystemLanguage] = useState(
+    () => navigator.languages?.[0] || navigator.language || 'zh-CN',
+  );
+  useEffect(() => {
+    const changed = () => setSystemLanguage(navigator.languages?.[0] || navigator.language || 'zh-CN');
+    window.addEventListener('languagechange', changed);
+    return () => window.removeEventListener('languagechange', changed);
+  }, []);
+  const locale = resolveLocale(languageSetting, systemLanguage);
+  useEffect(() => { setDocumentLocale(locale); }, [locale]);
+  const changeLanguage = (next: LanguageSetting) => {
+    setLanguageSetting(next);
+    saveLanguageSetting(next);
+  };
+  return (
+    <I18nProvider locale={locale}>
+      <AppScreen languageSetting={languageSetting} onChangeLanguage={changeLanguage} />
+    </I18nProvider>
+  );
+}
+
+/** Learning state and recording logic are independent from display locale. */
+function AppScreen({languageSetting,onChangeLanguage}: {
+  languageSetting: LanguageSetting;
+  onChangeLanguage: (next: LanguageSetting) => void;
+}) {
+  const {t} = useI18n();
   const [sentenceId, setSentenceId] = useState(FIRST_SENTENCE.id);
   const [view, setView] = useState<View>('practice');
   const [visited, setVisited] = useState<string[]>([FIRST_SENTENCE.id]);
@@ -62,7 +91,7 @@ export function App() {
   const display = useCallback(
     (target: Sentence) => {
       if (recordingBusy) {
-        setNotice('请先结束当前录音，再切换句子。');
+        setNotice(t('recordingGuard'));
         return;
       }
       silence();
@@ -122,7 +151,7 @@ export function App() {
 
   const chooseFromLibrary = (item: Sentence) => {
     if (recordingBusy) {
-      setNotice('请先停止录音。');
+      setNotice(t('recordingNavigate'));
       return;
     }
     display(item);
@@ -134,12 +163,12 @@ export function App() {
 
   const playDemo = async () => {
     if (recordingBusy) {
-      setNotice('请先结束当前录音，再播放参考发音。');
+      setNotice(t('recordingPlay'));
       return;
     }
     const result = await speak(current.english, speed);
     if (result.cancelled) return;
-    setNotice(result.ok ? '' : (result.message ?? '无法播放语音。'));
+    setNotice(result.ok ? '' : (result.message ?? t('speechFailed')));
   };
 
   const handleRecorder = () => {
@@ -154,7 +183,7 @@ export function App() {
 
   const nav = (target: View) => {
     if (recordingBusy && target !== 'practice') {
-      setNotice('请先结束当前录音，再切换页面。');
+      setNotice(t('recordingChangeView'));
       return;
     }
     setView(target);
@@ -167,16 +196,16 @@ export function App() {
       <DesktopTitlebar />
       <div className="shell">
       <aside className="sidebar">
-        <div className="brand" aria-label="Voxnelo 品牌">
+        <div className="brand" aria-label="Voxnelo">
           <div className="brandMark"><img src="/brand/voxnelo-mark.svg" alt="" width="48" height="48" /></div>
           <div className="brandText"><strong>Voxnelo</strong></div>
         </div>
-        <div className="sidebarHint">我的学习空间</div>
-        <nav aria-label="主导航">
-          {menu.map(({ id, label, accessibleLabel, icon: Icon }) => (
-            <button key={id} className={`navItem ${view === id ? 'active' : ''}`} aria-label={accessibleLabel} aria-current={view === id ? 'page' : undefined} onClick={() => nav(id)}>
+        <div className="sidebarHint">{t('sidebarSpace')}</div>
+        <nav aria-label={t('navLabel')}>
+          {menu.map(({ id, icon: Icon }) => (
+            <button key={id} className={`navItem ${view === id ? 'active' : ''}`} aria-label={t(({practice:'navStart',favorites:'navMyFavorites',history:'navRecent',review:'navReviewItems',settings:'navSettings'} as const)[id])} aria-current={view === id ? 'page' : undefined} onClick={() => nav(id)}>
               <Icon size={20} strokeWidth={1.9} />
-              <span>{label}</span>
+              <span>{t(({practice:'navPractice',favorites:'navFavorites',history:'navHistory',review:'navReview',settings:'navSettings'} as const)[id])}</span>
               {id === 'favorites' && stats.favorites > 0 ? <span className="navCount">{stats.favorites}</span> : null}
             </button>
           ))}
@@ -184,8 +213,8 @@ export function App() {
         <div className="sidebarBottom">
           <div className="tinyPanel privacyPanel">
             <span className="tinyBadge"><ShieldCheck size={17} /></span>
-            <strong>在自己的节奏里练习</strong>
-            <span>无需登录 · 记录保存在本机</span>
+            <strong>{t('sidebarRhythm')}</strong>
+            <span>{t('sidebarLocal')}</span>
           </div>
           <div className="sidebarVersion">Voxnelo · Early Access {APP_VERSION}</div>
         </div>
@@ -193,7 +222,7 @@ export function App() {
       <div className="mainArea">
         {recorder.status === 'recording' ? (
           <button type="button" className="recordingQuickStop" onClick={handleRecorder}
-            aria-label="悬浮快速停止录音"><Square size={15} fill="currentColor" aria-hidden="true" /> 结束录音</button>
+            aria-label={t("stopFloating")}><Square size={15} fill="currentColor" aria-hidden="true" /> {t("stopRecording")}</button>
         ) : null}
         <main className="content">
           {view === 'practice' ? (
@@ -225,6 +254,8 @@ export function App() {
               speed={speed}
               showIpa={showIpa}
               appearance={appearance}
+              languageSetting={languageSetting}
+              onChangeLanguage={onChangeLanguage}
               onChangeAppearance={changeAppearance}
               onToggleSpeed={() => setSpeed((value) => (value === 'normal' ? 'slow' : 'normal'))}
               onToggleIpa={() => setShowIpa((value) => !value)}
