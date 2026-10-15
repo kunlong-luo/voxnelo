@@ -3,6 +3,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { APP_ORIGIN, APP_SCHEME, THEME_BACKGROUND, WINDOW_SIZE } from '@voxnelo/core';
 import { isAudioOnlyRequest, APP_HOST, isTrustedUrl, resolveLocalFile } from './security';
+import { LinuxEnglishSpeech } from './linuxSpeech';
 
 // Electron 推荐的标准安全自定义协议：允许 IndexedDB 使用持久且一致的 origin。
 // 注册必须发生在 app ready 之前；不允许 bypassCSP。
@@ -15,6 +16,7 @@ const devServer = process.env.VOXNELO_DEV_SERVER_URL;
 const isDev = !app.isPackaged && Boolean(devServer);
 const rendererDir = path.join(__dirname, '..', 'dist');
 const appOrigin = APP_ORIGIN;
+const linuxSpeech = new LinuxEnglishSpeech();
 
 /**
  * Window IPC is intentionally narrower than a general-purpose ipcRenderer bridge.
@@ -39,6 +41,19 @@ function registerWindowControls(): void {
   });
   ipcMain.on('voxnelo:window:close', (event) => authorizedWindow(event)?.close());
   ipcMain.handle('voxnelo:window:is-maximized', (event) => authorizedWindow(event)?.isMaximized() ?? false);
+}
+
+function registerLinuxSpeech(): void {
+  // Never expose a general exec/process interface to untrusted page code.
+  ipcMain.handle('voxnelo:speech:synthesize', async (event, text: unknown, speed: unknown) => {
+    if (process.platform !== 'linux' || !authorizedWindow(event)) {
+      return { ok: false, reason: 'invalid' };
+    }
+    return linuxSpeech.synthesize(text, speed);
+  });
+  ipcMain.on('voxnelo:speech:cancel', (event) => {
+    if (process.platform === 'linux' && authorizedWindow(event)) linuxSpeech.cancel();
+  });
 }
 
 function registerLocalProtocol(): void {
@@ -101,6 +116,7 @@ async function createWindow(): Promise<void> {
 
 app.whenReady().then(async () => {
   registerWindowControls();
+  registerLinuxSpeech();
   registerLocalProtocol();
   session.defaultSession.setPermissionRequestHandler((webContents, permission, callback, details) => {
     const { mediaTypes } = details as { mediaTypes?: unknown };
@@ -117,5 +133,6 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => {
+  linuxSpeech.cancel();
   if (process.platform !== 'darwin') app.quit();
 });

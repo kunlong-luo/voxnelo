@@ -29,11 +29,13 @@ describe('App smoke', () => {
   });
 
   it('右方向键换到下一句', async () => {
-    render(<App />);
+    const view = render(<App />);
     await screen.findByText(FIRST_SENTENCE.english);
     fireEvent.keyDown(window, { key: 'ArrowRight' });
     await waitFor(() => {
-      expect(screen.queryByText(FIRST_SENTENCE.english)).toBeNull();
+      // Related-expression suggestions can still contain the previous sentence.
+      // Verify the central lesson itself actually changed.
+      expect(view.container.querySelector('h1.sentenceText')?.textContent).not.toBe(FIRST_SENTENCE.english);
     });
   });
   it('正在录音时不能切到历史/收藏，示范音也应停用', async () => {

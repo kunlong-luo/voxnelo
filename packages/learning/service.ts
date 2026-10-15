@@ -88,7 +88,7 @@ export function summarize(states: LearningState[]): LearningStats {
   return calculateStats(states);
 }
 
-export function speak(text: string, speed: 'normal' | 'slow' = 'normal'): SpeechResult {
+export async function speak(text: string, speed: 'normal' | 'slow' = 'normal'): Promise<SpeechResult> {
   if (typeof window === 'undefined') {
     return { ok: false, message: '当前环境不支持语音朗读。' };
   }
