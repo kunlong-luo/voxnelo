@@ -1,75 +1,99 @@
 import { ArrowLeft, AudioLines, Check, Languages, Palette, ShieldCheck, Settings2 } from 'lucide-react';
 import type { AppearanceTheme } from './appearance';
+import { useI18n, type LanguageSetting } from './i18n';
 
 interface SettingsViewProps {
   speed: 'normal' | 'slow';
   showIpa: boolean;
   appearance: AppearanceTheme;
+  languageSetting?: LanguageSetting;
   onChangeAppearance: (theme: AppearanceTheme) => void;
+  onChangeLanguage?: (language: LanguageSetting) => void;
   onToggleSpeed: () => void;
   onToggleIpa: () => void;
   onBackToPractice: () => void;
 }
 
-const appearances: { id: AppearanceTheme; name: string; summary: string }[] = [
-  { id: 'nordic', name: '北欧纯净', summary: '暖白与鼠尾草绿 · 默认主题' },
-  { id: 'sunset', name: '日落柔光', summary: '桃粉与雾青 · 实验性视觉预览' },
-];
+const appearanceIds: AppearanceTheme[] = ['nordic', 'sunset'];
+const languageIds: LanguageSetting[] = ['system', 'zh-CN', 'en-US'];
 
-/** Local appearance persists; speed and IPA remain session-scoped. */
+/** A fully styled appearance and language picker, never a platform-native select. */
 export function SettingsView({
-  speed, showIpa, appearance, onChangeAppearance,
+  speed, showIpa, appearance, languageSetting = 'system', onChangeAppearance, onChangeLanguage,
   onToggleSpeed, onToggleIpa, onBackToPractice,
 }: SettingsViewProps) {
+  const { t, locale } = useI18n();
   return (
     <div className="settingsPage">
       <div className="libraryTitle">
         <div>
-          <div className="eyebrow"><Settings2 size={16} /> YOUR PRACTICE</div>
-          <h1>练习设置</h1>
-          <p>语音和音标设置本次会话生效；外观选择只保存在本机。</p>
+          <div className="eyebrow"><Settings2 size={16} /> {t('settingsEyebrow')}</div>
+          <h1>{t('settingsTitle')}</h1>
+          <p>{t('settingsSummary')}</p>
         </div>
         <button type="button" className="backPractice" onClick={onBackToPractice}>
-          <ArrowLeft size={17} /> 返回练习
+          <ArrowLeft size={17} /> {t('backPractice')}
         </button>
       </div>
       <div className="settingsGrid">
         <section className="settingsPanel appearanceSettings">
-          <div className="settingsPanelHeading"><Palette size={21} /><h2>外观主题</h2></div>
-          <p>两种风格使用同一套练习功能。可以随时切换，不影响学习进度和录音。</p>
-          <div className="appearanceChoices" role="group" aria-label="选择外观主题">
-            {appearances.map(({ id, name, summary }) => (
-              <button type="button" className="appearanceChoice" key={id}
-                onClick={() => onChangeAppearance(id)}
-                aria-label={'选择' + name + '主题'}
-                aria-pressed={appearance === id}>
-                <span className={'appearancePreview ' + id} aria-hidden="true" />
-                <strong>{name} {appearance === id ? <Check size={15} aria-hidden="true" /> : null}</strong>
-                <small>{summary}</small>
+          <div className="settingsPanelHeading"><Palette size={21} /><h2>{t('appearanceTitle')}</h2></div>
+          <p>{t('appearanceDesc')}</p>
+          <div className="appearanceChoices" role="group" aria-label={t('appearanceGroup')}>
+            {appearanceIds.map((id) => {
+              const name = t(id === 'nordic' ? 'nordicName' : 'sunsetName');
+              return (
+                <button type="button" className="appearanceChoice" key={id}
+                  onClick={() => onChangeAppearance(id)}
+                  aria-label={t('appearanceChoose',{name})} aria-pressed={appearance === id}>
+                  <span className={'appearancePreview ' + id} aria-hidden="true" />
+                  <strong>{name} {appearance === id ? <Check size={15} aria-hidden="true" /> : null}</strong>
+                  <small>{t(id === 'nordic' ? 'nordicSummary' : 'sunsetSummary')}</small>
+                </button>
+              );
+            })}
+          </div>
+          <p className="appearanceHelp">{t('appearanceNote')}</p>
+        </section>
+        <section className="settingsPanel languageSettings">
+          <div className="settingsPanelHeading"><Languages size={21} /><h2>{t('languageTitle')}</h2></div>
+          <p>{t('languageDesc')}</p>
+          <div className="languageChoices" role="group" aria-label={t('languageGroup')}>
+            {languageIds.map((id) => (
+              <button className="languageChoice" type="button" key={id}
+                aria-pressed={languageSetting === id}
+                onClick={() => onChangeLanguage?.(id)}>
+                <span className="languageChoiceTop">
+                  <strong>{t(id === 'system' ? 'languageSystem' : id === 'zh-CN' ? 'languageChinese' : 'languageEnglish')}</strong>
+                  {languageSetting === id ? <Check size={16} aria-hidden="true" /> : null}
+                </span>
+                <small>{id === 'system'
+                  ? t('languageSystemDetail',{name:t(locale === 'zh-CN' ? 'languageChinese' : 'languageEnglish')})
+                  : t('languageManualDetail')}</small>
               </button>
             ))}
           </div>
-          <p className="appearanceHelp">日落柔光目前为设计预览，尚未完成跨平台实机与用户体验验证。</p>
+          <p className="appearanceHelp">{t('languageContentNote')}</p>
         </section>
         <section className="settingsPanel">
-          <div className="settingsPanelHeading"><AudioLines size={21} /><h2>语音播放</h2></div>
-          <p>选择系统英语朗读速度；具体声音取决于设备安装的语音包。</p>
+          <div className="settingsPanelHeading"><AudioLines size={21} /><h2>{t('voiceTitle')}</h2></div>
+          <p>{t('voiceDesc')}</p>
           <button type="button" className="settingToggle" onClick={onToggleSpeed} aria-pressed={speed === 'slow'}>
-            <span><strong>慢速模式</strong><small>以约 0.75 倍速播放示范发音</small></span>
+            <span><strong>{t('slowMode')}</strong><small>{t('slowModeHint')}</small></span>
             <span className={'switchTrack' + (speed === 'slow' ? ' on' : '')}><span /></span>
           </button>
         </section>
         <section className="settingsPanel">
-          <div className="settingsPanelHeading"><Languages size={21} /><h2>练习内容</h2></div>
-          <p>音标仅供学习参考；发音标记将在正式发布前继续校对。</p>
+          <div className="settingsPanelHeading"><Languages size={21} /><h2>{t('contentTitle')}</h2></div>
+          <p>{t('contentDesc')}</p>
           <button type="button" className="settingToggle" onClick={onToggleIpa} aria-pressed={showIpa}>
-            <span><strong>显示参考音标</strong><small>在英语例句下方展示音标</small></span>
+            <span><strong>{t('showIpa')}</strong><small>{t('showIpaHint')}</small></span>
             <span className={'switchTrack' + (showIpa ? ' on' : '')}><span /></span>
           </button>
         </section>
         <section className="settingsPanel privacySettings">
-          <div className="settingsPanelHeading"><ShieldCheck size={21} /><h2>本地隐私</h2></div>
-          <p>无需账号，学习记录保存在本机。麦克风仅在点击跟读后申请权限，录音只供本次回听，切换句子后会清理。</p>
+          <div className="settingsPanelHeading"><ShieldCheck size={21} /><h2>{t('localPrivacyTitle')}</h2></div>
+          <p>{t('localPrivacyDesc')}</p>
         </section>
       </div>
     </div>
