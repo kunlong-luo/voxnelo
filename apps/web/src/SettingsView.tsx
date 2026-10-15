@@ -1,26 +1,56 @@
-import { ArrowLeft, AudioLines, Languages, ShieldCheck, Settings2 } from 'lucide-react';
+import { ArrowLeft, AudioLines, Check, Languages, Palette, ShieldCheck, Settings2 } from 'lucide-react';
+import type { AppearanceTheme } from './appearance';
 
 interface SettingsViewProps {
   speed: 'normal' | 'slow';
   showIpa: boolean;
+  appearance: AppearanceTheme;
+  onChangeAppearance: (theme: AppearanceTheme) => void;
   onToggleSpeed: () => void;
   onToggleIpa: () => void;
   onBackToPractice: () => void;
 }
 
-/** Session preferences: no account, cloud sync or background recording. */
-export function SettingsView({ speed, showIpa, onToggleSpeed, onToggleIpa, onBackToPractice }: SettingsViewProps) {
+const appearances: { id: AppearanceTheme; name: string; summary: string }[] = [
+  { id: 'nordic', name: '北欧纯净', summary: '暖白与鼠尾草绿 · 默认主题' },
+  { id: 'sunset', name: '日落柔光', summary: '桃粉与雾青 · 实验性视觉预览' },
+];
+
+/** Local appearance persists; speed and IPA remain session-scoped. */
+export function SettingsView({
+  speed, showIpa, appearance, onChangeAppearance,
+  onToggleSpeed, onToggleIpa, onBackToPractice,
+}: SettingsViewProps) {
   return (
     <div className="settingsPage">
       <div className="libraryTitle">
         <div>
           <div className="eyebrow"><Settings2 size={16} /> YOUR PRACTICE</div>
           <h1>练习设置</h1>
-          <p>调整当前练习体验。选择在本次打开应用期间生效。</p>
+          <p>语音和音标设置本次会话生效；外观选择只保存在本机。</p>
         </div>
-        <button type="button" className="backPractice" onClick={onBackToPractice}><ArrowLeft size={17} /> 返回练习</button>
+        <button type="button" className="backPractice" onClick={onBackToPractice}>
+          <ArrowLeft size={17} /> 返回练习
+        </button>
       </div>
       <div className="settingsGrid">
+        <section className="settingsPanel appearanceSettings">
+          <div className="settingsPanelHeading"><Palette size={21} /><h2>外观主题</h2></div>
+          <p>两种风格使用同一套练习功能。可以随时切换，不影响学习进度和录音。</p>
+          <div className="appearanceChoices" role="group" aria-label="选择外观主题">
+            {appearances.map(({ id, name, summary }) => (
+              <button type="button" className="appearanceChoice" key={id}
+                onClick={() => onChangeAppearance(id)}
+                aria-label={'选择' + name + '主题'}
+                aria-pressed={appearance === id}>
+                <span className={'appearancePreview ' + id} aria-hidden="true" />
+                <strong>{name} {appearance === id ? <Check size={15} aria-hidden="true" /> : null}</strong>
+                <small>{summary}</small>
+              </button>
+            ))}
+          </div>
+          <p className="appearanceHelp">日落柔光目前为设计预览，尚未完成跨平台实机与用户体验验证。</p>
+        </section>
         <section className="settingsPanel">
           <div className="settingsPanelHeading"><AudioLines size={21} /><h2>语音播放</h2></div>
           <p>选择系统英语朗读速度；具体声音取决于设备安装的语音包。</p>
