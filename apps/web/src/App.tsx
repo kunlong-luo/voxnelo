@@ -168,7 +168,15 @@ function AppScreen({languageSetting,onChangeLanguage}: {
     }
     const result = await speak(current.english, speed);
     if (result.cancelled) return;
-    setNotice(result.ok ? '' : (result.message ?? t('speechFailed')));
+    if (result.ok) { setNotice(''); return; }
+    const message = result.message ?? '';
+    const issue = message.includes('sudo apt install espeak-ng') ? 'speechInstall'
+      : message.includes('未找到可用的英语语音') ? 'speechUnavailable'
+      : message.includes('已生成英语语音') ? 'speechPlayback'
+      : message.includes('Linux 本地英语语音服务') ? 'speechSystemError'
+      : message.includes('Linux 英语语音生成失败') ? 'speechSynthesisError'
+      : 'speechFailed';
+    setNotice(t(issue));
   };
 
   const handleRecorder = () => {
