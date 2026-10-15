@@ -9,6 +9,12 @@ afterEach(() => {
 });
 
 describe('品牌化录音回听组件', () => {
+  it('录音尚未完成时回听按钮明确不可用', () => {
+    render(<RecordingPlayback src={null} />);
+    expect((screen.getByRole('button', { name: '回听刚才的录音' }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.queryByRole('progressbar', { name: '录音播放进度' })).toBeNull();
+  });
+
   it('只展示真实音频回听与未确认时长，不显示虚构波形或评分', () => {
     render(<RecordingPlayback src="blob:practice" />);
     expect(screen.getByRole('button', { name: '回听刚才的录音' })).toBeTruthy();

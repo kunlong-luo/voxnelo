@@ -48,6 +48,27 @@ describe('PracticeView', () => {
     expect(screen.getByRole('button', { name: '换一句' })).toBeTruthy();
   });
 
+  it('练习台有横向六操作入口与真实课程进度，不渲染虚构学习成绩', () => {
+    render(<PracticeView {...basePracticeProps} />);
+    const rail = screen.getByTestId('practice-control-rail');
+    expect(rail.children).toHaveLength(6);
+    expect(screen.getByText('1 / 40')).toBeTruthy();
+    expect(screen.getByText('录音尝试句')).toBeTruthy();
+    expect(screen.queryByText('连续天数')).toBeNull();
+    expect(screen.queryByText('发音准确率')).toBeNull();
+    expect(screen.getByRole('button', { name: '结束录音' }).hasAttribute('disabled')).toBe(true);
+    expect(screen.getByRole('button', { name: '回听刚才的录音' }).hasAttribute('disabled')).toBe(true);
+  });
+
+  it('录音中只有结束录音可用，避免切换语速、播放示范或误启动录音', () => {
+    render(<PracticeView {...basePracticeProps} recorder={stubRecorder({ status: 'recording' })} recordingBusy />);
+    expect((screen.getByRole('button', { name: '开口跟读' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: '结束录音' }) as HTMLButtonElement).disabled).toBe(false);
+    expect((screen.getByRole('button', { name: '播放标准朗读' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: '切换语速' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: '换一句' }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
   it('收藏态显示已收藏', () => {
     render(
       <PracticeView
