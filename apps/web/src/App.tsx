@@ -91,7 +91,8 @@ export function App() {
   useEffect(() => {
     const listener = (event: KeyboardEvent) => {
       if (view !== 'practice' || recordingBusy || event.altKey || event.ctrlKey || event.metaKey) return;
-      if ((event.target as HTMLElement)?.closest('input, textarea')) return;
+      const target = event.target as HTMLElement | null;
+      if (target && typeof target.closest === 'function' && target.closest('input, textarea')) return;
       if (event.key === 'ArrowRight') {
         event.preventDefault();
         nextSentence();

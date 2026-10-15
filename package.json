@@ -21,6 +21,7 @@
     "format:check": "prettier --check .",
     "arch": "depcruise --validate .dependency-cruiser.json apps packages tests",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build",
     "preview:web": "rsbuild preview",
     "pack:dir": "pnpm build && electron-builder --dir",

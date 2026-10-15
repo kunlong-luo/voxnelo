@@ -17,8 +17,9 @@
 - 主进程安全守卫逻辑抽取为纯函数（`security.ts`），原内联实现删除，
   `devServer!` 断言消除，行为逐项等价。
 - TypeScript 收紧 `noUncheckedIndexedAccess` / `noUnusedLocals` /
-  `noUnusedParameters`；课程首句以 `FIRST_SENTENCE` fail-fast 导出，
-  索引访问全部显式收窄。
+  `noUnusedParameters` / `exactOptionalPropertyTypes`；课程首句以
+  `FIRST_SENTENCE` fail-fast 导出，索引访问全部显式收窄。
+- 键盘处理器对无 `closest` 的事件目标加固（单测暴露的真实 bug）。
 
 ### Added
 
@@ -27,8 +28,10 @@
 - GitHub Actions CI（install / typecheck / lint / test / build）。
 - `vitest.config.ts`（node 环境 + v8 coverage）与持久层单测，
   测试从 4 用例增至 19 用例；后补组件单测（ErrorBoundary/视图/冒烟，
-  jsdom + Testing Library），现共 34 用例；`@vitest/coverage-v8` 钉住 v3
-  与 vitest 对齐。
+  jsdom + Testing Library），现共 42 用例（含录音 hook、语音合成、
+  键盘导航）；`@vitest/coverage-v8` 钉住 v3 与 vitest 对齐；
+  覆盖率阈值锁定（lines 85 / branches 70 / functions 65）并配
+  `test:coverage` 脚本，主进程与渲染入口除外。
 - 主进程安全守卫抽取为 `apps/desktop/security.ts` 纯函数并补单测
   （信任 URL / 仅音频 / 路径穿越）。
 - `ErrorBoundary` 包裹渲染根节点；`App` 拆为壳 + `PracticeView` +

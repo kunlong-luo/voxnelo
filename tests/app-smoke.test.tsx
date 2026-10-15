@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { FIRST_SENTENCE } from '@voxnelo/content';
 import { database } from '@voxnelo/storage';
 import { App } from '../apps/web/src/App';
@@ -22,5 +22,14 @@ describe('App smoke', () => {
     expect(await screen.findByText(FIRST_SENTENCE.english)).toBeTruthy();
     expect(screen.getByRole('button', { name: '换一句' })).toBeTruthy();
     expect(screen.getByRole('button', { name: '我的收藏' })).toBeTruthy();
+  });
+
+  it('右方向键换到下一句', async () => {
+    render(<App />);
+    await screen.findByText(FIRST_SENTENCE.english);
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    await waitFor(() => {
+      expect(screen.queryByText(FIRST_SENTENCE.english)).toBeNull();
+    });
   });
 });
