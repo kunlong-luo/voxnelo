@@ -48,10 +48,12 @@ describe('PracticeView', () => {
     expect(screen.getByRole('button', { name: '换一句' })).toBeTruthy();
   });
 
-  it('练习台有横向六操作入口与真实课程进度，不渲染虚构学习成绩', () => {
+  it('练习台有横向五个音频操作入口与真实课程进度，不渲染虚构学习成绩', () => {
     render(<PracticeView {...basePracticeProps} />);
     const rail = screen.getByTestId('practice-control-rail');
-    expect(rail.children).toHaveLength(6);
+    expect(rail.children).toHaveLength(5);
+    expect(screen.getByRole('button', { name: '上一句' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: '换一句' })).toBeTruthy();
     expect(screen.getByText('1 / 40')).toBeTruthy();
     expect(screen.getByText('录音尝试句')).toBeTruthy();
     expect(screen.queryByText('连续天数')).toBeNull();
