@@ -205,7 +205,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
       <div className="shell">
       <aside className="sidebar">
         <div className="brand" aria-label="Voxnelo">
-          <div className="brandMark"><img src="/brand/voxnelo-mark.svg" alt="" width="48" height="48" /></div>
+          <div className="brandMark"><img src="brand/voxnelo-mark.svg" alt="" width="48" height="48" /></div>
           <div className="brandText"><strong>Voxnelo</strong></div>
         </div>
         <div className="sidebarHint">{t('sidebarSpace')}</div>
