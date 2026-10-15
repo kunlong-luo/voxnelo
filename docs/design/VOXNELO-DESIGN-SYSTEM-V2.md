@@ -8,7 +8,7 @@
 - shadcn/ui 的**组件源码所有权**模式：组件放在 `apps/web/src/components/ui`，通过 `components.json` 使用 `base-nova` + Base UI 基础组件方案；配色和圆角属于 Voxnelo，不直接复制任何默认品牌。
 - `@base-ui/react` 负责 Tooltip 等复杂浮层的焦点与碰撞检测；普通可操作 `button` 继续使用有语义的 HTML 包裹，统一经 `Button` 组件建立外观，不使用原生 `title` 弹泡或浏览器默认选择器外观。
 - Tailwind CSS 4 控制尺寸、空间、排版、网格、响应式、交互反馈。**禁止为每张卡片/按钮单独写一份 CSS 覆盖文件**。
-- `class-variance-authority` + `clsx` + `tailwind-merge` 负责按钮变体和稳定 class 合并；`motion/react` 负责可中断的句子微动效，`useReducedMotion` 响应系统偏好。
+- `class-variance-authority` + `clsx` + `tailwind-merge` 负责按钮变体与稳定 class 合并。初次构建发现完整 Motion runtime 使 JavaScript 超过既有性能预算，因此当前句子动画改用 Tailwind `--animate-sentence-enter` Token 与系统 `prefers-reduced-motion`；需要更复杂交互时，再按需使用轻量 `LazyMotion`。
 - 原来的六份应用 CSS（约 2161 行）整体下线，唯一新样式入口 `apps/web/src/design-system.css` 只容纳 Tailwind 导入、主题 Token、浏览器重置、Electron 窗口拖动与减少动画规则。业务组件禁止继续添加全局选择器。
 
 ## Voxnelo 设计 Token
