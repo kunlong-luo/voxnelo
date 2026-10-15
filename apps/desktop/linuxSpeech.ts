@@ -9,13 +9,8 @@ export type SpeechSpeed = 'normal' | 'slow';
 
 const MAX_WAV_BYTES = 3 * 1024 * 1024;
 const MAX_GENERATION_MS = 12_000;
-const ALLOWED_TEXT = new Set(SENTENCES.map((sentence) => sentence.english));
-
 /** Restrict renderer requests to actual shipped lessons, never arbitrary CLI input. */
-export function validSpeechRequest(text: unknown, speed: unknown): text is string {
-  return typeof text === 'string' && ALLOWED_TEXT.has(text) &&
-    (speed === 'normal' || speed === 'slow');
-}
+export const validSpeechRequest = isLessonSpeechRequest;
 
 export function validWave(bytes: Buffer): boolean {
   return bytes.length >= 44 && bytes.toString('ascii', 0, 4) === 'RIFF' &&
