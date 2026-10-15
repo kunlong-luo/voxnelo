@@ -32,7 +32,8 @@
     "pack:windows": "pnpm build && electron-builder --win nsis",
     "pack:mac": "pnpm build && electron-builder --mac dmg",
     "icon:linux:dev": "node scripts/register-linux-dev-launcher.mjs",
-    "icon:linux:dev:remove": "node scripts/register-linux-dev-launcher.mjs --remove"
+    "icon:linux:dev:remove": "node scripts/register-linux-dev-launcher.mjs --remove",
+    "ui:check": "node scripts/check-ui-style-architecture.mjs"
   },
   "dependencies": {
     "dexie": "^4.2.0",
