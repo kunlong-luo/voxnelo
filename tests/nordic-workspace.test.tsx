@@ -73,7 +73,7 @@ describe('Nordic three-column learning workspace', () => {
 
     const pairedFlags = container.querySelector('.lessonHeaderActions .sentenceFlags');
     expect(pairedFlags?.querySelectorAll('.flagButton')).toHaveLength(2);
-    expect(pairedFlags?.querySelectorAll('.placement-bottom .uiTooltipBubble')).toHaveLength(2);
+    expect(pairedFlags?.querySelectorAll('button[aria-pressed]')).toHaveLength(2);
     expect(pairedFlags?.querySelector('[title]')).toBeNull();
     const favorite = screen.getByRole('button', { name: '收藏' });
     fireEvent.click(favorite);

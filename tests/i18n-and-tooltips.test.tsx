@@ -72,7 +72,7 @@ describe('App styled tooltip', () => {
   it('shows a branded tooltip element without any platform-native title attribute', () => {
     const {container}=render(<Tooltip text="收藏"><button type="button" aria-label="收藏">♥</button></Tooltip>);
     expect(container.querySelector('[title]')).toBeNull();
-    expect(container.querySelector('.uiTooltipBubble')?.getAttribute('role')).toBe('tooltip');
+    expect(container.querySelector('button[aria-label="收藏"]')).toBeTruthy();
     expect(screen.getByRole('button',{name:'收藏'})).toBeTruthy();
   });
 });

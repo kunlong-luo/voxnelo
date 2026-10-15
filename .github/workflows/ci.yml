@@ -40,6 +40,8 @@ jobs:
         run: pnpm lint
       - name: Architecture
         run: pnpm arch
+      - name: UI architecture
+        run: pnpm ui:check
       - name: Unit tests and coverage
         run: pnpm test:coverage
       - name: Build

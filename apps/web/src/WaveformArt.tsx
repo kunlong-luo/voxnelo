@@ -16,14 +16,14 @@ const ribbons = Array.from({ length: 9 }, (_, line) => {
 
 export function WaveformArt() {
   return (
-    <svg className="waveformArt" viewBox="0 0 780 132" preserveAspectRatio="none"
+    <svg className="waveformArt h-auto max-h-22 w-full" viewBox="0 0 780 132" preserveAspectRatio="none"
       aria-hidden="true" focusable="false">
       <defs>
         <linearGradient id="nordicRhythm" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#ccdcd1" />
-          <stop offset="38%" stopColor="#88b6a2" />
-          <stop offset="65%" stopColor="#72a799" />
-          <stop offset="100%" stopColor="#d8e6d8" />
+          <stop offset="0%" stopColor="var(--brand-mist)" />
+          <stop offset="38%" stopColor="var(--primary)" />
+          <stop offset="65%" stopColor="var(--primary)" />
+          <stop offset="100%" stopColor="var(--brand-mist)" />
         </linearGradient>
       </defs>
       <g fill="none" stroke="url(#nordicRhythm)" strokeWidth="1.7" strokeLinecap="round" opacity=".78">

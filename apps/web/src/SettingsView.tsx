@@ -1,101 +1,77 @@
 import { ArrowLeft, AudioLines, Check, Languages, Palette, ShieldCheck, Settings2 } from 'lucide-react';
 import type { AppearanceTheme } from './appearance';
 import { useI18n, type LanguageSetting } from './i18n';
-
+import { Button } from './components/ui/button';
+import { Card } from './components/ui/card';
+import { cn } from './lib/utils';
 interface SettingsViewProps {
-  speed: 'normal' | 'slow';
-  showIpa: boolean;
-  appearance: AppearanceTheme;
-  languageSetting?: LanguageSetting;
-  onChangeAppearance: (theme: AppearanceTheme) => void;
-  onChangeLanguage?: (language: LanguageSetting) => void;
-  onToggleSpeed: () => void;
-  onToggleIpa: () => void;
-  onBackToPractice: () => void;
+  speed:'normal'|'slow';showIpa:boolean;appearance:AppearanceTheme;
+  languageSetting?:LanguageSetting;
+  onChangeAppearance:(theme:AppearanceTheme)=>void;
+  onChangeLanguage?:(locale:LanguageSetting)=>void;
+  onToggleSpeed:()=>void;onToggleIpa:()=>void;onBackToPractice:()=>void;
 }
-
-const appearanceIds: AppearanceTheme[] = ['nordic', 'sunset'];
-const languageIds: LanguageSetting[] = ['system', 'zh-CN', 'en-US'];
-
-/** A fully styled appearance and language picker, never a platform-native select. */
+const themes:AppearanceTheme[]=['nordic','sunset'];
+const languageIds:LanguageSetting[]=['system','zh-CN','en-US'];
 export function SettingsView({
-  speed, showIpa, appearance, languageSetting = 'system', onChangeAppearance, onChangeLanguage,
-  onToggleSpeed, onToggleIpa, onBackToPractice,
-}: SettingsViewProps) {
-  const { t, locale } = useI18n();
-  return (
-    <div className="settingsPage">
-      <div className="libraryTitle">
-        <div>
-          <div className="eyebrow"><Settings2 size={16} /> {t('settingsEyebrow')}</div>
-          <h1>{t('settingsTitle')}</h1>
-          <p>{t('settingsSummary')}</p>
-        </div>
-        <button type="button" className="backPractice" onClick={onBackToPractice}>
-          <ArrowLeft size={17} /> {t('backPractice')}
-        </button>
+  speed,showIpa,appearance,languageSetting='system',onChangeAppearance,
+  onChangeLanguage,onToggleSpeed,onToggleIpa,onBackToPractice,
+}:SettingsViewProps) {
+  const {t,locale}=useI18n();
+  const section='flex flex-col gap-4 rounded-3xl border border-border/70 bg-card/90 p-5 shadow-soft sm:p-6';
+  return <div className="settingsPage mx-auto flex w-full max-w-305 flex-col gap-6 px-0 py-2">
+    <div className="libraryTitle flex flex-wrap items-start justify-between gap-4">
+      <div className="space-y-2">
+        <div className="eyebrow flex items-center gap-2 text-[10px] font-bold tracking-[.21em] text-primary uppercase"><Settings2 size={16}/>{t('settingsEyebrow')}</div>
+        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">{t('settingsTitle')}</h1>
+        <p className="max-w-125 text-xs leading-6 text-muted-foreground">{t('settingsSummary')}</p>
       </div>
-      <div className="settingsGrid">
-        <section className="settingsPanel appearanceSettings">
-          <div className="settingsPanelHeading"><Palette size={21} /><h2>{t('appearanceTitle')}</h2></div>
-          <p>{t('appearanceDesc')}</p>
-          <div className="appearanceChoices" role="group" aria-label={t('appearanceGroup')}>
-            {appearanceIds.map((id) => {
-              const name = t(id === 'nordic' ? 'nordicName' : 'sunsetName');
-              return (
-                <button type="button" className="appearanceChoice" key={id}
-                  onClick={() => onChangeAppearance(id)}
-                  aria-label={t('appearanceChoose',{name})} aria-pressed={appearance === id}>
-                  <span className={'appearancePreview ' + id} aria-hidden="true" />
-                  <strong>{name} {appearance === id ? <Check size={15} aria-hidden="true" /> : null}</strong>
-                  <small>{t(id === 'nordic' ? 'nordicSummary' : 'sunsetSummary')}</small>
-                </button>
-              );
-            })}
-          </div>
-          <p className="appearanceHelp">{t('appearanceNote')}</p>
-        </section>
-        <section className="settingsPanel languageSettings">
-          <div className="settingsPanelHeading"><Languages size={21} /><h2>{t('languageTitle')}</h2></div>
-          <p>{t('languageDesc')}</p>
-          <div className="languageChoices" role="group" aria-label={t('languageGroup')}>
-            {languageIds.map((id) => (
-              <button className="languageChoice" type="button" key={id}
-                aria-pressed={languageSetting === id}
-                onClick={() => onChangeLanguage?.(id)}>
-                <span className="languageChoiceTop">
-                  <strong>{t(id === 'system' ? 'languageSystem' : id === 'zh-CN' ? 'languageChinese' : 'languageEnglish')}</strong>
-                  {languageSetting === id ? <Check size={16} aria-hidden="true" /> : null}
-                </span>
-                <small>{id === 'system'
-                  ? t('languageSystemDetail',{name:t(locale === 'zh-CN' ? 'languageChinese' : 'languageEnglish')})
-                  : t('languageManualDetail')}</small>
-              </button>
-            ))}
-          </div>
-          <p className="appearanceHelp">{t('languageContentNote')}</p>
-        </section>
-        <section className="settingsPanel">
-          <div className="settingsPanelHeading"><AudioLines size={21} /><h2>{t('voiceTitle')}</h2></div>
-          <p>{t('voiceDesc')}</p>
-          <button type="button" className="settingToggle" onClick={onToggleSpeed} aria-pressed={speed === 'slow'}>
-            <span><strong>{t('slowMode')}</strong><small>{t('slowModeHint')}</small></span>
-            <span className={'switchTrack' + (speed === 'slow' ? ' on' : '')}><span /></span>
-          </button>
-        </section>
-        <section className="settingsPanel">
-          <div className="settingsPanelHeading"><Languages size={21} /><h2>{t('contentTitle')}</h2></div>
-          <p>{t('contentDesc')}</p>
-          <button type="button" className="settingToggle" onClick={onToggleIpa} aria-pressed={showIpa}>
-            <span><strong>{t('showIpa')}</strong><small>{t('showIpaHint')}</small></span>
-            <span className={'switchTrack' + (showIpa ? ' on' : '')}><span /></span>
-          </button>
-        </section>
-        <section className="settingsPanel privacySettings">
-          <div className="settingsPanelHeading"><ShieldCheck size={21} /><h2>{t('localPrivacyTitle')}</h2></div>
-          <p>{t('localPrivacyDesc')}</p>
-        </section>
-      </div>
+      <Button variant="outline" size="sm" className="backPractice" onClick={onBackToPractice}><ArrowLeft size={16}/>{t('backPractice')}</Button>
     </div>
-  );
+    <div className="settingsGrid grid grid-cols-1 gap-4 xl:grid-cols-2">
+      <Card className={cn(section,'appearanceSettings')}>
+        <div className="settingsPanelHeading flex items-center gap-3 text-primary"><Palette size={20}/><h2 className="text-sm font-extrabold text-foreground">{t('appearanceTitle')}</h2></div>
+        <p className="text-xs leading-6 text-muted-foreground">{t('appearanceDesc')}</p>
+        <div className="appearanceChoices grid grid-cols-2 gap-3" role="group" aria-label={t('appearanceGroup')}>
+          {themes.map(id=>{const name=t(id==='nordic'?'nordicName':'sunsetName');return <button type="button" className={cn('appearanceChoice group flex min-w-0 flex-col gap-2 rounded-2xl border p-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-md motion-reduce:transform-none',appearance===id?'border-primary/50 bg-secondary/65 ring-2 ring-primary/10':'border-border bg-card/70 hover:border-primary/30')} key={id} onClick={()=>onChangeAppearance(id)} aria-label={t('appearanceChoose',{name})} aria-pressed={appearance===id}>
+            <span className={cn('appearancePreview h-18 w-full rounded-xl border border-white/75',id==='nordic'?'bg-gradient-to-tr from-brand-mist via-brand-cream to-accent':'bg-gradient-to-tr from-brand-blush via-brand-cream to-brand-mist')} aria-hidden="true"/>
+            <strong className="flex items-center justify-between gap-2 text-xs text-foreground">{name}{appearance===id&&<Check size={15} className="text-primary"/>}</strong>
+            <small className="text-[10px] leading-4 text-muted-foreground">{t(id==='nordic'?'nordicSummary':'sunsetSummary')}</small>
+          </button>})}
+        </div>
+        <p className="appearanceHelp text-[10px] leading-5 text-muted-foreground">{t('appearanceNote')}</p>
+      </Card>
+      <Card className={cn(section,'languageSettings')}>
+        <div className="settingsPanelHeading flex items-center gap-3 text-primary"><Languages size={20}/><h2 className="text-sm font-extrabold text-foreground">{t('languageTitle')}</h2></div>
+        <p className="text-xs leading-6 text-muted-foreground">{t('languageDesc')}</p>
+        <div className="languageChoices grid grid-cols-1 gap-2 sm:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3" role="group" aria-label={t('languageGroup')}>
+          {languageIds.map(id=><button type="button" key={id} className={cn('languageChoice flex min-h-18 flex-col justify-center gap-2 rounded-2xl border px-3 py-3 text-left transition-all hover:-translate-y-0.5 motion-reduce:transform-none',languageSetting===id?'border-primary/50 bg-secondary/80 ring-2 ring-primary/10':'border-border bg-card/80 hover:border-primary/30 hover:bg-muted')} aria-pressed={languageSetting===id} onClick={()=>onChangeLanguage?.(id)}>
+            <span className="languageChoiceTop flex items-center justify-between gap-1"><strong className="text-xs text-foreground">{t(id==='system'?'languageSystem':id==='zh-CN'?'languageChinese':'languageEnglish')}</strong>{languageSetting===id&&<Check size={15} className="text-primary"/>}</span>
+            <small className="text-[10px] leading-4 text-muted-foreground">{id==='system'?t('languageSystemDetail',{name:t(locale==='zh-CN'?'languageChinese':'languageEnglish')}):t('languageManualDetail')}</small>
+          </button>)}
+        </div>
+        <p className="appearanceHelp mt-auto text-[10px] leading-5 text-muted-foreground">{t('languageContentNote')}</p>
+      </Card>
+      <Card className={section}>
+        <div className="settingsPanelHeading flex items-center gap-3 text-primary"><AudioLines size={20}/><h2 className="text-sm font-extrabold text-foreground">{t('voiceTitle')}</h2></div>
+        <p className="text-xs leading-6 text-muted-foreground">{t('voiceDesc')}</p>
+        <button type="button" className="settingToggle flex w-full items-center justify-between gap-4 rounded-2xl border border-border/70 bg-muted/50 p-4 text-left transition hover:bg-secondary/50" aria-pressed={speed==='slow'} onClick={onToggleSpeed}>
+          <span className="flex flex-col gap-1"><strong className="text-xs">{t('slowMode')}</strong><small className="text-[10px] leading-5 text-muted-foreground">{t('slowModeHint')}</small></span>
+          <span className={cn('switchTrack relative inline-flex h-6 w-11 shrink-0 rounded-full border border-border/50 p-0.5 transition-colors',speed==='slow'?'bg-primary':'bg-muted-foreground/30')}><span className={cn('size-5 rounded-full bg-white shadow-sm transition-transform',speed==='slow'&&'translate-x-5')}/></span>
+        </button>
+      </Card>
+      <Card className={section}>
+        <div className="settingsPanelHeading flex items-center gap-3 text-primary"><Languages size={20}/><h2 className="text-sm font-extrabold text-foreground">{t('contentTitle')}</h2></div>
+        <p className="text-xs leading-6 text-muted-foreground">{t('contentDesc')}</p>
+        <button type="button" className="settingToggle flex w-full items-center justify-between gap-4 rounded-2xl border border-border/70 bg-muted/50 p-4 text-left transition hover:bg-secondary/50" aria-pressed={showIpa} onClick={onToggleIpa}>
+          <span className="flex flex-col gap-1"><strong className="text-xs">{t('showIpa')}</strong><small className="text-[10px] leading-5 text-muted-foreground">{t('showIpaHint')}</small></span>
+          <span className={cn('switchTrack relative inline-flex h-6 w-11 shrink-0 rounded-full border border-border/50 p-0.5 transition-colors',showIpa?'bg-primary':'bg-muted-foreground/30')}><span className={cn('size-5 rounded-full bg-white shadow-sm transition-transform',showIpa&&'translate-x-5')}/></span>
+        </button>
+      </Card>
+      <Card className={cn(section,'privacySettings xl:col-span-2')}>
+        <div className="settingsPanelHeading flex items-center gap-3 text-primary"><ShieldCheck size={20}/><h2 className="text-sm font-extrabold text-foreground">{t('localPrivacyTitle')}</h2></div>
+        <p className="text-xs leading-6 text-muted-foreground">{t('localPrivacyDesc')}</p>
+      </Card>
+    </div>
+  </div>;
 }

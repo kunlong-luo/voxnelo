@@ -15,6 +15,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      '@': path.resolve('apps/web/src'),
       '@voxnelo/audio': workspace('audio'),
       '@voxnelo/content': workspace('content'),
       '@voxnelo/core': workspace('core'),
