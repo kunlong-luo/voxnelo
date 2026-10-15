@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Clock3, Headphones, Heart, ListRestart, ShieldCheck, type LucideIcon } from 'lucide-react';
+import { Clock3, Headphones, Heart, ListRestart, ShieldCheck, Square, type LucideIcon } from 'lucide-react';
 import {
   APP_VERSION,
   FIRST_SENTENCE,
@@ -181,9 +181,13 @@ export function App() {
           <span className="breadcrumb">
             学习空间 <span>/</span> {view === 'practice' ? TOPIC_LABELS[current.topic] : menu.find((x) => x.id === view)?.label}
           </span>
-          <span className="topRight">
-            <span className="statusDot" /> 免费 · 本地优先
-          </span>
+          <div className="topbarActions">
+            {recorder.status === 'recording' ? (
+              <button type="button" className="topbarStop" onClick={handleRecorder}
+                aria-label="顶部快速停止录音"><Square size={15} fill="currentColor" /> 结束录音</button>
+            ) : null}
+            <span className="topRight"><span className="statusDot" /> 免费 · 本地优先</span>
+          </div>
         </header>
         <main className="content">
           {view === 'practice' ? (

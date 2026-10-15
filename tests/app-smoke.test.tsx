@@ -60,6 +60,9 @@ describe('App smoke', () => {
       fireEvent.click(screen.getByRole('button', { name: '我的收藏' }));
       expect(screen.getByText('请先结束当前录音，再切换页面。')).toBeTruthy();
       expect(screen.getByText(FIRST_SENTENCE.english)).toBeTruthy();
+      // 在窄屏或滚动位置较深时，顶部提供不依赖卡片可见性的停录按钮。
+      fireEvent.click(screen.getByRole('button', { name: '顶部快速停止录音' }));
+      expect(stopTrack).toHaveBeenCalled();
       view.unmount();
       expect(stopTrack).toHaveBeenCalled();
     } finally {

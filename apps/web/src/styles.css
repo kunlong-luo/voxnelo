@@ -801,3 +801,48 @@ html {
 @media (prefers-reduced-motion: reduce) {
   .lessonProgressTrack > span { transition: none; }
 }
+
+
+/* Accessible emergency stop remains visible when a small desktop window scrolls. */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: blur(14px);
+}
+.topbarActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  min-width: 0;
+}
+.topbarStop {
+  min-height: 39px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 14px;
+  border-radius: 11px;
+  border: 1px solid #f6a0b3;
+  color: #a92847;
+  background: #fff0f4;
+  box-shadow: 0 5px 16px #c72d4f16;
+  font-size: 12px;
+  font-weight: 780;
+  white-space: nowrap;
+}
+.topbarStop:hover { background: #ffe1e9; }
+.topbarStop:focus-visible { outline: 3px solid #f17c93; outline-offset: 2px; }
+.replaySlot { position: relative; }
+.replaySlot .replayError {
+  top: 100%;
+  left: 50%;
+  margin-top: 2px;
+  transform: translateX(-50%);
+  width: 190px;
+}
+@media(max-width: 890px) {
+  .topbarStop { padding: 0 9px; font-size: 11px; }
+  .topbarActions { gap: 7px; }
+}
