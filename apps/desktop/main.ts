@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { APP_ORIGIN, APP_SCHEME, THEME_BACKGROUND, WINDOW_SIZE } from '@voxnelo/core';
 import { isAudioOnlyRequest, APP_HOST, isTrustedUrl, resolveLocalFile } from './security';
 import { LinuxEnglishSpeech } from './linuxSpeech';
+import { LINUX_DESKTOP_FILENAME, resolveLinuxIconPath } from './linuxAppIdentity';
 
 // Electron 推荐的标准安全自定义协议：允许 IndexedDB 使用持久且一致的 origin。
 // 注册必须发生在 app ready 之前；不允许 bypassCSP。
@@ -12,6 +13,10 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 // 此文件通过 esbuild 构建为 dist-electron/main.cjs，__dirname 在 CJS 中有效。
+// Set before Electron is ready: keeps the X11 WM_CLASS / Wayland app_id
+// consistent with the Linux .desktop launcher supplied by electron-builder.
+if (process.platform === 'linux') app.setDesktopName(LINUX_DESKTOP_FILENAME);
+
 const devServer = process.env.VOXNELO_DEV_SERVER_URL;
 const isDev = !app.isPackaged && Boolean(devServer);
 const rendererDir = path.join(__dirname, '..', 'dist');
@@ -89,6 +94,14 @@ async function createWindow(): Promise<void> {
     minHeight: WINDOW_SIZE.minHeight,
     backgroundColor: THEME_BACKGROUND,
     title: 'Voxnelo',
+    // Linux taskbars need the native window icon as well as a matching app_id.
+    ...(process.platform === 'linux' ? {
+      icon: resolveLinuxIconPath({
+        isPackaged: app.isPackaged,
+        bundleDir: __dirname,
+        resourcesPath: process.resourcesPath,
+      }),
+    } : {}),
     autoHideMenuBar: true,
     frame: false,
     webPreferences: {
