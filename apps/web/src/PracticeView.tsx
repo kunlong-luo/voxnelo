@@ -17,10 +17,12 @@ import {
   VolumeX,
   X,
 } from 'lucide-react';
-import { SENTENCES, TOPIC_LABELS, type LearningState, type LearningStats, type Sentence } from '@voxnelo/learning';
+import { SENTENCES, type LearningState, type LearningStats, type Sentence } from '@voxnelo/learning';
 import type { useRecorder } from './useRecorder';
 import { RecordingPlayback } from './RecordingPlayback';
 import { WaveformArt } from './WaveformArt';
+import { Tooltip } from './Tooltip';
+import { useI18n, type TranslationKey } from './i18n';
 
 interface PracticeViewProps {
   current: Sentence;
@@ -43,12 +45,13 @@ interface PracticeViewProps {
   onDismissNotice: () => void;
 }
 
-const tips: Record<Sentence['topic'], string> = {
-  greetings: '先模仿语气和节奏，不必追求一次完美。听一遍，再跟着读一遍。',
-  personal: '试着把句子里的人名或地点换成自己的信息，让练习更贴近生活。',
-  needs: '想象一个真实场景，先把整句顺畅地说出来，再回听自己的语速。',
-  learning: '遇到没有听清的地方，可以用这些句子请求对方重复或放慢。',
-  daily: '先听清每个词，再连起来练习；不熟悉的短句可以加入复习。',
+const topicKeys: Record<Sentence['topic'], TranslationKey> = {
+  greetings: 'topicGreetings', personal: 'topicPersonal', needs: 'topicNeeds',
+  learning: 'topicLearning', daily: 'topicDaily',
+};
+const tipKeys: Record<Sentence['topic'], TranslationKey> = {
+  greetings: 'tipGreetings', personal: 'tipPersonal', needs: 'tipNeeds',
+  learning: 'tipLearning', daily: 'tipDaily',
 };
 
 /** Nordic edition: UI2's three-column learning hierarchy, real V0.1 behaviors only. */
@@ -57,6 +60,7 @@ export function PracticeView({
   canGoPrevious, onToggleIpa, onSpeak, onToggleSpeed, onRecord,
   onToggleFlag, onNext, onPrevious, onChooseRelated, onDismissNotice,
 }: PracticeViewProps) {
+  const {t} = useI18n();
   const rawPosition = SENTENCES.findIndex((item) => item.id === current.id);
   const index = rawPosition < 0 ? 1 : rawPosition + 1;
   const catalogPercentage = (index / Math.max(1, SENTENCES.length)) * 100;
@@ -67,153 +71,158 @@ export function PracticeView({
   const review = Boolean(currentState?.review);
   const related = SENTENCES.filter((item) => item.topic === current.topic && item.id !== current.id).slice(0, 4);
   const sceneTopics = [
-    { topic: 'greetings', label: '问候交流', icon: MessageCircle },
-    { topic: 'personal', label: '自我介绍', icon: BookOpen },
-    { topic: 'daily', label: '日常生活', icon: Coffee },
+    { topic: 'greetings', label: t('sceneGreetings'), icon: MessageCircle },
+    { topic: 'personal', label: t('scenePersonal'), icon: BookOpen },
+    { topic: 'daily', label: t('sceneDaily'), icon: Coffee },
   ] as const;
 
   return (
     <div className="practiceLayout layoutWorkbench">
       <div className="practiceColumn">
-        <section className="practiceCard referenceLesson" aria-label="当前短句练习">
+        <section className="practiceCard referenceLesson" aria-label={t("currentPractice")}>
           <header className="cardHeader lessonHeader">
-            <div className="lessonProgress" aria-label={'课程位置，第 ' + index + ' 句，共 ' + SENTENCES.length + ' 句'}>
+            <div className="lessonProgress" aria-label={t('coursePosition',{index,total:SENTENCES.length})}>
               <span className="lessonCount">{index} / {SENTENCES.length}</span>
               <div className="lessonProgressTrack" aria-hidden="true">
                 <span style={{ width: catalogPercentage + '%' }} />
               </div>
             </div>
             <div className="lessonHeaderActions">
-              <span className="pill"><BookOpen size={15} /> {TOPIC_LABELS[current.topic]}</span>
-              <button type="button" className={'reviewIconButton' + (review ? ' selected' : '')}
-                onClick={() => onToggleFlag('review')} aria-pressed={review}
-                aria-label={review ? '取消复习标记' : '标记需要复习'}
-                title={review ? '取消复习标记' : '标记需要复习'}>
-                <Bookmark size={20} fill={review ? 'currentColor' : 'none'} aria-hidden="true" />
-              </button>
+              <span className="pill"><BookOpen size={15} /> {t(topicKeys[current.topic])}</span>
+              <div className="sentenceFlags" role="group" aria-label={t('navFavorites') + ' / ' + t('navReview')}>
+                <Tooltip text={t(favorite ? 'favoriteRemove' : 'favoriteAdd')}>
+                  <button type="button" className={'lessonFavorite flagButton' + (favorite ? ' selected' : '')}
+                    onClick={() => onToggleFlag('favorite')} aria-label={t(favorite ? 'favoriteRemove' : 'favoriteAdd')} aria-pressed={favorite}>
+                    <Heart size={20} fill={favorite ? 'currentColor' : 'none'} aria-hidden="true" />
+                  </button>
+                </Tooltip>
+                <Tooltip text={t(review ? 'reviewRemove' : 'reviewAdd')}>
+                  <button type="button" className={'reviewIconButton flagButton' + (review ? ' selected' : '')}
+                    onClick={() => onToggleFlag('review')} aria-pressed={review}
+                    aria-label={t(review ? 'reviewRemove' : 'reviewAdd')}>
+                    <Bookmark size={20} fill={review ? 'currentColor' : 'none'} aria-hidden="true" />
+                  </button>
+                </Tooltip>
+              </div>
             </div>
           </header>
 
           <div className="lessonFocus">
             <div className="sentenceContent">
-              <p className="lessonLevel">口语练习 <span>·</span> {current.level}</p>
+              <p className="lessonLevel">{t("speakingPractice")} <span>·</span> {current.level}</p>
               <div className="sentenceHeading">
                 <h1 key={current.id} className="sentenceText">{current.english}</h1>
-                <button className={'lessonFavorite' + (favorite ? ' selected' : '')}
-                  type="button" onClick={() => onToggleFlag('favorite')}
-                  aria-label={favorite ? '取消收藏' : '收藏'} aria-pressed={favorite}
-                  title={favorite ? '取消收藏' : '收藏'}>
-                  <Heart size={23} fill={favorite ? 'currentColor' : 'none'} />
-                </button>
               </div>
               <p className="translation">{current.chinese}</p>
               {showIpa ? <p className="ipa">{current.ipa}</p> : null}
               <button type="button" className="subtleLink" onClick={onToggleIpa} aria-expanded={showIpa}>
-                <CircleHelp size={15} /> {showIpa ? '收起音标' : '查看音标'}
+                <CircleHelp size={15} /> {t(showIpa ? 'ipaHide' : 'ipaShow')}
               </button>
             </div>
             <div className="wavePanel"><WaveformArt /></div>
           </div>
 
-          <section className="lessonActions" aria-label="口语练习操作">
+          <section className="lessonActions" aria-label={t("practiceActions")}>
             <div className="actionRail" data-testid="practice-control-rail">
               <div className="actionSlot">
-                <button type="button" className="roundControl sampleButton" onClick={onSpeak}
-                  title="播放标准朗读" aria-label="播放标准朗读" disabled={recordingBusy}>
-                  <Volume2 size={23} />
-                </button>
-                <span className="actionCaption">播放示范</span>
+                <Tooltip text={t('playExample')}>
+                  <button type="button" className="roundControl sampleButton" onClick={onSpeak}
+                    aria-label={t('playExample')} disabled={recordingBusy}>
+                    <Volume2 size={23} />
+                  </button>
+                </Tooltip>
+                <span className="actionCaption">{t('playDemo')}</span>
               </div>
               <div className="actionSlot">
                 <button type="button" className="roundControl speedButton" onClick={onToggleSpeed}
-                  disabled={recordingBusy} aria-pressed={speed === 'slow'} aria-label="切换语速">
+                  disabled={recordingBusy} aria-pressed={speed === 'slow'} aria-label={t("speedSwitch")}>
                   <Turtle size={23} />
                 </button>
-                <span className="actionCaption">慢速播放</span>
-                <span className="actionAux">{speed === 'slow' ? '0.75×' : '普通语速'}</span>
+                <span className="actionCaption">{t("speedSlow")}</span>
+                <span className="actionAux">{speed === 'slow' ? '0.75×' : t('speedNormal')}</span>
               </div>
               <div className="actionSlot recordSlot">
                 <button type="button" className={'recordAction' + (isRecording ? ' isRecording' : '')}
                   onClick={onRecord} disabled={recordingBusy}
-                  aria-label={requesting ? '正在获取权限' : isRecording ? '录音进行中' : '开口跟读'}>
+                  aria-label={t(requesting ? 'micPermission' : isRecording ? 'micBusy' : 'micStart')}>
                   <Mic size={36} />
                 </button>
                 <span className="actionCaption">
-                  {requesting ? '正在获取权限' : isRecording ? '正在录音' : '开口跟读'}
+                  {t(requesting ? 'micPermission' : isRecording ? 'recordingInProgress' : 'micStart')}
                 </span>
-                <span className="actionAux">点击开始，手动结束</span>
+                <span className="actionAux">{t("micStartHint")}</span>
               </div>
               <div className="actionSlot">
                 <button type="button" className="roundControl stopButton" onClick={onRecord}
-                  disabled={!isRecording} aria-label="结束录音">
+                  disabled={!isRecording} aria-label={t("stopRecording")}>
                   <Square size={21} fill="currentColor" />
                 </button>
-                <span className="actionCaption">结束录音</span>
+                <span className="actionCaption">{t("stopRecording")}</span>
               </div>
               <RecordingPlayback key={recorder.recordingUrl ?? 'no-recording'} src={recorder.recordingUrl} />
             </div>
 
             {isRecording ? (
-              <p className="recordingStatus" role="status"><span className="liveDot" /> 麦克风正在使用 · 点击“结束录音”停止</p>
+              <p className="recordingStatus" role="status"><span className="liveDot" /> {t('recordingStatus')}</p>
             ) : requesting ? (
-              <p className="recordingStatus" role="status">请在系统弹窗中允许使用麦克风</p>
+              <p className="recordingStatus" role="status">{t('permissionHint')}</p>
             ) : (
-              <p className="practicePrompt"><ShieldCheck size={14} /> 录音只用于本次回听，切换短句后清除，不上传开发者服务器</p>
+              <p className="practicePrompt"><ShieldCheck size={14} /> {t('privacyRecording')}</p>
             )}
             {recorder.error ? <p className="warning" role="alert">{recorder.error}</p> : null}
           </section>
 
           <footer className="cardFooter referenceFooter">
             <button type="button" className="prevButton pagerButton" onClick={onPrevious}
-              disabled={!canGoPrevious} aria-label="上一句"><ChevronLeft size={18} aria-hidden="true" /> 上一句</button>
-            <span className="footerHint">先听示范，再开口跟读</span>
+              disabled={!canGoPrevious} aria-label={t("previous")}><ChevronLeft size={18} aria-hidden="true" /> {t("previous")}</button>
+            <span className="footerHint">{t("footerHint")}</span>
             <button type="button" className="nextButton pagerButton" onClick={onNext}
-              disabled={recordingBusy} aria-label="换一句">下一句 <ArrowRight size={18} aria-hidden="true" /></button>
+              disabled={recordingBusy} aria-label={t("nextAccessible")}>{t("next")} <ArrowRight size={18} aria-hidden="true" /></button>
           </footer>
         </section>
         {notice ? (
           <div className="notice" role="status"><VolumeX size={16} />{notice}
-            <button type="button" onClick={onDismissNotice} aria-label="关闭提示"><X size={16} /></button>
+            <button type="button" onClick={onDismissNotice} aria-label={t("closeNotice")}><X size={16} /></button>
           </div>
         ) : null}
       </div>
 
-      <aside className="insightsColumn referenceInsights" aria-label="本地学习概览">
+      <aside className="insightsColumn referenceInsights" aria-label={t("localOverview")}>
         <section className="insightCard progressCard">
           <div className="insightHeading">
-            <h2>学习进度</h2>
-            <span className="insightSideNote">本地记录</span>
+            <h2>{t("progress")}</h2>
+            <span className="insightSideNote">{t("localRecord")}</span>
           </div>
           <div className="progressOverview">
             <div className="progressDonut" role="img"
-              aria-label={'已浏览 ' + stats.viewed + ' / ' + SENTENCES.length + ' 句'}
+              aria-label={t('viewedCount',{viewed:stats.viewed,total:SENTENCES.length})}
               style={{ background: 'conic-gradient(#80ad9a ' + viewedPercentage + '%, #e7eee8 0)' }}>
               <div className="donutInner"><strong>{stats.viewed}</strong><small>/{SENTENCES.length}</small></div>
             </div>
             <div className="progressSummary">
-              <span>已浏览课程</span>
-              <strong>{stats.viewed} / {SENTENCES.length} 句</strong>
-              <small>每一步都值得记录 ✨</small>
+              <span>{t("viewedLessons")}</span>
+              <strong>{t("sentencesCount",{count:stats.viewed,total:SENTENCES.length})}</strong>
+              <small>{t("progressEncourage")}</small>
             </div>
           </div>
           <div className="miniMetrics">
-            <div><strong>{stats.practiced}</strong><span>录音尝试句</span></div>
-            <div><strong>{stats.favorites}</strong><span>已收藏</span></div>
-            <div><strong>{stats.review}</strong><span>待复习</span></div>
+            <div><strong>{stats.practiced}</strong><span>{t("practiced")}</span></div>
+            <div><strong>{stats.favorites}</strong><span>{t("favorited")}</span></div>
+            <div><strong>{stats.review}</strong><span>{t("toReview")}</span></div>
           </div>
-          <p className="progressCopy">仅为本地学习记录，不代表发音评分</p>
+          <p className="progressCopy">{t("progressDisclaimer")}</p>
         </section>
 
         <section className="insightCard feedCard">
           <div className="insightHeading">
-            <h2>相关表达</h2>
-            <span className="insightSideNote">同主题短句</span>
+            <h2>{t("relatedPhrases")}</h2>
+            <span className="insightSideNote">{t("sameTopic")}</span>
           </div>
-          <div className="feedStrip" aria-label="同主题练习短句">
+          <div className="feedStrip" aria-label={t("relatedPhrasesAria")}>
             {related.map((item) => (
               <button className="feedItem" type="button" key={item.id}
                 onClick={() => onChooseRelated?.(item)} disabled={recordingBusy || !onChooseRelated}
-                aria-label={'练习短句：' + item.english}>
+                aria-label={t('practiceSentence',{english:item.english})}>
                 <span>{item.chinese}</span>
                 <strong>{item.english}</strong>
                 <ChevronRight size={14} aria-hidden="true" />
@@ -225,17 +234,17 @@ export function PracticeView({
         <section className="insightCard tipCard">
           <div className="insightHeading">
             <span className="insightIcon"><Lightbulb size={18} /></span>
-            <h2>学习提示</h2>
+            <h2>{t("learningTip")}</h2>
           </div>
-          <p>{tips[current.topic]}</p>
+          <p>{t(tipKeys[current.topic])}</p>
           <div className="tipDivider" />
-          <small>先听示范，再点击麦克风跟读，完成后可回听自己的录音。</small>
+          <small>{t("tipFooter")}</small>
         </section>
 
         <section className="insightCard sceneCard">
           <div className="insightHeading">
             <span className="insightIcon cyan"><MessageCircle size={18} /></span>
-            <h2>相关场景</h2>
+            <h2>{t("relatedScenes")}</h2>
           </div>
           <div className="sceneGrid">
             {sceneTopics.map(({ topic, label, icon: Icon }) => {
@@ -243,14 +252,14 @@ export function PracticeView({
               return first ? (
                 <button key={topic} type="button" className={'sceneThumb scene-' + topic}
                   onClick={() => onChooseRelated?.(first)} disabled={recordingBusy || !onChooseRelated}
-                  aria-label={'练习场景：' + label}>
+                  aria-label={t('practiceScene',{name:label})}>
                   <Icon size={22} aria-hidden="true" />
                   <span>{label}</span>
                 </button>
               ) : null;
             })}
           </div>
-          <div className="privacyNote"><ShieldCheck size={15} /> 无需注册 · 学习进度保存在本机</div>
+          <div className="privacyNote"><ShieldCheck size={15} /> {t("privacyLocal")}</div>
         </section>
       </aside>
     </div>
