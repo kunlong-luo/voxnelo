@@ -330,3 +330,29 @@
 @media (max-height: 690px) {
   .practiceLayout .lessonFocus { min-height: 250px; }
 }
+
+/* Product mark belongs to the left navigation column, not to the blank
+ * draggable window chrome. Keep its identity even in icon-only mode. */
+.sidebar .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+.sidebar .brandMark, .sidebar .brandMark img {
+  display: block;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  object-fit: contain;
+}
+.sidebar .brandText { min-width: 0; }
+.sidebar .brandText strong { font-size: 23px; }
+.sidebar .sidebarHint { margin-top: 8px; }
+@media (max-width: 900px) {
+  .sidebar .brand { justify-content: center; padding: 0; margin-bottom: 18px; }
+  .sidebar .brandMark, .sidebar .brandMark img { width: 40px; height: 40px; flex-basis: 40px; }
+  .sidebar .brandText { display: none; }
+}
