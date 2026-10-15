@@ -83,7 +83,15 @@ export function PracticeView({
                 <span style={{ width: catalogPercentage + '%' }} />
               </div>
             </div>
-            <span className="pill"><BookOpen size={15} /> {TOPIC_LABELS[current.topic]}</span>
+            <div className="lessonHeaderActions">
+              <span className="pill"><BookOpen size={15} /> {TOPIC_LABELS[current.topic]}</span>
+              <button type="button" className={'reviewIconButton' + (review ? ' selected' : '')}
+                onClick={() => onToggleFlag('review')} aria-pressed={review}
+                aria-label={review ? '取消复习标记' : '标记需要复习'}
+                title={review ? '取消复习标记' : '标记需要复习'}>
+                <Bookmark size={20} fill={review ? 'currentColor' : 'none'} aria-hidden="true" />
+              </button>
+            </div>
           </header>
 
           <div className="lessonFocus">
@@ -143,13 +151,6 @@ export function PracticeView({
                 <span className="actionCaption">结束录音</span>
               </div>
               <RecordingPlayback key={recorder.recordingUrl ?? 'no-recording'} src={recorder.recordingUrl} />
-              <div className="actionSlot">
-                <button type="button" className="roundControl nextButton" onClick={onNext}
-                  disabled={recordingBusy} aria-label="换一句">
-                  <ArrowRight size={24} />
-                </button>
-                <span className="actionCaption">下一句</span>
-              </div>
             </div>
 
             {isRecording ? (
@@ -163,14 +164,11 @@ export function PracticeView({
           </section>
 
           <footer className="cardFooter referenceFooter">
-            <button type="button" className="prevButton" onClick={onPrevious}
-              disabled={!canGoPrevious} aria-label="上一句"><ChevronLeft size={18} /> 上一句</button>
+            <button type="button" className="prevButton pagerButton" onClick={onPrevious}
+              disabled={!canGoPrevious} aria-label="上一句"><ChevronLeft size={18} aria-hidden="true" /> 上一句</button>
             <span className="footerHint">先听示范，再开口跟读</span>
-            <button type="button" className={'iconText' + (review ? ' selected' : '')}
-              onClick={() => onToggleFlag('review')} aria-pressed={review}>
-              <Bookmark size={17} fill={review ? 'currentColor' : 'none'} />
-              {review ? '已加入复习' : '需要复习'}
-            </button>
+            <button type="button" className="nextButton pagerButton" onClick={onNext}
+              disabled={recordingBusy} aria-label="换一句">下一句 <ArrowRight size={18} aria-hidden="true" /></button>
           </footer>
         </section>
         {notice ? (
@@ -252,8 +250,8 @@ export function PracticeView({
               ) : null;
             })}
           </div>
+          <div className="privacyNote"><ShieldCheck size={15} /> 无需注册 · 学习进度保存在本机</div>
         </section>
-        <div className="privacyNote"><ShieldCheck size={15} /> 无需注册 · 学习进度保存在本机</div>
       </aside>
     </div>
   );
