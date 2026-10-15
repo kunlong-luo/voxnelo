@@ -130,7 +130,11 @@ export function App() {
   const handleRecorder = () => {
     if (recorder.status === 'recording') {
       recorder.stop();
-    } else void recorder.start();
+    } else {
+      // 示范音与录音不可重叠，防止把扬声器输出录为自己的跟读。
+      silence();
+      void recorder.start();
+    }
   };
 
   const nav = (target: View) => {

@@ -12,7 +12,7 @@
 
 > **请区分三个层次**：本目录中的 `*.md` 已根据实际源码进行了实施同步（如 40 句、学习服务门面、系统 TTS）；随包 `完整产品文档_v1.0.docx/pdf` 仍为 2026-10-15 冻结时的**原始阅读版**，并**不包含**这些实施修订。请勿声称 Word/PDF 与 Markdown 完全一致。
 >
-> 原交付时的 `CHECKSUMS.txt` 是初始文档包的 SHA-256 清单，不再适用于当前修订的 Markdown。原始清单已归档为 `CHECKSUMS.original-v1.0.txt`；本仓库目录的原始校验信息及合理性评估见 [产品文档变更审计](../../PRODUCT-DOCS-CHANGE-AUDIT.md)。后续需要一个带新版本号（建议 1.1）的独立文档包，并同步生成 Markdown、Word、PDF 与校验文件。
+> 原交付时的 `CHECKSUMS.txt` 是初始文档包的 SHA-256 清单，不再适用于当前修订的 Markdown。原始清单已归档为 `CHECKSUMS.original-v1.0.txt`；本仓库目录的原始校验信息及合理性评估见 [产品文档变更审计](../PRODUCT-DOCS-CHANGE-AUDIT.md)。后续需要一个带新版本号（建议 1.1）的独立文档包，并同步生成 Markdown、Word、PDF 与校验文件。
 >
 > 当前编辑只同步真实实现/技术决策，**没有授权提前交付三大杀手锏**，也不将实现现状当作用户已验收功能。
 

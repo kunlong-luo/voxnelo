@@ -102,7 +102,7 @@ export function useRecorder() {
         disposedRef.current = true;
         if (recorder.current) recorder.current.onstop = null;
         if (recorder.current?.state === 'recording') recorder.current.stop();
-      stream.current?.getTracks().forEach((track) => track.stop());
+        stream.current?.getTracks().forEach((track) => track.stop());
         if (urlRef.current) URL.revokeObjectURL(urlRef.current);
       };
     },
