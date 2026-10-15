@@ -32,3 +32,8 @@
 - 按钮和历史条目统一焦点、hover、pressed、disabled 状态；系统减少动画时关闭动效。
 - 保留 Electron/操作系统的原生窗口标题栏和窗口控制按钮，不为了装饰而牺牲窗口拖拽、最大化及平台兼容性。
 - 验收：低高度窗口滚动侧栏；长历史列表滚动；深色侧栏和浅色内容的滚动条不会混色；键盘导航可见；滚动不会影响麦克风状态。
+
+
+## 布局基线
+
+参考原始视觉概念图的**三栏空间比例、练习卡纵向占比和圆形操作轨道**，详细实施规范见 [DESKTOP-LAYOUT-SPEC-v0.1.md](DESKTOP-LAYOUT-SPEC-v0.1.md)，可版本管理的线框草图见 [desktop-layout-wireframe.svg](desktop-layout-wireframe.svg)。这是版式目标，未实现的功能不能写成完成。

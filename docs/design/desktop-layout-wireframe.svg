@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 780" role="img" aria-label="Voxnelo 桌面布局区块示意">
+<style>text{font-family:system-ui,'Microsoft YaHei',sans-serif;fill:#15345c;font-size:19px} .small{font-size:15px;fill:#6183a1}.line{stroke:#deecf7;stroke-width:2}</style>
+<rect width="1280" height="780" rx="24" fill="#eaf5ff"/><rect width="230" height="780" rx="24" fill="#0a2549"/>
+<text x="30" y="66" fill="white" font-size="31" font-weight="800">Voxnelo</text>
+<rect x="20" y="150" width="189" height="60" rx="16" fill="#1a4c85"/><text x="48" y="188" fill="white">练习</text>
+<text x="47" y="280" fill="white">收藏</text><text x="47" y="353" fill="white">历史</text><text x="47" y="426" fill="white">复习</text>
+<rect x="250" y="17" width="1010" height="65" rx="18" fill="#ffffff"/><text x="282" y="58">日常对话   /   英语练习</text>
+<rect x="251" y="101" width="686" height="655" rx="26" fill="white"/>
+<rect x="275" y="128" width="72" height="39" rx="19" fill="#e8f2fc"/><text x="294" y="154" class="small">1 / 40</text>
+<rect x="365" y="144" width="288" height="8" rx="4" fill="#e3ebf7"/><rect x="365" y="144" width="36" height="8" rx="4" fill="#20c5bd"/>
+<text x="799" y="153" class="small">日常问候</text>
+<text x="416" y="338" font-size="56" font-weight="800">How are you?</text>
+<text x="540" y="392" font-size="24">你好吗？</text><text x="524" y="429" class="small">查看音标</text>
+<path d="M305 495 Q365 461 425 495 T545 495 T665 495 T785 495 T885 495" fill="none" stroke="#6bd2e9" stroke-width="5" stroke-linecap="round" stroke-dasharray="3 11"/>
+<g fill="#eef6ff" stroke="#d1e5f7" stroke-width="2">
+<circle cx="327" cy="591" r="35"/><circle cx="421" cy="591" r="35"/><circle cx="605" cy="591" r="35"/><circle cx="699" cy="591" r="35"/><circle cx="793" cy="591" r="35"/></g>
+<circle cx="513" cy="587" r="62" fill="#d4f4fb"/><circle cx="513" cy="587" r="47" fill="#2b8eee"/>
+<g class="small" text-anchor="middle"><text x="327" y="650">播放</text><text x="421" y="650">慢速</text><text x="513" y="671">录音</text><text x="605" y="650">停止</text><text x="699" y="650">回听</text><text x="793" y="650">换句</text></g>
+<rect x="955" y="101" width="306" height="327" rx="25" fill="white"/><text x="978" y="144">学习记录</text>
+<circle cx="1029" cy="246" r="55" fill="none" stroke="#e3f1f9" stroke-width="13"/>
+<path d="M1029 191 A55 55 0 0 1 1084 246" fill="none" stroke="#12c8b5" stroke-width="13"/><text x="1013" y="254">3</text><text x="1112" y="246" class="small">真实录音尝试</text>
+<path class="line" d="M978 322 H1236"/><text x="982" y="362" class="small">已浏览 / 收藏 / 待复习</text>
+<rect x="955" y="446" width="306" height="201" rx="25" fill="white"/><text x="980" y="490">练习小提示</text>
+<text x="980" y="528" class="small">本地规则提示，无虚构进度</text>
+<text x="280" y="744" class="small">结构草图，不表示功能示范录音或实际评分</text>
+</svg>
