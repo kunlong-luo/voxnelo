@@ -40,7 +40,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       return (
         <main className="recoveryShell">
           <section className="recoveryPanel" role="alert" aria-labelledby="recovery-title">
-            <img src="/brand/voxnelo-mark.svg" alt="Voxnelo" width="53" height="53" />
+            <img src="brand/voxnelo-mark.svg" alt="Voxnelo" width="53" height="53" />
             <div className="recoveryIcon"><AlertTriangle size={22} /></div>
             <h1 id="recovery-title">{t("errorTitle")}</h1>
             <p>{t("errorDesc")}</p>
