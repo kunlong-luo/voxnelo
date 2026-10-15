@@ -11,11 +11,11 @@ export function parseAppearance(value: unknown): AppearanceTheme {
 
 export function readAppearance(): AppearanceTheme {
   try {
-    if (typeof window === 'undefined') return 'nordic';
+    if (typeof window === 'undefined') return 'sunset';
     return parseAppearance(window.localStorage.getItem(APPEARANCE_KEY));
   } catch {
-    // Sandboxed/storage-disabled windows still render the Nordic baseline.
-    return 'nordic';
+    // Sandboxed/storage-disabled windows still render the U3 Sunset baseline.
+    return 'sunset';
   }
 }
 
