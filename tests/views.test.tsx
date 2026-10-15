@@ -54,7 +54,9 @@ describe('PracticeView', () => {
     expect(rail.children).toHaveLength(5);
     expect(screen.getByRole('button', { name: '上一句' })).toBeTruthy();
     expect(screen.getByRole('button', { name: '换一句' })).toBeTruthy();
-    expect(screen.getByText('1 / 40')).toBeTruthy();
+    const progress = screen.getByRole('progressbar', { name: '课程位置，第 1 句，共 40 句' });
+    expect(progress.getAttribute('aria-valuenow')).toBe('1');
+    expect(progress.getAttribute('aria-valuemax')).toBe('40');
     expect(screen.getByText('录音尝试句')).toBeTruthy();
     expect(screen.queryByText('连续天数')).toBeNull();
     expect(screen.queryByText('发音准确率')).toBeNull();
