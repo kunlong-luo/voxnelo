@@ -213,11 +213,11 @@ function AppScreen({languageSetting,onChangeLanguage}: {
         <div className="sidebarHint px-4 text-[10px] font-bold tracking-[.18em] text-muted-foreground uppercase max-[900px]:hidden">{t('sidebarSpace')}</div>
         <nav className="mt-4 flex w-full flex-col gap-1.5" aria-label={t('navLabel')}>
           {menu.map(({ id, icon: Icon }) => (
-            <button key={id} className={`navItem ${view === id ? 'active' : ''}`} aria-label={t(({practice:'navStart',favorites:'navMyFavorites',history:'navRecent',review:'navReviewItems',settings:'navSettings'} as const)[id])} aria-current={view === id ? 'page' : undefined} onClick={() => nav(id)}>
+            <Button key={id} variant="ghost" className={cn('navItem group h-12 w-full justify-start rounded-2xl px-4 text-sm font-semibold text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-foreground max-[900px]:size-12 max-[900px]:justify-center max-[900px]:px-0',view===id&&'active bg-card/85 text-primary shadow-sm ring-1 ring-border/40')} aria-label={t(({practice:'navStart',favorites:'navMyFavorites',history:'navRecent',review:'navReviewItems',settings:'navSettings'} as const)[id])} aria-current={view === id ? 'page' : undefined} onClick={() => nav(id)}>
               <Icon size={20} strokeWidth={1.9} />
-              <span>{t(({practice:'navPractice',favorites:'navFavorites',history:'navHistory',review:'navReview',settings:'navSettings'} as const)[id])}</span>
-              {id === 'favorites' && stats.favorites > 0 ? <span className="navCount">{stats.favorites}</span> : null}
-            </button>
+              <span className="max-[900px]:hidden">{t(({practice:'navPractice',favorites:'navFavorites',history:'navHistory',review:'navReview',settings:'navSettings'} as const)[id])}</span>
+              {id === 'favorites' && stats.favorites > 0 ? <span className="navCount ml-auto rounded-full bg-secondary px-2 py-0.5 text-[10px] text-secondary-foreground max-[900px]:hidden">{stats.favorites}</span> : null}
+            </Button>
           ))}
         </nav>
         <div className="sidebarBottom mt-auto flex flex-col gap-4 px-2 pt-8 max-[900px]:hidden">
@@ -231,8 +231,8 @@ function AppScreen({languageSetting,onChangeLanguage}: {
       </aside>
       <div className="mainArea relative min-w-0 flex-1 bg-gradient-to-br from-background via-brand-cream/45 to-brand-mist/35">
         {recorder.status === 'recording' ? (
-          <button type="button" className="recordingQuickStop" onClick={handleRecorder}
-            aria-label={t("stopFloating")}><Square size={15} fill="currentColor" aria-hidden="true" /> {t("stopRecording")}</button>
+          <Button variant="destructive" className="recordingQuickStop fixed right-6 bottom-6 z-60 shadow-xl" onClick={handleRecorder}
+            aria-label={t("stopFloating")}><Square size={15} fill="currentColor" aria-hidden="true" /> {t("stopRecording")}</Button>
         ) : null}
         <main className="content mx-auto w-full max-w-400 px-3 py-4 sm:px-5 sm:py-6 xl:px-8">
           {view === 'practice' ? (
