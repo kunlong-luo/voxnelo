@@ -163,7 +163,7 @@ export function App() {
   };
 
   return (
-    <div className="appFrame">
+    <div className={window.voxneloDesktop?.windowControls ? "appFrame desktopFrame" : "appFrame"}>
       <DesktopTitlebar />
       <div className="shell">
       <aside className="sidebar">
