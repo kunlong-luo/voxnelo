@@ -1,0 +1,28 @@
+name: Final UI dependency lockfile cleanup
+on:
+  push:
+    branches: [refactor/shadcn-tailwind-design-system]
+    paths: [.github/workflows/remove-unused-motion-once.yml]
+permissions:
+  contents: write
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Generate exact lockfile from final runtime dependencies
+        run: pnpm install --lockfile-only --no-frozen-lockfile
+      - name: Persist pnpm lockfile
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- pnpm-lock.yaml; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add pnpm-lock.yaml
+          git commit -m 'chore(ui): prune unused Motion from lockfile'
+          git push origin "HEAD:refactor/shadcn-tailwind-design-system"
