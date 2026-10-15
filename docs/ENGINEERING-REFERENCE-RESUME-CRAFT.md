@@ -12,6 +12,7 @@
 | 稳定依赖版本检查 | Node 原生脚本覆盖根 package.json 及 packages 子包 |
 | Bundle gzip 体积预算 | 新增 Rsbuild 输出检查，阈值取自本项目现有 CI 构建体积 |
 | 更严格的 CI 权限和生命周期 | 权限只读、取消过时任务、超时限制、Actions 固定 SHA |
+| 崩溃恢复体验 | 错误页统一品牌风格、提供重试与重新加载、不自动删除本地数据 |
 
 ## 构建体积阈值的由来
 
@@ -24,7 +25,7 @@
 1. P0：Playwright + Electron 端到端验收。测试录音许可/拒绝、录音中切页、系统语音、重启后学习记录持久化、小窗口键盘导航。
 2. P1：参照 Resume Craft 的 portable-workspace-backup 设计导出导入。Voxnelo 是 states/events，不是简历 profiles/drafts。应使用格式版本、文件容量上限、完整校验、原子写入，避免错误备份损坏 IndexedDB；属于原规划 V0.3。
 3. P1：跨平台安装包验证与签名。不要搬运 Resume Craft 的网站发布、SEO/PWA 工作流，必须在 Linux、Windows、macOS 验收。
-4. P1：带键盘焦点管理的错误恢复与导入确认，按需改造 ErrorBoundary/对话框模式。
+4. P1：后续导入确认对话框应采用带键盘焦点管理的模式；ErrorBoundary 的基础恢复 UI 已实现。
 5. P2：优化初次使用指引、帮助和无障碍测试，不增设无关广告、账户或收费功能。
 
 ## 不应直接搬运
