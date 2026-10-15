@@ -1,5 +1,4 @@
 import { ArrowRight, Bookmark, BookOpen, ChevronLeft, ChevronRight, CircleHelp, Coffee, Heart, Lightbulb, MessageCircle, Mic, ShieldCheck, Square, Turtle, Volume2, VolumeX, X } from 'lucide-react';
-import { motion, useReducedMotion } from 'motion/react';
 import { SENTENCES, type LearningState, type LearningStats, type Sentence } from '@voxnelo/learning';
 import type { useRecorder } from './useRecorder';
 import { RecordingPlayback } from './RecordingPlayback';
@@ -54,7 +53,6 @@ export function PracticeView({
   onNext,onPrevious,onChooseRelated,onDismissNotice,
 }:PracticeViewProps) {
   const {t} = useI18n();
-  const reducedMotion = useReducedMotion();
   const position = SENTENCES.findIndex(item=>item.id===current.id);
   const index = position < 0 ? 1 : position+1;
   const favorite = Boolean(currentState?.favorite);
@@ -95,7 +93,7 @@ export function PracticeView({
           <div className="sentenceContent flex w-full flex-col items-center justify-center gap-3">
             <span className="lessonLevel text-[11px] font-bold tracking-[.2em] text-muted-foreground uppercase">{t('speakingPractice')} · {current.level}</span>
             <div className="sentenceHeading flex max-w-full justify-center">
-              <motion.h1 key={current.id} initial={reducedMotion?false:{opacity:0,y:9,filter:'blur(3px)'}} animate={{opacity:1,y:0,filter:'blur(0px)'}} transition={{duration:0.27,ease:[.22,.7,.22,1]}} className="sentenceText max-w-full text-[clamp(30px,3.7vw,54px)] leading-[1.18] font-extrabold tracking-[-.055em] wrap-break-word text-foreground">{current.english}</motion.h1>
+              <h1 key={current.id} className="sentenceText max-w-full text-[clamp(30px,3.7vw,54px)] leading-[1.18] font-extrabold tracking-[-.055em] wrap-break-word text-foreground motion-safe:animate-sentence-enter">{current.english}</h1>
             </div>
             <p className="translation text-base leading-7 text-muted-foreground sm:text-lg">{current.chinese}</p>
             {showIpa && <p className="ipa max-w-full text-sm leading-6 wrap-break-word text-muted-foreground">{current.ipa}</p>}
