@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { Maximize2, Minus, Square, X, Copy } from 'lucide-react';
 import './desktopBridge';
 
-/** Real window actions are available exclusively via our narrow Electron preload API.
- * The browser preview shows the title, without fake OS buttons.
+/** Frameless Electron chrome: only actual window controls, without product
+ * logo, heading, breadcrumb or extra toolbars. Browser preview renders none.
  */
 export function DesktopTitlebar() {
   const desktop = window.voxneloDesktop;
@@ -42,10 +42,10 @@ export function DesktopTitlebar() {
     </div>
   ) : null;
 
+  if (!controls) return null;
+
   return (
-    <header className={'appTitlebar' + (isMac ? ' mac' : '')} aria-label="Voxnelo 自定义窗口标题栏">
-      <div className="titlebarBrand"><img src="/brand/voxnelo-mark.svg" alt="" width="24" height="24" /><strong>Voxnelo</strong></div>
-      <span className="titlebarSubtitle">英语口语练习</span>
+    <header className={'appTitlebar' + (isMac ? ' mac' : '')} aria-label="窗口标题栏">
       {buttons}
     </header>
   );

@@ -1,0 +1,174 @@
+/* Three-column learning workspace · 2026-10-15
+ * Shared by Nordic Clean and Sunset Glow.
+ * Chrome is deliberately empty except for three real Electron controls.
+ */
+.appFrame { --window-chrome-height: 0px; }
+.appFrame.desktopFrame { --window-chrome-height: 42px; }
+
+.appTitlebar {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 70;
+  flex: 0 0 var(--window-chrome-height);
+  height: var(--window-chrome-height);
+  min-height: var(--window-chrome-height);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 9px;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-app-region: drag;
+  border-bottom: 1px solid var(--n-border);
+  background: var(--n-sidebar);
+}
+.appTitlebar.mac { justify-content: flex-start; padding-left: 14px; }
+.windowControls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  -webkit-app-region: no-drag;
+}
+.windowControls.mac {
+  display: flex;
+  gap: 8px;
+  grid-column: auto;
+  grid-row: auto;
+  justify-self: auto;
+}
+.windowControls .windowControl {
+  display: grid; place-items: center;
+  min-width: 37px; height: 32px;
+  -webkit-app-region: no-drag;
+}
+.windowControls.mac .windowControl {
+  min-width: 17px; width: 17px; height: 17px;
+}
+
+.shell {
+  min-height: calc(100vh - var(--window-chrome-height));
+  align-items: stretch;
+}
+.sidebar {
+  top: var(--window-chrome-height);
+  height: calc(100vh - var(--window-chrome-height));
+  min-height: min(550px, calc(100vh - var(--window-chrome-height)));
+  padding-top: 28px;
+}
+.sidebarHint {
+  margin: 0 13px 19px;
+  color: var(--n-primary-strong);
+  font-size: 12px;
+  font-weight: 740;
+  letter-spacing: .2px;
+}
+.sidebar nav { margin-top: 0; }
+
+.mainArea { min-width: 0; }
+.content { padding-top: clamp(15px, 2vw, 28px); }
+
+.layoutWorkbench.practiceLayout {
+  grid-template-columns: minmax(0, 1fr) clamp(235px, 22vw, 304px);
+  align-items: start;
+  gap: clamp(10px, 1.4vw, 19px);
+}
+/* Recording stop remains reachable independently of scroll position,
+ * but never adds a fourth button to the operating-system titlebar. */
+.recordingQuickStop {
+  position: fixed;
+  right: 24px;
+  bottom: 22px;
+  z-index: 65;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 11px 17px;
+  border: 1px solid #dd9dab;
+  border-radius: 13px;
+  color: #fff;
+  background: #a74156;
+  box-shadow: 0 8px 22px rgba(103,35,53,.22);
+  font-size: 12px;
+  font-weight: 750;
+  -webkit-app-region: no-drag;
+}
+.recordingQuickStop:hover { background: #923547; }
+.recordingQuickStop:focus-visible { outline: 3px solid var(--n-focus); outline-offset: 3px; }
+
+[data-theme='sunset'] .appTitlebar {
+  background: rgba(255, 247, 243, .96);
+  border-bottom-color: #efe3db;
+}
+[data-theme='sunset'] .recordingQuickStop {
+  border-color: #dba6aa;
+  background: #a4495d;
+}
+[data-theme='sunset'] .recordingQuickStop:hover { background: #913c52; }
+
+/* Prefer the true left / center / right structure, including compact Linux windows.
+ * At small widths we shrink navigation to icons instead of stacking the right rail.
+ */
+@media (max-width: 1259px) {
+  .layoutWorkbench.practiceLayout {
+    grid-template-columns: minmax(0, 1fr) 244px;
+  }
+}
+@media (max-width: 1020px) {
+  .layoutWorkbench.practiceLayout {
+    grid-template-columns: minmax(0, 1fr) clamp(198px, 24vw, 230px);
+    gap: 10px;
+  }
+  .referenceInsights.insightsColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+  }
+  .referenceInsights .privacyNote { grid-column: auto; }
+  .progressOverview { flex-wrap: wrap; }
+  .progressSummary strong { white-space: normal; }
+}
+@media (max-width: 900px) {
+  .sidebar {
+    flex: 0 0 78px;
+    padding: 19px 9px;
+    align-items: stretch;
+  }
+  .sidebarHint, .sidebarBottom { display: none; }
+  .sidebar nav {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    width: 100%;
+  }
+  .navItem {
+    display: grid;
+    place-items: center;
+    width: 51px;
+    min-width: 51px;
+    height: 51px;
+    min-height: 51px;
+    padding: 0;
+    border-radius: 14px;
+    gap: 0;
+  }
+  .navItem > span { display: none; }
+  .navItem svg { width: 22px; height: 22px; }
+  .content { padding: 14px 11px 24px; }
+  .layoutWorkbench.practiceLayout {
+    grid-template-columns: minmax(0, 1fr) 202px;
+    gap: 9px;
+  }
+  .referenceInsights .insightCard { padding: 13px 10px; }
+  .sceneGrid { gap: 4px; }
+  .sceneThumb span { font-size: 9px; }
+  .referenceLesson.practiceCard { padding: 15px 12px 0; }
+  .referenceFooter.cardFooter { margin-inline: -12px; padding-inline: 12px; }
+  .referenceLesson .sentenceText { font-size: clamp(30px, 4.4vw, 39px); }
+  .recordingQuickStop { bottom: 14px; right: 14px; }
+}
+@media (max-height: 690px) {
+  .sidebar { min-height: 0; height: calc(100vh - var(--window-chrome-height)); }
+}

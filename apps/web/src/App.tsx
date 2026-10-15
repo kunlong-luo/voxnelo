@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { BarChart3, BookOpen, CalendarDays, Clock3, MessageCircle, Settings2, ShieldCheck, Square, Star, UserCircle2, type LucideIcon } from 'lucide-react';
+import { BarChart3, Clock3, MessageCircle, Settings2, ShieldCheck, Square, Star, type LucideIcon } from 'lucide-react';
 import {
   APP_VERSION,
   FIRST_SENTENCE,
   pickNext,
   primeSpeechVoices,
   SENTENCES,
-  TOPIC_LABELS,
   silence,
   speak,
   summarize,
@@ -164,16 +163,10 @@ export function App() {
   };
 
   return (
-    <div className="appFrame">
+    <div className={window.voxneloDesktop?.windowControls ? "appFrame desktopFrame" : "appFrame"}>
       <DesktopTitlebar />
       <div className="shell">
       <aside className="sidebar">
-        <div className="brand">
-          <div className="brandMark"><img src="/brand/voxnelo-mark.svg" alt="" width="48" height="48" /></div>
-          <div className="brandText">
-            <strong>Voxnelo</strong>
-          </div>
-        </div>
         <div className="sidebarHint">我的学习空间</div>
         <nav aria-label="主导航">
           {menu.map(({ id, label, accessibleLabel, icon: Icon }) => (
@@ -194,21 +187,10 @@ export function App() {
         </div>
       </aside>
       <div className="mainArea">
-        <header className="topbar">
-          <span className="breadcrumb">
-            <BookOpen size={18} aria-hidden="true" />
-            <span>英语口语</span><span className="breadcrumbArrow">›</span>
-            <span>{view === 'practice' ? TOPIC_LABELS[current.topic] : menu.find((x) => x.id === view)?.label}</span>
-          </span>
-          <div className="topbarActions">
-            {recorder.status === 'recording' ? (
-              <button type="button" className="topbarStop" onClick={handleRecorder}
-                aria-label="顶部快速停止录音"><Square size={15} fill="currentColor" /> 结束录音</button>
-            ) : null}
-            <span className="dateBadge"><CalendarDays size={15} aria-hidden="true" />{new Intl.DateTimeFormat('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date())}</span>
-            <span className="topRight" title="无需账号，本地练习"><UserCircle2 size={22} aria-hidden="true" /><span className="srOnly">本地学习模式</span></span>
-          </div>
-        </header>
+        {recorder.status === 'recording' ? (
+          <button type="button" className="recordingQuickStop" onClick={handleRecorder}
+            aria-label="悬浮快速停止录音"><Square size={15} fill="currentColor" aria-hidden="true" /> 结束录音</button>
+        ) : null}
         <main className="content">
           {view === 'practice' ? (
             <PracticeView

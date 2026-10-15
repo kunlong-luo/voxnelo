@@ -9,11 +9,10 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('Nordic frameless Electron titlebar', () => {
-  it('does not fake OS controls in a normal browser preview', () => {
-    render(<DesktopTitlebar />);
-    expect(screen.getByText('Voxnelo')).toBeTruthy();
-    expect(screen.getByRole('banner', { name: 'Voxnelo 自定义窗口标题栏' })).toBeTruthy();
+describe('Minimal frameless Electron window controls', () => {
+  it('does not render empty fake chrome in a browser preview', () => {
+    const { container } = render(<DesktopTitlebar />);
+    expect(container.querySelector('.appTitlebar')).toBeNull();
     expect(screen.queryByRole('button', { name: '关闭窗口' })).toBeNull();
   });
 
@@ -36,6 +35,10 @@ describe('Nordic frameless Electron titlebar', () => {
     };
     vi.stubGlobal('voxneloDesktop', api);
     const view = render(<DesktopTitlebar />);
+    const bar = screen.getByRole('banner', { name: '窗口标题栏' });
+    expect(bar.querySelectorAll('button')).toHaveLength(3);
+    expect(bar.querySelector('img')).toBeNull();
+    expect(bar.textContent).toBe('');
     fireEvent.click(screen.getByRole('button', { name: '最小化窗口' }));
     fireEvent.click(screen.getByRole('button', { name: '最大化窗口' }));
     fireEvent.click(screen.getByRole('button', { name: '关闭窗口' }));
@@ -59,6 +62,8 @@ describe('Nordic frameless Electron titlebar', () => {
     } satisfies VoxneloDesktopAPI);
     const { container } = render(<DesktopTitlebar />);
     expect(container.querySelector('.windowControls.mac')).toBeTruthy();
+    expect(container.querySelectorAll('.appTitlebar button')).toHaveLength(3);
+    expect(container.querySelector('.titlebarBrand')).toBeNull();
     expect(screen.getByRole('button', { name: '最小化窗口' })).toBeTruthy();
     expect(screen.getByRole('button', { name: '关闭窗口' })).toBeTruthy();
   });
