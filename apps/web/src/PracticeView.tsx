@@ -2,7 +2,10 @@ import {
   ArrowRight,
   Bookmark,
   BookOpen,
-  Check,
+  ChevronRight,
+  Coffee,
+  Lightbulb,
+  MessageCircle,
   ChevronLeft,
   CircleHelp,
   Heart,
@@ -18,6 +21,7 @@ import {
 import { SENTENCES, TOPIC_LABELS, type LearningState, type LearningStats, type Sentence } from '@voxnelo/learning';
 import type { useRecorder } from './useRecorder';
 import { RecordingPlayback } from './RecordingPlayback';
+import { WaveformArt } from './WaveformArt';
 
 interface PracticeViewProps {
   current: Sentence;
@@ -36,6 +40,7 @@ interface PracticeViewProps {
   onToggleFlag: (flag: 'favorite' | 'review') => void;
   onNext: () => void;
   onPrevious: () => void;
+  onChooseRelated?: (sentence: Sentence) => void;
   onDismissNotice: () => void;
 }
 
@@ -47,22 +52,11 @@ const tips: Record<Sentence['topic'], string> = {
   daily: '先听清每个词，再连起来练习；不熟悉的短句可以加入复习。',
 };
 
-/** 纯视觉节奏纹理，绝不是实时麦克风输入或发音正确率。 */
-const accentHeights = [3, 4, 6, 8, 10, 14, 17, 21, 13, 7, 11, 20, 28, 37, 45, 30, 18, 11, 8, 16, 29, 47, 55, 34, 21, 14, 26, 33, 22, 12, 6, 4, 3];
-
-function RhythmDecoration() {
-  return (
-    <div className="rhythmDecoration" aria-hidden="true">
-      {accentHeights.map((height, index) => <span key={index} style={{ height }} />)}
-    </div>
-  );
-}
-
 /** Original concept's spatial arrangement with only genuine V0.1 functionality. */
 export function PracticeView({
   current, currentState, stats, speed, showIpa, notice, recorder, recordingBusy,
   canGoPrevious, onToggleIpa, onSpeak, onToggleSpeed, onRecord,
-  onToggleFlag, onNext, onPrevious, onDismissNotice,
+  onToggleFlag, onNext, onPrevious, onChooseRelated, onDismissNotice,
 }: PracticeViewProps) {
   const rawPosition = SENTENCES.findIndex((item) => item.id === current.id);
   const index = rawPosition < 0 ? 1 : rawPosition + 1;
@@ -72,6 +66,12 @@ export function PracticeView({
   const requesting = recorder.status === 'requesting';
   const favorite = Boolean(currentState?.favorite);
   const review = Boolean(currentState?.review);
+  const related = SENTENCES.filter((item) => item.topic === current.topic && item.id !== current.id).slice(0, 4);
+  const sceneTopics = [
+    { topic: 'greetings', label: '问候交流', icon: MessageCircle },
+    { topic: 'personal', label: '自我介绍', icon: BookOpen },
+    { topic: 'daily', label: '日常生活', icon: Coffee },
+  ] as const;
 
   return (
     <div className="practiceLayout layoutWorkbench">
@@ -89,7 +89,7 @@ export function PracticeView({
 
           <div className="lessonFocus">
             <div className="sentenceContent">
-              <p className="lessonLevel">英语口语 · {current.level}</p>
+              <p className="lessonLevel">SpeakCore <span>·</span> {current.level}</p>
               <div className="sentenceHeading">
                 <h1 key={current.id} className="sentenceText">{current.english}</h1>
                 <button className={'lessonFavorite' + (favorite ? ' selected' : '')}
@@ -105,7 +105,7 @@ export function PracticeView({
                 <CircleHelp size={15} /> {showIpa ? '收起音标' : '查看音标'}
               </button>
             </div>
-            <RhythmDecoration />
+            <div className="wavePanel"><WaveformArt /></div>
           </div>
 
           <section className="lessonActions" aria-label="口语练习操作">
@@ -122,8 +122,8 @@ export function PracticeView({
                   disabled={recordingBusy} aria-pressed={speed === 'slow'} aria-label="切换语速">
                   <Turtle size={23} />
                 </button>
-                <span className="actionCaption">慢速模式</span>
-                <span className="actionAux">{speed === 'slow' ? '已开启' : '点击切换'}</span>
+                <span className="actionCaption">慢速播放</span>
+                <span className="actionAux">{speed === 'slow' ? '0.75×' : '普通语速'}</span>
               </div>
               <div className="actionSlot recordSlot">
                 <button type="button" className={'recordAction' + (isRecording ? ' isRecording' : '')}
@@ -149,7 +149,7 @@ export function PracticeView({
                   disabled={recordingBusy} aria-label="换一句">
                   <ArrowRight size={24} />
                 </button>
-                <span className="actionCaption">下一个</span>
+                <span className="actionCaption">下一句</span>
               </div>
             </div>
 
@@ -182,20 +182,21 @@ export function PracticeView({
       </div>
 
       <aside className="insightsColumn referenceInsights" aria-label="本地学习概览">
-        <section className="insightCard">
+        <section className="insightCard progressCard">
           <div className="insightHeading">
-            <span className="insightIcon"><Target size={19} /></span><h2>学习记录</h2>
+            <h2>学习进度</h2>
+            <span className="insightSideNote">本地记录</span>
           </div>
           <div className="progressOverview">
             <div className="progressDonut" role="img"
               aria-label={'已浏览 ' + stats.viewed + ' / ' + SENTENCES.length + ' 句'}
-              style={{ background: 'conic-gradient(#0dc7bd ' + viewedPercentage + '%, #e7f0fa 0)' }}>
+              style={{ background: 'conic-gradient(#7effdc ' + viewedPercentage + '%, rgba(255,255,255,.25) 0)' }}>
               <div className="donutInner"><strong>{stats.viewed}</strong><small>/{SENTENCES.length}</small></div>
             </div>
             <div className="progressSummary">
               <span>已浏览课程</span>
               <strong>{stats.viewed} / {SENTENCES.length} 句</strong>
-              <small>按自己的节奏练习</small>
+              <small>每一步都值得记录 ✨</small>
             </div>
           </div>
           <div className="miniMetrics">
@@ -203,16 +204,55 @@ export function PracticeView({
             <div><strong>{stats.favorites}</strong><span>已收藏</span></div>
             <div><strong>{stats.review}</strong><span>待复习</span></div>
           </div>
-          <p className="progressCopy">统计来自本地记录，不代表发音评分</p>
+          <p className="progressCopy">仅为本地学习记录，不代表发音评分</p>
         </section>
+
+        <section className="insightCard feedCard">
+          <div className="insightHeading">
+            <h2>SpeakFeed</h2>
+            <span className="insightSideNote">同主题短句</span>
+          </div>
+          <div className="feedStrip" aria-label="同主题练习短句">
+            {related.map((item) => (
+              <button className="feedItem" type="button" key={item.id}
+                onClick={() => onChooseRelated?.(item)} disabled={recordingBusy || !onChooseRelated}
+                aria-label={'练习短句：' + item.english}>
+                <span>{item.chinese}</span>
+                <strong>{item.english}</strong>
+                <ChevronRight size={14} aria-hidden="true" />
+              </button>
+            ))}
+          </div>
+        </section>
+
         <section className="insightCard tipCard">
-          <div className="insightHeading"><span className="insightIcon cyan"><BookOpen size={18} /></span><h2>学习提示</h2></div>
+          <div className="insightHeading">
+            <span className="insightIcon"><Lightbulb size={18} /></span>
+            <h2>学习提示</h2>
+          </div>
           <p>{tips[current.topic]}</p>
+          <div className="tipDivider" />
+          <small>先听示范，再点击麦克风跟读，完成后可回听自己的录音。</small>
         </section>
-        <section className="insightCard routineCard">
-          <div className="insightHeading"><span className="insightIcon cyan"><Check size={18} /></span><h2>练习流程</h2></div>
-          <div className="routineChips"><span>听示范</span><span>开口说</span><span>回听录音</span></div>
-          <p>都是手动操作，可以随时重来。</p>
+
+        <section className="insightCard sceneCard">
+          <div className="insightHeading">
+            <span className="insightIcon cyan"><MessageCircle size={18} /></span>
+            <h2>相关场景</h2>
+          </div>
+          <div className="sceneGrid">
+            {sceneTopics.map(({ topic, label, icon: Icon }) => {
+              const first = SENTENCES.find((item) => item.topic === topic);
+              return first ? (
+                <button key={topic} type="button" className={'sceneThumb scene-' + topic}
+                  onClick={() => onChooseRelated?.(first)} disabled={recordingBusy || !onChooseRelated}
+                  aria-label={'练习场景：' + label}>
+                  <Icon size={22} aria-hidden="true" />
+                  <span>{label}</span>
+                </button>
+              ) : null;
+            })}
+          </div>
         </section>
         <div className="privacyNote"><ShieldCheck size={15} /> 无需注册 · 学习进度保存在本机</div>
       </aside>
