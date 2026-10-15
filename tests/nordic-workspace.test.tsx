@@ -44,6 +44,48 @@ describe('Nordic three-column learning workspace', () => {
     expect(onChooseRelated).toHaveBeenCalledWith(expect.objectContaining({ topic: 'personal' }));
   });
 
+  it('centers the five practice actions and gives previous/next a symmetric footer', () => {
+    const onNext = vi.fn();
+    const onPrevious = vi.fn();
+    const onToggleFlag = vi.fn();
+    const { container } = render(
+      <PracticeView current={FIRST_SENTENCE} currentState={undefined}
+        stats={{ viewed: 1, practiced: 0, favorites: 0, review: 0 }}
+        speed="normal" showIpa notice="" recorder={stubRecorder()}
+        recordingBusy={false} canGoPrevious
+        onToggleIpa={() => undefined} onSpeak={() => undefined}
+        onToggleSpeed={() => undefined} onRecord={() => undefined}
+        onToggleFlag={onToggleFlag} onNext={onNext}
+        onPrevious={onPrevious} onDismissNotice={() => undefined}
+      />,
+    );
+
+    const footer = container.querySelector('.referenceFooter');
+    expect(footer?.querySelectorAll('.pagerButton')).toHaveLength(2);
+    expect(container.querySelectorAll('.actionRail > .actionSlot')).toHaveLength(5);
+    expect(container.querySelector('.actionRail .nextButton')).toBeNull();
+    expect(container.querySelector('.lessonFocus .sentenceContent')).toBeTruthy();
+    expect(container.querySelector('.lessonFocus .wavePanel')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: '上一句' }));
+    fireEvent.click(screen.getByRole('button', { name: '换一句' }));
+    expect(onPrevious).toHaveBeenCalledOnce();
+    expect(onNext).toHaveBeenCalledOnce();
+
+    const review = screen.getByRole('button', { name: '标记需要复习' });
+    expect(review.getAttribute('aria-pressed')).toBe('false');
+    expect(review.querySelector('svg')).toBeTruthy();
+    expect(review.textContent).toBe('');
+    expect(container.querySelector('.lessonHeaderActions .reviewIconButton')).toBe(review);
+    expect(container.querySelector('.referenceFooter .reviewIconButton')).toBeNull();
+    fireEvent.click(review);
+    expect(onToggleFlag).toHaveBeenCalledWith('review');
+
+    const rightRail = container.querySelector('.referenceInsights');
+    expect(rightRail?.querySelectorAll(':scope > .insightCard')).toHaveLength(4);
+    expect(rightRail?.lastElementChild?.classList.contains('sceneCard')).toBe(true);
+    expect(rightRail?.querySelector('.sceneCard .privacyNote')).toBeTruthy();
+  });
+
   it('offers actionable session preferences without fake sign-in or subscription', () => {
     const onToggleSpeed = vi.fn();
     const onToggleIpa = vi.fn();
