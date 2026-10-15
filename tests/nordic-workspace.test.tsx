@@ -71,6 +71,14 @@ describe('Nordic three-column learning workspace', () => {
     expect(onPrevious).toHaveBeenCalledOnce();
     expect(onNext).toHaveBeenCalledOnce();
 
+    const pairedFlags = container.querySelector('.lessonHeaderActions .sentenceFlags');
+    expect(pairedFlags?.querySelectorAll('.flagButton')).toHaveLength(2);
+    expect(pairedFlags?.querySelectorAll('.placement-bottom .uiTooltipBubble')).toHaveLength(2);
+    expect(pairedFlags?.querySelector('[title]')).toBeNull();
+    const favorite = screen.getByRole('button', { name: '收藏' });
+    fireEvent.click(favorite);
+    expect(onToggleFlag).toHaveBeenCalledWith('favorite');
+
     const review = screen.getByRole('button', { name: '标记需要复习' });
     expect(review.getAttribute('aria-pressed')).toBe('false');
     expect(review.querySelector('svg')).toBeTruthy();
