@@ -7,6 +7,7 @@ on:
       - .github/workflows/prune-superseded-once.yml
 permissions:
   contents: write
+  pull-requests: read
 jobs:
   cleanup:
     if: github.repository == 'kunlong-luo/voxnelo'
@@ -22,15 +23,11 @@ jobs:
           set -euo pipefail
           branches=(
             "docs/changelog-backfill"
-            "feat/github-pages-preview-readiness"
             "fix/card-footer-overlap"
-            "fix/pages-publishing-permissions"
           )
           expected_heads=(
             "5f8b4ca2664180ac0bb2f2151cbca66a23f8708c"
-            "bd5d5715c41e805a58bd71424285995bcfaf2051"
             "9fef30e611b6012a6c83b58290474b32ec5ba4e0"
-            "e4320bf1dc1d4c3412e18d2248e244c89401cedf"
           )
           failures=0
           for idx in "${!branches[@]}"; do
