@@ -1,5 +1,8 @@
 # Voxnelo 桌面练习工作台｜设计基线 V0.1.1
 
+> **历史布局规范**：自 2026-10-15 起当前设计基线为 [Nordic Learning v1.0](NORDIC-LEARNING-DESIGN-SYSTEM.md)，包括自定义无边框顶部栏；以下内容为原 UI2 前的设计记录。
+
+
 状态：**布局实施规范**（不是产品 PRD 修订）。依据 2026-10-15 讨论中的原始概念图《Voxnelo language practice dashboard》（约 1534×960 横向视觉稿），以当前 V0.1 真实功能为准，优先落实布局与操作层级。
 
 ## 1. 为什么重新布局
