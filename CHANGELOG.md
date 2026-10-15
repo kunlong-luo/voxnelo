@@ -52,6 +52,16 @@
   `docs/ADR/ADR-0003-learning-service.md`、
   `SECURITY.md`；`docs/06` 按新分层修订；新增 `docs/PRIVACY.md` 草案
   （公开发布前须法务复核）。
+- 界面重塑（PR #10 #12 #13 #14 #17 #18 #21）：练习台布局规范、glass 工作区、
+  Nordic Clean、Sunset Glow 主题预览、三栏工作区 + control-only 无框标题栏
+  （命名 IPC 通道：窗口控制、最大化状态订阅）、居中练习台与对称导航、
+  U3 微交互与自定义 tooltip、UI 参考图归档（#11 #19）。
+- 双语国际化（#21 系列）：系统跟随语言、中英运行时切换、麦克风权限与
+  Linux 语音错误信息的本地化（含可操作提示）。
+- 离线语音兜底（#15）：主进程经 espeak 合成英文 WAV（base64 回传播放），
+  无系统英文语音时不再仅凭 Web Speech；慢速经统一速率常量。
+- 工程协作：Resume Craft 质量保障基线（#3）、品牌 Logo 与桌面端升级（#2）、
+  Dependabot 批量升级与 TS6 兼容（#4 #9 #16）、已合并分支清理（#20）。
 
 ### Removed
 
