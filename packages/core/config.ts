@@ -14,7 +14,7 @@ export const APP_SCHEME = 'voxnelo';
 export const APP_ORIGIN = 'voxnelo://app';
 export const DEV_ORIGIN = 'http://127.0.0.1:3000';
 
-export const THEME_BACKGROUND = '#0d121d';
+export const THEME_BACKGROUND = '#eff6ff';
 
 export const WINDOW_SIZE = {
   width: 1160,

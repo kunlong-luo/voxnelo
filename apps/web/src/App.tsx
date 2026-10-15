@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Clock3, Headphones, Heart, ListRestart, Sparkles, type LucideIcon } from 'lucide-react';
+import { ArrowUpRight, Clock3, Headphones, Heart, ListRestart, Sparkles, type LucideIcon } from 'lucide-react';
 import {
   APP_VERSION,
   FIRST_SENTENCE,
@@ -151,30 +151,29 @@ export function App() {
     <div className="shell">
       <aside className="sidebar">
         <div className="brand">
-          <div className="brandMark">
-            <span>✳</span>
-          </div>
-          <div>
+          <div className="brandMark"><img src="/brand/voxnelo-mark.svg" alt="" width="48" height="48" /></div>
+          <div className="brandText">
             <strong>Voxnelo</strong>
-            <small>每天开口说一句英语</small>
           </div>
         </div>
-        <div className="sidebarHint">YOUR LEARNING SPACE</div>
+        <div className="sidebarHint">LEARNING SPACE</div>
         <nav aria-label="主导航">
           {menu.map(({ id, label, icon: Icon }) => (
-            <button key={id} className={`navItem ${view === id ? 'active' : ''}`} onClick={() => nav(id)}>
-              <Icon size={19} />
-              {label}
+            <button key={id} className={`navItem ${view === id ? 'active' : ''}`} aria-current={view === id ? 'page' : undefined} onClick={() => nav(id)}>
+              <Icon size={20} strokeWidth={1.9} />
+              <span>{label}</span>
               {id === 'favorites' && stats.favorites > 0 ? <span className="navCount">{stats.favorites}</span> : null}
             </button>
           ))}
         </nav>
         <div className="sidebarBottom">
           <div className="tinyPanel">
-            <Sparkles size={18} />
-            <span>从一句简单的英语开始，慢慢练习就好。</span>
+            <span className="tinyBadge"><Sparkles size={16} /></span>
+            <strong>今天，也来说一句。</strong>
+            <span>没有考试压力，按自己的节奏练习。</span>
+            <ArrowUpRight className="tinyArrow" size={17} />
           </div>
-          <div className="sidebarVersion">Early Access · V{APP_VERSION}</div>
+          <div className="sidebarVersion">Voxnelo · Early Access {APP_VERSION}</div>
         </div>
       </aside>
       <div className="mainArea">
