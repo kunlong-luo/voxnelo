@@ -19,7 +19,7 @@
     "isolatedModules": true,
     "forceConsistentCasingInFileNames": true,
     "paths": {
-      "@voxnelo/*": ["packages/*/index.ts"]
+      "@voxnelo/*": ["./packages/*/index.ts"]
     }
   },
   "include": [
