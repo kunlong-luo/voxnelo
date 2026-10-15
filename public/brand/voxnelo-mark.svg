@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Voxnelo">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#12335d"/><stop offset="1" stop-color="#06192f"/></linearGradient><linearGradient id="v" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#3085ff"/><stop offset=".6" stop-color="#12b9e7"/><stop offset="1" stop-color="#20dfaa"/></linearGradient></defs>
+<rect width="128" height="128" rx="29" fill="url(#bg)"/>
+<path d="M17 42 C23 36 30 38 34 45 L55 82 L77 54 C82 47 90 46 96 52 C101 57 100 66 95 72 L67 102 C60 110 51 108 45 100 L15 55 C12 49 13 46 17 42Z" fill="url(#v)"/>
+<path d="M20 44 C26 41 31 43 35 50 L53 80" fill="none" stroke="#a6efff" stroke-width="4" stroke-linecap="round" opacity=".65"/>
+<path d="M80 41 A17 17 0 0 1 97 58 M85 27 A31 31 0 0 1 111 52" fill="none" stroke="#39e2a1" stroke-width="6" stroke-linecap="round"/></svg>

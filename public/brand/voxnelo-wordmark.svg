@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 630 144" role="img" aria-label="Voxnelo">
+<defs><linearGradient id="v" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#348aff"/><stop offset="1" stop-color="#20dfaa"/></linearGradient></defs>
+<rect x="4" y="6" width="128" height="128" rx="29" fill="#0d2447"/>
+<path d="M21 48 C27 42 34 44 38 51 L59 88 L81 60 C86 53 94 52 100 58 C105 63 104 72 99 78 L71 108 C64 116 55 114 49 106 L19 61 C16 55 17 52 21 48Z" fill="url(#v)"/>
+<path d="M84 47 A17 17 0 0 1 101 64 M89 33 A31 31 0 0 1 115 58" fill="none" stroke="#39e2a1" stroke-width="6" stroke-linecap="round"/>
+<text x="158" y="105" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="82" letter-spacing="-4" fill="#0d2447">Voxnelo</text></svg>
