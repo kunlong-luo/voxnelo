@@ -1,12 +1,12 @@
-# GitHub Pages Web 预览发布指南（不自动公开）
+# GitHub Pages 公开体验版部署与验收指南
 
-> 2026-10-15 · 准备态。Voxnelo 的主产品是 Electron 桌面端；GitHub Pages 只能托管编译后的 React/Rsbuild 静态 Web 预览。新增的部署工作流仅允许从 `main` **手动触发**，不会在合并代码后自动发布。
+> 2026-10-15 · 仓库拥有者已确认**网页版可公开访问**。Voxnelo 主产品是 Electron 桌面端，GitHub Pages 仅托管编译后的 React/Rsbuild 静态体验版。部署工作流在 `main` 提交后自动尝试发布，也允许手动重跑。**仓库仍保留 Private，不会自动转换为 Public**。
 
 ## 现状与隐私前提
 
 - 仓库 `kunlong-luo/voxnelo` 当前为 **Private**。GitHub Free 只能为公开仓库提供 Pages；从私有仓库使用 Pages 需要符合 GitHub Pro / Team / Enterprise 等计划和组织政策。请先在 GitHub **Settings → Pages** 检查是否支持 GitHub Actions 发布。
 - 即使仓库是私有，普通 Pages 站点仍**默认公开可访问**；源码库 Private 不等于网站私密。不要把用户个人学习历史、密钥或未准备公开的原始产品文档放进静态 `dist`。
-- 本次变更不会切换仓库可见性、不会启用 Pages 设置，也不会触发发布。须由仓库所有者明确决定是否公开网站。
+- 该工作流会通过官方 `configure-pages` / `upload-pages-artifact` / `deploy-pages` 尝试启用并发布 Pages；如当前 GitHub 账户计划或仓库设置阻止私有仓库 Pages，任务可能失败，必须从 Settings → Pages 完成资格/源设置。不能将工作流成功构建等同于网站已经可访问。
 
 ## 部署 URL 与构建
 
@@ -16,11 +16,11 @@
 
 网页目前使用 `output.assetPrefix: './'`，故打包的 JS/CSS 是相对引用。Voxnelo 侧栏 Logo 已从 `/brand/voxnelo-mark.svg` 调整为 `brand/voxnelo-mark.svg`，并提供项目路径下的 favicon。两者兼容本地 Web、Electron 自定义协议 `voxnelo://app/index.html` 与 Pages 的 `/voxnelo/` 子目录。 `scripts/check-pages-artifact.mjs` 在 CI 中检查 HTML 静态引用和品牌图标。
 
-## 如何在确认可公开后发布
+## 用户已同意公开体验后的发布步骤
 
-1. 先审查、合并 GitHub Pages 准备 PR。确认网站可以公开，仓库本身**不需要转公开**（前提是 GitHub 账户的计划允许从私有仓库使用 Pages）。
+1. 合并准备 PR 后会自动运行公开体验版部署任务。仓库保持 **Private**，不会自动公开源代码（前提是 GitHub 计划支持从私有仓库发布 Pages）。
 2. 打开 **GitHub → 仓库 Settings → Pages → Build and deployment → Source → GitHub Actions**。若账户计划不支持私有仓库 Pages，请先决定是否启用符合条件的计划或另选平台；不要为了测试网站而仓促公开整库。
-3. 在 **Actions → GitHub Pages web preview (manual) → Run workflow** 中选择 **main** 并运行。工作流安装锁定依赖、仅构建 Renderer、校验输出，再通过官方 Pages Actions 上传和发布。
+3. 在 **Actions → GitHub Pages public web demo** 中检查自动运行结果。需要重试时点击 **Run workflow** 选择 **main**。任务安装锁定依赖、仅构建 Renderer、校验输出，再通过官方 Pages Actions 上传和发布。
 4. 在 Pages 设置或部署任务中确认实际访问 URL；检查 `/voxnelo/` 上的品牌 Logo、favicon、JS/CSS 和所有页面视图。
 5. 如需取消公开，请在仓库 Settings → Pages 中取消 Pages 发布。只删除某次 Actions 运行不会自动确保站点下线。
 
