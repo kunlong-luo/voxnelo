@@ -68,8 +68,8 @@ describe('Voxnelo 学习应用服务门面', () => {
     }
   });
 
-  it('node 环境朗读不可用但不抛错', () => {
-    const result = speak('Hello');
+  it('node 环境朗读不可用但不抛错', async () => {
+    const result = await speak('Hello');
     expect(result.ok).toBe(false);
     expect(() => silence()).not.toThrow();
   });
