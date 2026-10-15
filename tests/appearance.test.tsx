@@ -57,7 +57,7 @@ describe('Local-only appearance preference', () => {
     expect(document.documentElement.dataset.theme).toBe('nordic');
   });
 
-  it('replaces invalid stored preferences with the safe Nordic baseline', () => {
+  it('uses U3 Sunset for invalid stored appearance values', () => {
     localStorage.setItem(APPEARANCE_KEY, 'glow-unknown');
     render(<App />);
     expect(document.documentElement.dataset.theme).toBe('sunset');
