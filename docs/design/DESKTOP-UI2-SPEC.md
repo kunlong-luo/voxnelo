@@ -1,5 +1,8 @@
 # Voxnelo UI2 桌面界面设计与验收规范（V0.2）
 
+> **历史视觉稿**：UI2 玻璃拟态主题已由 [Nordic Learning v1.0](NORDIC-LEARNING-DESIGN-SYSTEM.md) 替代。此文只记录之前实现和用户图片的来源，不再作为当前视觉验收标准。
+
+
 状态：已按最新参考图落地到代码；视觉效果仍须 Electron 实机截图验收。参考素材：[`docs/ui2.jpeg`](../ui2.jpeg)（2026-10-15 上传）。此文件只描述视觉与交互实现，不改动冻结的 `docs/Voxnelo-Product-Docs-v1.0`。
 
 ## 1. 视觉母版与可实现边界
