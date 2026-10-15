@@ -298,3 +298,8 @@ export const SENTENCES: Sentence[] = [
     level: 'A1',
   },
 ];
+
+const head = SENTENCES[0];
+if (!head) throw new Error('Course content is empty');
+/** 首句：空课程在模块加载时即失败，而非在使用处扩散 undefined。 */
+export const FIRST_SENTENCE: Sentence = head;

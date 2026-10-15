@@ -9,6 +9,7 @@ import { loadLearningData, patchState, recordEvent, type HistoryEvent } from '@v
  * UI 层只做展示与导航，不再直连 storage/audio/core。
  */
 export { APP_VERSION, SENTENCES, TOPIC_LABELS };
+export { FIRST_SENTENCE } from '@voxnelo/content';
 export { primeSpeechVoices } from '@voxnelo/audio';
 export type { HistoryEvent, LearningState, Sentence, SpeechResult };
 export type LearningStats = ReturnType<typeof calculateStats>;

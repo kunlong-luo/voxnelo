@@ -1,16 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { calculateStats, chooseNext, type LearningState } from '@voxnelo/core';
-import { SENTENCES } from '@voxnelo/content';
+import { FIRST_SENTENCE, SENTENCES } from '@voxnelo/content';
 
 describe('Voxnelo V0.1 推荐与进度', () => {
   it('不会推荐当前句子（存在其他候选时）', () => {
-    const next = chooseNext(SENTENCES, [], SENTENCES[0].id, [], () => 0);
-    expect(next?.id).not.toBe(SENTENCES[0].id);
+    const next = chooseNext(SENTENCES, [], FIRST_SENTENCE.id, [], () => 0);
+    expect(next?.id).not.toBe(FIRST_SENTENCE.id);
   });
   it('最近练习过滤不会导致没有可推荐句子', () => {
     const selected = SENTENCES.slice(0, 2);
-    const next = chooseNext(selected, [], selected[0].id, [selected[1].id], () => 0);
-    expect(next?.id).toBe(selected[1].id);
+    const first = selected[0];
+    const second = selected[1];
+    if (!first || !second) throw new Error('expected two seed sentences');
+    const next = chooseNext(selected, [], first.id, [second.id], () => 0);
+    expect(next?.id).toBe(second.id);
   });
   it('区分已浏览与已练习', () => {
     const states: LearningState[] = [

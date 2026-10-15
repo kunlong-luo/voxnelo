@@ -16,6 +16,9 @@
 - 修复 zip 解出目录 1970 时间戳导致的 rspack 构建 panic（已刷新）。
 - 主进程安全守卫逻辑抽取为纯函数（`security.ts`），原内联实现删除，
   `devServer!` 断言消除，行为逐项等价。
+- TypeScript 收紧 `noUncheckedIndexedAccess` / `noUnusedLocals` /
+  `noUnusedParameters`；课程首句以 `FIRST_SENTENCE` fail-fast 导出，
+  索引访问全部显式收窄。
 
 ### Added
 
@@ -23,7 +26,9 @@
   `lint` / `format` / `format:check` 脚本，`check` 串入 lint。
 - GitHub Actions CI（install / typecheck / lint / test / build）。
 - `vitest.config.ts`（node 环境 + v8 coverage）与持久层单测，
-  测试从 4 用例增至 19 用例。
+  测试从 4 用例增至 19 用例；后补组件单测（ErrorBoundary/视图/冒烟，
+  jsdom + Testing Library），现共 34 用例；`@vitest/coverage-v8` 钉住 v3
+  与 vitest 对齐。
 - 主进程安全守卫抽取为 `apps/desktop/security.ts` 纯函数并补单测
   （信任 URL / 仅音频 / 路径穿越）。
 - `ErrorBoundary` 包裹渲染根节点；`App` 拆为壳 + `PracticeView` +
@@ -42,11 +47,13 @@
   新增 `docs/ADR/ADR-0001-reference-audio.md`、
   `docs/ADR/ADR-0002-release-signing-update.md`、
   `docs/ADR/ADR-0003-learning-service.md`、
-  `SECURITY.md`；`docs/06` 按新分层修订。
+  `SECURITY.md`；`docs/06` 按新分层修订；新增 `docs/PRIVACY.md` 草案
+  （公开发布前须法务复核）。
 
 ### Removed
 
-- 无用依赖 `zod`、`zustand`（全仓零引用）；`App.tsx` 3 个无用图标导入。
+- 无用依赖 `zod`、`zustand`（全仓零引用）；`App.tsx` 3 个无用图标导入；
+  删除从未被调用的 `exportLearningData`（备份/恢复待 V0.3 完整设计后再做）。
 
 ## [0.1.0] - 2026-10-15
 

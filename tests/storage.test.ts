@@ -17,16 +17,20 @@ describe('Voxnelo V0.1 学习持久层', () => {
     await recordEvent('s001', 'view');
     const { states } = await loadLearningData();
     expect(states).toHaveLength(1);
-    expect(states[0]).toMatchObject({ sentenceId: 's001', seenCount: 2, practicedCount: 0 });
-    expect(states[0].lastSeenAt).toBeGreaterThan(0);
+    const first = states[0];
+    if (!first) throw new Error('expected one state');
+    expect(first).toMatchObject({ sentenceId: 's001', seenCount: 2, practicedCount: 0 });
+    expect(first.lastSeenAt).toBeGreaterThan(0);
   });
 
   it('view 与 practice 互不干扰', async () => {
     await recordEvent('s001', 'view');
     await recordEvent('s001', 'practice');
     const { states } = await loadLearningData();
-    expect(states[0]).toMatchObject({ seenCount: 1, practicedCount: 1 });
-    expect(states[0].lastPracticedAt).toBeGreaterThan(0);
+    const first = states[0];
+    if (!first) throw new Error('expected one state');
+    expect(first).toMatchObject({ seenCount: 1, practicedCount: 1 });
+    expect(first.lastPracticedAt).toBeGreaterThan(0);
   });
 
   it('patchState 合并标记且不丢失计数', async () => {

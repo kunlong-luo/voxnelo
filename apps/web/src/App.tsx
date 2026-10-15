@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Clock3, Headphones, Heart, ListRestart, Sparkles, type LucideIcon } from 'lucide-react';
 import {
   APP_VERSION,
+  FIRST_SENTENCE,
   pickNext,
   primeSpeechVoices,
   SENTENCES,
@@ -24,16 +25,16 @@ const menu: { id: View; label: string; icon: LucideIcon }[] = [
 
 /** 应用壳：侧边导航、视图切换与句子游走；数据读写在 useLearningData，视图在各 View 组件。 */
 export function App() {
-  const [sentenceId, setSentenceId] = useState(SENTENCES[0].id);
+  const [sentenceId, setSentenceId] = useState(FIRST_SENTENCE.id);
   const [view, setView] = useState<View>('practice');
-  const [visited, setVisited] = useState<string[]>([SENTENCES[0].id]);
+  const [visited, setVisited] = useState<string[]>([FIRST_SENTENCE.id]);
   const [historyPosition, setHistoryPosition] = useState(0);
   const [speed, setSpeed] = useState<'normal' | 'slow'>('normal');
   const [showIpa, setShowIpa] = useState(false);
   const [notice, setNotice] = useState('');
   const [search, setSearch] = useState('');
   const recorder = useRecorder();
-  const current = useMemo(() => SENTENCES.find((item) => item.id === sentenceId) ?? SENTENCES[0], [sentenceId]);
+  const current = useMemo(() => SENTENCES.find((item) => item.id === sentenceId) ?? FIRST_SENTENCE, [sentenceId]);
   const recordingBusy = recorder.status === 'requesting' || recorder.status === 'recording';
   const notify = useCallback((message: string) => setNotice(message), []);
   const { states, events, setFlag } = useLearningData(notify, sentenceId, current.id, recorder.recordingUrl);
@@ -79,8 +80,10 @@ export function App() {
 
   const previousSentence = useCallback(() => {
     if (historyPosition <= 0 || recordingBusy) return;
+    const targetId = visited[historyPosition - 1];
+    if (!targetId) return;
     setHistoryPosition(historyPosition - 1);
-    setSentenceId(visited[historyPosition - 1]);
+    setSentenceId(targetId);
     recorder.clearAudio();
     silence();
   }, [historyPosition, recordingBusy, visited, recorder]);

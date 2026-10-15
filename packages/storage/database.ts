@@ -69,8 +69,3 @@ export async function loadLearningData() {
   ]);
   return { states, events };
 }
-
-export async function exportLearningData(): Promise<string> {
-  const { states, events } = await loadLearningData();
-  return JSON.stringify({ version: 1, exportedAt: new Date().toISOString(), states, events }, null, 2);
-}
