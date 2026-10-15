@@ -16,7 +16,6 @@ import {
   Volume2,
   VolumeX,
   X,
-  Target,
 } from 'lucide-react';
 import { SENTENCES, TOPIC_LABELS, type LearningState, type LearningStats, type Sentence } from '@voxnelo/learning';
 import type { useRecorder } from './useRecorder';
