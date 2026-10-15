@@ -1,0 +1,88 @@
+# dependencies
+node_modules/
+.pnpm-store/
+.npm/
+.yarn/*
+.pnp.*
+
+# build outputs
+dist/
+dist-electron/
+release/
+build/*
+!build/icon.png
+out/
+*.tsbuildinfo
+
+# rsbuild / bundler cache
+.rsbuild/
+.rslib/
+.cache/
+.parcel-cache/
+.turbo/
+
+# testing & coverage
+coverage/
+.nyc_output/
+*.lcov
+test-results/
+playwright-report/
+blob-report/
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+logs/
+
+# os
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.Spotlight-V100
+.Trashes
+
+# env & secrets (只保留 .env.example)
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.pfx
+
+# editors & IDE（本地个人配置，勿入库）
+.idea/
+.vscode/
+*.code-workspace
+*.iml
+.project
+.classpath
+.settings/
+*.swp
+*.swo
+*~
+*.orig
+*.rej
+
+# electron 打包散件（output 目录已忽略，防漏到根目录）
+*.dmg
+*.exe
+*.msi
+*.AppImage
+*.deb
+*.snap
+
+# docs 打包副本（解压目录与源码已入库，zip 为纯重复）
+docs/*.zip
+
+# 本地工具索引 / AI 助手缓存
+.codegraph
+.omo/
+.opencode/
+.Muse/
+.cursor/

@@ -1,0 +1,93 @@
+{
+  "name": "voxnelo",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Voxnelo — 桌面优先、本地优先的免费英语口语练习应用（V0.1 Early Access）",
+  "author": "Voxnelo",
+  "type": "module",
+  "main": "dist-electron/main.cjs",
+  "packageManager": "pnpm@12.11.2+sha512.25a51652a196785af5f28bda6dfe8dc582ebefa4ac1d180221ce1390231c5fb76637822ea4b6e4633ce74acdcb0a77f725af11bad38177fdeddaee818a955cb9",
+  "scripts": {
+    "dev": "concurrently --kill-others \"pnpm dev:renderer\" \"pnpm dev:desktop\"",
+    "dev:renderer": "rsbuild dev --host 127.0.0.1 --port 3000",
+    "dev:desktop": "pnpm build:electron && wait-on http://127.0.0.1:3000 && cross-env VOXNELO_DEV_SERVER_URL=http://127.0.0.1:3000 electron . --disable-gpu-sandbox",
+    "dev:web": "rsbuild dev --host 127.0.0.1 --port 3000",
+    "build": "pnpm build:renderer && pnpm build:electron",
+    "build:renderer": "rsbuild build",
+    "build:electron": "node scripts/build-electron.mjs",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings=0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build",
+    "preview:web": "rsbuild preview",
+    "pack:dir": "pnpm build && electron-builder --dir",
+    "pack:linux": "pnpm build && electron-builder --linux deb AppImage",
+    "pack:windows": "pnpm build && electron-builder --win nsis",
+    "pack:mac": "pnpm build && electron-builder --mac dmg"
+  },
+  "dependencies": {
+    "dexie": "^4.2.0",
+    "lucide-react": "^0.468.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@rsbuild/core": "^2.1.0",
+    "@rsbuild/plugin-react": "^2.1.0",
+    "@rsbuild/plugin-tailwindcss": "^2.0.3",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitest/coverage-v8": "^5.0.4",
+    "concurrently": "^9.1.0",
+    "cross-env": "^7.0.3",
+    "electron": "^44.7.2",
+    "electron-builder": "^26.0.0",
+    "esbuild": "^0.25.0",
+    "eslint": "^10.12.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "fake-indexeddb": "^6.2.5",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10",
+    "tailwindcss": "^4.1.0",
+    "typescript": "^5.9.0",
+    "typescript-eslint": "^8.71.2",
+    "vitest": "^3.2.0",
+    "wait-on": "^8.0.0"
+  },
+  "build": {
+    "appId": "app.voxnelo.desktop",
+    "productName": "Voxnelo",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "linux": {
+      "icon": "build/icon.png",
+      "target": [
+        "deb",
+        "AppImage"
+      ],
+      "category": "Education"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.education",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "Voxnelo 只会在你主动录音时使用麦克风。录音默认不会上传或长期保存。"
+      }
+    }
+  }
+}

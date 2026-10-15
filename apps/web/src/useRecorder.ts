@@ -1,0 +1,86 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+export type RecorderStatus = 'idle' | 'requesting' | 'recording' | 'ready';
+
+export function useRecorder() {
+  const [status, setStatus] = useState<RecorderStatus>('idle');
+  const [recordingUrl, setRecordingUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const recorder = useRef<MediaRecorder | null>(null);
+  const stream = useRef<MediaStream | null>(null);
+  const urlRef = useRef<string | null>(null);
+
+  const clearAudio = useCallback(() => {
+    if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+    urlRef.current = null;
+    setRecordingUrl(null);
+  }, []);
+
+  const stop = useCallback(() => {
+    if (recorder.current?.state === 'recording') recorder.current.stop();
+    stream.current?.getTracks().forEach((track) => track.stop());
+    stream.current = null;
+  }, []);
+
+  const start = useCallback(async () => {
+    if (status === 'requesting' || status === 'recording') return;
+    setError(null);
+    clearAudio();
+    setStatus('requesting');
+    try {
+      if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+        throw new Error('当前设备或浏览器不支持录音。');
+      }
+      const granted = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      stream.current = granted;
+      const mime = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm'].find((type) =>
+        MediaRecorder.isTypeSupported(type),
+      );
+      const mediaRecorder = mime ? new MediaRecorder(granted, { mimeType: mime }) : new MediaRecorder(granted);
+      recorder.current = mediaRecorder;
+      const chunks: BlobPart[] = [];
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) chunks.push(event.data);
+      };
+      mediaRecorder.onstop = () => {
+        granted.getTracks().forEach((track) => track.stop());
+        if (chunks.length) {
+          const blob = new Blob(chunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+          const objectUrl = URL.createObjectURL(blob);
+          if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+          urlRef.current = objectUrl;
+          setRecordingUrl(objectUrl);
+          setStatus('ready');
+        } else {
+          setStatus('idle');
+          setError('没有录到声音，请检查麦克风并重试。');
+        }
+      };
+      mediaRecorder.onerror = () => setError('录音中断，请重新尝试。');
+      mediaRecorder.start();
+      setStatus('recording');
+    } catch (cause) {
+      stream.current?.getTracks().forEach((track) => track.stop());
+      stream.current = null;
+      setStatus('idle');
+      setError(
+        cause instanceof Error && cause.name === 'NotAllowedError'
+          ? '麦克风未获授权。你仍然可以听示范和查看短句。'
+          : cause instanceof Error
+            ? cause.message
+            : '无法启动录音。',
+      );
+    }
+  }, [clearAudio, status]);
+
+  useEffect(
+    () => () => {
+      if (recorder.current?.state === 'recording') recorder.current.stop();
+      stream.current?.getTracks().forEach((track) => track.stop());
+      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+    },
+    [],
+  );
+
+  return { status, recordingUrl, error, start, stop, clearAudio };
+}
