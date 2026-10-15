@@ -1,5 +1,5 @@
 import { spawn, type ChildProcess } from 'node:child_process';
-import { SENTENCES } from '@voxnelo/content';
+import { isLessonSpeechRequest } from '@voxnelo/core';
 
 export type LinuxSpeechResult =
   | { ok: true; wavBase64: string }
