@@ -19,7 +19,7 @@ function stubRecorder() {
   } as ReturnType<typeof useRecorder>;
 }
 
-describe('UI2 reference workspace', () => {
+describe('Nordic three-column learning workspace', () => {
   it('shows real related sentences and lets learners navigate them', () => {
     const onChooseRelated = vi.fn();
     const { container } = render(
@@ -34,7 +34,7 @@ describe('UI2 reference workspace', () => {
         onChooseRelated={onChooseRelated}
       />,
     );
-    expect(screen.getByText('SpeakFeed')).toBeTruthy();
+    expect(screen.getByText('相关表达')).toBeTruthy();
     expect(screen.getByText('相关场景')).toBeTruthy();
     expect(screen.getByText('1 / 40 句')).toBeTruthy();
     expect(container.querySelector('.waveformArt')?.getAttribute('aria-hidden')).toBe('true');

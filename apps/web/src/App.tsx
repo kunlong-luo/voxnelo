@@ -17,6 +17,7 @@ import { useLearningData } from './useLearningData';
 import { PracticeView } from './PracticeView';
 import { LibraryView, type View } from './LibraryView';
 import { SettingsView } from './SettingsView';
+import { DesktopTitlebar } from './DesktopTitlebar';
 
 const menu: { id: View; label: string; accessibleLabel: string; icon: LucideIcon }[] = [
   { id: 'practice', label: '练习', accessibleLabel: '开始练习', icon: MessageCircle },
@@ -151,7 +152,9 @@ export function App() {
   };
 
   return (
-    <div className="shell">
+    <div className="appFrame">
+      <DesktopTitlebar />
+      <div className="shell">
       <aside className="sidebar">
         <div className="brand">
           <div className="brandMark"><img src="/brand/voxnelo-mark.svg" alt="" width="48" height="48" /></div>
@@ -159,7 +162,7 @@ export function App() {
             <strong>Voxnelo</strong>
           </div>
         </div>
-        <div className="sidebarHint">YOUR LEARNING SPACE</div>
+        <div className="sidebarHint">我的学习空间</div>
         <nav aria-label="主导航">
           {menu.map(({ id, label, accessibleLabel, icon: Icon }) => (
             <button key={id} className={`navItem ${view === id ? 'active' : ''}`} aria-label={accessibleLabel} aria-current={view === id ? 'page' : undefined} onClick={() => nav(id)}>
@@ -240,6 +243,7 @@ export function App() {
             />
           )}
         </main>
+      </div>
       </div>
     </div>
   );

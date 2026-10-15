@@ -51,7 +51,7 @@ const tips: Record<Sentence['topic'], string> = {
   daily: '先听清每个词，再连起来练习；不熟悉的短句可以加入复习。',
 };
 
-/** Original concept's spatial arrangement with only genuine V0.1 functionality. */
+/** Nordic edition: UI2's three-column learning hierarchy, real V0.1 behaviors only. */
 export function PracticeView({
   current, currentState, stats, speed, showIpa, notice, recorder, recordingBusy,
   canGoPrevious, onToggleIpa, onSpeak, onToggleSpeed, onRecord,
@@ -88,7 +88,7 @@ export function PracticeView({
 
           <div className="lessonFocus">
             <div className="sentenceContent">
-              <p className="lessonLevel">SpeakCore <span>·</span> {current.level}</p>
+              <p className="lessonLevel">口语练习 <span>·</span> {current.level}</p>
               <div className="sentenceHeading">
                 <h1 key={current.id} className="sentenceText">{current.english}</h1>
                 <button className={'lessonFavorite' + (favorite ? ' selected' : '')}
@@ -189,7 +189,7 @@ export function PracticeView({
           <div className="progressOverview">
             <div className="progressDonut" role="img"
               aria-label={'已浏览 ' + stats.viewed + ' / ' + SENTENCES.length + ' 句'}
-              style={{ background: 'conic-gradient(#7effdc ' + viewedPercentage + '%, rgba(255,255,255,.25) 0)' }}>
+              style={{ background: 'conic-gradient(#80ad9a ' + viewedPercentage + '%, #e7eee8 0)' }}>
               <div className="donutInner"><strong>{stats.viewed}</strong><small>/{SENTENCES.length}</small></div>
             </div>
             <div className="progressSummary">
@@ -208,7 +208,7 @@ export function PracticeView({
 
         <section className="insightCard feedCard">
           <div className="insightHeading">
-            <h2>SpeakFeed</h2>
+            <h2>相关表达</h2>
             <span className="insightSideNote">同主题短句</span>
           </div>
           <div className="feedStrip" aria-label="同主题练习短句">

@@ -18,7 +18,7 @@ beforeEach(async () => {
 describe('App smoke', () => {
   it('首屏展示品牌、首句与导航', async () => {
     render(<App />);
-    expect(screen.getByText('Voxnelo')).toBeTruthy();
+    expect(screen.getAllByText('Voxnelo')).toHaveLength(2);
     // 首屏直接进入学习，不再出现重复的营销标语或每日口号。
     expect(screen.queryByText('从第一句开始，自信开口')).toBeNull();
     expect(screen.queryByText('从这一句开始，')).toBeNull();
