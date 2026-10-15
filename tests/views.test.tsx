@@ -91,7 +91,7 @@ describe('PracticeView', () => {
   it('录音中显示录音态，且禁止参考语音与录音重叠', () => {
     render(<PracticeView {...basePracticeProps} recorder={stubRecorder({ status: 'recording' })} recordingBusy />);
     expect(screen.getByText('结束录音')).toBeTruthy();
-    expect((screen.getByTitle('播放标准朗读') as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: '播放标准朗读' }) as HTMLButtonElement).disabled).toBe(true);
   });
 
   it('收藏按钮触发回调', () => {

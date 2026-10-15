@@ -5,10 +5,12 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { FIRST_SENTENCE } from '@voxnelo/content';
 import { database } from '@voxnelo/storage';
 import { App } from '../apps/web/src/App';
+import { LANGUAGE_STORAGE_KEY } from '../apps/web/src/i18n';
 
 afterEach(cleanup);
 
 beforeEach(async () => {
+  localStorage.setItem(LANGUAGE_STORAGE_KEY, 'zh-CN');
   await database.transaction('rw', database.states, database.events, async () => {
     await database.states.clear();
     await database.events.clear();
@@ -65,7 +67,7 @@ describe('App smoke', () => {
       const view = render(<App />);
       fireEvent.click(screen.getByRole('button', { name: '开口跟读' }));
       expect(await screen.findByText('结束录音')).toBeTruthy();
-      expect((screen.getByTitle('播放标准朗读') as HTMLButtonElement).disabled).toBe(true);
+      expect((screen.getByRole('button', { name: '播放标准朗读' }) as HTMLButtonElement).disabled).toBe(true);
       fireEvent.click(screen.getByRole('button', { name: '我的收藏' }));
       expect(screen.getByText('请先结束当前录音，再切换页面。')).toBeTruthy();
       expect(screen.getByText(FIRST_SENTENCE.english)).toBeTruthy();

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
+import { useI18n, type TranslationKey } from './i18n';
 import { ArrowRight, Bookmark, ChevronLeft, Search, Heart, Clock3, ListRestart } from 'lucide-react';
-import { SENTENCES, TOPIC_LABELS, type HistoryEvent, type LearningState, type Sentence } from '@voxnelo/learning';
+import { SENTENCES, type HistoryEvent, type LearningState, type Sentence } from '@voxnelo/learning';
 
 export type View = 'practice' | 'history' | 'favorites' | 'review' | 'settings';
 
@@ -15,16 +16,21 @@ interface LibraryViewProps {
   onBackToPractice: () => void;
 }
 
-const viewInfo = {
-  history: { title: '最近学过的句子', helper: '浏览与录音尝试都会留在本地记录中。', icon: Clock3 },
-  favorites: { title: '我的收藏', helper: '喜欢的表达，都可以随时回来练习。', icon: Heart },
-  review: { title: '需要复习', helper: '把暂时不熟悉的句子放在这里，慢慢变得熟练。', icon: ListRestart },
+const viewInfo: Record<'history'|'favorites'|'review', {title: TranslationKey; helper: TranslationKey; icon: typeof Clock3}> = {
+  history: { title: 'libHistoryTitle', helper: 'libHistoryHelp', icon: Clock3 },
+  favorites: { title: 'libFavoritesTitle', helper: 'libFavoritesHelp', icon: Heart },
+  review: { title: 'libReviewTitle', helper: 'libReviewHelp', icon: ListRestart },
+};
+const topics: Record<Sentence['topic'], TranslationKey> = {
+  greetings: 'topicGreetings', personal: 'topicPersonal', needs: 'topicNeeds',
+  learning: 'topicLearning', daily: 'topicDaily',
 };
 
 /** 收藏、历史和复习：统一品牌卡片布局，保持原有功能与搜索规则。 */
 export function LibraryView({
   view, states, events, search, notice, onSearch, onChoose, onBackToPractice,
 }: LibraryViewProps) {
+  const {t} = useI18n();
   const filtered = useMemo(() => {
     const unique = new Set<string>();
     if (view === 'history')
@@ -42,19 +48,19 @@ export function LibraryView({
     <div className="libraryPage">
       <div className="libraryTitle">
         <div>
-          <div className="eyebrow"><Icon size={15} /> YOUR LEARNING LIBRARY</div>
-          <h1>{title}</h1><p>{helper}</p>
+          <div className="eyebrow"><Icon size={15} /> {t('libraryEyebrow')}</div>
+          <h1>{t(title)}</h1><p>{t(helper)}</p>
         </div>
         <button type="button" className="backPractice" onClick={onBackToPractice}>
-          <ChevronLeft size={17} /> 返回练习
+          <ChevronLeft size={17} /> {t('backPractice')}
         </button>
       </div>
-      <section className="libraryCard" aria-label={title}>
+      <section className="libraryCard" aria-label={t(title)}>
         <div className="libraryToolbar">
-          <span className="libraryCount">共 {filtered.length} 句</span>
+          <span className="libraryCount">{t('libraryCount',{count:filtered.length})}</span>
           <div className="searchBox">
             <Search size={18} />
-            <input aria-label="搜索历史短句" placeholder="搜索英语或中文…"
+            <input aria-label={t("searchAria")} placeholder={t("searchPlaceholder")}
               value={search} onChange={(event) => onSearch(event.target.value)} />
           </div>
         </div>
@@ -65,16 +71,16 @@ export function LibraryView({
                 <div className="librarySentence">
                   <strong>{sentence.english}</strong><span>{sentence.chinese}</span>
                 </div>
-                <div className="libraryMeta"><span>{TOPIC_LABELS[sentence.topic]}</span><ArrowRight size={17} /></div>
+                <div className="libraryMeta"><span>{t(topics[sentence.topic])}</span><ArrowRight size={17} /></div>
               </button>
             ))
           ) : (
             <div className="empty">
               <span className="emptyIcon"><Bookmark size={26} /></span>
-              <strong>这里暂时还没有短句</strong>
-              <span>{search ? '没有找到匹配的短句，换个关键词试试。' : '去练习几句英语，喜欢的内容就会出现在这里。'}</span>
+              <strong>{t('libraryEmptyTitle')}</strong>
+              <span>{t(search ? 'libraryEmptySearch' : 'libraryEmptyHint')}</span>
               <button type="button" onClick={onBackToPractice}>
-                开始练习 <ArrowRight size={15} />
+                {t('libraryStart')} <ArrowRight size={15} />
               </button>
             </div>
           )}

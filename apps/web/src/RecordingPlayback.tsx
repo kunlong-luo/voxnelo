@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react';
 import { Pause, Play } from 'lucide-react';
+import { useI18n } from './i18n';
+import { Tooltip } from './Tooltip';
 
 function clock(seconds: number): string {
   if (!Number.isFinite(seconds)) return '0:00';
@@ -9,6 +11,7 @@ function clock(seconds: number): string {
 
 /** Styled control integrated into the same action rail as the real recording controls. */
 export function RecordingPlayback({ src }: { src: string | null }) {
+  const {t} = useI18n();
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -29,7 +32,7 @@ export function RecordingPlayback({ src }: { src: string | null }) {
       setPlaying(true);
     } catch {
       setPlaying(false);
-      setError('暂时无法回听这段录音，请重试。');
+      setError(t('playbackError'));
     }
   };
 
@@ -46,18 +49,22 @@ export function RecordingPlayback({ src }: { src: string | null }) {
           onPause={() => setPlaying(false)}
         />
       ) : null}
-      <button type="button" className="roundControl replayButton" onClick={() => void toggle()}
-        disabled={!src} aria-label={playing ? '暂停回听' : '回听刚才的录音'}>
-        {playing ? <Pause size={22} /> : <Play size={22} />}
-      </button>
-      <span className="actionCaption">{playing ? '暂停回听' : '回听录音'}</span>
+      <Tooltip text={t(playing ? 'playbackPause' : 'playbackStart')}>
+        <button type="button" className="roundControl replayButton" onClick={() => void toggle()}
+          disabled={!src} aria-label={t(playing ? 'playbackPause' : 'playbackStart')}>
+          {playing ? <Pause size={22} /> : <Play size={22} />}
+        </button>
+      </Tooltip>
+      <span className="actionCaption">{t(playing ? 'playbackPause' : 'playbackCaption')}</span>
       {src ? (
         <>
           <time className="actionAux replayTime">{clock(elapsed)} / {duration > 0 ? clock(duration) : '--:--'}</time>
-          <progress className="replayProgress" value={elapsed} max={duration > 0 ? duration : 1}
-            aria-label="录音播放进度" />
+          <div className="replayProgress" role="progressbar" aria-label={t('playbackProgress')}
+            aria-valuemin={0} aria-valuemax={duration > 0 ? duration : 1} aria-valuenow={elapsed}>
+            <span style={{width: Math.min(100, elapsed / (duration > 0 ? duration : 1) * 100) + '%'}} />
+          </div>
         </>
-      ) : <span className="actionAux">完成录音后可用</span>}
+      ) : <span className="actionAux">{t("playbackUnavailable")}</span>}
       {error ? <p className="replayError" role="alert">{error}</p> : null}
     </div>
   );

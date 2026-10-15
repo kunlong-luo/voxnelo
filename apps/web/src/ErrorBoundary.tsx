@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { AlertTriangle, RotateCcw, RefreshCw, ShieldCheck } from 'lucide-react';
+import { translate, resolveLocale, readLanguageSetting } from './i18n';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -35,22 +36,23 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
   render(): ReactNode {
     if (this.state.failed) {
+      const t = (key: Parameters<typeof translate>[1]) => translate(resolveLocale(readLanguageSetting()), key);
       return (
         <main className="recoveryShell">
           <section className="recoveryPanel" role="alert" aria-labelledby="recovery-title">
             <img src="/brand/voxnelo-mark.svg" alt="Voxnelo" width="53" height="53" />
             <div className="recoveryIcon"><AlertTriangle size={22} /></div>
-            <h1 id="recovery-title">页面遇到了问题</h1>
-            <p>可以重新尝试打开练习界面，或者重新加载应用。不会自动清除你的本地学习记录。</p>
+            <h1 id="recovery-title">{t("errorTitle")}</h1>
+            <p>{t("errorDesc")}</p>
             <div className="recoveryButtons">
               <button type="button" className="recoveryPrimary" onClick={this.retry}>
-                <RotateCcw size={17} /> 重试
+                <RotateCcw size={17} /> {t("errorRetry")}
               </button>
               <button type="button" className="recoverySecondary" onClick={this.reload}>
-                <RefreshCw size={17} /> 重新加载
+                <RefreshCw size={17} /> {t("errorReload")}
               </button>
             </div>
-            <span className="recoveryPrivacy"><ShieldCheck size={15} /> 错误详情仅记录在本机控制台，不会自动上传</span>
+            <span className="recoveryPrivacy"><ShieldCheck size={15} /> {t("errorPrivacy")}</span>
           </section>
         </main>
       );
