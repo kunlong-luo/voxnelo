@@ -253,3 +253,19 @@ html {
 }
 
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+/* Recovery view: helpful when the React tree fails; it never clears IndexedDB. */
+.recoveryShell{min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% -20%,#caedfa,transparent 55%),#eff6ff}
+.recoveryPanel{width:min(100%,460px);background:#ffffff;border:1px solid #deedf8;border-radius:25px;padding:36px 32px;box-shadow:0 22px 70px #234d8521;display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px}
+.recoveryPanel>img{border-radius:15px}
+.recoveryIcon{width:42px;height:42px;display:grid;place-items:center;color:#bc701d;background:#fff3de;border-radius:14px}
+.recoveryPanel h1{font-size:24px;margin:0}
+.recoveryPanel p{font-size:13px;line-height:1.85;color:#627f9b;margin:0}
+.recoveryButtons{display:flex;justify-content:center;gap:11px;flex-wrap:wrap;margin-top:7px}
+.recoveryButtons button{border-radius:12px;padding:12px 16px;display:flex;gap:8px;align-items:center;justify-content:center;font-weight:750;font-size:12px}
+.recoveryPrimary{background:#155fb3;border:1px solid #155fb3;color:#fff}
+.recoveryPrimary:hover{background:#237ad0}
+.recoverySecondary{background:#f1f8ff;border:1px solid #d5e8f9;color:#2d6593}
+.recoverySecondary:hover{background:#e4f1ff}
+.recoveryPrivacy{font-size:10px;line-height:1.7;color:#7291a6;display:flex;align-items:center;gap:6px}
+@media(max-width:420px){.recoveryPanel{padding:30px 20px}}

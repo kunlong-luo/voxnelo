@@ -1,0 +1,31 @@
+name: "功能建议 / Feature request"
+description: 提出符合 Voxnelo 免费、本地优先定位的改进
+title: "[Feature]: "
+body:
+  - type: checkboxes
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 我已查看现有 Issue 与产品路线图。
+          required: true
+  - type: textarea
+    attributes:
+      label: 希望解决的学习问题
+      description: 用户在练习英语时遇到了什么障碍？
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 预期的功能或交互
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: 与规划版本的关系
+      options: ["V0.1 缺陷/可用性修复", "V0.2–V0.3 体验增强", "V0.9 / V1.0 特色功能", "长期探索 / 不确定"]
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: 可选实现思路与隐私考虑
+      description: 能否离线？是否需要麦克风？不承诺尚未实现的实时识别能力。

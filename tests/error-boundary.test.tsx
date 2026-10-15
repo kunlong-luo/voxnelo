@@ -20,6 +20,9 @@ describe('ErrorBoundary', () => {
     );
     expect(screen.getByText('页面遇到了问题')).toBeTruthy();
     expect(screen.getByRole('button', { name: '重试' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: '重新加载' })).toBeTruthy();
+    expect(screen.getByText(/不会自动清除你的本地学习记录/)).toBeTruthy();
+    expect(screen.getByText(/不会自动上传/)).toBeTruthy();
     vi.restoreAllMocks();
   });
 
