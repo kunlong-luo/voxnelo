@@ -95,7 +95,7 @@ describe('PracticeView', () => {
   it('收藏按钮触发回调', () => {
     const onToggleFlag = vi.fn();
     render(<PracticeView {...basePracticeProps} onToggleFlag={onToggleFlag} />);
-    fireEvent.click(screen.getByText('收藏'));
+    fireEvent.click(screen.getByRole('button', { name: '收藏' }));
     expect(onToggleFlag).toHaveBeenCalledWith('favorite');
   });
 });
