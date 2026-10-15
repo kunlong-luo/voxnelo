@@ -167,6 +167,10 @@ export function App() {
       <DesktopTitlebar />
       <div className="shell">
       <aside className="sidebar">
+        <div className="brand" aria-label="Voxnelo 品牌">
+          <div className="brandMark"><img src="/brand/voxnelo-mark.svg" alt="" width="48" height="48" /></div>
+          <div className="brandText"><strong>Voxnelo</strong></div>
+        </div>
         <div className="sidebarHint">我的学习空间</div>
         <nav aria-label="主导航">
           {menu.map(({ id, label, accessibleLabel, icon: Icon }) => (

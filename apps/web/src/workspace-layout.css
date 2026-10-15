@@ -172,3 +172,187 @@
 @media (max-height: 690px) {
   .sidebar { min-height: 0; height: calc(100vh - var(--window-chrome-height)); }
 }
+
+/* Practice alignment v0.3: both columns stretch to the same baseline.
+ * The viewport is a minimum only. Long lessons/recording messages grow
+ * naturally and remain scrollable instead of clipping under the footer.
+ */
+.layoutWorkbench.practiceLayout {
+  min-height: max(700px, calc(100dvh - var(--window-chrome-height) - 68px));
+  align-items: stretch;
+}
+.practiceLayout .practiceColumn {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+}
+.practiceLayout .referenceLesson.practiceCard {
+  flex: 1 1 auto;
+  min-height: 700px;
+  height: auto;
+}
+.practiceLayout .lessonFocus {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 290px;
+  padding-inline: 0;
+  gap: clamp(15px, 2.2vh, 28px);
+}
+.practiceLayout .sentenceContent {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+}
+.practiceLayout .sentenceHeading { justify-content: center; }
+.practiceLayout .wavePanel { margin-inline: auto; }
+
+.practiceLayout .lessonHeaderActions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+  align-items: center;
+}
+.practiceLayout .reviewIconButton {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  padding: 0;
+  border: 1px solid var(--n-border);
+  border-radius: 12px;
+  background: var(--n-soft);
+  color: var(--n-muted);
+}
+.practiceLayout .reviewIconButton:hover { background: #e5f1e9; color: var(--n-primary-strong); }
+.practiceLayout .reviewIconButton.selected { color: var(--n-primary-strong); background: #dcefe3; border-color: #b9d8c4; }
+.practiceLayout .reviewIconButton:focus-visible { outline: 3px solid var(--n-focus); outline-offset: 3px; }
+
+/* Five balanced actions with the main microphone on the center axis.
+ * Sentence navigation lives in the separate, symmetric bottom pager.
+ */
+.practiceLayout .actionRail {
+  grid-template-columns: repeat(2, minmax(0,1fr)) minmax(94px,1.3fr) repeat(2,minmax(0,1fr));
+}
+.practiceLayout .referenceFooter.cardFooter {
+  display: grid;
+  grid-template-columns: minmax(102px,1fr) auto minmax(102px,1fr);
+  gap: 12px;
+  align-items: center;
+}
+.practiceLayout .referenceFooter .pagerButton {
+  box-sizing: border-box;
+  width: clamp(102px, 10.5vw, 138px);
+  height: 42px;
+  min-height: 42px;
+  padding: 0 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid #dce7df;
+  border-radius: 12px;
+  background: #f5f8f4;
+  color: #416b5c;
+  font-size: 12px;
+  font-weight: 740;
+  white-space: nowrap;
+  box-shadow: none;
+}
+.practiceLayout .referenceFooter .pagerButton:not(:disabled):hover {
+  background: #eaf3eb;
+  color: #2c6659;
+  border-color: #c0d8c6;
+}
+.practiceLayout .referenceFooter .prevButton { justify-self: start; }
+.practiceLayout .referenceFooter .nextButton { justify-self: end; }
+.practiceLayout .referenceFooter .footerHint { text-align: center; }
+
+.practiceLayout .referenceInsights.insightsColumn {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  height: auto;
+  min-width: 0;
+  gap: 12px;
+}
+.practiceLayout .referenceInsights .insightCard {
+  flex: 1 0 auto;
+  min-width: 0;
+}
+.practiceLayout .referenceInsights .sceneCard { display: flex; flex-direction: column; }
+.practiceLayout .referenceInsights .sceneCard .privacyNote {
+  margin-top: auto;
+  padding: 12px 2px 0;
+  grid-column: auto;
+}
+
+/* Both themes use identical geometry: only token-level colors differ. */
+[data-theme='sunset'] .practiceLayout .reviewIconButton {
+  background: #fbf0e9;
+  color: #8c7770;
+  border-color: #eddcd3;
+}
+[data-theme='sunset'] .practiceLayout .reviewIconButton.selected {
+  background: #f9e3dc;
+  color: #aa655d;
+  border-color: #eacbbf;
+}
+[data-theme='sunset'] .practiceLayout .reviewIconButton:hover { background: #f9e3dc; color: #985a51; }
+[data-theme='sunset'] .practiceLayout .referenceFooter .pagerButton {
+  background: #fcf8f4;
+  color: #756d67;
+  border-color: #eaded5;
+}
+[data-theme='sunset'] .practiceLayout .referenceFooter .pagerButton:not(:disabled):hover {
+  background: #f8ebe3;
+  border-color: #e2c9bd;
+}
+@media (max-width: 900px) {
+  .practiceLayout .referenceFooter.cardFooter {
+    grid-template-columns: minmax(89px,1fr) auto minmax(89px,1fr);
+    gap: 5px;
+  }
+  .practiceLayout .referenceFooter .pagerButton { width: 90px; padding: 0 6px; }
+  .practiceLayout .referenceFooter .footerHint { font-size: 9px; }
+  .practiceLayout .lessonHeaderActions { gap: 4px; }
+  .practiceLayout .reviewIconButton { width: 38px; height: 38px; flex-basis: 38px; }
+  .practiceLayout .actionRail { grid-template-columns: repeat(2,minmax(0,1fr)) minmax(83px,1.35fr) repeat(2,minmax(0,1fr)); }
+}
+@media (max-height: 690px) {
+  .practiceLayout .lessonFocus { min-height: 250px; }
+}
+
+/* Product mark belongs to the left navigation column, not to the blank
+ * draggable window chrome. Keep its identity even in icon-only mode. */
+.sidebar .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 8px;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+.sidebar .brandMark, .sidebar .brandMark img {
+  display: block;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  object-fit: contain;
+}
+.sidebar .brandText { min-width: 0; }
+.sidebar .brandText strong { font-size: 23px; }
+.sidebar .sidebarHint { margin-top: 8px; }
+@media (max-width: 900px) {
+  .sidebar .brand { justify-content: center; padding: 0; margin-bottom: 18px; }
+  .sidebar .brandMark, .sidebar .brandMark img { width: 40px; height: 40px; flex-basis: 40px; }
+  .sidebar .brandText { display: none; }
+}

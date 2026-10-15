@@ -19,7 +19,11 @@ describe('App smoke', () => {
   it('首屏展示品牌、首句与导航', async () => {
     render(<App />);
     expect(screen.getByText(/Voxnelo · Early Access/)).toBeTruthy();
+    const sidebar = document.querySelector('.sidebar');
+    expect(sidebar?.querySelector('.brand img')?.getAttribute('src')).toBe('/brand/voxnelo-mark.svg');
+    expect(sidebar?.querySelector('.brandText')?.textContent).toBe('Voxnelo');
     expect(screen.queryByRole('banner', { name: '窗口标题栏' })).toBeNull();
+    expect(document.querySelector('.appTitlebar .brand')).toBeNull();
     expect(screen.queryByText('英语口语')).toBeNull();
     expect(screen.queryByText('本地学习模式')).toBeNull();
     // 首屏直接进入学习，不再出现重复的营销标语或每日口号。
