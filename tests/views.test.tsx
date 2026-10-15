@@ -62,7 +62,7 @@ describe('PracticeView', () => {
 
   it('录音中只有结束录音可用，避免切换语速、播放示范或误启动录音', () => {
     render(<PracticeView {...basePracticeProps} recorder={stubRecorder({ status: 'recording' })} recordingBusy />);
-    expect((screen.getByRole('button', { name: '开口跟读' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: '录音进行中' }) as HTMLButtonElement).disabled).toBe(true);
     expect((screen.getByRole('button', { name: '结束录音' }) as HTMLButtonElement).disabled).toBe(false);
     expect((screen.getByRole('button', { name: '播放标准朗读' }) as HTMLButtonElement).disabled).toBe(true);
     expect((screen.getByRole('button', { name: '切换语速' }) as HTMLButtonElement).disabled).toBe(true);
