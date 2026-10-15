@@ -23,6 +23,45 @@ pnpm dev
 
 如果 Linux 上执行 `corepack enable` 遇到权限问题，可用 `corepack pnpm install` 和 `corepack pnpm dev` 替代（确保 Corepack 正常启用）。
 
+## Pop!_OS 24 / Linux：任务栏显示 Voxnelo 图标
+
+Voxnelo 的**网页左上角 Logo**、**运行中窗口图标**、**桌面启动器图标**是三个不同的入口。项目已有 `build/icon.png` 品牌图标；修复后开发版 Electron `BrowserWindow.icon` 会加载这张图，deb / AppImage 打包会将同一图片复制到安装资源中。Linux 的 X11/Wayland 窗口标识与 `.desktop` 文件名同步为 `app.voxnelo.desktop`，让任务栏更容易把窗口关联到正确的应用图标。
+
+### 从源码开发（`pnpm dev`）
+
+先拉取代码并**完全关闭旧 Electron 窗口**，再重新启动（只刷新 Web 页面不会更新窗口图标）：
+
+```bash
+git pull origin main
+pnpm dev
+```
+
+某些 Pop!_OS 24 的 Wayland/COSMIC/GNOME 桌面需要注册对应的用户级 `.desktop` 项，才能把运行中的窗口匹配到启动器。如果仍显示系统默认的 Electron 图标，**只需运行一次**：
+
+```bash
+pnpm icon:linux:dev
+```
+
+此命令仅在 Linux 写入当前用户的 `~/.local/share/applications/app.voxnelo.desktop.desktop`（如有 `XDG_DATA_HOME` 则按该目录），指向源码中的 `build/icon.png`，无需 sudo。随后退出旧窗口，重新执行 `pnpm dev`。也可以从桌面应用列表启动 “Voxnelo (Development)”，该快捷方式会运行此项目的 `pnpm dev`；项目换路径后需重新注册。
+
+如不再需要开发启动器：
+
+```bash
+pnpm icon:linux:dev:remove
+```
+
+该命令只删除这一个开发桌面项；不会删除系统软件、用户学习记录或任何其他启动器。
+
+### 正式 Linux 安装包（deb / AppImage）
+
+```bash
+pnpm pack:linux
+```
+
+安装或运行**重新打包的最新版**，不要指望旧安装包自动换图标。打包后的 `Voxnelo` 使用统一桌面标识和 `build/icon.png`。如果先前手工固定过旧 Electron 图标，需从 Dock 中取消固定旧项，再固定新版 Voxnelo。AppImage 视桌面环境需要用户自行进行应用菜单集成；并非每个桌面都会自动注册它。Pop!_OS 24 的实际 Dock 映射仍需实机验收，GitHub CI 类型检查和构建不能替代该检查。
+
+排查可使用 `echo "$XDG_SESSION_TYPE"` 确认 Wayland 还是 X11，及检查 `~/.local/share/applications/app.voxnelo.desktop.desktop` 是否存在；不需要更改 Electron 的 GPU 沙盒或安全配置。
+
 ## Linux GPU 说明
 
 部分 NVIDIA + X11 环境下，Chromium GPU 沙盒会拒绝打开 GBM/DRI（日志出现
