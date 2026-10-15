@@ -2,10 +2,10 @@ import { useMemo } from 'react';
 import { ArrowRight, Bookmark, ChevronLeft, Search, Heart, Clock3, ListRestart } from 'lucide-react';
 import { SENTENCES, TOPIC_LABELS, type HistoryEvent, type LearningState, type Sentence } from '@voxnelo/learning';
 
-export type View = 'practice' | 'history' | 'favorites' | 'review';
+export type View = 'practice' | 'history' | 'favorites' | 'review' | 'settings';
 
 interface LibraryViewProps {
-  view: Exclude<View, 'practice'>;
+  view: Exclude<View, 'practice' | 'settings'>;
   states: LearningState[];
   events: HistoryEvent[];
   search: string;
