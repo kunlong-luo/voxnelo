@@ -1,14 +1,24 @@
-import { type ReactNode } from 'react';
+import type { ReactElement } from 'react';
+import { Tooltip as BaseTooltip } from '@base-ui/react/tooltip';
 
-/** Unified app tooltip. Never uses the browser-native HTML title tooltip.
- * CSS hover / focus-within, Escape-free because it never traps input or focus.
+/** Base UI tooltip uses collision-aware portal positioning (not native title).
+ * Trigger remains the original focusable button, including Electron controls.
  */
-export function Tooltip({text, children, placement = 'top'}:
-  {text: string; children: ReactNode; placement?: 'top' | 'bottom'}) {
-  return (
-    <span className={'uiTooltip placement-' + placement}>
-      {children}
-      <span className="uiTooltipBubble" role="tooltip">{text}</span>
-    </span>
-  );
+export function Tooltip({text,children,placement='top'}:{
+  text:string;
+  children:ReactElement;
+  placement?:'top'|'bottom';
+}) {
+  return <BaseTooltip.Provider delay={180}>
+    <BaseTooltip.Root>
+      <BaseTooltip.Trigger render={children}/>
+      <BaseTooltip.Portal>
+        <BaseTooltip.Positioner side={placement} sideOffset={9} collisionPadding={12}>
+          <BaseTooltip.Popup className="uiTooltipBubble z-[100] max-w-60 rounded-xl border border-white/10 bg-popover px-3 py-2 text-xs font-medium text-popover-foreground shadow-xl outline-none transition-[opacity,transform] duration-150 ease-out data-[starting-style]:translate-y-1 data-[starting-style]:opacity-0 data-[ending-style]:opacity-0 motion-reduce:transition-none">
+            {text}
+          </BaseTooltip.Popup>
+        </BaseTooltip.Positioner>
+      </BaseTooltip.Portal>
+    </BaseTooltip.Root>
+  </BaseTooltip.Provider>;
 }
