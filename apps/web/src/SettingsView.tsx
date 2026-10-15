@@ -34,7 +34,7 @@ export function SettingsView({
         <p className="text-xs leading-6 text-muted-foreground">{t('appearanceDesc')}</p>
         <div className="appearanceChoices grid grid-cols-2 gap-3" role="group" aria-label={t('appearanceGroup')}>
           {themes.map(id=>{const name=t(id==='nordic'?'nordicName':'sunsetName');return <button type="button" className={cn('appearanceChoice group flex min-w-0 flex-col gap-2 rounded-2xl border p-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-md motion-reduce:transform-none',appearance===id?'border-primary/50 bg-secondary/65 ring-2 ring-primary/10':'border-border bg-card/70 hover:border-primary/30')} key={id} onClick={()=>onChangeAppearance(id)} aria-label={t('appearanceChoose',{name})} aria-pressed={appearance===id}>
-            <span className={cn('appearancePreview h-18 w-full rounded-xl border border-white/75',id==='nordic'?'bg-gradient-to-tr from-[#d8e9dc] via-[#fffdfa] to-[#e9f3ed]':'bg-gradient-to-tr from-[#f5d5cc] via-[#fff5ee] to-[#d6ece5]')} aria-hidden="true"/>
+            <span className={cn('appearancePreview h-18 w-full rounded-xl border border-white/75',id==='nordic'?'bg-gradient-to-tr from-brand-mist via-brand-cream to-accent':'bg-gradient-to-tr from-brand-blush via-brand-cream to-brand-mist')} aria-hidden="true"/>
             <strong className="flex items-center justify-between gap-2 text-xs text-foreground">{name}{appearance===id&&<Check size={15} className="text-primary"/>}</strong>
             <small className="text-[10px] leading-4 text-muted-foreground">{t(id==='nordic'?'nordicSummary':'sunsetSummary')}</small>
           </button>})}
