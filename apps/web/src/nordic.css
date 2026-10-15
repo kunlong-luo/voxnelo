@@ -270,6 +270,7 @@ button:focus-visible, input:focus-visible {
   min-height: 59px; background: #fbfcfa; border-top: 1px solid #e9efe9;
   margin: 0 calc(-1 * clamp(19px,2vw,30px));
   padding: 10px clamp(19px,2vw,30px);
+  border-radius: 0 0 24px 24px;
 }
 .referenceFooter .prevButton {
   display: inline-flex; gap: 5px; width: auto; min-height: 41px;

@@ -90,13 +90,13 @@ export function PracticeView({
             <div className="lessonHeaderActions">
               <span className="pill"><BookOpen size={15} /> {t(topicKeys[current.topic])}</span>
               <div className="sentenceFlags" role="group" aria-label={t('navFavorites') + ' / ' + t('navReview')}>
-                <Tooltip text={t(favorite ? 'favoriteRemove' : 'favoriteAdd')}>
+                <Tooltip text={t(favorite ? 'favoriteRemove' : 'favoriteAdd')} placement="bottom">
                   <button type="button" className={'lessonFavorite flagButton' + (favorite ? ' selected' : '')}
                     onClick={() => onToggleFlag('favorite')} aria-label={t(favorite ? 'favoriteRemove' : 'favoriteAdd')} aria-pressed={favorite}>
                     <Heart size={20} fill={favorite ? 'currentColor' : 'none'} aria-hidden="true" />
                   </button>
                 </Tooltip>
-                <Tooltip text={t(review ? 'reviewRemove' : 'reviewAdd')}>
+                <Tooltip text={t(review ? 'reviewRemove' : 'reviewAdd')} placement="bottom">
                   <button type="button" className={'reviewIconButton flagButton' + (review ? ' selected' : '')}
                     onClick={() => onToggleFlag('review')} aria-pressed={review}
                     aria-label={t(review ? 'reviewRemove' : 'reviewAdd')}>

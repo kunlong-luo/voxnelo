@@ -109,6 +109,14 @@ body { -webkit-font-smoothing: antialiased; }
 }
 .placement-top > .uiTooltipBubble { left: 50%; bottom: calc(100% + 11px); }
 .placement-bottom > .uiTooltipBubble { left: 50%; top: calc(100% + 11px); }
+/* Header flags sit at the card's right edge: drop their bubbles downward and pin
+ * them to the right so a centered 220px bubble never overflows the viewport. */
+.lessonHeaderActions .placement-bottom > .uiTooltipBubble {
+  left: auto; right: -6px; transform: none;
+}
+.lessonHeaderActions .uiTooltip:is(:hover,:focus-within) > .uiTooltipBubble {
+  transform: none;
+}
 .uiTooltip:is(:hover,:focus-within) > .uiTooltipBubble {
   opacity: 1;
   visibility: visible;
