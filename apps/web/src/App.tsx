@@ -119,6 +119,10 @@ export function App() {
   };
 
   const playDemo = () => {
+    if (recordingBusy) {
+      setNotice('请先结束当前录音，再播放参考发音。');
+      return;
+    }
     const result = speak(current.english, speed);
     setNotice(result.ok ? '' : (result.message ?? '无法播放语音。'));
   };
@@ -130,6 +134,10 @@ export function App() {
   };
 
   const nav = (target: View) => {
+    if (recordingBusy && target !== 'practice') {
+      setNotice('请先结束当前录音，再切换页面。');
+      return;
+    }
     setView(target);
     setSearch('');
     setNotice('');

@@ -108,6 +108,39 @@ describe('useRecorder', () => {
     expect(latest.recordingUrl).toBeNull();
   });
 
+
+  it('录音设备报错时释放音轨且回到 idle，不误报录音成功', async () => {
+    const stopTrack = vi.fn();
+    mockDevices(() => Promise.resolve({ getTracks: () => [{ stop: stopTrack }] } as unknown as MediaStream));
+    render(<Harness />);
+    await act(async () => { await latest.start(); });
+    const instance = MockMediaRecorder.instances[0];
+    if (!instance) throw new Error('expected recorder instance');
+    act(() => {
+      instance.onerror?.();
+      instance.onstop?.();
+    });
+    expect(stopTrack).toHaveBeenCalled();
+    expect(latest.status).toBe('idle');
+    expect(latest.error).toBe('录音中断，请重新尝试。');
+    expect(latest.recordingUrl).toBeNull();
+  });
+
+  it('系统权限请求在页面卸载后才返回时，仍释放新获得的音轨', async () => {
+    let grant: ((stream: MediaStream) => void) | undefined;
+    const stopTrack = vi.fn();
+    mockDevices(() => new Promise<MediaStream>((resolve) => { grant = resolve; }));
+    const view = render(<Harness />);
+    let pending!: Promise<void>;
+    act(() => { pending = latest.start(); });
+    view.unmount();
+    await act(async () => {
+      grant?.({ getTracks: () => [{ stop: stopTrack }] } as unknown as MediaStream);
+      await pending;
+    });
+    expect(stopTrack).toHaveBeenCalledTimes(1);
+    expect(MockMediaRecorder.instances).toHaveLength(0);
+  });
   it('没有录到声音时报错', async () => {
     mockDevices(() => Promise.resolve(fakeStream()));
     render(<Harness />);

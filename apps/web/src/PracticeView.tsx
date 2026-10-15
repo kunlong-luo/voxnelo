@@ -88,7 +88,7 @@ export function PracticeView({
         </div>
         <div className="practiceDivider" />
         <div className="controls">
-          <button className="circleAction" onClick={onSpeak} title="播放标准朗读">
+          <button className="circleAction" onClick={onSpeak} title="播放标准朗读" disabled={recordingBusy}>
             <Volume2 size={22} />
           </button>
           <button className="textAction" onClick={onToggleSpeed}>
