@@ -85,7 +85,17 @@
         "deb",
         "AppImage"
       ],
-      "category": "Education"
+      "category": "Education",
+      "syncDesktopName": true,
+      "desktop": {
+        "entry": {
+          "Name": "Voxnelo",
+          "Comment": "English speaking practice",
+          "StartupWMClass": "app.voxnelo.desktop",
+          "Terminal": false,
+          "Type": "Application"
+        }
+      }
     },
     "win": {
       "target": "nsis"
@@ -96,6 +106,13 @@
       "extendInfo": {
         "NSMicrophoneUsageDescription": "Voxnelo 只会在你主动录音时使用麦克风。录音默认不会上传或长期保存。"
       }
-    }
-  }
+    },
+    "extraResources": [
+      {
+        "from": "build/icon.png",
+        "to": "icons/voxnelo.png"
+      }
+    ]
+  },
+  "desktopName": "app.voxnelo.desktop.desktop"
 }
