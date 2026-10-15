@@ -1,4 +1,4 @@
-import { app, BrowserWindow, net, protocol, session } from 'electron';
+import { app, BrowserWindow, ipcMain, net, protocol, session, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { APP_ORIGIN, APP_SCHEME, THEME_BACKGROUND, WINDOW_SIZE } from '@voxnelo/core';
@@ -15,6 +15,31 @@ const devServer = process.env.VOXNELO_DEV_SERVER_URL;
 const isDev = !app.isPackaged && Boolean(devServer);
 const rendererDir = path.join(__dirname, '..', 'dist');
 const appOrigin = APP_ORIGIN;
+
+/**
+ * Window IPC is intentionally narrower than a general-purpose ipcRenderer bridge.
+ * Requests must come from this app's own top-level renderer, never an iframe
+ * or an untrusted navigation.
+ */
+function authorizedWindow(event: IpcMainEvent | IpcMainInvokeEvent): BrowserWindow | null {
+  const contents = event.sender;
+  if (!event.senderFrame || event.senderFrame !== contents.mainFrame) return null;
+  if (!isTrustedUrl(contents.getURL(), { isDev })) return null;
+  const window = BrowserWindow.fromWebContents(contents);
+  return window && !window.isDestroyed() && window.webContents === contents ? window : null;
+}
+
+function registerWindowControls(): void {
+  ipcMain.on('voxnelo:window:minimize', (event) => authorizedWindow(event)?.minimize());
+  ipcMain.on('voxnelo:window:toggle-maximize', (event) => {
+    const window = authorizedWindow(event);
+    if (!window) return;
+    if (window.isMaximized()) window.unmaximize();
+    else window.maximize();
+  });
+  ipcMain.on('voxnelo:window:close', (event) => authorizedWindow(event)?.close());
+  ipcMain.handle('voxnelo:window:is-maximized', (event) => authorizedWindow(event)?.isMaximized() ?? false);
+}
 
 function registerLocalProtocol(): void {
   protocol.handle(APP_SCHEME, (request) => {
@@ -50,6 +75,7 @@ async function createWindow(): Promise<void> {
     backgroundColor: THEME_BACKGROUND,
     title: 'Voxnelo',
     autoHideMenuBar: true,
+    frame: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       sandbox: true,
@@ -58,6 +84,13 @@ async function createWindow(): Promise<void> {
       webSecurity: true,
     },
   });
+  const sendMaximize = () => {
+    if (!window.isDestroyed() && !window.webContents.isDestroyed()) {
+      window.webContents.send('voxnelo:window:maximize-changed', window.isMaximized());
+    }
+  };
+  window.on('maximize', sendMaximize);
+  window.on('unmaximize', sendMaximize);
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', (event, targetUrl) => {
     if (!isTrustedUrl(targetUrl, { isDev })) event.preventDefault();
@@ -67,6 +100,7 @@ async function createWindow(): Promise<void> {
 }
 
 app.whenReady().then(async () => {
+  registerWindowControls();
   registerLocalProtocol();
   session.defaultSession.setPermissionRequestHandler((webContents, permission, callback, details) => {
     const { mediaTypes } = details as { mediaTypes?: unknown };
