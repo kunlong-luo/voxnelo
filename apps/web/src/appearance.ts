@@ -1,12 +1,12 @@
 /**
  * Local-only appearance preference. Never interacts with the learning DB or audio.
- * Nordic stays the default until a product decision changes it.
+ * U3's Sunset Glow is the new-install default; explicit Nordic choices persist.
  */
 export type AppearanceTheme = 'nordic' | 'sunset';
 export const APPEARANCE_KEY = 'voxnelo.appearance.theme';
 
 export function parseAppearance(value: unknown): AppearanceTheme {
-  return value === 'sunset' ? 'sunset' : 'nordic';
+  return value === 'nordic' ? 'nordic' : 'sunset';
 }
 
 export function readAppearance(): AppearanceTheme {
