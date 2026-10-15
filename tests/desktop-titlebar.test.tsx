@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { DesktopTitlebar } from '../apps/web/src/DesktopTitlebar';
 import type { VoxneloDesktopAPI } from '../apps/web/src/desktopBridge';
 
@@ -42,7 +42,7 @@ describe('Nordic frameless Electron titlebar', () => {
     expect(minimize).toHaveBeenCalledOnce();
     expect(toggleMaximize).toHaveBeenCalledOnce();
     expect(close).toHaveBeenCalledOnce();
-    notify?.(true);
+    act(() => notify?.(true));
     await waitFor(() => expect(screen.getByRole('button', { name: '还原窗口' })).toBeTruthy());
     view.unmount();
     expect(unsubscribe).toHaveBeenCalledOnce();
