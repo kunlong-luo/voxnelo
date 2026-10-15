@@ -2,73 +2,107 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { primeSpeechVoices, speakEnglish, stopSpeech } from '@voxnelo/audio';
 
-interface MockVoice {
-  lang: string;
-}
-
+interface MockVoice { lang: string }
 class MockUtterance {
   static instances: MockUtterance[] = [];
   voice: MockVoice | null = null;
   lang = '';
   rate = 1;
   pitch = 1;
-  text: string;
-
-  constructor(text: string) {
-    this.text = text;
-    MockUtterance.instances.push(this);
-  }
+  constructor(public text: string) { MockUtterance.instances.push(this); }
 }
-
+class MockAudio {
+  static instances: MockAudio[] = [];
+  play = vi.fn().mockResolvedValue(undefined);
+  pause = vi.fn();
+  load = vi.fn();
+  removeAttribute = vi.fn();
+  addEventListener = vi.fn();
+  constructor(public src: string) { MockAudio.instances.push(this); }
+}
 function mockSynthesis(langs: string[]) {
   const synthesis = {
     getVoices: vi.fn(() => langs.map((lang) => ({ lang }))),
-    cancel: vi.fn(),
-    speak: vi.fn(),
-    addEventListener: vi.fn(),
+    cancel: vi.fn(), speak: vi.fn(),
+    addEventListener: vi.fn(), removeEventListener: vi.fn(),
   };
   Object.defineProperty(window, 'speechSynthesis', { value: synthesis, configurable: true });
   vi.stubGlobal('SpeechSynthesisUtterance', MockUtterance);
   return synthesis;
 }
-
-function clearSynthesis(): void {
-  delete (window as unknown as Record<string, unknown>).speechSynthesis;
+function nativeSpeech() {
+  const synthesizeEnglish = vi.fn().mockResolvedValue({
+    ok: true, wavBase64: btoa('RIFF----WAVEtest-data'),
+  });
+  const cancel = vi.fn();
+  vi.stubGlobal('voxneloDesktop', { platform: 'linux', speech: { synthesizeEnglish, cancel } });
+  vi.stubGlobal('Audio', MockAudio);
+  vi.stubGlobal('URL', Object.assign(URL, {
+    createObjectURL: vi.fn(() => 'blob:linux-tts'),
+    revokeObjectURL: vi.fn(),
+  }));
+  return { synthesizeEnglish, cancel };
 }
-
 afterEach(() => {
-  clearSynthesis();
+  stopSpeech();
+  Reflect.deleteProperty(window, 'speechSynthesis');
+  Reflect.deleteProperty(window, 'voxneloDesktop');
   MockUtterance.instances = [];
+  MockAudio.instances = [];
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
 
 describe('speech', () => {
-  it('无语音环境时降级且不抛错', () => {
+  it('unsupported browser reports a recoverable error', async () => {
     expect(() => primeSpeechVoices()).not.toThrow();
-    expect(speakEnglish('Hello')).toEqual({
-      ok: false,
-      message: '当前系统没有可用的语音朗读功能。',
+    expect(await speakEnglish('Hello')).toEqual({
+      ok: false, message: '当前环境不支持语音朗读。',
     });
     expect(() => stopSpeech()).not.toThrow();
   });
-
-  it('优先选用 en-US 并按语速设置 rate', () => {
-    const synthesis = mockSynthesis(['fr-FR', 'en-US', 'en-GB']);
-    const result = speakEnglish('Hello', 'normal');
-    expect(result).toEqual({ ok: true });
-    expect(synthesis.speak).toHaveBeenCalledTimes(1);
+  it('prefers en-US voice and adjusts rate', async () => {
+    const synthesis = mockSynthesis(['fr-FR','en-US','en-GB']);
+    expect(await speakEnglish('Hello')).toEqual({ ok: true });
+    expect(synthesis.speak).toHaveBeenCalledOnce();
     expect(MockUtterance.instances[0]?.rate).toBe(0.96);
-    const slow = speakEnglish('Hello', 'slow');
-    expect(slow.ok).toBe(true);
+    expect((await speakEnglish('Hello','slow')).ok).toBe(true);
     expect(MockUtterance.instances[1]?.rate).toBe(0.75);
-    expect(MockUtterance.instances[1]?.voice).toEqual({ lang: 'en-US' });
+    expect(MockUtterance.instances[1]?.voice).toEqual({lang:'en-US'});
   });
-
-  it('无英文语音时提示安装', () => {
-    mockSynthesis(['fr-FR', 'zh-CN']);
-    const result = speakEnglish('Hello');
+  it('Linux with empty voices uses offline WAV playback and cancels cleanly', async () => {
+    mockSynthesis([]);
+    const bridge = nativeSpeech();
+    expect(await speakEnglish('Hello!','slow')).toEqual({ ok:true });
+    expect(bridge.synthesizeEnglish).toHaveBeenCalledWith('Hello!','slow');
+    expect(MockAudio.instances[0]?.play).toHaveBeenCalledOnce();
+    stopSpeech();
+    expect(bridge.cancel).toHaveBeenCalled();
+    expect(MockAudio.instances[0]?.pause).toHaveBeenCalled();
+  });
+  it('Linux without eSpeak gets precise instructions instead of generic missing voice', async () => {
+    mockSynthesis(['zh-CN']);
+    const bridge = nativeSpeech();
+    bridge.synthesizeEnglish.mockResolvedValueOnce({ok:false,reason:'not-installed'});
+    const result = await speakEnglish('Hello!');
     expect(result.ok).toBe(false);
-    expect(result.message).toBe('未检测到英语语音包，请先在系统中安装英语语音。');
+    expect(result.message).toContain('sudo apt install espeak-ng');
+  });
+  it('non-English browser voices without desktop fallback get clear message', async () => {
+    mockSynthesis(['fr-FR','zh-CN']);
+    const result = await speakEnglish('Hello!');
+    expect(result.ok).toBe(false);
+    expect(result.message).toContain('未找到可用的英语语音');
+  });
+  it('cancelled native request cannot play stale audio', async () => {
+    mockSynthesis([]);
+    let resolveRequest: (result: {ok: true;wavBase64:string}) => void = () => undefined;
+    const synthesizeEnglish = vi.fn().mockImplementation(() => new Promise((resolve) => { resolveRequest = resolve; }));
+    const cancel = vi.fn();
+    vi.stubGlobal('voxneloDesktop', { platform:'linux', speech: {synthesizeEnglish,cancel} });
+    const pending = speakEnglish('Hello!');
+    stopSpeech();
+    resolveRequest({ok:true,wavBase64:btoa('RIFF----WAVEtest')});
+    expect(await pending).toEqual({ok:false,cancelled:true});
   });
 });
