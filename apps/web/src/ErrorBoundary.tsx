@@ -1,6 +1,8 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { AlertTriangle, RotateCcw, RefreshCw, ShieldCheck } from 'lucide-react';
 import { translate, resolveLocale, readLanguageSetting } from './i18n';
+import { Button } from './components/ui/button';
+import { Card } from './components/ui/card';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -38,22 +40,22 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     if (this.state.failed) {
       const t = (key: Parameters<typeof translate>[1]) => translate(resolveLocale(readLanguageSetting()), key);
       return (
-        <main className="recoveryShell">
-          <section className="recoveryPanel" role="alert" aria-labelledby="recovery-title">
+        <main className="recoveryShell flex min-h-dvh items-center justify-center bg-gradient-to-br from-background via-brand-cream to-brand-mist/50 p-6">
+          <Card className="recoveryPanel flex w-full max-w-xl flex-col items-center gap-5 border-white/70 p-8 text-center sm:p-12" role="alert" aria-labelledby="recovery-title">
             <img src="brand/voxnelo-mark.svg" alt="Voxnelo" width="53" height="53" />
-            <div className="recoveryIcon"><AlertTriangle size={22} /></div>
-            <h1 id="recovery-title">{t("errorTitle")}</h1>
-            <p>{t("errorDesc")}</p>
-            <div className="recoveryButtons">
-              <button type="button" className="recoveryPrimary" onClick={this.retry}>
+            <div className="recoveryIcon rounded-2xl bg-destructive/10 p-4 text-destructive"><AlertTriangle size={22}/></div>
+            <h1 className="text-2xl font-extrabold" id="recovery-title">{t("errorTitle")}</h1>
+            <p className="max-w-md text-sm leading-7 text-muted-foreground">{t("errorDesc")}</p>
+            <div className="recoveryButtons flex flex-wrap justify-center gap-3">
+              <Button variant="default" className="recoveryPrimary" onClick={this.retry}>
                 <RotateCcw size={17} /> {t("errorRetry")}
-              </button>
-              <button type="button" className="recoverySecondary" onClick={this.reload}>
+              </Button>
+              <Button variant="outline" className="recoverySecondary" onClick={this.reload}>
                 <RefreshCw size={17} /> {t("errorReload")}
-              </button>
+              </Button>
             </div>
-            <span className="recoveryPrivacy"><ShieldCheck size={15} /> {t("errorPrivacy")}</span>
-          </section>
+            <span className="recoveryPrivacy flex items-center gap-1 text-xs text-muted-foreground"><ShieldCheck size={15} /> {t("errorPrivacy")}</span>
+          </Card>
         </main>
       );
     }
