@@ -14,12 +14,16 @@ export function DesktopTitlebar() {
   useEffect(() => {
     if (!controls) return;
     let active = true;
-    void controls.isMaximized().then((value) => {
-      if (active) setMaximized(value);
-    }).catch(() => undefined);
+    let changedSinceSubscribe = false;
+    // Subscribe first: a late initial state request must not override a
+    // more recent maximize/unmaximize event from the main process.
     const unsubscribe = controls.onMaximizeChange((value) => {
+      changedSinceSubscribe = true;
       if (active) setMaximized(value);
     });
+    void controls.isMaximized().then((value) => {
+      if (active && !changedSinceSubscribe) setMaximized(value);
+    }).catch(() => undefined);
     return () => { active = false; unsubscribe(); };
   }, [controls]);
 
