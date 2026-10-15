@@ -109,6 +109,9 @@ body { -webkit-font-smoothing: antialiased; }
 }
 .placement-top > .uiTooltipBubble { left: 50%; bottom: calc(100% + 11px); }
 .placement-bottom > .uiTooltipBubble { left: 50%; top: calc(100% + 11px); }
+/* Avoid clipping paired favorite/review hints at the window's right edge. */
+.lessonHeaderActions .placement-bottom > .uiTooltipBubble { left: auto; right: -6px; transform: none; }
+.lessonHeaderActions .uiTooltip:is(:hover,:focus-within) > .uiTooltipBubble { transform: none; }
 .uiTooltip:is(:hover,:focus-within) > .uiTooltipBubble {
   opacity: 1;
   visibility: visible;

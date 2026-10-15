@@ -44,5 +44,7 @@ jobs:
         run: pnpm test:coverage
       - name: Build
         run: pnpm build
+      - name: Validate static Pages assets
+        run: node scripts/check-pages-artifact.mjs
       - name: Renderer size budget
         run: pnpm perf:budget

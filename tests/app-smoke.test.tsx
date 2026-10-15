@@ -22,7 +22,7 @@ describe('App smoke', () => {
     render(<App />);
     expect(screen.getByText(/Voxnelo · Early Access/)).toBeTruthy();
     const sidebar = document.querySelector('.sidebar');
-    expect(sidebar?.querySelector('.brand img')?.getAttribute('src')).toBe('/brand/voxnelo-mark.svg');
+    expect(sidebar?.querySelector('.brand img')?.getAttribute('src')).toBe('brand/voxnelo-mark.svg');
     expect(sidebar?.querySelector('.brandText')?.textContent).toBe('Voxnelo');
     expect(screen.queryByRole('banner', { name: '窗口标题栏' })).toBeNull();
     expect(document.querySelector('.appTitlebar .brand')).toBeNull();

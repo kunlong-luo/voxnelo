@@ -52,6 +52,17 @@
   `docs/ADR/ADR-0003-learning-service.md`、
   `SECURITY.md`；`docs/06` 按新分层修订；新增 `docs/PRIVACY.md` 草案
   （公开发布前须法务复核）。
+- 界面重塑（PR #10 #12 #13 #14 #17 #18 #21）：练习台布局规范、glass 工作区、
+  Nordic Clean、Sunset Glow 主题、左中右三栏 + 自定义无框标题栏、
+  居中练习台与对称导航、U3 微交互和应用自绘 Tooltip、UI 参考图（#11 #19）。
+- 双语国际化（#21）：跟随系统语言、中英文运行时切换、语音和权限错误提示本地化。
+- Linux 英语语音兜底（#15）：Chromium 英语声音不可用时，受控主进程
+  使用 eSpeak 合成 WAV；仍需 Pop!_OS 24 上的真实听音验收。
+- 工程协作：Resume Craft 工程模式（#3）、品牌与主题升级（#2）、
+  Dependabot 与 TypeScript 6 兼容升级（#4 #9 #16）、已合并分支清理（#20）。
+- GitHub Pages Web 体验版部署准备（#25）：静态资源路径修复、
+  品牌 favicon、构建验收和手动发布工作流；桌面端保留完整 Electron 能力。
+- 收藏/复习图标的旧绝对定位和 Tooltip 视口裁剪修复（#23 变更并入 #25）。
 
 ### Removed
 
