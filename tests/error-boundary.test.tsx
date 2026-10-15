@@ -1,10 +1,13 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { ErrorBoundary } from '../apps/web/src/ErrorBoundary';
+import { LANGUAGE_STORAGE_KEY } from '../apps/web/src/i18n';
 
-afterEach(cleanup);
+afterEach(() => { cleanup(); localStorage.removeItem(LANGUAGE_STORAGE_KEY); });
+
+beforeEach(() => localStorage.setItem(LANGUAGE_STORAGE_KEY, 'zh-CN'));
 
 function Boom(): ReactNode {
   throw new Error('boom');
