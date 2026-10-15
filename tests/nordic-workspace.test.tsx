@@ -47,12 +47,12 @@ describe('Nordic three-column learning workspace', () => {
   it('offers actionable session preferences without fake sign-in or subscription', () => {
     const onToggleSpeed = vi.fn();
     const onToggleIpa = vi.fn();
-    render(<SettingsView speed="normal" showIpa onToggleSpeed={onToggleSpeed}
+    render(<SettingsView speed="normal" showIpa appearance="nordic" onChangeAppearance={() => undefined} onToggleSpeed={onToggleSpeed}
       onToggleIpa={onToggleIpa} onBackToPractice={() => undefined} />);
     fireEvent.click(screen.getByRole('button', { name: /慢速模式/ }));
     fireEvent.click(screen.getByRole('button', { name: /显示参考音标/ }));
     expect(onToggleSpeed).toHaveBeenCalledOnce();
     expect(onToggleIpa).toHaveBeenCalledOnce();
-    expect(screen.getByText(/选择在本次打开应用期间生效/)).toBeTruthy();
+    expect(screen.getByText(/语音和音标设置本次会话生效/)).toBeTruthy();
   });
 });
