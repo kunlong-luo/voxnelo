@@ -38,7 +38,10 @@ describe('Minimal frameless Electron window controls', () => {
     const bar = screen.getByRole('banner', { name: '窗口标题栏' });
     expect(bar.querySelectorAll('button')).toHaveLength(3);
     expect(bar.querySelector('img')).toBeNull();
-    expect(bar.textContent).toBe('');
+    expect(bar.querySelector('.titlebarBrand')).toBeNull();
+    expect(bar.querySelector('.titlebarSubtitle')).toBeNull();
+    expect(bar.querySelector('[title]')).toBeNull();
+    expect(bar.querySelectorAll('.uiTooltipBubble')).toHaveLength(3);
     fireEvent.click(screen.getByRole('button', { name: '最小化窗口' }));
     fireEvent.click(screen.getByRole('button', { name: '最大化窗口' }));
     fireEvent.click(screen.getByRole('button', { name: '关闭窗口' }));
