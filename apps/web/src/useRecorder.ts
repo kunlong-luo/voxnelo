@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useI18n } from './i18n';
 
 export type RecorderStatus = 'idle' | 'requesting' | 'recording' | 'ready';
 
 export function useRecorder() {
+  const {t} = useI18n();
   const [status, setStatus] = useState<RecorderStatus>('idle');
   const [recordingUrl, setRecordingUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +34,7 @@ export function useRecorder() {
     setStatus('requesting');
     try {
       if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
-        throw new Error('当前设备或浏览器不支持录音。');
+        throw new Error(t('recorderUnsupported'));
       }
       const granted = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
       // 窗口可能在系统权限弹窗尚未关闭时已经卸载。
@@ -63,7 +65,7 @@ export function useRecorder() {
           setStatus('ready');
         } else {
           setStatus('idle');
-          setError('没有录到声音，请检查麦克风并重试。');
+          setError(t('recorderEmpty'));
         }
       };
       mediaRecorder.onerror = () => {
@@ -73,7 +75,7 @@ export function useRecorder() {
         if (recorder.current === mediaRecorder) recorder.current = null;
         if (!disposedRef.current) {
           setStatus('idle');
-          setError('录音中断，请重新尝试。');
+          setError(t('recorderInterrupted'));
         }
       };
       mediaRecorder.start();
@@ -85,15 +87,15 @@ export function useRecorder() {
       setStatus('idle');
       setError(
         cause instanceof Error && cause.name === 'NotAllowedError'
-          ? '麦克风未获授权。你仍然可以听示范和查看短句。'
-          : cause instanceof Error
+          ? t('recorderPermission')
+          : cause instanceof Error && cause.message === t('recorderUnsupported')
             ? cause.message
-            : '无法启动录音。',
+            : t('recorderFailure'),
       );
     } finally {
       requestingRef.current = false;
     }
-  }, [clearAudio, status]);
+  }, [clearAudio, status, t]);
 
   useEffect(
     () => {
