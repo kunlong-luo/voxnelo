@@ -18,6 +18,7 @@ import { PracticeView } from './PracticeView';
 import { LibraryView, type View } from './LibraryView';
 import { SettingsView } from './SettingsView';
 import { DesktopTitlebar } from './DesktopTitlebar';
+import { applyAppearance, readAppearance, saveAppearance, type AppearanceTheme } from './appearance';
 
 const menu: { id: View; label: string; accessibleLabel: string; icon: LucideIcon }[] = [
   { id: 'practice', label: '练习', accessibleLabel: '开始练习', icon: MessageCircle },
@@ -37,6 +38,7 @@ export function App() {
   const [showIpa, setShowIpa] = useState(true);
   const [notice, setNotice] = useState('');
   const [search, setSearch] = useState('');
+  const [appearance, setAppearance] = useState<AppearanceTheme>(readAppearance);
   const recorder = useRecorder();
   const current = useMemo(() => SENTENCES.find((item) => item.id === sentenceId) ?? FIRST_SENTENCE, [sentenceId]);
   const recordingBusy = recorder.status === 'requesting' || recorder.status === 'recording';
@@ -48,6 +50,15 @@ export function App() {
   useEffect(() => {
     primeSpeechVoices();
   }, []);
+
+  useEffect(() => {
+    applyAppearance(appearance);
+  }, [appearance]);
+
+  const changeAppearance = (next: AppearanceTheme) => {
+    setAppearance(next);
+    saveAppearance(next);
+  };
 
   const display = useCallback(
     (target: Sentence) => {
@@ -226,6 +237,8 @@ export function App() {
             <SettingsView
               speed={speed}
               showIpa={showIpa}
+              appearance={appearance}
+              onChangeAppearance={changeAppearance}
               onToggleSpeed={() => setSpeed((value) => (value === 'normal' ? 'slow' : 'normal'))}
               onToggleIpa={() => setShowIpa((value) => !value)}
               onBackToPractice={() => nav('practice')}
