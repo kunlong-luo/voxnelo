@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 import 'fake-indexeddb/auto';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { APPEARANCE_KEY, applyAppearance, parseAppearance, readAppearance, saveAppearance } from '../apps/web/src/appearance';
 import { App } from '../apps/web/src/App';
+import { LANGUAGE_STORAGE_KEY } from '../apps/web/src/i18n';
 
 afterEach(() => {
   cleanup();
@@ -12,6 +13,7 @@ afterEach(() => {
 });
 
 describe('Local-only appearance preference', () => {
+  beforeEach(() => localStorage.setItem(LANGUAGE_STORAGE_KEY, 'zh-CN'));
   it('falls back to Nordic for a missing or unrecognized value', () => {
     expect(parseAppearance(undefined)).toBe('nordic');
     expect(parseAppearance('invalid-theme')).toBe('nordic');
