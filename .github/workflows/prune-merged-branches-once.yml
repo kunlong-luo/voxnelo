@@ -1,0 +1,57 @@
+# Temporary workflow. Delete this file after the one-time cleanup run.
+# Triggered only when this file is added/modified on main.
+name: One-time merged branch cleanup
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/prune-merged-branches-once.yml
+permissions:
+  contents: write
+
+jobs:
+  prune:
+    if: github.repository == 'kunlong-luo/voxnelo'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Verify every topic branch is contained in main, then delete
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          branches=(
+            "chore/dependabot-compat-batch"
+            "design/nordic-learning-v01"
+            "design/sunset-glow-theme-preview"
+            "design/three-column-control-only-titlebar"
+            "design/ui2-glass-workspace"
+            "docs/ui-assets"
+            "docs/ui-u3"
+            "fix/centered-practice-symmetric-navigation"
+            "fix/linux-offline-tts-sunset-polish"
+            "chore/one-shot-merged-branch-prune"
+          )
+          failed=0
+          for branch in "${branches[@]}"; do
+            printf 'Checking %s...\n' "$branch"
+            if ! ahead=$(gh api "repos/$GH_REPO/compare/main...$branch" --jq '.ahead_by'); then
+              echo "::error::Could not verify $branch against main; refusing to delete."
+              failed=1
+              continue
+            fi
+            if [[ "$ahead" != "0" ]]; then
+              echo "::error::$branch has $ahead unmerged commit(s); leaving untouched."
+              failed=1
+              continue
+            fi
+            if gh api --method DELETE "repos/$GH_REPO/git/refs/heads/$branch" >/dev/null; then
+              echo "Deleted $branch (fully included in main)."
+            else
+              echo "::error::Deletion failed for $branch."
+              failed=1
+            fi
+          done
+          exit "$failed"
