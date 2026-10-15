@@ -102,7 +102,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
       setVisited((history) => [...history.slice(0, historyPosition + 1), target.id]);
       setHistoryPosition((position) => position + 1);
     },
-    [recordingBusy, historyPosition, recorder],
+    [recordingBusy, historyPosition, recorder, t],
   );
 
   const nextSentence = useCallback(() => {
