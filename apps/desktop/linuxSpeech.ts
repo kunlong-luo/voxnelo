@@ -1,4 +1,4 @@
-import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
+import { spawn, type ChildProcess } from 'node:child_process';
 import { SENTENCES } from '@voxnelo/content';
 
 export type LinuxSpeechResult =
@@ -28,7 +28,7 @@ export function validWave(bytes: Buffer): boolean {
  * audio sink (which can fail on PipeWire). No shell, network or file writes.
  */
 export class LinuxEnglishSpeech {
-  private current: ChildProcessWithoutNullStreams | null = null;
+  private current: ChildProcess | null = null;
   private sequence = 0;
 
   cancel(): void {
