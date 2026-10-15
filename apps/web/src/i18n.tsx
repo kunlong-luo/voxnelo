@@ -149,7 +149,17 @@ const strings = {
     "errorDesc": "可以重新尝试打开练习界面，或者重新加载应用。不会自动清除你的本地学习记录。",
     "errorRetry": "重试",
     "errorReload": "重新加载",
-    "errorPrivacy": "错误详情仅记录在本机控制台，不会自动上传"
+    "errorPrivacy": "错误详情仅记录在本机控制台，不会自动上传",
+    "recorderUnsupported": "当前设备或浏览器不支持录音。",
+    "recorderEmpty": "没有录到声音，请检查麦克风并重试。",
+    "recorderInterrupted": "录音中断，请重新尝试。",
+    "recorderPermission": "麦克风未获授权。你仍然可以听示范和查看短句。",
+    "recorderFailure": "无法启动录音。",
+    "speechInstall": "未找到本地英语合成引擎。Pop!_OS 可运行 sudo apt install espeak-ng，安装后重试。",
+    "speechUnavailable": "未找到可用的英语语音。请检查系统的英语语音引擎，或使用安装了英语语音的浏览器。",
+    "speechPlayback": "已生成英语语音，但无法播放。请检查 Pop!_OS 的默认输出设备与音量。",
+    "speechSystemError": "Linux 本地英语语音服务暂时无法运行，请检查应用或系统音频设置。",
+    "speechSynthesisError": "Linux 英语语音生成失败，请检查 eSpeak 引擎及系统音频。"
   },
   "en": {
     "navPractice": "Practice",
@@ -296,7 +306,17 @@ const strings = {
     "errorDesc": "Try opening the practice screen again, or reload the app. Your local progress will not be deleted.",
     "errorRetry": "Try again",
     "errorReload": "Reload",
-    "errorPrivacy": "Error details stay in the local console; nothing is uploaded automatically."
+    "errorPrivacy": "Error details stay in the local console; nothing is uploaded automatically.",
+    "recorderUnsupported": "Recording is unavailable on this device or browser.",
+    "recorderEmpty": "No audio recorded. Check your microphone and try again.",
+    "recorderInterrupted": "Recording was interrupted. Please try again.",
+    "recorderPermission": "Microphone permission was denied. You can still listen and read examples.",
+    "recorderFailure": "Unable to start recording.",
+    "speechInstall": "No local English voice engine found. On Pop!_OS, run sudo apt install espeak-ng, then retry.",
+    "speechUnavailable": "No English voice is available. Check your system speech engine or use a browser with English voices.",
+    "speechPlayback": "English audio was generated but could not be played. Check the default sound output and volume.",
+    "speechSystemError": "The local Linux speech service is unavailable. Check the app and system audio settings.",
+    "speechSynthesisError": "Linux English speech generation failed. Check eSpeak and your audio settings."
   }
 } as const;
 export type TranslationKey = keyof typeof strings.zh;
