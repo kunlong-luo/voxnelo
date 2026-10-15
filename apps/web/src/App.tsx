@@ -133,12 +133,13 @@ export function App() {
     void setFlag(current.id, flag, !currentState?.[flag]);
   };
 
-  const playDemo = () => {
+  const playDemo = async () => {
     if (recordingBusy) {
       setNotice('请先结束当前录音，再播放参考发音。');
       return;
     }
-    const result = speak(current.english, speed);
+    const result = await speak(current.english, speed);
+    if (result.cancelled) return;
     setNotice(result.ok ? '' : (result.message ?? '无法播放语音。'));
   };
 
