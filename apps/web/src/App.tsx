@@ -17,6 +17,8 @@ import { PracticeView } from './PracticeView';
 import { LibraryView, type View } from './LibraryView';
 import { SettingsView } from './SettingsView';
 import { DesktopTitlebar } from './DesktopTitlebar';
+import { Button } from './components/ui/button';
+import { cn } from './lib/utils';
 import { applyAppearance, readAppearance, saveAppearance, type AppearanceTheme } from './appearance';
 import { I18nProvider, readLanguageSetting, resolveLocale, saveLanguageSetting, setDocumentLocale, useI18n, type LanguageSetting } from './i18n';
 
@@ -200,16 +202,16 @@ function AppScreen({languageSetting,onChangeLanguage}: {
   };
 
   return (
-    <div className={window.voxneloDesktop?.windowControls ? "appFrame desktopFrame" : "appFrame"}>
+    <div className={cn("appFrame min-h-dvh bg-background text-foreground",window.voxneloDesktop?.windowControls&&"desktopFrame")}>
       <DesktopTitlebar />
-      <div className="shell">
-      <aside className="sidebar">
-        <div className="brand" aria-label="Voxnelo">
-          <div className="brandMark"><img src="brand/voxnelo-mark.svg" alt="" width="48" height="48" /></div>
-          <div className="brandText"><strong>Voxnelo</strong></div>
+      <div className="shell flex min-h-dvh items-stretch">
+      <aside className="sidebar sticky top-0 flex h-dvh w-56 shrink-0 flex-col overflow-y-auto border-r border-border/70 bg-sidebar px-3 py-7 text-sidebar-foreground max-[900px]:w-19 max-[900px]:items-center max-[900px]:px-2 sm:w-60">
+        <div className="brand mb-8 flex w-full items-center gap-3 px-2 max-[900px]:justify-center max-[900px]:px-0" aria-label="Voxnelo">
+          <div className="brandMark flex size-11 shrink-0 items-center justify-center"><img src="brand/voxnelo-mark.svg" alt="" width="44" height="44" className="size-11 rounded-2xl shadow-sm"/></div>
+          <div className="brandText max-[900px]:hidden"><strong className="text-[24px] font-extrabold tracking-[-.065em] text-foreground">Voxnelo</strong></div>
         </div>
-        <div className="sidebarHint">{t('sidebarSpace')}</div>
-        <nav aria-label={t('navLabel')}>
+        <div className="sidebarHint px-4 text-[10px] font-bold tracking-[.18em] text-muted-foreground uppercase max-[900px]:hidden">{t('sidebarSpace')}</div>
+        <nav className="mt-4 flex w-full flex-col gap-1.5" aria-label={t('navLabel')}>
           {menu.map(({ id, icon: Icon }) => (
             <button key={id} className={`navItem ${view === id ? 'active' : ''}`} aria-label={t(({practice:'navStart',favorites:'navMyFavorites',history:'navRecent',review:'navReviewItems',settings:'navSettings'} as const)[id])} aria-current={view === id ? 'page' : undefined} onClick={() => nav(id)}>
               <Icon size={20} strokeWidth={1.9} />
@@ -218,21 +220,21 @@ function AppScreen({languageSetting,onChangeLanguage}: {
             </button>
           ))}
         </nav>
-        <div className="sidebarBottom">
-          <div className="tinyPanel privacyPanel">
-            <span className="tinyBadge"><ShieldCheck size={17} /></span>
+        <div className="sidebarBottom mt-auto flex flex-col gap-4 px-2 pt-8 max-[900px]:hidden">
+          <div className="tinyPanel privacyPanel flex flex-col gap-2 rounded-2xl border border-border/70 bg-card/55 p-4 text-xs leading-5 text-muted-foreground">
+            <span className="tinyBadge flex size-9 items-center justify-center rounded-xl bg-secondary text-primary"><ShieldCheck size={17} /></span>
             <strong>{t('sidebarRhythm')}</strong>
             <span>{t('sidebarLocal')}</span>
           </div>
-          <div className="sidebarVersion">Voxnelo · Early Access {APP_VERSION}</div>
+          <div className="sidebarVersion px-1 text-[10px] text-muted-foreground">Voxnelo · Early Access {APP_VERSION}</div>
         </div>
       </aside>
-      <div className="mainArea">
+      <div className="mainArea relative min-w-0 flex-1 bg-gradient-to-br from-background via-brand-cream/45 to-brand-mist/35">
         {recorder.status === 'recording' ? (
           <button type="button" className="recordingQuickStop" onClick={handleRecorder}
             aria-label={t("stopFloating")}><Square size={15} fill="currentColor" aria-hidden="true" /> {t("stopRecording")}</button>
         ) : null}
-        <main className="content">
+        <main className="content mx-auto w-full max-w-400 px-3 py-4 sm:px-5 sm:py-6 xl:px-8">
           {view === 'practice' ? (
             <PracticeView
               current={current}
