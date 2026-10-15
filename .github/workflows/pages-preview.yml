@@ -17,6 +17,10 @@ concurrency:
 jobs:
   build:
     if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -39,6 +43,8 @@ jobs:
         run: node scripts/check-pages-artifact.mjs
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - name: Upload static site
         uses: actions/upload-pages-artifact@v4
         with:
