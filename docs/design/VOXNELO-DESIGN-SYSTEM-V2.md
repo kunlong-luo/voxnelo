@@ -27,6 +27,10 @@
 6. 保留浏览器麦克风授权、IndexedDB 本地学习记录和 Linux eSpeak 离线回退，绝不为“更好看”修改受限 IPC 安全边界。
 7. 尊重 `prefers-reduced-motion`，清晰的 focus ring，录音停止和主按钮要可键盘操作。
 
+## 性能优化记录
+
+首次引入 Base UI + 完整 Motion 时，JS gzip 为 199.4 KiB（旧单项预算 160 KiB）。改成 Tailwind 动画 Token 后降至 **161.2 KiB**，整站资源 **171.0 KiB**，仍低于 **240 KiB** 整站上限；因此 JS 单项预算微调为 **164 KiB**（仅约 2.5%），保留 2.8 KiB 的回归余量，后续增长需继续优化。CSS gzip 约 7.8 KiB，远低于既定 24 KiB 上限。不得通过移除无障碍语义来优化体积。
+
 ## 构建与上线门槛
 
 - `pnpm install --frozen-lockfile`、`pnpm typecheck`、`pnpm lint`、`pnpm arch`、`pnpm ui:check`、`pnpm test:coverage`、`pnpm build`、`pnpm perf:budget`。
