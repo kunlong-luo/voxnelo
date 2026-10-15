@@ -18,7 +18,10 @@ beforeEach(async () => {
 describe('App smoke', () => {
   it('首屏展示品牌、首句与导航', async () => {
     render(<App />);
-    expect(screen.getAllByText('Voxnelo')).toHaveLength(2);
+    expect(screen.getByText(/Voxnelo · Early Access/)).toBeTruthy();
+    expect(screen.queryByRole('banner', { name: '窗口标题栏' })).toBeNull();
+    expect(screen.queryByText('英语口语')).toBeNull();
+    expect(screen.queryByText('本地学习模式')).toBeNull();
     // 首屏直接进入学习，不再出现重复的营销标语或每日口号。
     expect(screen.queryByText('从第一句开始，自信开口')).toBeNull();
     expect(screen.queryByText('从这一句开始，')).toBeNull();
@@ -62,8 +65,8 @@ describe('App smoke', () => {
       fireEvent.click(screen.getByRole('button', { name: '我的收藏' }));
       expect(screen.getByText('请先结束当前录音，再切换页面。')).toBeTruthy();
       expect(screen.getByText(FIRST_SENTENCE.english)).toBeTruthy();
-      // 在窄屏或滚动位置较深时，顶部提供不依赖卡片可见性的停录按钮。
-      fireEvent.click(screen.getByRole('button', { name: '顶部快速停止录音' }));
+      // 浮动停止按钮不在顶部窗口栏中，仍不依赖主卡片的滚动位置。
+      fireEvent.click(screen.getByRole('button', { name: '悬浮快速停止录音' }));
       expect(stopTrack).toHaveBeenCalled();
       view.unmount();
       expect(stopTrack).toHaveBeenCalled();
