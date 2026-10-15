@@ -162,7 +162,7 @@ export function App() {
             <strong>Voxnelo</strong>
           </div>
         </div>
-        <div className="sidebarHint">YOUR LEARNING SPACE</div>
+        <div className="sidebarHint">我的学习空间</div>
         <nav aria-label="主导航">
           {menu.map(({ id, label, accessibleLabel, icon: Icon }) => (
             <button key={id} className={`navItem ${view === id ? 'active' : ''}`} aria-label={accessibleLabel} aria-current={view === id ? 'page' : undefined} onClick={() => nav(id)}>
