@@ -269,3 +269,580 @@ html {
 .recoverySecondary:hover{background:#e4f1ff}
 .recoveryPrivacy{font-size:10px;line-height:1.7;color:#7291a6;display:flex;align-items:center;gap:6px}
 @media(max-width:420px){.recoveryPanel{padding:30px 20px}}
+
+
+/* ===== REFERENCE-MATCHED WORKSPACE · desktop layout v0.1.1 =====
+ * Main lesson = primary focus; side stats are secondary.
+ * Intentionally uses no live/fake sound measurements or timing.
+ * See docs/design/DESKTOP-LAYOUT-SPEC-v0.1.md.
+ */
+:root {
+  --workbench-navy: #0b254a;
+  --workbench-blue: #2775f2;
+  --workbench-teal: #0dbbc2;
+  --workbench-ink: #0a2550;
+  --workbench-muted: #7087a2;
+}
+.content {
+  max-width: 1540px;
+  padding: 23px clamp(18px, 2.1vw, 34px) 34px;
+}
+.layoutWorkbench.practiceLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(255px, 23vw, 332px);
+  align-items: start;
+  column-gap: 16px;
+  row-gap: 16px;
+}
+.referenceLesson.practiceCard {
+  min-height: clamp(600px, calc(100vh - 120px), 752px);
+  display: flex;
+  flex-direction: column;
+  padding: 25px clamp(18px, 2.1vw, 31px) 0;
+  border: 1px solid #e4eff9;
+  border-radius: 25px;
+  box-shadow: 0 16px 55px #28578415, 0 3px 10px #28578408;
+}
+.lessonHeader.cardHeader {
+  align-items: center;
+  min-height: 44px;
+}
+.lessonProgress {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  width: 100%;
+  min-width: 0;
+  flex: 1;
+}
+.lessonCount {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  min-height: 37px;
+  padding: 0 13px;
+  color: #32639e;
+  background: #f0f6ff;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.lessonProgressTrack {
+  width: 100%;
+  max-width: 340px;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e7eef8;
+}
+.lessonProgressTrack > span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #2880f6, #16d4b5);
+  border-radius: inherit;
+  transition: width 180ms ease;
+}
+.referenceLesson .pill {
+  font-size: 11px;
+  color: #3974a1;
+  background: #eff7ff;
+  padding: 10px 12px;
+  flex-shrink: 0;
+}
+.lessonFocus {
+  flex: 1 1 auto;
+  min-height: 286px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  padding: 27px 3px 9px;
+}
+.sentenceContent {
+  width: 100%;
+  max-width: 100%;
+  text-align: center;
+}
+.lessonLevel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8ea5c3;
+  letter-spacing: 1px;
+  margin: 0 0 16px;
+}
+.sentenceHeading {
+  width: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 37px;
+}
+.referenceLesson .sentenceText {
+  font-size: clamp(37px, 4vw, 70px);
+  font-weight: 850;
+  letter-spacing: -2.1px;
+  line-height: 1.15;
+  color: #0a2451;
+  margin: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+.lessonFavorite {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 39px;
+  height: 39px;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: #6d91c4;
+}
+.lessonFavorite:hover {
+  color: #2869bb;
+  background: #eff6ff;
+}
+.lessonFavorite.selected {
+  color: #12a89c;
+  background: #e2f8f4;
+}
+.referenceLesson .translation {
+  font-size: clamp(19px, 1.65vw, 24px);
+  margin: 18px 0 0;
+  color: #5c6f89;
+}
+.referenceLesson .ipa {
+  margin: 12px 0 0;
+  color: #6584a8;
+}
+.referenceLesson .subtleLink {
+  margin: 14px auto 0;
+  border-color: #e5eff9;
+  background: #f8fbff;
+}
+.rhythmDecoration {
+  width: min(100%, 550px);
+  height: 72px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 3px;
+  overflow: hidden;
+  opacity: .75;
+  mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent);
+}
+.rhythmDecoration span {
+  display: block;
+  flex: 0 1 5px;
+  min-width: 2px;
+  max-width: 5px;
+  border-radius: 99px;
+  background: linear-gradient(180deg, #59b8fc, #0ed3c2);
+}
+.rhythmDecoration span:nth-child(3n) { background: #81c9ee; }
+.rhythmDecoration span:nth-child(4n) { background: #3dd9de; }
+
+.lessonActions {
+  flex-shrink: 0;
+  min-width: 0;
+  padding: 4px 0 15px;
+}
+.actionRail {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(100px, 1.25fr) repeat(3, minmax(0, 1fr));
+  align-items: start;
+  justify-items: stretch;
+  gap: clamp(3px, .6vw, 11px);
+}
+.actionSlot {
+  min-width: 0;
+  min-height: 148px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: center;
+  gap: 7px;
+}
+.actionSlot .roundControl,
+.actionSlot .recordAction {
+  margin-top: 20px;
+}
+.actionSlot .roundControl {
+  display: grid;
+  place-items: center;
+  width: clamp(49px, 4.8vw, 76px);
+  height: clamp(49px, 4.8vw, 76px);
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  flex-shrink: 0;
+  border: 1px solid #dce9f7;
+  border-radius: 50%;
+  color: #315c9b;
+  background: linear-gradient(155deg, #ffffff, #eaf4ff);
+  box-shadow: 0 5px 12px #2a6cb617;
+}
+.actionSlot .roundControl:hover:not(:disabled) {
+  transform: translateY(-2px);
+  color: #176bc2;
+  border-color: #a9cdee;
+  box-shadow: 0 9px 17px #2a6cb622;
+}
+.actionSlot .roundControl:active:not(:disabled) {
+  transform: translateY(0);
+}
+.actionSlot .speedButton[aria-pressed='true'] {
+  background: #ddf8f2;
+  color: #088f88;
+  border-color: #8ae1d2;
+}
+.actionSlot .stopButton:not(:disabled) {
+  color: #cc3b5a;
+  background: #fff0f4;
+  border-color: #f3b4c2;
+}
+.actionSlot .replayButton:disabled {
+  color: #96abc1;
+  background: #edf3fa;
+}
+.actionSlot.recordSlot {
+  min-height: 162px;
+  gap: 6px;
+}
+.actionSlot.recordSlot .recordAction {
+  width: clamp(84px, 7.5vw, 110px);
+  height: clamp(84px, 7.5vw, 110px);
+  min-width: 0;
+  max-width: none;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 6px solid #e9f9ff;
+  outline: 3px solid #cceaf9;
+  border-radius: 50%;
+  background: linear-gradient(140deg, #2678f8 5%, #08cbbf 100%);
+  color: #fff;
+  box-shadow: 0 8px 0 #eef9fd, 0 10px 26px #2e94eb3d;
+}
+.actionSlot.recordSlot .recordAction:not(:disabled):hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 0 #eef9fd, 0 15px 28px #2e94eb42;
+}
+.actionSlot.recordSlot .recordAction.isRecording {
+  background: linear-gradient(145deg, #f27078, #df3b69);
+  outline-color: #f9cdd7;
+  box-shadow: 0 9px 26px #ea4f7040;
+  opacity: 1;
+}
+.actionCaption {
+  font-size: clamp(10px, .83vw, 12px);
+  line-height: 1.45;
+  font-weight: 750;
+  color: #3d587d;
+  text-align: center;
+}
+.actionAux {
+  display: block;
+  font-size: 10px;
+  line-height: 1.3;
+  color: #90a4bb;
+  text-align: center;
+}
+.replaySlot .replayProgress {
+  height: 4px;
+  max-width: 76px;
+  width: 76%;
+  margin-top: 2px;
+  flex: none;
+}
+.replaySlot .replayTime {
+  font-variant-numeric: tabular-nums;
+  color: #7190af;
+  font-size: 10px;
+}
+.replaySlot .replayError {
+  position: absolute;
+  margin-top: 134px;
+  max-width: 160px;
+  z-index: 1;
+  padding: 6px;
+  background: #fff8fb;
+  border-radius: 8px;
+  border: 1px solid #f3d6dd;
+  font-size: 10px;
+}
+.referenceLesson .recordingStatus,
+.referenceLesson .practicePrompt {
+  min-height: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin: 3px 0 4px;
+  text-align: center;
+  line-height: 1.6;
+}
+.referenceFooter.cardFooter {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 calc(-1 * clamp(18px, 2.1vw, 31px));
+  padding: 14px clamp(18px, 2.1vw, 31px);
+  min-height: 64px;
+  gap: 11px;
+}
+.referenceFooter .prevButton {
+  width: auto;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0 11px;
+  color: #48769b;
+  font-size: 11px;
+  font-weight: 700;
+}
+.referenceFooter .iconText {
+  white-space: nowrap;
+}
+.footerHint {
+  font-size: 10px;
+  color: #92a4bb;
+  text-align: center;
+}
+.referenceInsights.insightsColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.referenceInsights .insightCard {
+  border-radius: 23px;
+  padding: 21px 18px;
+  box-shadow: 0 12px 29px #37649d10;
+  width: 100%;
+}
+.referenceInsights .insightHeading h2 {
+  font-size: 16px;
+  color: var(--workbench-ink);
+  font-weight: 800;
+  margin: 0;
+}
+.progressOverview {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 23px 1px 18px;
+}
+.progressDonut {
+  width: clamp(85px, 8vw, 110px);
+  height: clamp(85px, 8vw, 110px);
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+.donutInner {
+  width: 78%;
+  height: 78%;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  font-variant-numeric: tabular-nums;
+}
+.donutInner strong {
+  font-size: 26px;
+  font-weight: 850;
+  color: #1a3b65;
+}
+.donutInner small {
+  font-size: 13px;
+  color: #7a90af;
+}
+.progressSummary {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #7188a2;
+  font-size: 11px;
+}
+.progressSummary strong {
+  color: #1c3765;
+  font-size: clamp(14px, 1.18vw, 19px);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.progressSummary small {
+  color: #7c9bad;
+  font-size: 10px;
+  line-height: 1.4;
+}
+.referenceInsights .miniMetrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin-top: 4px;
+  padding: 16px 0 1px;
+  border: 1px solid #e7eff8;
+  border-radius: 13px;
+  overflow: hidden;
+}
+.referenceInsights .miniMetrics > div {
+  padding: 4px 3px 12px;
+  text-align: center;
+  gap: 4px;
+  border-right: 1px solid #e5eef8;
+}
+.referenceInsights .miniMetrics > div:last-child { border-right: none; }
+.referenceInsights .miniMetrics strong {
+  font-size: 20px;
+  color: #1b4678;
+}
+.referenceInsights .miniMetrics span {
+  line-height: 1.35;
+  font-size: 10px;
+  color: #768fa9;
+}
+.referenceInsights .progressCopy {
+  font-size: 10px;
+  line-height: 1.5;
+  margin: 13px 0 0;
+  text-align: center;
+}
+.referenceInsights .tipCard p {
+  background: #eaf5ff;
+  color: #4c6c90;
+  padding: 18px;
+  font-size: 12px;
+  margin: 15px 0 0;
+  border-radius: 13px;
+  line-height: 1.85;
+}
+.routineChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 17px 0 10px;
+}
+.routineChips span {
+  padding: 8px 10px;
+  color: #3779b3;
+  background: #eaf5ff;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 730;
+}
+.routineCard p {
+  color: #8194aa;
+  font-size: 11px;
+  margin: 0;
+  line-height: 1.5;
+}
+.referenceInsights .privacyNote {
+  grid-column: 1/-1;
+  font-size: 10px;
+  padding: 3px 8px 0;
+}
+.privacyPanel .tinyBadge { color: #51d9c7; }
+
+@media (max-width: 1280px) {
+  .layoutWorkbench.practiceLayout { grid-template-columns: minmax(0, 1fr) 242px; gap: 13px; }
+  .referenceInsights .insightCard { padding: 17px 14px; }
+  .progressOverview { gap: 9px; }
+  .progressDonut { width: 82px; height: 82px; }
+  .progressSummary strong { font-size: 14px; }
+  .referenceLesson.practiceCard { padding-left: 20px; padding-right: 20px; }
+  .referenceFooter.cardFooter { margin-left: -20px; margin-right: -20px; padding-left: 20px; padding-right: 20px; }
+}
+@media (max-width: 1090px) {
+  .layoutWorkbench.practiceLayout { grid-template-columns: minmax(0,1fr); }
+  .referenceInsights.insightsColumn { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); align-items: start; }
+  .referenceInsights .routineCard { grid-column: 1/-1; }
+  .referenceInsights .privacyNote { grid-column: 1/-1; }
+  .referenceLesson.practiceCard { min-height: 580px; }
+  .referenceLesson .sentenceText { font-size: clamp(38px, 5vw, 62px); }
+}
+@media (max-width: 890px) {
+  .layoutWorkbench.practiceLayout { gap: 14px; }
+  .content { padding-left: 16px; padding-right: 16px; }
+  .referenceLesson.practiceCard { padding-left: 16px; padding-right: 16px; }
+  .referenceFooter.cardFooter { margin-left: -16px; margin-right: -16px; padding: 12px 16px; }
+  .referenceLesson .sentenceText { font-size: 38px; }
+  .actionRail { grid-template-columns: repeat(2,minmax(0,1fr)) minmax(89px,1.25fr) repeat(3,minmax(0,1fr)); gap: 3px; }
+  .actionSlot .roundControl { width: 46px; height: 46px; }
+  .actionSlot.recordSlot .recordAction { width: 78px; height: 78px; }
+  .actionSlot { min-height: 125px; }
+  .actionSlot.recordSlot { min-height: 137px; }
+  .actionCaption { font-size: 10px; }
+  .actionAux { font-size: 9px; }
+  .footerHint { display: none; }
+}
+@media (max-height: 690px) {
+  .referenceLesson.practiceCard { min-height: 580px; }
+  .lessonFocus { min-height: 235px; gap: 10px; padding-top: 17px; }
+  .rhythmDecoration { height: 50px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lessonProgressTrack > span { transition: none; }
+}
+
+
+/* Accessible emergency stop remains visible when a small desktop window scrolls. */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: blur(14px);
+}
+.topbarActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  min-width: 0;
+}
+.topbarStop {
+  min-height: 39px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 14px;
+  border-radius: 11px;
+  border: 1px solid #f6a0b3;
+  color: #a92847;
+  background: #fff0f4;
+  box-shadow: 0 5px 16px #c72d4f16;
+  font-size: 12px;
+  font-weight: 780;
+  white-space: nowrap;
+}
+.topbarStop:hover { background: #ffe1e9; }
+.topbarStop:focus-visible { outline: 3px solid #f17c93; outline-offset: 2px; }
+.replaySlot { position: relative; }
+.replaySlot .replayError {
+  top: 100%;
+  left: 50%;
+  margin-top: 2px;
+  transform: translateX(-50%);
+  width: 190px;
+}
+@media(max-width: 890px) {
+  .topbarStop { padding: 0 9px; font-size: 11px; }
+  .topbarActions { gap: 7px; }
+}

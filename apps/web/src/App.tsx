@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowUpRight, Clock3, Headphones, Heart, ListRestart, Sparkles, type LucideIcon } from 'lucide-react';
+import { Clock3, Headphones, Heart, ListRestart, ShieldCheck, Square, type LucideIcon } from 'lucide-react';
 import {
   APP_VERSION,
   FIRST_SENTENCE,
   pickNext,
   primeSpeechVoices,
   SENTENCES,
+  TOPIC_LABELS,
   silence,
   speak,
   summarize,
@@ -18,8 +19,8 @@ import { LibraryView, type View } from './LibraryView';
 
 const menu: { id: View; label: string; icon: LucideIcon }[] = [
   { id: 'practice', label: '开始练习', icon: Headphones },
-  { id: 'history', label: '最近学习', icon: Clock3 },
   { id: 'favorites', label: '我的收藏', icon: Heart },
+  { id: 'history', label: '最近学习', icon: Clock3 },
   { id: 'review', label: '需要复习', icon: ListRestart },
 ];
 
@@ -167,11 +168,10 @@ export function App() {
           ))}
         </nav>
         <div className="sidebarBottom">
-          <div className="tinyPanel">
-            <span className="tinyBadge"><Sparkles size={16} /></span>
-            <strong>今天，也来说一句。</strong>
-            <span>没有考试压力，按自己的节奏练习。</span>
-            <ArrowUpRight className="tinyArrow" size={17} />
+          <div className="tinyPanel privacyPanel">
+            <span className="tinyBadge"><ShieldCheck size={17} /></span>
+            <strong>本地隐私保护</strong>
+            <span>学习记录保存在本机；录音仅供当次回听。</span>
           </div>
           <div className="sidebarVersion">Voxnelo · Early Access {APP_VERSION}</div>
         </div>
@@ -179,11 +179,15 @@ export function App() {
       <div className="mainArea">
         <header className="topbar">
           <span className="breadcrumb">
-            学习空间 <span>/</span> {view === 'practice' ? '今日练习' : menu.find((x) => x.id === view)?.label}
+            学习空间 <span>/</span> {view === 'practice' ? TOPIC_LABELS[current.topic] : menu.find((x) => x.id === view)?.label}
           </span>
-          <span className="topRight">
-            <span className="statusDot" /> 免费 · 本地优先
-          </span>
+          <div className="topbarActions">
+            {recorder.status === 'recording' ? (
+              <button type="button" className="topbarStop" onClick={handleRecorder}
+                aria-label="顶部快速停止录音"><Square size={15} fill="currentColor" /> 结束录音</button>
+            ) : null}
+            <span className="topRight"><span className="statusDot" /> 免费 · 本地优先</span>
+          </div>
         </header>
         <main className="content">
           {view === 'practice' ? (
