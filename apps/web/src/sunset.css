@@ -1,0 +1,248 @@
+/* Sunset Glow · visual prototype, built on the exact same Nordic/UI2 layout.
+ * Not a second 20KB full layout: only color, surface and art direction change.
+ * No live waveform, fake activity, accounts, or extra recording behaviors.
+ */
+:root[data-theme='sunset'] {
+  --n-bg: #f6eee8;
+  --n-sidebar: #f3e9e2;
+  --n-surface: #fff9f5;
+  --n-soft: #f4e9e2;
+  --n-warm: #f9eee3;
+  --n-ink: #2b3e40;
+  --n-muted: #596d6e;
+  --n-primary: #477e78;
+  --n-primary-strong: #325f5c;
+  --n-border: #eadfd9;
+  --n-focus: #1c726c;
+  --n-danger: #ab4759;
+  --n-shadow: 0 18px 38px rgba(104, 91, 86, .10), 0 2px 7px rgba(112, 85, 78, .05);
+  background: #f6eee8;
+  color: var(--n-ink);
+  scrollbar-color: #d2b4aa #f8f0eb;
+}
+:root[data-theme='sunset'] body {
+  color: var(--n-ink);
+  background:
+    radial-gradient(ellipse 43% 49% at 3% 3%, rgba(250, 175, 147, .62), transparent 87%),
+    radial-gradient(ellipse 44% 62% at 94% 8%, rgba(241, 209, 164, .48), transparent 86%),
+    radial-gradient(ellipse 51% 52% at 56% 90%, rgba(145, 205, 198, .42), transparent 90%),
+    linear-gradient(122deg, #faeee8 2%, #e7eeeb 55%, #f5e9e4 100%);
+  background-attachment: fixed;
+}
+[data-theme='sunset'] .appTitlebar {
+  border-bottom-color: #efe3db;
+  background: rgba(255, 247, 243, .92);
+  color: #354b49;
+}
+[data-theme='sunset'] .titlebarBrand strong { color: #3f7770; }
+[data-theme='sunset'] .titlebarSubtitle { color: #877973; }
+[data-theme='sunset'] .windowControl { color: #696d6b; }
+[data-theme='sunset'] .windowControl:hover { color: #3a5552; background: #f4e7df; border-color: #e9d6cb; }
+[data-theme='sunset'] .windowControl.close:hover { background: #fae4e1; color: #a43749; }
+[data-theme='sunset'] .shell { background: transparent; }
+[data-theme='sunset'] .sidebar {
+  background: linear-gradient(165deg, rgba(255, 249, 243, .72), rgba(244, 232, 227, .75));
+  border-right: 1px solid rgba(255, 255, 255, .8);
+  box-shadow: inset -1px 0 rgba(228, 201, 189, .24);
+  backdrop-filter: blur(16px);
+  scrollbar-color: #d6b8ad #f7ede7;
+}
+[data-theme='sunset'] .brandText strong { color: #395d5b; }
+[data-theme='sunset'] .sidebarHint { color: #8d8580; }
+[data-theme='sunset'] .navItem { color: #676d6b; }
+[data-theme='sunset'] .navItem svg { color: #968780; }
+[data-theme='sunset'] .navItem:not(.active):hover {
+  color: #4e615f;
+  background: rgba(255, 255, 255, .61);
+}
+[data-theme='sunset'] .navItem.active {
+  color: #574b48;
+  border-color: #efd9cd;
+  background: linear-gradient(110deg, #fbe2d5, #f6f0e9);
+  box-shadow: inset 3px 0 #da9283, 0 4px 14px rgba(157, 112, 98, .07);
+}
+[data-theme='sunset'] .navItem.active svg { color: #ba7669; }
+[data-theme='sunset'] .navCount { background: #f5dad0; color: #9d6557; }
+[data-theme='sunset'] .tinyPanel {
+  border: 1px solid rgba(255, 255, 255, .78);
+  background: rgba(255, 252, 248, .82);
+  box-shadow: 0 9px 25px rgba(123, 96, 86, .09);
+  color: #726e67;
+}
+[data-theme='sunset'] .tinyPanel strong { color: #5c5e53; }
+[data-theme='sunset'] .tinyPanel .tinyBadge { background: #f5e2d8; color: #b47c6b; }
+[data-theme='sunset'] .tinyPanel span:last-child { color: #8c8178; }
+[data-theme='sunset'] .sidebarVersion { color: #a29288; }
+[data-theme='sunset'] .mainArea { background: transparent; }
+[data-theme='sunset'] .topbar {
+  background: rgba(255, 250, 246, .69);
+  border-color: rgba(255, 255, 255, .69);
+  backdrop-filter: blur(14px);
+}
+[data-theme='sunset'] .breadcrumb { color: #5e6560; }
+[data-theme='sunset'] .breadcrumb svg { color: #b5796c; }
+[data-theme='sunset'] .breadcrumb .breadcrumbArrow { color: #ac9990; }
+[data-theme='sunset'] .dateBadge {
+  color: #7b726d; background: rgba(255,255,255,.68);
+  border-color: rgba(255,255,255,.84);
+}
+[data-theme='sunset'] .dateBadge svg { color: #b98670; }
+[data-theme='sunset'] .topRight { color: #8e7b73; background: #f8f0eb; border-color: #eadbd2; }
+
+/* Central reading surface: visually warm but text remains on a stable light plane. */
+[data-theme='sunset'] .referenceLesson.practiceCard {
+  background: linear-gradient(144deg, rgba(255,252,249,.94), rgba(251,241,235,.91) 54%, rgba(238,247,243,.92));
+  border: 1px solid rgba(255,255,255,.88);
+  box-shadow: 0 24px 45px rgba(133,91,85,.10), 0 3px 9px rgba(99,122,119,.06);
+}
+[data-theme='sunset'] .referenceLesson.practiceCard::before {
+  display: block;
+  content: '';
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(ellipse 52% 35% at 10% 12%, rgba(250,187,163,.19), transparent 90%),
+    radial-gradient(ellipse 46% 39% at 90% 80%, rgba(135,207,198,.17), transparent 95%);
+}
+[data-theme='sunset'] .referenceLesson.practiceCard > * { position: relative; z-index: 1; }
+[data-theme='sunset'] .lessonCount { color: #896d63; background: #f6eae3; border-color: #ead9cf; }
+[data-theme='sunset'] .lessonProgressTrack { background: #efe3dc; }
+[data-theme='sunset'] .lessonProgressTrack>span { background: linear-gradient(90deg, #cf8b7b, #86b2a9); }
+[data-theme='sunset'] .referenceLesson .pill { color: #786e65; background: #f7eee6; border-color: #eadcd0; }
+[data-theme='sunset'] .referenceLesson .pill svg { color: #b87f70; }
+[data-theme='sunset'] .lessonLevel { color: #96817a; }
+[data-theme='sunset'] .sentenceText { color: #304345; text-shadow: none; }
+[data-theme='sunset'] .referenceLesson .translation { color: #5e6c6a; }
+[data-theme='sunset'] .referenceLesson .ipa { color: #778986; }
+[data-theme='sunset'] .lessonFavorite { color: #a89186; }
+[data-theme='sunset'] .lessonFavorite:hover { color: #b26b63; background: #f8e9e1; }
+[data-theme='sunset'] .lessonFavorite.selected { color: #b86663; background: #f6e4dc; }
+[data-theme='sunset'] .referenceLesson .subtleLink { color: #81766e; }
+[data-theme='sunset'] .referenceLesson .subtleLink:hover { background: #f9ede7; color: #8e6257; }
+[data-theme='sunset'] .wavePanel {
+  background: linear-gradient(90deg, transparent, rgba(239,215,204,.59) 28%, rgba(217,237,231,.69) 71%, transparent);
+}
+[data-theme='sunset'] .waveformArt { opacity: .82; }
+[data-theme='sunset'] .actionSlot .roundControl {
+  color: #6a7875;
+  border-color: #e7dbd3;
+  background: rgba(255,252,249,.75);
+}
+[data-theme='sunset'] .actionSlot .roundControl:not(:disabled):hover {
+  color: #4b6661; background: #fff9f4; border-color: #d1bdb2;
+  box-shadow: 0 6px 15px rgba(140,105,95,.13);
+}
+[data-theme='sunset'] .actionSlot .speedButton[aria-pressed='true'] {
+  background: #e4f0ea; color: #366e68; border-color: #bbd7cb;
+}
+[data-theme='sunset'] .actionSlot .stopButton:not(:disabled) { color: #a54756; background: #fbebea; border-color: #eec9cb; }
+[data-theme='sunset'] .actionSlot.recordSlot .recordAction {
+  color: #fff;
+  background: linear-gradient(140deg, #db9b84, #c97c78 61%, #ae6670);
+  border-color: #fff8f5;
+  outline-color: #eed5cd;
+  box-shadow: 0 7px 22px rgba(183,107,103,.26);
+}
+[data-theme='sunset'] .actionSlot.recordSlot .recordAction.isRecording {
+  background: linear-gradient(145deg, #ba5c70, #973d57);
+  outline-color: #edc5ca;
+}
+[data-theme='sunset'] .actionCaption { color: #696c67; }
+[data-theme='sunset'] .actionAux,.replaySlot .replayTime { color: #938b84; }
+[data-theme='sunset'] .referenceLesson .practicePrompt { color: #79877e; }
+[data-theme='sunset'] .referenceFooter.cardFooter { background: rgba(255,255,255,.38); border-top-color: #eee3dc; }
+[data-theme='sunset'] .referenceFooter .prevButton { background: #fcf8f4; color: #756d67; border-color: #eaded5; }
+[data-theme='sunset'] .referenceFooter .iconText { color: #776d68; }
+[data-theme='sunset'] .referenceFooter .iconText.selected { color: #b36c5e; background: #f7e6dd; }
+[data-theme='sunset'] .footerHint { color: #948e86; }
+
+/* Right rail: one quiet material system, peach highlights for the learning tip. */
+[data-theme='sunset'] .referenceInsights .insightCard {
+  background: rgba(255,251,247,.88);
+  border-color: rgba(255,255,255,.86);
+  color: #344748;
+  box-shadow: 0 16px 29px rgba(132,103,93,.10), inset 0 1px #fff9;
+  backdrop-filter: blur(9px);
+}
+[data-theme='sunset'] .referenceInsights .insightHeading h2 { color: #424b49; }
+[data-theme='sunset'] .insightSideNote { color: #9b897f; }
+[data-theme='sunset'] .progressDonut { box-shadow: 0 2px 8px rgba(145,113,101,.08); }
+[data-theme='sunset'] .donutInner { background: #fffaf6; }
+[data-theme='sunset'] .donutInner strong { color: #755e55; }
+[data-theme='sunset'] .progressSummary strong { color: #595c56; }
+[data-theme='sunset'] .referenceInsights .miniMetrics { background: #faf0e9; border-color: #eddfd6; }
+[data-theme='sunset'] .referenceInsights .miniMetrics > div { border-right-color: #e9dacf; }
+[data-theme='sunset'] .referenceInsights .miniMetrics strong { color: #846c60; }
+[data-theme='sunset'] .referenceInsights .miniMetrics span { color: #8c8076; }
+[data-theme='sunset'] .feedItem { background: #fbf0e9; border-color: #eedfd6; color: #6b615d; }
+[data-theme='sunset'] .feedItem strong { color: #615d59; }
+[data-theme='sunset'] .feedItem span { color: #9b8276; }
+[data-theme='sunset'] .feedItem:hover:not(:disabled) { background: #f7e7df; border-color: #e2c7b7; }
+[data-theme='sunset'] .referenceInsights .tipCard { background: #fff1e7; border-color: #f3ded2; }
+[data-theme='sunset'] .referenceInsights .tipCard p { color: #6e5e54; background: #fceddf; }
+[data-theme='sunset'] .referenceInsights .tipCard small { color: #8b776a; }
+[data-theme='sunset'] .referenceInsights .insightIcon { color: #b8815f; background: #f8e7d6; }
+[data-theme='sunset'] .referenceInsights .insightIcon.cyan { color: #608d83; background: #e3efea; }
+[data-theme='sunset'] .sceneThumb { border-color: #eadfd6; color: #596d64; }
+[data-theme='sunset'] .scene-greetings { background: #f8e5dd; }
+[data-theme='sunset'] .scene-personal { background: #e5f0ec; }
+[data-theme='sunset'] .scene-daily { background: #f6eddb; }
+[data-theme='sunset'] .sceneThumb svg { color: #aa8474; }
+[data-theme='sunset'] .privacyNote { color: #877c73; }
+
+/* Unified secondary views and saved appearance picker. */
+[data-theme='sunset'] .libraryCard,[data-theme='sunset'] .settingsPanel {
+  background: rgba(255,251,248,.94);
+  border-color: rgba(255,255,255,.86);
+  box-shadow: var(--n-shadow);
+}
+[data-theme='sunset'] .libraryTitle h1 { color: #344848; }
+[data-theme='sunset'] .libraryTitle p { color: #73756e; }
+[data-theme='sunset'] .settingsPanelHeading { color: #ac7868; }
+[data-theme='sunset'] .settingsPanelHeading h2 { color: #544d49; }
+[data-theme='sunset'] .settingsPanel p { color: #817b70; }
+[data-theme='sunset'] .settingToggle { color: #514f4c; background: #fcf4ee; border-color: #ecded4; }
+[data-theme='sunset'] .switchTrack.on { background: #bf8175; }
+[data-theme='sunset'] .backPractice { color: #7d6159; background: #f9eae1; border-color: #ead7ca; }
+[data-theme='sunset'] .libraryItem { background: #fffbf8; border-color: #ecdfd7; }
+[data-theme='sunset'] .libraryItem:hover { background: #f9ece5; border-color: #e6cabe; }
+[data-theme='sunset'] .searchBox { color: #87756a; background: #fffbf7; border-color: #ebddd4; }
+[data-theme='sunset'] .searchBox input { color: #344848; }
+[data-theme='sunset'] .libraryMeta span { background: #f8ece5; color: #8d7265; }
+[data-theme='sunset'] .privacySettings { background: #faf6f0; }
+
+/* Appearance chooser shares both themes' exact layout and all keyboard states. */
+.appearanceChoices { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.appearanceChoice {
+  display: flex; flex-direction: column; align-items: stretch;
+  gap: 10px; min-width: 0; padding: 11px;
+  border: 2px solid var(--n-border); border-radius: 16px;
+  background: #fff; color: var(--n-ink); text-align: left;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.appearanceChoice:hover { border-color: #a6c4b5; }
+.appearanceChoice[aria-pressed='true'] {
+  border-color: var(--n-primary); box-shadow: 0 0 0 2px rgba(56,125,115,.11);
+}
+.appearancePreview {
+  display: flex; min-height: 80px; align-items: stretch; gap: 8px;
+  padding: 11px; border-radius: 11px; border: 1px solid rgba(150,148,140,.13);
+}
+.appearancePreview::before {
+  content: ''; width: 20%; border-radius: 7px; background: rgba(255,255,255,.64);
+}
+.appearancePreview::after {
+  content: ''; flex: 1; border-radius: 9px; background: rgba(255,255,255,.80);
+  box-shadow: inset 0 0 0 1px rgba(120,130,118,.08);
+}
+.appearancePreview.nordic { background: linear-gradient(135deg,#eaf1eb,#f6f7f3); }
+.appearancePreview.sunset { background: linear-gradient(125deg,#f1c3b1,#faf0e7 52%,#d4ece5); }
+.appearanceChoice strong { font-size: 13px; }
+.appearanceChoice small { font-size: 11px; color: var(--n-muted); line-height: 1.5; }
+.appearanceHelp { margin: 13px 0 0 !important; font-size: 11px !important; color: var(--n-muted) !important; }
+@media (max-width: 870px) {
+  .appearanceChoices { grid-template-columns: 1fr; }
+  .appearancePreview { min-height: 52px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .appearanceChoice { transition: none; }
+}
