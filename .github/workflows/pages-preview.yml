@@ -1,8 +1,10 @@
-# Deliberately MANUAL ONLY. Do not expose this private repository's web app
-# publicly without the repository owner's explicit choice.
-name: GitHub Pages web preview (manual)
+# Site owner has confirmed the web experience can be publicly accessible.
+# Publish renderer-only static files; do NOT publish the private repository source.
+name: GitHub Pages public web demo
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -19,13 +21,13 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
         with:
           version: 12.11.2
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: '22'
           cache: pnpm
@@ -35,6 +37,8 @@ jobs:
         run: pnpm build:renderer
       - name: Check project-relative files and branded assets
         run: node scripts/check-pages-artifact.mjs
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
       - name: Upload static site
         uses: actions/upload-pages-artifact@v4
         with:
