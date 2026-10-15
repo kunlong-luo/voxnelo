@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Pause, Play, Volume2 } from 'lucide-react';
+import { Pause, Play } from 'lucide-react';
 
 function clock(seconds: number): string {
   if (!Number.isFinite(seconds)) return '0:00';
@@ -7,8 +7,8 @@ function clock(seconds: number): string {
   return Math.floor(safe / 60) + ':' + String(safe % 60).padStart(2, '0');
 }
 
-/** 用户录音回听：使用真实音频事件，不伪造声纹、时长或发音评分。 */
-export function RecordingPlayback({ src }: { src: string }) {
+/** Styled control integrated into the same action rail as the real recording controls. */
+export function RecordingPlayback({ src }: { src: string | null }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -17,7 +17,7 @@ export function RecordingPlayback({ src }: { src: string }) {
 
   const toggle = async () => {
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio || !src) return;
     if (!audio.paused) {
       audio.pause();
       setPlaying(false);
@@ -34,28 +34,30 @@ export function RecordingPlayback({ src }: { src: string }) {
   };
 
   return (
-    <div className="replay" aria-label="录音回听">
-      <audio ref={audioRef} src={src} preload="metadata"
-        onLoadedMetadata={(event) => {
-          const value = event.currentTarget.duration;
-          setDuration(Number.isFinite(value) ? value : 0);
-        }}
-        onTimeUpdate={(event) => setElapsed(event.currentTarget.currentTime)}
-        onEnded={() => setPlaying(false)}
-        onPause={() => setPlaying(false)}
-      />
-      <div className="replayTitle">
-        <span className="replayIcon"><Volume2 size={17} /></span>
-        <div><strong>录音已完成</strong><small>听一听自己的声音，可以再录一次</small></div>
-      </div>
-      <div className="replayControls">
-        <button type="button" className="replayButton" onClick={() => void toggle()} aria-label={playing ? '暂停回听' : '回听刚才的录音'}>
-          {playing ? <Pause size={16} /> : <Play size={16} />}
-          {playing ? '暂停' : '播放录音'}
-        </button>
-        <progress className="replayProgress" value={elapsed} max={duration > 0 ? duration : 1} aria-label="录音播放进度" />
-        <time className="replayTime">{clock(elapsed)} / {duration > 0 ? clock(duration) : '--:--'}</time>
-      </div>
+    <div className="actionSlot replaySlot">
+      {src ? (
+        <audio ref={audioRef} src={src} preload="metadata"
+          onLoadedMetadata={(event) => {
+            const value = event.currentTarget.duration;
+            setDuration(Number.isFinite(value) ? value : 0);
+          }}
+          onTimeUpdate={(event) => setElapsed(event.currentTarget.currentTime)}
+          onEnded={() => setPlaying(false)}
+          onPause={() => setPlaying(false)}
+        />
+      ) : null}
+      <button type="button" className="roundControl replayButton" onClick={() => void toggle()}
+        disabled={!src} aria-label={playing ? '暂停回听' : '回听刚才的录音'}>
+        {playing ? <Pause size={22} /> : <Play size={22} />}
+      </button>
+      <span className="actionCaption">{playing ? '暂停回听' : '回听录音'}</span>
+      {src ? (
+        <>
+          <time className="actionAux replayTime">{clock(elapsed)} / {duration > 0 ? clock(duration) : '--:--'}</time>
+          <progress className="replayProgress" value={elapsed} max={duration > 0 ? duration : 1}
+            aria-label="录音播放进度" />
+        </>
+      ) : <span className="actionAux">完成录音后可用</span>}
       {error ? <p className="replayError" role="alert">{error}</p> : null}
     </div>
   );
