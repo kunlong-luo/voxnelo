@@ -7,7 +7,6 @@ import {
   HelpCircle,
   Mic,
   Square,
-  Sparkles,
   Volume2,
   VolumeX,
   X,
@@ -57,11 +56,6 @@ export function PracticeView({
   const percentage = Math.min(100, (stats.viewed / Math.max(1, SENTENCES.length)) * 100);
   return (
     <>
-      <div className="pageIntro">
-        <div className="eyebrow"><Sparkles size={15} /> SPEAK A LITTLE, EVERY DAY</div>
-        <h1>从这一句开始，<em>轻松开口。</em></h1>
-        <p>先听，再说，最后回听。不用赶时间，每一句都值得慢慢练习。</p>
-      </div>
       <div className="practiceLayout">
         <div className="practiceColumn">
           <section className="practiceCard" aria-label="当前短句练习">

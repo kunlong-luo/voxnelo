@@ -154,7 +154,6 @@ export function App() {
           <div className="brandMark"><img src="/brand/voxnelo-mark.svg" alt="" width="48" height="48" /></div>
           <div className="brandText">
             <strong>Voxnelo</strong>
-            <small>从第一句开始，自信开口</small>
           </div>
         </div>
         <div className="sidebarHint">LEARNING SPACE</div>
