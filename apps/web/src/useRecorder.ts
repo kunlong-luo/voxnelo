@@ -9,6 +9,8 @@ export function useRecorder() {
   const recorder = useRef<MediaRecorder | null>(null);
   const stream = useRef<MediaStream | null>(null);
   const urlRef = useRef<string | null>(null);
+  const disposedRef = useRef(false);
+  const requestingRef = useRef(false);
 
   const clearAudio = useCallback(() => {
     if (urlRef.current) URL.revokeObjectURL(urlRef.current);
@@ -23,7 +25,8 @@ export function useRecorder() {
   }, []);
 
   const start = useCallback(async () => {
-    if (status === 'requesting' || status === 'recording') return;
+    if (requestingRef.current || status === 'requesting' || status === 'recording') return;
+    requestingRef.current = true;
     setError(null);
     clearAudio();
     setStatus('requesting');
@@ -32,6 +35,11 @@ export function useRecorder() {
         throw new Error('当前设备或浏览器不支持录音。');
       }
       const granted = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      // 窗口可能在系统权限弹窗尚未关闭时已经卸载。
+      if (disposedRef.current) {
+        granted.getTracks().forEach((track) => track.stop());
+        return;
+      }
       stream.current = granted;
       const mime = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/webm'].find((type) =>
         MediaRecorder.isTypeSupported(type),
@@ -42,8 +50,10 @@ export function useRecorder() {
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) chunks.push(event.data);
       };
+      let failed = false;
       mediaRecorder.onstop = () => {
         granted.getTracks().forEach((track) => track.stop());
+        if (failed || disposedRef.current) return;
         if (chunks.length) {
           const blob = new Blob(chunks, { type: mediaRecorder.mimeType || 'audio/webm' });
           const objectUrl = URL.createObjectURL(blob);
@@ -56,10 +66,20 @@ export function useRecorder() {
           setError('没有录到声音，请检查麦克风并重试。');
         }
       };
-      mediaRecorder.onerror = () => setError('录音中断，请重新尝试。');
+      mediaRecorder.onerror = () => {
+        failed = true;
+        granted.getTracks().forEach((track) => track.stop());
+        if (stream.current === granted) stream.current = null;
+        if (recorder.current === mediaRecorder) recorder.current = null;
+        if (!disposedRef.current) {
+          setStatus('idle');
+          setError('录音中断，请重新尝试。');
+        }
+      };
       mediaRecorder.start();
       setStatus('recording');
     } catch (cause) {
+      if (disposedRef.current) return;
       stream.current?.getTracks().forEach((track) => track.stop());
       stream.current = null;
       setStatus('idle');
@@ -70,14 +90,21 @@ export function useRecorder() {
             ? cause.message
             : '无法启动录音。',
       );
+    } finally {
+      requestingRef.current = false;
     }
   }, [clearAudio, status]);
 
   useEffect(
-    () => () => {
-      if (recorder.current?.state === 'recording') recorder.current.stop();
-      stream.current?.getTracks().forEach((track) => track.stop());
-      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+    () => {
+      disposedRef.current = false;
+      return () => {
+        disposedRef.current = true;
+        if (recorder.current) recorder.current.onstop = null;
+        if (recorder.current?.state === 'recording') recorder.current.stop();
+        stream.current?.getTracks().forEach((track) => track.stop());
+        if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+      };
     },
     [],
   );

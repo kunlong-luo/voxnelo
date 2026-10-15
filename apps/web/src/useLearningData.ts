@@ -19,9 +19,19 @@ export function useLearningData(
   const [events, setEvents] = useState<HistoryEvent[]>([]);
   const playedRef = useRef<string>('');
   const countedRecordingUrl = useRef<string | null>(null);
+  const mountedRef = useRef(false);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const refresh = useCallback(async () => {
     const result = await loadSnapshot();
+    // IndexedDB Promise 可能在卸载后才完成，不能对已销毁的 React 根节点 setState。
+    if (!mountedRef.current) return;
     if (result.ok) {
       setStates(result.value.states);
       setEvents(result.value.events);
@@ -38,6 +48,7 @@ export function useLearningData(
     if (playedRef.current === sentenceId) return;
     playedRef.current = sentenceId;
     void recordView(sentenceId).then(async (result) => {
+      if (!mountedRef.current) return;
       if (!result.ok) {
         notify(result.error.message);
         return;
@@ -50,6 +61,7 @@ export function useLearningData(
     if (!recordingUrl || countedRecordingUrl.current === recordingUrl) return;
     countedRecordingUrl.current = recordingUrl;
     void recordPractice(currentId).then(async (result) => {
+      if (!mountedRef.current) return;
       if (!result.ok) {
         notify(result.error.message);
         return;
@@ -61,6 +73,7 @@ export function useLearningData(
   const setFlag = useCallback(
     async (targetId: string, flag: 'favorite' | 'review', value: boolean) => {
       const result = await saveFlag(targetId, flag, value);
+      if (!mountedRef.current) return;
       if (!result.ok) {
         notify(result.error.message);
         return;

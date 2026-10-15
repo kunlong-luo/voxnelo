@@ -119,6 +119,10 @@ export function App() {
   };
 
   const playDemo = () => {
+    if (recordingBusy) {
+      setNotice('请先结束当前录音，再播放参考发音。');
+      return;
+    }
     const result = speak(current.english, speed);
     setNotice(result.ok ? '' : (result.message ?? '无法播放语音。'));
   };
@@ -126,10 +130,18 @@ export function App() {
   const handleRecorder = () => {
     if (recorder.status === 'recording') {
       recorder.stop();
-    } else void recorder.start();
+    } else {
+      // 示范音与录音不可重叠，防止把扬声器输出录为自己的跟读。
+      silence();
+      void recorder.start();
+    }
   };
 
   const nav = (target: View) => {
+    if (recordingBusy && target !== 'practice') {
+      setNotice('请先结束当前录音，再切换页面。');
+      return;
+    }
     setView(target);
     setSearch('');
     setNotice('');
