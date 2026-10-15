@@ -14,10 +14,11 @@ afterEach(() => {
 
 describe('Local-only appearance preference', () => {
   beforeEach(() => localStorage.setItem(LANGUAGE_STORAGE_KEY, 'zh-CN'));
-  it('falls back to Nordic for a missing or unrecognized value', () => {
-    expect(parseAppearance(undefined)).toBe('nordic');
-    expect(parseAppearance('invalid-theme')).toBe('nordic');
-    expect(readAppearance()).toBe('nordic');
+  it('defaults to U3 Sunset for new/invalid preferences and honors explicit Nordic choice', () => {
+    expect(parseAppearance(undefined)).toBe('sunset');
+    expect(parseAppearance('invalid-theme')).toBe('sunset');
+    expect(parseAppearance('nordic')).toBe('nordic');
+    expect(readAppearance()).toBe('sunset');
   });
 
   it('applies and persists only the explicitly chosen appearance', () => {
@@ -33,8 +34,10 @@ describe('Local-only appearance preference', () => {
 
   it('switches theme through settings and leaves practice navigation intact', async () => {
     const view = render(<App />);
-    expect(document.documentElement.dataset.theme).toBe('nordic');
+    expect(document.documentElement.dataset.theme).toBe('sunset');
     fireEvent.click(screen.getByRole('button', { name: '设置' }));
+    fireEvent.click(screen.getByRole('button', { name: '选择北欧纯净主题' }));
+    expect(document.documentElement.dataset.theme).toBe('nordic');
     const sunset = screen.getByRole('button', { name: '选择日落柔光主题' });
     expect(sunset.getAttribute('aria-pressed')).toBe('false');
     fireEvent.click(sunset);
@@ -57,6 +60,6 @@ describe('Local-only appearance preference', () => {
   it('replaces invalid stored preferences with the safe Nordic baseline', () => {
     localStorage.setItem(APPEARANCE_KEY, 'glow-unknown');
     render(<App />);
-    expect(document.documentElement.dataset.theme).toBe('nordic');
+    expect(document.documentElement.dataset.theme).toBe('sunset');
   });
 });
