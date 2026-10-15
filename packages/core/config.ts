@@ -1,5 +1,6 @@
 /**
- * 全仓共享的应用常量：版本号、主题色、窗口尺寸、TTS 速率、推荐权重。
+ * 全仓共享的应用常量：版本号、协议源、主题色、窗口尺寸、推荐权重。
+ *（TTS 速率属音频域，见 packages/audio/speech.ts。）
  *
  * 注意 dev 端口 3000 仍有三处需手动同步（构建配置无法引用 TS 常量）：
  * - rsbuild.config.ts 的 server.port
@@ -21,9 +22,6 @@ export const WINDOW_SIZE = {
   minWidth: 800,
   minHeight: 610,
 } as const;
-
-export const TTS_RATE = { normal: 0.96, slow: 0.75 } as const;
-export const TTS_PITCH = 1;
 
 export const RECOMMEND_WEIGHTS = {
   unseen: 8,

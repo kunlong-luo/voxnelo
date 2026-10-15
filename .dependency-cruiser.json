@@ -1,0 +1,57 @@
+{
+  "forbidden": [
+    {
+      "name": "no-circular",
+      "severity": "error",
+      "comment": "包之间不允许循环依赖。",
+      "from": {},
+      "to": { "circular": true }
+    },
+    {
+      "name": "web-no-direct-lowlevel",
+      "severity": "error",
+      "comment": "渲染层只允许经 @voxnelo/learning 门面与 @voxnelo/content 访问底层能力。",
+      "from": { "path": "apps/web/src" },
+      "to": { "path": "packages/(storage|audio|core)" }
+    },
+    {
+      "name": "desktop-core-only",
+      "severity": "error",
+      "comment": "主进程仅允许引用 @voxnelo/core 共享常量，不碰业务包。",
+      "from": { "path": "apps/desktop" },
+      "to": { "path": "packages/(audio|content|storage|learning)" }
+    },
+    {
+      "name": "storage-core-only",
+      "severity": "error",
+      "comment": "storage 仅允许依赖 core 类型。",
+      "from": { "path": "packages/storage" },
+      "to": { "path": "packages/(audio|content|learning)" }
+    },
+    {
+      "name": "audio-leaf",
+      "severity": "error",
+      "comment": "audio 为叶子包，不依赖其他包。",
+      "from": { "path": "packages/audio" },
+      "to": { "path": "packages/", "pathNot": "packages/audio" }
+    },
+    {
+      "name": "core-content-only",
+      "severity": "error",
+      "comment": "core 仅允许依赖 content。",
+      "from": { "path": "packages/core" },
+      "to": { "path": "packages/(audio|storage|learning)" }
+    },
+    {
+      "name": "content-leaf",
+      "severity": "error",
+      "comment": "content 为叶子包，不依赖其他包。",
+      "from": { "path": "packages/content" },
+      "to": { "path": "packages/", "pathNot": "packages/content" }
+    }
+  ],
+  "options": {
+    "doNotFollow": { "path": "node_modules" },
+    "tsConfig": { "fileName": "tsconfig.json" }
+  }
+}

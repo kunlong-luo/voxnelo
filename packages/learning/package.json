@@ -1,0 +1,12 @@
+{
+  "name": "@voxnelo/learning",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "index.ts",
+  "dependencies": {
+    "@voxnelo/audio": "workspace:*",
+    "@voxnelo/content": "workspace:*",
+    "@voxnelo/core": "workspace:*",
+    "@voxnelo/storage": "workspace:*"
+  }
+}

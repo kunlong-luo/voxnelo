@@ -1,7 +1,7 @@
 import { app, BrowserWindow, net, protocol, session } from 'electron';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { APP_ORIGIN, APP_SCHEME, THEME_BACKGROUND, WINDOW_SIZE } from '../../packages/core/config';
+import { APP_ORIGIN, APP_SCHEME, THEME_BACKGROUND, WINDOW_SIZE } from '@voxnelo/core';
 import { isAudioOnlyRequest, APP_HOST, isTrustedUrl, resolveLocalFile } from './security';
 
 // Electron 推荐的标准安全自定义协议：允许 IndexedDB 使用持久且一致的 origin。

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { calculateStats, chooseNext, type LearningState } from '../packages/core/recommend';
-import { SENTENCES } from '../packages/content/sentences';
+import { calculateStats, chooseNext, type LearningState } from '@voxnelo/core';
+import { SENTENCES } from '@voxnelo/content';
 
 describe('Voxnelo V0.1 推荐与进度', () => {
   it('不会推荐当前句子（存在其他候选时）', () => {

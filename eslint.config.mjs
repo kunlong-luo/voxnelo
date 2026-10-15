@@ -20,6 +20,18 @@ export default tseslint.config(
       'react-hooks/exhaustive-deps': 'warn',
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      // 包只能走 @voxnelo/* barrel 互相引用，禁止深路径相对引用
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/packages/**'],
+              message: '跨包引用请走 @voxnelo/* barrel，禁止深路径相对引用。',
+            },
+          ],
+        },
+      ],
     },
   },
 );

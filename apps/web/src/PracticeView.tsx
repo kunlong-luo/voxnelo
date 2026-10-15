@@ -12,14 +12,13 @@ import {
   VolumeX,
   X,
 } from 'lucide-react';
-import { TOPIC_LABELS, type Sentence } from '../../../packages/content/sentences';
-import { calculateStats, type LearningState } from '../../../packages/core/recommend';
+import { TOPIC_LABELS, type LearningState, type LearningStats, type Sentence } from '@voxnelo/learning';
 import type { useRecorder } from './useRecorder';
 
 interface PracticeViewProps {
   current: Sentence;
   currentState: LearningState | undefined;
-  stats: ReturnType<typeof calculateStats>;
+  stats: LearningStats;
   speed: 'normal' | 'slow';
   showIpa: boolean;
   notice: string;

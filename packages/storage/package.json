@@ -1,0 +1,9 @@
+{
+  "name": "@voxnelo/storage",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "index.ts",
+  "dependencies": {
+    "dexie": "^4.2.0"
+  }
+}

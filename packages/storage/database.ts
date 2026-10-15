@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { LearningState } from '../core/recommend';
+import type { LearningState } from '@voxnelo/core';
 
 export interface HistoryEvent {
   id?: number;

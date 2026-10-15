@@ -1,6 +1,6 @@
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
-import { database, loadLearningData, patchState, recordEvent } from '../packages/storage/database';
+import { database, loadLearningData, patchState, recordEvent } from '@voxnelo/storage';
 
 async function clearAll(): Promise<void> {
   await database.transaction('rw', database.states, database.events, async () => {

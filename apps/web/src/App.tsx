@@ -1,9 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Clock3, Headphones, Heart, ListRestart, Sparkles, type LucideIcon } from 'lucide-react';
-import { SENTENCES, type Sentence } from '../../../packages/content/sentences';
-import { APP_VERSION } from '../../../packages/core/config';
-import { chooseNext, calculateStats } from '../../../packages/core/recommend';
-import { speakEnglish, stopSpeech } from '../../../packages/audio/speech';
+import {
+  APP_VERSION,
+  pickNext,
+  primeSpeechVoices,
+  SENTENCES,
+  silence,
+  speak,
+  summarize,
+  type Sentence,
+} from '@voxnelo/learning';
 import { useRecorder } from './useRecorder';
 import { useLearningData } from './useLearningData';
 import { PracticeView } from './PracticeView';
@@ -32,7 +38,11 @@ export function App() {
   const notify = useCallback((message: string) => setNotice(message), []);
   const { states, events, setFlag } = useLearningData(notify, sentenceId, current.id, recorder.recordingUrl);
   const currentState = states.find((item) => item.sentenceId === current.id);
-  const stats = calculateStats(states);
+  const stats = summarize(states);
+
+  useEffect(() => {
+    primeSpeechVoices();
+  }, []);
 
   const display = useCallback(
     (target: Sentence) => {
@@ -40,7 +50,7 @@ export function App() {
         setNotice('请先结束当前录音，再切换句子。');
         return;
       }
-      stopSpeech();
+      silence();
       recorder.clearAudio();
       setNotice('');
       setSentenceId(target.id);
@@ -59,11 +69,11 @@ export function App() {
         setHistoryPosition(historyPosition + 1);
         setSentenceId(target.id);
         recorder.clearAudio();
-        stopSpeech();
+        silence();
         return;
       }
     }
-    const next = chooseNext(SENTENCES, states, current.id, visited);
+    const next = pickNext(states, current.id, visited);
     if (next) display(next);
   }, [recordingBusy, historyPosition, visited, states, current.id, display, recorder]);
 
@@ -72,7 +82,7 @@ export function App() {
     setHistoryPosition(historyPosition - 1);
     setSentenceId(visited[historyPosition - 1]);
     recorder.clearAudio();
-    stopSpeech();
+    silence();
   }, [historyPosition, recordingBusy, visited, recorder]);
 
   useEffect(() => {
@@ -104,8 +114,8 @@ export function App() {
     void setFlag(current.id, flag, !currentState?.[flag]);
   };
 
-  const speak = () => {
-    const result = speakEnglish(current.english, speed);
+  const playDemo = () => {
+    const result = speak(current.english, speed);
     setNotice(result.ok ? '' : (result.message ?? '无法播放语音。'));
   };
 
@@ -173,7 +183,7 @@ export function App() {
               recordingBusy={recordingBusy}
               canGoPrevious={historyPosition > 0 && !recordingBusy}
               onToggleIpa={() => setShowIpa((value) => !value)}
-              onSpeak={speak}
+              onSpeak={playDemo}
               onToggleSpeed={() => {
                 setSpeed((value) => (value === 'normal' ? 'slow' : 'normal'));
                 setNotice('');

@@ -1,7 +1,6 @@
 # Changelog
 
-格式遵循 Keep a Changelog。`Unreleased` 为已落库但未打版本标签的变更；
-本仓库尚未产生 git 提交，下列条目以工作区现状为准。
+格式遵循 Keep a Changelog。`Unreleased` 为已落库但未打版本标签的变更。
 
 ## [Unreleased]
 
@@ -15,6 +14,8 @@
 - Linux NVIDIA + X11 下 MESA-LOADER 日志噪声：`dev:desktop` 默认追加
   `--disable-gpu-sandbox`（仅 dev，见 README.DEVELOPMENT.md）。
 - 修复 zip 解出目录 1970 时间戳导致的 rspack 构建 panic（已刷新）。
+- 主进程安全守卫逻辑抽取为纯函数（`security.ts`），原内联实现删除，
+  `devServer!` 断言消除，行为逐项等价。
 
 ### Added
 
@@ -27,14 +28,21 @@
   （信任 URL / 仅音频 / 路径穿越）。
 - `ErrorBoundary` 包裹渲染根节点；`App` 拆为壳 + `PracticeView` +
   `LibraryView` + `useLearningData`。
-- `packages/core/config.ts` 收口版本/协议源/主题色/窗口/TTS 速率/推荐权重；
+- `packages/core/config.ts` 收口版本/协议源/主题色/窗口/推荐权重
+  （TTS 速率属音频域，已迁回 `audio` 包）；
   preload 全局名 `speakSeedDesktop` 更名为 `voxneloDesktop`。
-- `build/icon.png`（Linux）并接线 electron-builder；`author` 字段。
+- 真单仓：`packages/*` 补包声明与 barrel，`@voxnelo/*` 别名贯通
+  tsc/rsbuild/vitest/esbuild，深路径引用清零并被 lint 禁止。
+- 学习应用服务门面 `@voxnelo/learning`：UI 不再直连 storage/audio/core；
+  dependency-cruiser 架构门禁（无环 + 分层边规则）并接入 CI。
+- 启动时预热语音列表，缓解冷启动首次点击取空语音。
+- `build/icon.png`（Linux）并接线 electron-builder；`author` 字段；`pack:dir` 打通。
 - 文档：`docs/12` 安装构建现状、`README` pnpm 版本、
   `docs/07` 对齐 40 句实装与实际 schema；
   新增 `docs/ADR/ADR-0001-reference-audio.md`、
   `docs/ADR/ADR-0002-release-signing-update.md`、
-  `SECURITY.md`。
+  `docs/ADR/ADR-0003-learning-service.md`、
+  `SECURITY.md`；`docs/06` 按新分层修订。
 
 ### Removed
 

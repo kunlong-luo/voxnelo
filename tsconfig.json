@@ -13,7 +13,11 @@
     "resolveJsonModule": true,
     "types": ["node"],
     "isolatedModules": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@voxnelo/*": ["packages/*/index.ts"]
+    }
   },
   "include": [
     "apps/**/*.ts",

@@ -1,4 +1,5 @@
-import { TTS_PITCH, TTS_RATE } from '../core/config';
+const TTS_RATE = { normal: 0.96, slow: 0.75 } as const;
+const TTS_PITCH = 1;
 
 export interface SpeechResult {
   ok: boolean;
@@ -27,4 +28,16 @@ export function speakEnglish(text: string, speed: 'normal' | 'slow' = 'normal'):
 
 export function stopSpeech() {
   if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+}
+
+let primed = false;
+
+/** 启动时预热语音列表，避免冷启动首次点击时 getVoices 取空。 */
+export function primeSpeechVoices(): void {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window) || primed) return;
+  primed = true;
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.addEventListener('voiceschanged', () => window.speechSynthesis.getVoices(), {
+    once: true,
+  });
 }

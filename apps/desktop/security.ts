@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { APP_ORIGIN, APP_SCHEME, DEV_ORIGIN } from '../../packages/core/config';
+import { APP_ORIGIN, APP_SCHEME, DEV_ORIGIN } from '@voxnelo/core';
 
 const APP_PROTOCOL = `${APP_SCHEME}:`;
 export const APP_HOST = new URL(APP_ORIGIN).hostname;

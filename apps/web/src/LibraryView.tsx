@@ -1,8 +1,6 @@
 import { useMemo } from 'react';
 import { ArrowRight, Bookmark, ChevronLeft, Search } from 'lucide-react';
-import { SENTENCES, TOPIC_LABELS, type Sentence } from '../../../packages/content/sentences';
-import type { LearningState } from '../../../packages/core/recommend';
-import type { HistoryEvent } from '../../../packages/storage/database';
+import { SENTENCES, TOPIC_LABELS, type HistoryEvent, type LearningState, type Sentence } from '@voxnelo/learning';
 
 export type View = 'practice' | 'history' | 'favorites' | 'review';
 
