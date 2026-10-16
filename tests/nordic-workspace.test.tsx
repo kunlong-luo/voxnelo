@@ -8,6 +8,12 @@ import { SettingsView } from '../apps/web/src/SettingsView';
 
 afterEach(cleanup);
 
+const dictation = {
+  status:'idle' as const,active:false,mode:'local' as const,chooseMode:()=>undefined,
+  supported:false,browserModeAvailable:true,noiseReduction:'unknown' as const,localPack:'unknown' as const,finalText:'',
+  interimText:'',error:'',start:async()=>undefined,stop:()=>undefined,
+  clear:()=>undefined,installLocal:async()=>undefined,
+};
 function stubRecorder() {
   return {
     status: 'idle' as const,
@@ -25,7 +31,7 @@ describe('Nordic three-column learning workspace', () => {
     const { container } = render(
       <PracticeView current={FIRST_SENTENCE} currentState={undefined}
         stats={{ viewed: 1, practiced: 0, favorites: 0, review: 0 }}
-        speed="normal" showIpa notice="" recorder={stubRecorder()}
+        speed="normal" showIpa notice="" recorder={stubRecorder()} dictation={dictation} onStartDictation={()=>undefined}
         recordingBusy={false} canGoPrevious={false}
         onToggleIpa={() => undefined} onSpeak={() => undefined}
         onToggleSpeed={() => undefined} onRecord={() => undefined}
@@ -37,7 +43,7 @@ describe('Nordic three-column learning workspace', () => {
     expect(screen.getByText('相关表达')).toBeTruthy();
     expect(screen.getByText('相关场景')).toBeTruthy();
     expect(screen.getByText('1 / 40 句')).toBeTruthy();
-    expect(container.querySelector('.waveformArt')?.getAttribute('aria-hidden')).toBe('true');
+    expect(container.querySelector('.liveDictation')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: '练习短句：Hi!' }));
     expect(onChooseRelated).toHaveBeenCalledWith(expect.objectContaining({ english: 'Hi!' }));
     fireEvent.click(screen.getByRole('button', { name: '练习场景：自我介绍' }));
@@ -51,7 +57,7 @@ describe('Nordic three-column learning workspace', () => {
     const { container } = render(
       <PracticeView current={FIRST_SENTENCE} currentState={undefined}
         stats={{ viewed: 1, practiced: 0, favorites: 0, review: 0 }}
-        speed="normal" showIpa notice="" recorder={stubRecorder()}
+        speed="normal" showIpa notice="" recorder={stubRecorder()} dictation={dictation} onStartDictation={()=>undefined}
         recordingBusy={false} canGoPrevious
         onToggleIpa={() => undefined} onSpeak={() => undefined}
         onToggleSpeed={() => undefined} onRecord={() => undefined}
@@ -74,7 +80,7 @@ describe('Nordic three-column learning workspace', () => {
     expect(container.querySelectorAll('.actionRail > .actionSlot')).toHaveLength(5);
     expect(container.querySelector('.actionRail .nextButton')).toBeNull();
     expect(container.querySelector('.lessonFocus .sentenceContent')).toBeTruthy();
-    expect(container.querySelector('.lessonFocus .wavePanel')).toBeTruthy();
+    expect(container.querySelector('.lessonFocus .liveDictation')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: '上一句' }));
     fireEvent.click(screen.getByRole('button', { name: '换一句' }));
     expect(onPrevious).toHaveBeenCalledOnce();

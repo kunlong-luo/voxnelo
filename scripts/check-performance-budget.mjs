@@ -10,7 +10,7 @@ const dir = resolve('dist');
 const reportOnly = process.argv.includes('--report-only');
 const KiB = 1024;
 const budgets = {
-  jsGzip: 164,       // 2026-10-16 Base UI migration: measured 161.2 KiB after removing full Motion runtime
+  jsGzip: 168,       // V3 live dictation: measured 165.4 KiB with native browser ASR adapter; +2.4% headroom vs 164, no extra SDK
   cssGzip: 24,       // 2026-10-15 baseline: about 6 KiB
   rendererGzip: 240, // HTML, CSS, JS and public brand assets
 };

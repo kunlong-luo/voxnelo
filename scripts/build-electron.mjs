@@ -22,4 +22,5 @@ const common = {
 await Promise.all([
   build({ ...common, entryPoints: ['apps/desktop/main.ts'], outfile: 'dist-electron/main.cjs' }),
   build({ ...common, entryPoints: ['apps/desktop/preload.ts'], outfile: 'dist-electron/preload.cjs' }),
+  build({ ...common, entryPoints: ['apps/desktop/offlineAsrWorker.ts'], outfile: 'dist-electron/offlineAsrWorker.cjs' }),
 ]);

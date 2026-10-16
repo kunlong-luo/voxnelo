@@ -46,6 +46,10 @@ jobs:
         run: pnpm test:coverage
       - name: Build
         run: pnpm build
+      - name: Validate offline ASR worker IPC transport (mock inference only)
+        run: node scripts/check-offline-asr-worker.mjs
+      - name: Check real-model benchmark CLI syntax (no download or native model)
+        run: node --check scripts/benchmark-offline-asr.mjs
       - name: Validate static Pages assets
         run: node scripts/check-pages-artifact.mjs
       - name: Renderer size budget

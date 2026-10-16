@@ -12,6 +12,7 @@ import {
   type Sentence,
 } from '@voxnelo/learning';
 import { useRecorder } from './useRecorder';
+import { useLiveDictation } from './useLiveDictation';
 import { useLearningData } from './useLearningData';
 import { PracticeView } from './PracticeView';
 import { LibraryView, type View } from './LibraryView';
@@ -70,8 +71,9 @@ function AppScreen({languageSetting,onChangeLanguage}: {
   const [search, setSearch] = useState('');
   const [appearance, setAppearance] = useState<AppearanceTheme>(readAppearance);
   const recorder = useRecorder();
+  const dictation = useLiveDictation(sentenceId);
   const current = useMemo(() => SENTENCES.find((item) => item.id === sentenceId) ?? FIRST_SENTENCE, [sentenceId]);
-  const recordingBusy = recorder.status === 'requesting' || recorder.status === 'recording';
+  const recordingBusy = recorder.status === 'requesting' || recorder.status === 'recording' || dictation.active;
   const notify = useCallback((message: string) => setNotice(message), []);
   const restoreLastSentence=useCallback((id:string|undefined)=>{
     if (!id || !SENTENCES.some(item=>item.id===id)) return;
@@ -190,6 +192,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
   };
 
   const handleRecorder = () => {
+    if (dictation.active) return;
     if (recorder.status === 'recording') {
       recorder.stop();
     } else {
@@ -197,6 +200,12 @@ function AppScreen({languageSetting,onChangeLanguage}: {
       silence();
       void recorder.start();
     }
+  };
+
+  const startDictation = () => {
+    if (recorder.status === 'recording' || recorder.status === 'requesting') return;
+    silence();
+    void dictation.start();
   };
 
   const nav = (target: View) => {
@@ -254,6 +263,8 @@ function AppScreen({languageSetting,onChangeLanguage}: {
               showIpa={showIpa}
               notice={notice}
               recorder={recorder}
+              dictation={dictation}
+              onStartDictation={startDictation}
               recordingBusy={recordingBusy}
               canGoPrevious={historyPosition > 0 && !recordingBusy}
               onToggleIpa={() => setShowIpa((value) => !value)}

@@ -57,11 +57,14 @@ describe('Nonblocking microphone fallback', () => {
     render(<PracticeView current={FIRST_SENTENCE} currentState={undefined}
       stats={{viewed:0,practiced:0,favorites:0,review:0}}
       speed="normal" showIpa={false} notice="" recorder={recorder}
-      recordingBusy={false} canGoPrevious={false}
+      dictation={{status:'idle',active:false,mode:'local',chooseMode:()=>undefined,
+        supported:false,browserModeAvailable:true,noiseReduction:'unknown' as const,localPack:'unknown',finalText:'',interimText:'',
+        error:'',start:async()=>undefined,stop:()=>undefined,clear:()=>undefined,installLocal:async()=>undefined}}
+      onStartDictation={()=>undefined} recordingBusy={false} canGoPrevious={false}
       onToggleIpa={()=>undefined} onSpeak={()=>undefined} onToggleSpeed={()=>undefined}
       onRecord={()=>undefined} onToggleFlag={()=>undefined}
       onNext={()=>undefined} onPrevious={()=>undefined} onDismissNotice={()=>undefined}/>);
-    expect(screen.getByRole('status',{name:''}).textContent).toContain('麦克风');
+    expect(screen.getByText('暂未检测到可用麦克风，可以先畅听示范或收藏喜欢的句子。')).toBeTruthy();
     expect((screen.getByRole('button',{name:'播放标准朗读'}) as HTMLButtonElement).disabled).toBe(false);
     expect((screen.getByRole('button',{name:'收藏'}) as HTMLButtonElement).disabled).toBe(false);
   });

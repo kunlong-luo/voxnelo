@@ -21,6 +21,27 @@ contextBridge.exposeInMainWorld('voxneloDesktop', {
   platform: process.platform,
   version: APP_VERSION,
   windowControls,
+  asr: {
+    capabilities: () => ipcRenderer.invoke('voxnelo:asr:capabilities') as Promise<{available:boolean;reason:'ready'|'not-configured'}>,
+    start: () => ipcRenderer.invoke('voxnelo:asr:start') as Promise<{ok:true;sessionId:string}|{ok:false;reason:string}>,
+    push: (id:string,samples:Float32Array) => ipcRenderer.send('voxnelo:asr:pcm',id,samples),
+    stop: (id:string) => ipcRenderer.invoke('voxnelo:asr:stop',id) as Promise<{finalText:string}>,
+    onResult: (callback:(event:{sessionId:string;finalText:string;interimText:string})=>void) => {
+      const listener=(_event:IpcRendererEvent,data:unknown)=>{
+        if(data&&typeof data==='object'&&'sessionId' in data&&'finalText' in data&&'interimText' in data
+          &&typeof data.sessionId==='string'&&typeof data.finalText==='string'&&typeof data.interimText==='string')callback(data as {sessionId:string;finalText:string;interimText:string});
+      };
+      ipcRenderer.on('voxnelo:asr:result',listener);
+      return ()=>ipcRenderer.removeListener('voxnelo:asr:result',listener);
+    },
+    onError: (callback:(id:string)=>void) => {
+      const listener=(_event:IpcRendererEvent,data:unknown)=>{
+        if(data&&typeof data==='object'&&'sessionId' in data&&typeof data.sessionId==='string')callback(data.sessionId);
+      };
+      ipcRenderer.on('voxnelo:asr:error',listener);
+      return ()=>ipcRenderer.removeListener('voxnelo:asr:error',listener);
+    },
+  },
   speech: {
     synthesizeEnglish: (text: string, speed: 'normal' | 'slow') =>
       ipcRenderer.invoke('voxnelo:speech:synthesize', text, speed) as Promise<

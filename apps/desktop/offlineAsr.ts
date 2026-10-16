@@ -1,0 +1,113 @@
+import { existsSync } from 'node:fs';
+import path from 'node:path';
+import { randomUUID } from 'node:crypto';
+import { Worker } from 'node:worker_threads';
+import type { WebContents } from 'electron';
+
+export type AsrCapability={available:boolean;reason:'ready'|'not-configured'};
+export type AsrOpenResult={ok:true;sessionId:string}|{ok:false;reason:'not-configured'|'busy'|'failed'};
+interface Session {id:string;owner:WebContents;worker:Worker;ready:boolean;accepting:boolean;pendingChunks:number;stopTimer:ReturnType<typeof setTimeout>|null;lastText:string;resolveFinish:((result:{finalText:string})=>void)|null;}
+/** At 100ms chunks, stop on >2s of ASR backlog instead of silently dropping speech. */
+const MAX_PENDING_PCM_CHUNKS=20;
+const expected=['encoder.onnx','decoder.onnx','joiner.onnx','tokens.txt'];
+/**
+ * Experimental offline recognizer. Never run dynamic addon code from a page:
+ * paths are developer-provided at app startup, and unavailable in packaged
+ * builds until native binary + model redistribution has been audited.
+ */
+export class OfflineAsr {
+  private session:Session|null=null;
+  constructor(
+    private readonly modelDir:string|null,
+    private readonly addonPath:string|null,
+    private readonly spawnWorker:(data:{modelDir:string|null;addonPath:string|null})=>Worker=
+      data=>new Worker(path.join(__dirname,'offlineAsrWorker.cjs'),{workerData:data}),
+  ){}
+  capabilities():AsrCapability{
+    if(!this.modelDir||!this.addonPath||!path.isAbsolute(this.modelDir)||!path.isAbsolute(this.addonPath))return {available:false,reason:'not-configured'};
+    if(!existsSync(this.addonPath)||!expected.every(name=>existsSync(path.join(this.modelDir!,name))))return {available:false,reason:'not-configured'};
+    return {available:true,reason:'ready'};
+  }
+  async open(owner:WebContents):Promise<AsrOpenResult>{
+    if(this.session)return {ok:false,reason:'busy'};
+    if(!this.capabilities().available)return {ok:false,reason:'not-configured'};
+    const id=randomUUID();
+    let worker:Worker;
+    try{
+      worker=this.spawnWorker({modelDir:this.modelDir,addonPath:this.addonPath});
+    }catch{
+      return {ok:false,reason:'failed'};
+    }
+    const session:Session={id,owner,worker,ready:false,accepting:false,pendingChunks:0,stopTimer:null,lastText:'',resolveFinish:null};
+    this.session=session;
+    return new Promise(resolve=>{
+      let settled=false;
+      const settle=(result:AsrOpenResult)=>{if(settled)return;settled=true;clearTimeout(timeout);resolve(result);};
+      const dispose=()=>{if(this.session===session)this.dispose(session);};
+      const timeout=setTimeout(()=>{dispose();settle({ok:false,reason:'failed'});},12000);
+      worker.on('message',(message:unknown)=>{
+        if(!message||typeof message!=='object'||!('type' in message))return;
+        const result=message as {type:string;finalText?:unknown;interimText?:unknown};
+        if(result.type==='ready'){
+          session.ready=true;session.accepting=true;settle({ok:true,sessionId:id});
+        }else if(result.type==='drained'){
+          session.pendingChunks=Math.max(0,session.pendingChunks-1);
+        }else if(result.type==='result'&&session.ready&&!owner.isDestroyed()){
+          // Do not send arbitrary worker data: bound strings only.
+          const finalText=typeof result.finalText==='string'?result.finalText.slice(0,8000):'';
+          const interimText=typeof result.interimText==='string'?result.interimText.slice(0,1000):'';
+          session.lastText=finalText || session.lastText;
+          owner.send('voxnelo:asr:result',{sessionId:id,finalText,interimText});
+        }else if(result.type==='failure'){
+          if(session.ready&&!owner.isDestroyed())owner.send('voxnelo:asr:error',{sessionId:id});
+          dispose();settle({ok:false,reason:'failed'});
+        }else if(result.type==='finished'){
+          dispose();
+        }
+      });
+      const workerFailed=()=>{
+        if(this.session!==session)return;
+        if(session.ready&&!owner.isDestroyed())owner.send('voxnelo:asr:error',{sessionId:id});
+        dispose();
+        settle({ok:false,reason:'failed'});
+      };
+      worker.on('error',workerFailed);
+      worker.on('exit',workerFailed);
+      owner.once('destroyed',dispose);
+    });
+  }
+  push(owner:WebContents,id:unknown,input:unknown):void{
+    const s=this.session;
+    if(!s||s.owner!==owner||id!==s.id||!s.ready||!s.accepting)return;
+    // Exactly one 16kHz, mono, bounded PCM chunk. Reject NaN/Infinity.
+    if(!(input instanceof Float32Array)||input.length<1||input.length>3200)return;
+    for(const value of input){if(!Number.isFinite(value)||Math.abs(value)>1)return;}
+    if(s.pendingChunks>=MAX_PENDING_PCM_CHUNKS){
+      // A saturated engine must not silently drop phrases while claiming to listen.
+      if(!owner.isDestroyed())owner.send('voxnelo:asr:error',{sessionId:s.id,reason:'overloaded'});
+      this.dispose(s);
+      return;
+    }
+    s.pendingChunks++;
+    s.worker.postMessage({type:'pcm',samples:input});
+  }
+  stop(owner:WebContents,id:unknown):Promise<{finalText:string}>{
+    const s=this.session;
+    if(!s||s.owner!==owner||id!==s.id)return Promise.resolve({finalText:''});
+    if(!s.accepting)return Promise.resolve({finalText:s.lastText});
+    s.accepting=false;
+    return new Promise(resolve=>{
+      s.resolveFinish=resolve;
+      s.worker.postMessage({type:'finish'});
+      s.stopTimer=setTimeout(()=>this.dispose(s),1500);
+    });
+  }
+  close():void{if(this.session)this.dispose(this.session);}
+  private dispose(s:Session):void{
+    if(this.session!==s)return;
+    this.session=null;
+    if(s.stopTimer)clearTimeout(s.stopTimer);
+    s.resolveFinish?.({finalText:s.lastText});
+    void s.worker.terminate();
+  }
+}

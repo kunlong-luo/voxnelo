@@ -37,12 +37,12 @@ export function PracticeControlPanel({recorder,recordingBusy,speed,onSpeak,onTog
             <ActionSlot label={t('speedSlow')} detail={speed==='slow'?'0.75×':t('speedNormal')}>
               <Button variant="outline" size="icon-lg" className={utilityButton} onClick={onToggleSpeed} disabled={recordingBusy} aria-pressed={speed==='slow'} aria-label={t('speedSwitch')}><Turtle size={21}/></Button>
             </ActionSlot>
-            <ActionSlot label={t(requesting?'micPermission':recording?'recordingInProgress':'micStart')} detail={t(requesting?'micRequestHint':recording?'micRecordingHint':ready?'micReadyHint':'micStartHint')}>
+            <ActionSlot label={t(requesting?'micPermission':recording?'recordingInProgress':'recordingSecondary')} detail={t(requesting?'micRequestHint':recording?'micRecordingHint':ready?'micReadyHint':'micStartHint')}>
               <div className="relative isolate grid place-items-center">
                 {recording && <span aria-hidden="true" data-motion="record-halo" className="pointer-events-none absolute -inset-2 rounded-[30px] border-2 border-mic-halo/75 motion-safe:animate-record-halo"/>}
                 {requesting && <span aria-hidden="true" data-motion="permission-halo" className="pointer-events-none absolute -inset-1 rounded-[26px] border-2 border-primary/40 motion-safe:animate-status-breathe"/>}
-                <Button variant="default" size="icon-lg" className={cn('recordAction relative size-15 rounded-[22px] bg-primary bg-[image:var(--mic-gradient)] @min-[440px]/workspace:size-17 text-mic-foreground shadow-[0_12px_28px_-10px_var(--shadow-color)] transition-[filter,box-shadow,transform] duration-200 motion-safe:hover:scale-[1.04] hover:brightness-105 motion-reduce:transform-none',recording&&'ring-2 ring-mic-halo/50')} onClick={onRecord} disabled={recordingBusy} aria-label={t(requesting?'micPermission':recording?'micBusy':'micStart')}>
-                  {requesting?<LoaderCircle size={28} aria-hidden="true" className="motion-safe:animate-spin"/>:<Mic size={30} aria-hidden="true"/>}
+                <Button variant="default" size="icon-lg" className={cn('recordAction relative size-11 rounded-xl border border-primary/25 bg-card text-primary shadow-sm @min-[440px]/workspace:size-12 transition-[background-color,box-shadow,transform] duration-200 motion-safe:hover:scale-[1.04] hover:bg-accent motion-reduce:transform-none',recording&&'bg-secondary ring-2 ring-mic-halo/50')} onClick={onRecord} disabled={recordingBusy} aria-label={t(requesting?'micPermission':recording?'micBusy':'micStart')}>
+                  {requesting?<LoaderCircle size={28} aria-hidden="true" className="motion-safe:animate-spin"/>:<Mic size={23} aria-hidden="true"/>}
                 </Button>
               </div>
             </ActionSlot>

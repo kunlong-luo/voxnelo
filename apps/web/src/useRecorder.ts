@@ -36,7 +36,7 @@ export function useRecorder() {
       if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
         throw new Error(t('recorderUnsupported'));
       }
-      const granted = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      const granted = await navigator.mediaDevices.getUserMedia({ audio: { noiseSuppression: true, echoCancellation: true, autoGainControl: true, channelCount: 1 }, video: false });
       // 窗口可能在系统权限弹窗尚未关闭时已经卸载。
       if (disposedRef.current) {
         granted.getTracks().forEach((track) => track.stop());

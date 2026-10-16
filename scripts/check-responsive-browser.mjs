@@ -103,11 +103,12 @@ try{
   }
   // Validate both actual CSS themes in Chromium, not just class strings.
   await send('Emulation.setDeviceMetricsOverride',{width:1160,height:760,deviceScaleFactor:1,mobile:false});
-  const themeMaterial=async()=>evalJs('(()=>{const lesson=getComputedStyle(document.querySelector(".practiceCard"));const mic=getComputedStyle(document.querySelector(".recordAction"));return {theme:document.documentElement.dataset.theme,glass:lesson.backdropFilter,micImage:mic.backgroundImage,glassBackground:lesson.backgroundColor}})()');
+  const themeMaterial=async()=>evalJs('(()=>{const lesson=getComputedStyle(document.querySelector(".practiceCard"));const primary=getComputedStyle(document.querySelector(".dictationAction"));return {theme:document.documentElement.dataset.theme,glass:lesson.backdropFilter,primaryBackground:primary.backgroundColor,glassBackground:lesson.backgroundColor}})()');
   const sunset=await themeMaterial();
   assert.equal(sunset.theme,'sunset','Sunset should remain the default theme');
   assert.ok(sunset.glass.includes('blur(20px)'),'Sunset lesson frosted surface missing: '+JSON.stringify(sunset));
-  assert.ok(sunset.micImage.includes('linear-gradient'),'Sunset gradient microphone missing: '+JSON.stringify(sunset));
+  assert.ok(sunset.primaryBackground!=='rgba(0, 0, 0, 0)','primary live dictation control missing: '+JSON.stringify(sunset));
+  assert.ok(await evalJs('!!document.querySelector(".liveDictation")'),'live dictation should replace decorative waveform');
   report.push({page:'theme-sunset-material',...sunset});
   await activate(4,'.settingsPage');
   await evalJs('document.querySelector(".appearanceChoices button[aria-label*=\\"北欧\\"]").click()');
@@ -116,7 +117,7 @@ try{
   await shot(1160,760,'practice-nordic');
   const nordic=await themeMaterial();
   assert.ok(nordic.glass==='none'||nordic.glass.includes('blur(0px)'),'Nordic should have no blur: '+JSON.stringify(nordic));
-  assert.ok(nordic.micImage.includes('linear-gradient'),'Nordic microphone material missing');
+  assert.ok(nordic.primaryBackground!=='rgba(0, 0, 0, 0)','Nordic live dictation control missing');
   report.push({page:'theme-nordic-material',...nordic});
   await activate(4,'.settingsPage');
   await evalJs('document.querySelector(".appearanceChoices button[aria-label*=\\"日落\\"]").click()');
