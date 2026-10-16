@@ -15,7 +15,7 @@ export interface VoxneloOfflineAsr {
   capabilities():Promise<{available:boolean;reason:'ready'|'not-configured'}>;
   start():Promise<{ok:true;sessionId:string}|{ok:false;reason:'not-configured'|'busy'|'failed'}>;
   push(sessionId:string,samples:Float32Array):void;
-  stop(sessionId:string):void;
+  stop(sessionId:string):Promise<{finalText:string}>;
   onResult(listener:(result:OfflineAsrResult)=>void):()=>void;
   onError(listener:(sessionId:string)=>void):()=>void;
 }
