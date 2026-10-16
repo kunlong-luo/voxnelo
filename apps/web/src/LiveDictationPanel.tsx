@@ -52,7 +52,7 @@ export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
         {t(window.voxneloDesktop?(dictation.desktopReason==='missing-model'?'dictationModelMissing':dictation.desktopReason==='missing-addon'?'dictationAddonMissing':'dictationLocalRequired'):'dictationUnsupported')}
       </p>
       <p role="status" className="mt-1 text-[11px] leading-4 text-translation-ink @min-[440px]/lesson:hidden">{t('dictationUnavailableShort')}</p>
-    </>
+    </>}
     {listening&&window.voxneloDesktop&&dictation.noiseReduction!=='unknown'&&<p className="mt-2 flex items-center gap-1.5 text-[11px] leading-4 text-translation-ink">
       <ShieldCheck size={13} aria-hidden="true"/>{t(dictation.noiseReduction==='enabled'?'dictationNoiseEnabled':'dictationNoiseUnverified')}
     </p>}
