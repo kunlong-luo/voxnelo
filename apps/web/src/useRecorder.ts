@@ -16,19 +16,22 @@ export function useRecorder() {
   // Invalidates delayed MediaRecorder events when the user clears or changes a sentence.
   const generationRef = useRef(0);
 
-  const clearAudio = useCallback(() => {
-    generationRef.current += 1;
-    if (urlRef.current) URL.revokeObjectURL(urlRef.current);
-    urlRef.current = null;
-    setRecordingUrl(null);
-    setStatus('idle');
-  }, []);
-
   const stop = useCallback(() => {
     if (recorder.current?.state === 'recording') recorder.current.stop();
     stream.current?.getTracks().forEach((track) => track.stop());
     stream.current = null;
   }, []);
+
+  const clearAudio = useCallback(() => {
+    // A sentence change must invalidate callbacks and physically release any
+    // active microphone, even if the MediaRecorder's stop event arrives later.
+    generationRef.current += 1;
+    stop();
+    if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+    urlRef.current = null;
+    setRecordingUrl(null);
+    setStatus('idle');
+  }, [stop]);
 
   const start = useCallback(async () => {
     if (requestingRef.current || status === 'requesting' || status === 'recording') return;
