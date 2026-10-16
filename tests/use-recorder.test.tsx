@@ -92,6 +92,10 @@ describe('useRecorder', () => {
       await latest.start();
     });
     expect(latest.status).toBe('recording');
+    expect(navigator.mediaDevices.getUserMedia).toHaveBeenCalledWith({
+      audio: { noiseSuppression: true, echoCancellation: true, autoGainControl: true, channelCount: 1 },
+      video: false,
+    });
     const instance = MockMediaRecorder.instances[0];
     if (!instance) throw new Error('expected recorder instance');
     act(() => {
