@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { FIRST_SENTENCE } from '@voxnelo/content';
 import type { useRecorder } from '../apps/web/src/useRecorder';
+import type { useLiveDictation } from '../apps/web/src/useLiveDictation';
 import { PracticeView } from '../apps/web/src/PracticeView';
 import { LibraryView } from '../apps/web/src/LibraryView';
 
@@ -20,6 +21,15 @@ function stubRecorder(overrides: Partial<ReturnType<typeof useRecorder>> = {}) {
   };
 }
 
+function stubDictation(overrides:Partial<ReturnType<typeof useLiveDictation>>={}) {
+  return {
+    status:'idle' as const, active:false, mode:'local' as const,
+    chooseMode:()=>undefined, supported:false, browserModeAvailable:true,
+    localPack:'unknown' as const, finalText:'', interimText:'', error:'',
+    start:async()=>undefined, stop:()=>undefined, clear:()=>undefined, installLocal:async()=>undefined,
+    ...overrides,
+  };
+}
 const basePracticeProps = {
   current: FIRST_SENTENCE,
   currentState: undefined,
@@ -28,6 +38,8 @@ const basePracticeProps = {
   showIpa: false,
   notice: '',
   recorder: stubRecorder(),
+  dictation: stubDictation(),
+  onStartDictation: ()=>undefined,
   recordingBusy: false,
   canGoPrevious: false,
   onToggleIpa: () => undefined,
@@ -78,6 +90,22 @@ describe('PracticeView', () => {
     expect(lesson?.querySelector('.insightCard')).toBeNull();
   });
 
+  it('主要入口是实时听写，录制回听仍作为辅助入口', () => {
+    const onStartDictation=vi.fn();
+    const {container,rerender}=render(<PracticeView {...basePracticeProps}
+      onStartDictation={onStartDictation} dictation={stubDictation({supported:true})}/>);
+    expect(screen.getByRole('button',{name:'开始实时听写'})).toBeTruthy();
+    fireEvent.click(screen.getByRole('button',{name:'开始实时听写'}));
+    expect(onStartDictation).toHaveBeenCalledTimes(1);
+    expect(screen.getByText('录制回听')).toBeTruthy();
+    expect(container.querySelector('.recordAction')).toBeTruthy();
+    rerender(<PracticeView {...basePracticeProps} dictation={stubDictation({supported:true,status:'listening',active:true,finalText:'Hello',interimText:'world'})} recordingBusy/>);
+    expect(screen.getByRole('button',{name:'停止听写'})).toBeTruthy();
+    expect(screen.getByTestId('live-transcript').textContent).toContain('Hello');
+    expect(screen.getByTestId('live-transcript').textContent).toContain('world');
+    expect((screen.getByRole('button',{name:'开口跟读'}) as HTMLButtonElement).disabled).toBe(true);
+  });
+
   it('录音中只有结束录音可用，避免切换语速、播放示范或误启动录音', () => {
     render(<PracticeView {...basePracticeProps} recorder={stubRecorder({ status: 'recording' })} recordingBusy />);
     expect((screen.getByRole('button', { name: '录音进行中' }) as HTMLButtonElement).disabled).toBe(true);
@@ -91,7 +119,8 @@ describe('PracticeView', () => {
     const { container, rerender } = render(<PracticeView {...basePracticeProps} />);
     expect(container.querySelector('[data-motion="record-halo"]')).toBeNull();
     expect(container.querySelector('[data-motion="permission-halo"]')).toBeNull();
-    expect(container.querySelector('.waveformArt')?.getAttribute('aria-hidden')).toBe('true');
+    expect(container.querySelector('.liveDictation')).toBeTruthy();
+    expect(container.querySelector('.waveformArt')).toBeNull();
     expect(container.querySelector('.practiceLayout')?.className).toContain('motion-safe:animate-view-enter');
 
     rerender(<PracticeView {...basePracticeProps} recorder={stubRecorder({ status: 'requesting' })} recordingBusy />);
