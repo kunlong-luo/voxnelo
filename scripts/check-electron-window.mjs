@@ -122,7 +122,9 @@ try{
   const secure=await evaluate('({node:typeof window.require,process:typeof window.process,bridgeKeys:Object.keys(window.voxneloDesktop).sort()})');
   assert.equal(secure.node,'undefined','unsafe Node integration');
   assert.equal(secure.process,'undefined','unsafe process exposed in renderer');
-  assert.deepEqual(secure.bridgeKeys,['platform','speech','version','windowControls'],'unexpected preload capability');
+  assert.deepEqual(secure.bridgeKeys,['asr','platform','speech','version','windowControls'],'unexpected preload capability');
+  const offline=await evaluate('window.voxneloDesktop.asr.capabilities()');
+  assert.deepEqual(offline,{available:false,reason:'not-configured'},'Packaged/default Electron must not implicitly load native ASR or a cloud provider');
   report.push({label:'context-isolation',...secure});
 
   const winId=xdo('search','--onlyvisible','--name','^Voxnelo$').split('\n')[0];
