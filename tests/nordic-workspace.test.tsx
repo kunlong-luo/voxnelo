@@ -84,6 +84,8 @@ describe('Nordic three-column learning workspace', () => {
     const liveMic=container.querySelector('.liveDictation .dictationAction');
     const replayMic=container.querySelector('.actionRail .recordAction');
     expect(liveMic?.className).toContain('rounded-full');
+    expect(container.querySelector('.waveformArt')).toBeTruthy();
+    expect(container.querySelector('.liveDictation > div')?.className).toContain('@min-[560px]/lesson:flex-col');
     expect(liveMic?.className).toContain('bg-[image:var(--mic-gradient)]');
     expect(replayMic).toBeTruthy();
     expect(replayMic?.className).not.toContain('bg-[image:var(--mic-gradient)]');
