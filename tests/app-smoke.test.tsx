@@ -108,6 +108,22 @@ describe('App smoke', () => {
     await waitFor(() => expect(view.container.querySelector('.practiceLayout')).toBeTruthy());
   });
 
+  it('F005/F006: changing sentence records a new view without counting a practice', async () => {
+    const view = render(<App />);
+    await screen.findByText(FIRST_SENTENCE.english);
+    fireEvent.click(screen.getByRole('button', { name: '换一句' }));
+    await waitFor(() => {
+      expect(view.container.querySelector('h1.sentenceText')?.textContent).not.toBe(FIRST_SENTENCE.english);
+    });
+    const activeSentence = view.container.querySelector('h1.sentenceText')?.textContent;
+    await waitFor(async () => {
+      const data = await database.states.toArray();
+      expect(data.some(item => item.sentenceId !== FIRST_SENTENCE.id && item.seenCount > 0)).toBe(true);
+      expect(data.every(item => item.practicedCount === 0)).toBe(true);
+    });
+    expect(activeSentence).toBeTruthy();
+  });
+
   it('右方向键换到下一句', async () => {
     const view = render(<App />);
     await screen.findByText(FIRST_SENTENCE.english);
