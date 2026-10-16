@@ -4,6 +4,7 @@ import { useI18n } from './i18n';
 import { Tooltip } from './Tooltip';
 import { Button } from './components/ui/button';
 import { Progress } from './components/ui/progress';
+import { cn } from './lib/utils';
 
 function clock(seconds:number):string {
   if (!Number.isFinite(seconds)) return '0:00';
@@ -29,7 +30,7 @@ export function RecordingPlayback({src}:{src:string|null}) {
       onTimeUpdate={event=>setElapsed(event.currentTarget.currentTime)}
       onEnded={()=>setPlaying(false)} onPause={()=>setPlaying(false)}/>}
     <Tooltip text={t(playing?'playbackPause':'playbackStart')}>
-      <Button variant="outline" size="icon-lg" className="size-10 rounded-2xl border-border/65 bg-card/80 text-primary shadow-sm hover:bg-accent @min-[440px]/workspace:size-11 @min-[700px]/workspace:size-12" onClick={()=>void toggle()} disabled={!src} aria-label={t(playing?'playbackPause':'playbackStart')}>{playing?<Pause size={21}/>:<Play size={21}/>}</Button>
+      <Button variant="outline" size="icon-lg" className={cn("size-10 rounded-2xl border-border/65 bg-card/80 text-primary shadow-sm hover:bg-accent @min-[440px]/workspace:size-11 @min-[700px]/workspace:size-12",playing&&"border-primary/35 bg-secondary text-primary ring-2 ring-primary/15")} onClick={()=>void toggle()} disabled={!src} aria-label={t(playing?'playbackPause':'playbackStart')}>{playing?<Pause size={21} className="motion-safe:animate-soft-pop"/>:<Play size={21}/>}</Button>
     </Tooltip>
     <span className="actionCaption mt-2 max-w-full text-center text-[10px] font-semibold leading-4 text-muted-foreground @min-[560px]/workspace:text-[11px]">{t(playing?'playbackPause':'playbackCaption')}</span>
     {src?<><time className="actionAux mt-1 text-center text-[10px] text-muted-foreground">{clock(elapsed)} / {duration>0?clock(duration):'--:--'}</time>
