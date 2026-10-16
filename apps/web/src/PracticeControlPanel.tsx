@@ -8,7 +8,7 @@ import { cn } from './lib/utils';
 
 type ControlPanelProps = Pick<PracticeViewProps, 'recorder'|'recordingBusy'|'speed'|'onSpeak'|'onToggleSpeed'|'onRecord'>;
 
-const utilityButton = 'size-10 rounded-2xl border border-border/70 bg-card/80 text-foreground/75 shadow-sm transition-[background-color,color,box-shadow] hover:bg-accent hover:text-primary hover:shadow-md @min-[440px]/workspace:size-11 @min-[700px]/workspace:size-12';
+const utilityButton = 'size-10 rounded-2xl border border-border/70 bg-card/80 text-foreground/75 shadow-sm transition-[background-color,color,box-shadow] hover:bg-accent hover:text-primary hover:shadow-md motion-safe:hover:-translate-y-1 motion-safe:active:translate-y-0 @min-[440px]/workspace:size-11 @min-[700px]/workspace:size-12';
 const minorCaption = 'mt-2 max-w-full text-center text-[10px] font-semibold leading-4 text-muted-foreground @min-[560px]/workspace:text-[11px]';
 function ActionSlot({children,label,detail,className}:{
   children:React.ReactNode;label:string;detail?:string;className?:string;
@@ -41,7 +41,7 @@ export function PracticeControlPanel({recorder,recordingBusy,speed,onSpeak,onTog
               <div className="relative isolate grid place-items-center">
                 {recording && <span aria-hidden="true" data-motion="record-halo" className="pointer-events-none absolute -inset-2 rounded-[26px] border-2 border-mic-halo/75 motion-safe:animate-record-halo"/>}
                 {requesting && <span aria-hidden="true" data-motion="permission-halo" className="pointer-events-none absolute -inset-1 rounded-[26px] border-2 border-primary/40 motion-safe:animate-status-breathe"/>}
-                <Button variant="default" size="icon-lg" className={cn('recordAction relative size-11 rounded-2xl border border-primary/25 bg-secondary/75 text-primary shadow-sm @min-[440px]/workspace:size-12 transition-[background-color,box-shadow,transform] duration-200 motion-safe:hover:scale-[1.04] hover:bg-accent motion-reduce:transform-none',recording&&'bg-secondary ring-2 ring-mic-halo/50')} onClick={onRecord} disabled={recordingBusy} aria-label={t(requesting?'micPermission':recording?'micBusy':'micStart')}>
+                <Button variant="default" size="icon-lg" className={cn('recordAction relative size-11 rounded-2xl border border-primary/25 bg-secondary/75 text-primary shadow-sm @min-[440px]/workspace:size-12 transition-[background-color,box-shadow,transform] duration-200 motion-safe:hover:-translate-y-1 motion-safe:hover:scale-[1.04] motion-safe:active:translate-y-0 motion-safe:active:scale-[.97] hover:bg-accent motion-reduce:transform-none',recording&&'bg-secondary ring-2 ring-mic-halo/50')} onClick={onRecord} disabled={recordingBusy} aria-label={t(requesting?'micPermission':recording?'micBusy':'micStart')}>
                   {requesting?<LoaderCircle size={28} aria-hidden="true" className="motion-safe:animate-spin"/>:<Mic size={23} aria-hidden="true"/>}
                 </Button>
               </div>
