@@ -30,6 +30,7 @@ export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
       {dictation.interimText&&<span className="ml-1 text-translation-ink" aria-label={t('dictationInterim')}>{dictation.interimText}</span>}
     </div>
     {!dictation.supported&&<><p role="status" className="mt-1.5 hidden text-[11px] leading-4 text-translation-ink @min-[440px]/workspace:block">{t(window.voxneloDesktop?'dictationLocalRequired':'dictationUnsupported')}</p><p role="status" className="mt-1 text-[10px] leading-4 text-translation-ink @min-[440px]/workspace:hidden">{t('dictationUnavailableShort')}</p></>}
+    {listening&&window.voxneloDesktop&&dictation.noiseReduction!=='unknown'&&<p className="mt-1 flex items-center gap-1 text-[10px] leading-4 text-translation-ink"><ShieldCheck size={12} aria-hidden="true"/>{t(dictation.noiseReduction==='enabled'?'dictationNoiseEnabled':'dictationNoiseUnverified')}</p>}
     {dictation.error&&<p role="status" className="mt-1.5 text-[11px] leading-4 text-translation-ink">{dictation.error}</p>}
     {dictation.localPack==='downloadable'&&dictation.mode==='local'&&<Button variant="outline" size="sm" className="mt-2 h-8 text-[11px]" onClick={()=>void dictation.installLocal()} disabled={checking}><Download size={14}/>{t('dictationInstallPack')}</Button>}
     {dictation.supported&&dictation.browserModeAvailable&&!listening&&!checking&&<div className="mt-1.5 flex flex-wrap items-center gap-1.5">
