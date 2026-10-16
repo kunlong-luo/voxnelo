@@ -2,7 +2,7 @@ import { ArrowRight, Bookmark, BookOpen, ChevronLeft, CircleHelp, Heart } from '
 import { SENTENCES, type Sentence } from '@voxnelo/learning';
 import type { PracticeViewProps } from './PracticeTypes';
 import { PracticeControlPanel } from './PracticeControlPanel';
-import { WaveformArt } from './WaveformArt';
+import { LiveDictationPanel } from './LiveDictationPanel';
 import { Tooltip } from './Tooltip';
 import { useI18n, type TranslationKey } from './i18n';
 import { Badge } from './components/ui/badge';
@@ -19,7 +19,7 @@ const topics:Record<Sentence['topic'],TranslationKey> = {
 };
 
 /** Single glass surface, typographic hierarchy and persistent lesson controls. */
-export function PracticeCard({current,currentState,speed,showIpa,recorder,recordingBusy,canGoPrevious,
+export function PracticeCard({current,currentState,speed,showIpa,recorder,dictation,recordingBusy,canGoPrevious,onStartDictation,
   onToggleIpa,onSpeak,onToggleSpeed,onRecord,onToggleFlag,onNext,onPrevious}:PracticeCardProps) {
   const {t}=useI18n();
   const position=SENTENCES.findIndex(item=>item.id===current.id);
@@ -59,7 +59,7 @@ export function PracticeCard({current,currentState,speed,showIpa,recorder,record
             {showIpa && <p className="ipa max-w-full text-sm leading-6 wrap-break-word text-ipa-ink">{current.ipa}</p>}
             <Button variant="ghost" size="sm" className="subtleLink rounded-full text-xs text-primary" onClick={onToggleIpa} aria-expanded={showIpa}><CircleHelp size={14}/>{t(showIpa?'ipaHide':'ipaShow')}</Button>
           </div>
-          <div className="wavePanel mx-auto w-full max-w-150 opacity-80 motion-safe:animate-panel-enter motion-safe:[animation-delay:90ms]"><WaveformArt/></div>
+          <LiveDictationPanel dictation={dictation} blocked={recorder.status==='requesting'||recorder.status==='recording'} onStart={onStartDictation}/>
         </div>
         <PracticeControlPanel recorder={recorder} recordingBusy={recordingBusy} speed={speed} onSpeak={onSpeak} onToggleSpeed={onToggleSpeed} onRecord={onRecord} />
         <footer className="cardFooter referenceFooter grid min-h-18 grid-cols-[minmax(95px,1fr)_auto_minmax(95px,1fr)] items-center gap-2 rounded-b-[var(--radius)] border-t border-border/60 bg-card/75 px-4 py-3 sm:px-6">
