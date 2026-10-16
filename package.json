@@ -17,7 +17,7 @@
     "build:electron": "node --experimental-strip-types scripts/build-electron.mts",
     "worklet:build": "node --experimental-strip-types scripts/build-audio-worklet.mts",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint . --max-warnings=0",
+    "lint": "node --experimental-strip-types ./node_modules/eslint/bin/eslint.js --flag unstable_native_nodejs_ts_config . --max-warnings=0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "arch": "depcruise --validate .dependency-cruiser.json apps packages tests",
