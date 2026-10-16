@@ -6,7 +6,9 @@ import type { WebContents } from 'electron';
 
 export type AsrCapability={available:boolean;reason:'ready'|'not-configured'};
 export type AsrOpenResult={ok:true;sessionId:string}|{ok:false;reason:'not-configured'|'busy'|'failed'};
-interface Session {id:string;owner:WebContents;worker:Worker;ready:boolean;accepting:boolean;stopTimer:ReturnType<typeof setTimeout>|null;lastText:string;resolveFinish:((result:{finalText:string})=>void)|null;}
+interface Session {id:string;owner:WebContents;worker:Worker;ready:boolean;accepting:boolean;pendingChunks:number;stopTimer:ReturnType<typeof setTimeout>|null;lastText:string;resolveFinish:((result:{finalText:string})=>void)|null;}
+/** At 100ms chunks, stop on >2s of ASR backlog instead of silently dropping speech. */
+const MAX_PENDING_PCM_CHUNKS=20;
 const expected=['encoder.onnx','decoder.onnx','joiner.onnx','tokens.txt'];
 /**
  * Experimental offline recognizer. Never run dynamic addon code from a page:
@@ -28,7 +30,7 @@ export class OfflineAsr {
     const worker=new Worker(path.join(__dirname,'offlineAsrWorker.cjs'),{
       workerData:{modelDir:this.modelDir,addonPath:this.addonPath},
     });
-    const session:Session={id,owner,worker,ready:false,accepting:false,stopTimer:null,lastText:'',resolveFinish:null};
+    const session:Session={id,owner,worker,ready:false,accepting:false,pendingChunks:0,stopTimer:null,lastText:'',resolveFinish:null};
     this.session=session;
     return new Promise(resolve=>{
       let settled=false;
@@ -40,6 +42,8 @@ export class OfflineAsr {
         const result=message as {type:string;finalText?:unknown;interimText?:unknown};
         if(result.type==='ready'){
           session.ready=true;session.accepting=true;settle({ok:true,sessionId:id});
+        }else if(result.type==='drained'){
+          session.pendingChunks=Math.max(0,session.pendingChunks-1);
         }else if(result.type==='result'&&session.ready&&!owner.isDestroyed()){
           // Do not send arbitrary worker data: bound strings only.
           const finalText=typeof result.finalText==='string'?result.finalText.slice(0,8000):'';
@@ -70,6 +74,13 @@ export class OfflineAsr {
     // Exactly one 16kHz, mono, bounded PCM chunk. Reject NaN/Infinity.
     if(!(input instanceof Float32Array)||input.length<1||input.length>3200)return;
     for(const value of input){if(!Number.isFinite(value)||Math.abs(value)>1)return;}
+    if(s.pendingChunks>=MAX_PENDING_PCM_CHUNKS){
+      // A saturated engine must not silently drop phrases while claiming to listen.
+      if(!owner.isDestroyed())owner.send('voxnelo:asr:error',{sessionId:s.id,reason:'overloaded'});
+      this.dispose(s);
+      return;
+    }
+    s.pendingChunks++;
     s.worker.postMessage({type:'pcm',samples:input});
   }
   stop(owner:WebContents,id:unknown):Promise<{finalText:string}>{
