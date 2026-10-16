@@ -6,7 +6,7 @@ import type { WebContents } from 'electron';
 
 export type AsrCapability={available:boolean;reason:'ready'|'not-configured'};
 export type AsrOpenResult={ok:true;sessionId:string}|{ok:false;reason:'not-configured'|'busy'|'failed'};
-interface Session {id:string;owner:WebContents;worker:Worker;ready:boolean;stopTimer:ReturnType<typeof setTimeout>|null;}
+interface Session {id:string;owner:WebContents;worker:Worker;ready:boolean;accepting:boolean;stopTimer:ReturnType<typeof setTimeout>|null;}
 const expected=['encoder.onnx','decoder.onnx','joiner.onnx','tokens.txt'];
 /**
  * Experimental offline recognizer. Never run dynamic addon code from a page:
@@ -28,7 +28,7 @@ export class OfflineAsr {
     const worker=new Worker(path.join(__dirname,'offlineAsrWorker.cjs'),{
       workerData:{modelDir:this.modelDir,addonPath:this.addonPath},
     });
-    const session:Session={id,owner,worker,ready:false,stopTimer:null};
+    const session:Session={id,owner,worker,ready:false,accepting:false,stopTimer:null};
     this.session=session;
     return new Promise(resolve=>{
       let settled=false;
@@ -39,7 +39,7 @@ export class OfflineAsr {
         if(!message||typeof message!=='object'||!('type' in message))return;
         const result=message as {type:string;finalText?:unknown;interimText?:unknown};
         if(result.type==='ready'){
-          session.ready=true;settle({ok:true,sessionId:id});
+          session.ready=true;session.accepting=true;settle({ok:true,sessionId:id});
         }else if(result.type==='result'&&session.ready&&!owner.isDestroyed()){
           // Do not send arbitrary worker data: bound strings only.
           const finalText=typeof result.finalText==='string'?result.finalText.slice(0,8000):'';
@@ -59,7 +59,7 @@ export class OfflineAsr {
   }
   push(owner:WebContents,id:unknown,input:unknown):void{
     const s=this.session;
-    if(!s||s.owner!==owner||id!==s.id||!s.ready)return;
+    if(!s||s.owner!==owner||id!==s.id||!s.ready||!s.accepting)return;
     // Exactly one 16kHz, mono, bounded PCM chunk. Reject NaN/Infinity.
     if(!(input instanceof Float32Array)||input.length<1||input.length>3200)return;
     for(const value of input){if(!Number.isFinite(value)||Math.abs(value)>1)return;}
@@ -68,7 +68,7 @@ export class OfflineAsr {
   stop(owner:WebContents,id:unknown):void{
     const s=this.session;
     if(!s||s.owner!==owner||id!==s.id)return;
-    s.ready=false;
+    s.accepting=false;
     s.worker.postMessage({type:'finish'});
     s.stopTimer=setTimeout(()=>this.dispose(s),1500);
   }
