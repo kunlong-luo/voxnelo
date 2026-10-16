@@ -47,6 +47,7 @@ export function useLiveDictation(sentenceId: string) {
   const current = useRef<Recognizer | null>(null);
   const desktopStop = useRef<(() => Promise<{finalText:string}>) | null>(null);
   const [desktopAvailable,setDesktopAvailable] = useState(false);
+  const [desktopReason,setDesktopReason] = useState<'ready'|'not-configured'|'missing-model'|'missing-addon'>('not-configured');
   const [noiseReduction,setNoiseReduction] = useState<'unknown'|'enabled'|'unverified'>('unknown');
   const requestId = useRef(0);
   const disposed = useRef(false);
@@ -54,12 +55,9 @@ export function useLiveDictation(sentenceId: string) {
   // SpeechRecognition can use a vendor network service. The desktop app never
   // opts into that mode, even when the constructor happens to exist.
   const browserModeAvailable = !window.voxneloDesktop;
-  // Electron may expose Chromium's *on-device* SpeechRecognition even when the
-  // optional native ONNX addon is not configured. Never use its cloud mode here.
-  const localBrowserRecognition = Boolean(recognizerClass()?.available);
-  const supported = window.voxneloDesktop
-    ? desktopAvailable || localBrowserRecognition
-    : Boolean(recognizerClass());
+  // Electron has no Chrome on-device speech-service binder. A Chromium
+  // constructor/method presence does NOT mean recognition can run in Electron.
+  const supported = window.voxneloDesktop ? desktopAvailable : Boolean(recognizerClass());
   useEffect(()=>{
     const bridge=window.voxneloDesktop?.asr;
     if(!bridge)return;
@@ -67,8 +65,9 @@ export function useLiveDictation(sentenceId: string) {
     void bridge.capabilities().then(cap=>{
       if(!alive)return;
       setDesktopAvailable(cap.available);
+      setDesktopReason(cap.reason);
       setLocalPack(cap.available?'available':'unavailable');
-    }).catch(()=>{if(alive)setDesktopAvailable(false);});
+    }).catch(()=>{if(alive){setDesktopAvailable(false);setDesktopReason('not-configured');}});
     return ()=>{alive=false;};
   },[]);
   const stop = useCallback(() => {
@@ -118,12 +117,10 @@ export function useLiveDictation(sentenceId: string) {
     const Ctor=recognizerClass();
     setError('');
     const bridge=window.voxneloDesktop?.asr;
-    if(window.voxneloDesktop && mode!=='local'){
-      setError(t('dictationLocalRequired'));
-      return;
-    }
-    if(window.voxneloDesktop && desktopAvailable){
-      if(!bridge){setError(t('dictationLocalRequired'));return;}
+    if(window.voxneloDesktop){
+      // Fail closed, including on Electron builds exposing an incomplete
+      // SpeechRecognition API. Do not invoke Chrome's unsupported local binder.
+      if(mode!=='local'||!bridge||!desktopAvailable){setError(t('dictationLocalRequired'));return;}
       const id=++requestId.current;
       setStatus('checking');
       let media:MediaStream|null=null;
@@ -278,7 +275,7 @@ export function useLiveDictation(sentenceId: string) {
   },[status,mode,browserModeAvailable,desktopAvailable,stop,t]);
   const installLocal = useCallback(async()=>{
     const Ctor=recognizerClass();
-    if(!Ctor?.install)return setError(t('dictationLocalRequired'));
+    if(window.voxneloDesktop || !Ctor?.install)return setError(t('dictationLocalRequired'));
     const id=++requestId.current;
     setStatus('checking');setError('');
     try {
@@ -292,5 +289,5 @@ export function useLiveDictation(sentenceId: string) {
       if(!disposed.current&&id===requestId.current)setStatus('idle');
     }
   },[t]);
-  return {status,active,mode,chooseMode,supported,browserModeAvailable,localPack,noiseReduction,finalText,interimText,error,start,stop,clear,installLocal};
+  return {status,active,mode,chooseMode,supported,browserModeAvailable,desktopReason,localPack,noiseReduction,finalText,interimText,error,start,stop,clear,installLocal};
 }
