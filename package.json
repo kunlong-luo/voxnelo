@@ -17,6 +17,7 @@
     "build:electron": "node --experimental-strip-types scripts/check-asr-staging.mts && node --experimental-strip-types scripts/build-electron.mts",
     "asr:check-staging": "node --experimental-strip-types scripts/check-asr-staging.mts",
     "asr:model:prepare": "node --experimental-strip-types scripts/prepare-asr-model.mts",
+    "asr:native:stage": "node --experimental-strip-types scripts/stage-asr-native.mts",
     "worklet:build": "node --experimental-strip-types scripts/build-audio-worklet.mts",
     "typecheck": "tsc --noEmit",
     "lint": "node --experimental-strip-types ./node_modules/eslint/bin/eslint.js --flag unstable_native_nodejs_ts_config . --max-warnings=0",
