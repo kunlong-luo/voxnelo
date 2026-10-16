@@ -1,3 +1,4 @@
+/* global AudioWorkletProcessor, registerProcessor */
 /* Electron-only microphone capture. AudioContext runs at 16 kHz mono.
  * Device DSP (NS/AEC/AGC) is requested by getUserMedia, not emulated here.
  * No network access, no file writes, no playback audio output.
