@@ -7,6 +7,7 @@ afterEach(cleanup);
 
 class MockMediaRecorder {
   static instances: MockMediaRecorder[] = [];
+  static deferStop = false;
   static isTypeSupported = () => true;
   state: RecordingState = 'inactive';
   ondataavailable: ((event: { data: Blob }) => void) | null = null;
@@ -25,7 +26,7 @@ class MockMediaRecorder {
 
   stop(): void {
     this.state = 'inactive';
-    this.onstop?.();
+    if (!MockMediaRecorder.deferStop) this.onstop?.();
   }
 }
 
@@ -49,6 +50,7 @@ function Harness(): null {
 
 beforeEach(() => {
   MockMediaRecorder.instances = [];
+  MockMediaRecorder.deferStop = false;
   vi.stubGlobal('MediaRecorder', MockMediaRecorder);
   Object.defineProperty(URL, 'createObjectURL', {
     value: vi.fn(() => 'blob:mock'),
@@ -177,6 +179,57 @@ describe('useRecorder', () => {
     expect(stopTrack).toHaveBeenCalledTimes(1);
     expect(MockMediaRecorder.instances).toHaveLength(0);
   });
+  it('清理已经完成的录音时撤销 Blob URL 并复位状态', async () => {
+    mockDevices(() => Promise.resolve(fakeStream()));
+    render(<Harness />);
+    await act(async () => { await latest.start(); });
+    const instance = MockMediaRecorder.instances[0];
+    if (!instance) throw new Error('expected recorder instance');
+    act(() => {
+      instance.ondataavailable?.({ data: new Blob(['voice']) });
+      latest.stop();
+    });
+    expect(latest.status).toBe('ready');
+    act(() => { latest.clearAudio(); });
+    expect(latest.recordingUrl).toBeNull();
+    expect(latest.status).toBe('idle');
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:mock');
+  });
+
+  it('异步 onstop 在切句清理之后到达时不得恢复旧音频', async () => {
+    MockMediaRecorder.deferStop = true;
+    mockDevices(() => Promise.resolve(fakeStream()));
+    render(<Harness />);
+    await act(async () => { await latest.start(); });
+    const instance = MockMediaRecorder.instances[0];
+    if (!instance) throw new Error('expected recorder instance');
+    act(() => { latest.stop(); });
+    // Switching sentences clears the old recording while browser events are still queued.
+    act(() => { latest.clearAudio(); });
+    act(() => {
+      instance.ondataavailable?.({ data: new Blob(['late voice']) });
+      instance.onstop?.();
+    });
+    expect(latest.status).toBe('idle');
+    expect(latest.recordingUrl).toBeNull();
+    expect(URL.createObjectURL).not.toHaveBeenCalled();
+  });
+
+  it('卸载已经完成录音的组件时释放临时 Blob URL', async () => {
+    mockDevices(() => Promise.resolve(fakeStream()));
+    const view = render(<Harness />);
+    await act(async () => { await latest.start(); });
+    const instance = MockMediaRecorder.instances[0];
+    if (!instance) throw new Error('expected recorder instance');
+    act(() => {
+      instance.ondataavailable?.({ data: new Blob(['voice']) });
+      latest.stop();
+    });
+    expect(latest.recordingUrl).toBe('blob:mock');
+    view.unmount();
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:mock');
+  });
+
   it('没有录到声音时报错', async () => {
     mockDevices(() => Promise.resolve(fakeStream()));
     render(<Harness />);
