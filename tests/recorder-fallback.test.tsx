@@ -64,7 +64,7 @@ describe('Nonblocking microphone fallback', () => {
       onToggleIpa={()=>undefined} onSpeak={()=>undefined} onToggleSpeed={()=>undefined}
       onRecord={()=>undefined} onToggleFlag={()=>undefined}
       onNext={()=>undefined} onPrevious={()=>undefined} onDismissNotice={()=>undefined}/>);
-    expect(screen.getByRole('status',{name:''}).textContent).toContain('麦克风');
+    expect(screen.getByText('暂未检测到可用麦克风，可以先畅听示范或收藏喜欢的句子。')).toBeTruthy();
     expect((screen.getByRole('button',{name:'播放标准朗读'}) as HTMLButtonElement).disabled).toBe(false);
     expect((screen.getByRole('button',{name:'收藏'}) as HTMLButtonElement).disabled).toBe(false);
   });
