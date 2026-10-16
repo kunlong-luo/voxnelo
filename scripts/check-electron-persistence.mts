@@ -54,7 +54,7 @@ const send=(method:string,params:Record<string,unknown>={})=>new Promise<CdpPack
   pending.set(id,{resolve,reject,timeout});
   socket.send(JSON.stringify({id,method,params}));
 });
-const evaluate=async <T=unknown>(expression:string):Promise<T>=>{
+const evaluate=async <T=unknown,>(expression:string):Promise<T>=>{
   const response=await send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});
   if(response.exceptionDetails)throw Error('Renderer evaluation failed: '+response.exceptionDetails.text);
   return response.result?.value as T;
