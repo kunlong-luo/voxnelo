@@ -23,10 +23,11 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('System-first bilingual UI', () => {
+describe('Chinese-first bilingual UI (V0.1 PRD F001)', () => {
   it('resolves unsupported locales, Chinese locales, and invalid stored overrides safely', () => {
-    expect(parseLanguageSetting(undefined)).toBe('system');
-    expect(parseLanguageSetting('other')).toBe('system');
+    expect(parseLanguageSetting(undefined)).toBe('zh-CN');
+    expect(parseLanguageSetting('other')).toBe('zh-CN');
+    expect(parseLanguageSetting('system')).toBe('system');
     expect(parseLanguageSetting('en-US')).toBe('en-US');
     expect(resolveLocale('system', 'zh-TW')).toBe('zh-CN');
     expect(resolveLocale('system', 'fr-FR')).toBe('en-US');
@@ -35,21 +36,21 @@ describe('System-first bilingual UI', () => {
     expect(translate('zh-CN','coursePosition',{index:4,total:40})).toBe('课程位置，第 4 句，共 40 句');
   });
 
-  it('starts in system English and toggles to Chinese without resetting practice', () => {
+  it('starts in Chinese even on an English OS, then allows explicit English without resetting practice', () => {
     render(<App />);
-    expect(document.documentElement.lang).toBe('en-US');
-    expect(screen.getByRole('button',{name:'Start practice'})).toBeTruthy();
-    expect(screen.getByRole('button',{name:'Speak now'})).toBeTruthy();
-    fireEvent.click(screen.getByRole('button',{name:'Settings'}));
-    expect(screen.getByRole('heading',{name:'Interface language'})).toBeTruthy();
-    expect(screen.getByRole('button',{name:/Follow system/}).getAttribute('aria-pressed')).toBe('true');
-    fireEvent.click(screen.getByRole('button',{name:/简体中文/}));
     expect(document.documentElement.lang).toBe('zh-CN');
-    expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('zh-CN');
-    expect(screen.getByRole('heading',{name:'练习设置'})).toBeTruthy();
-    fireEvent.click(screen.getByRole('button',{name:'返回练习'}));
+    expect(screen.getByRole('button',{name:'开始练习'})).toBeTruthy();
     expect(screen.getByRole('button',{name:'开口跟读'})).toBeTruthy();
-    expect(screen.getByRole('button',{name:'换一句'})).toBeTruthy();
+    fireEvent.click(screen.getByRole('button',{name:'设置'}));
+    expect(screen.getByRole('heading',{name:'界面语言'})).toBeTruthy();
+    expect(screen.getByRole('button',{name:/简体中文/}).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(screen.getByRole('button',{name:/English/}));
+    expect(document.documentElement.lang).toBe('en-US');
+    expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('en-US');
+    expect(screen.getByRole('heading',{name:'Practice settings'})).toBeTruthy();
+    fireEvent.click(screen.getByRole('button',{name:'Back to practice'}));
+    expect(screen.getByRole('button',{name:'Speak now'})).toBeTruthy();
+    expect(screen.getByRole('button',{name:'Next sentence'})).toBeTruthy();
   });
 
   it('re-applies explicit English after remount and returns to live system language', () => {
