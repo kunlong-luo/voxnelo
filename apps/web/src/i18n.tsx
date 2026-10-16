@@ -67,6 +67,8 @@ const strings = {
     "dictationServiceUnavailable": "识别服务不可用。桌面端请使用离线语音识别引擎，不会自动改为在线上传。",
     "dictationFailed": "实时听写未能启动，请重试。",
     "dictationNoiseNote": "设备降噪效果取决于系统与识别引擎，不能完全隔绝外部人声。",
+    "dictationNoiseEnabled": "设备已开启降噪",
+    "dictationNoiseUnverified": "已请求降噪，设备效果未确认",
 
     "micStartHint": "点击开始，手动结束",
     "micRequestHint": "等待麦克风权限",
@@ -253,6 +255,8 @@ const strings = {
     "dictationServiceUnavailable": "Speech recognition is unavailable. Desktop requires offline ASR; audio is never silently uploaded.",
     "dictationFailed": "Live dictation could not start. Please try again.",
     "dictationNoiseNote": "Noise filtering depends on the device and recognition engine and cannot fully remove nearby voices.",
+    "dictationNoiseEnabled": "Device noise suppression enabled",
+    "dictationNoiseUnverified": "Noise suppression requested; device status unverified",
 
     "micStartHint": "Tap to start · Stop manually",
     "micRequestHint": "Waiting for microphone access",
