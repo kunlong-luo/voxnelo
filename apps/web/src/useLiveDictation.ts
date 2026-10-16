@@ -43,6 +43,8 @@ export function useLiveDictation(sentenceId: string) {
   const [localPack,setLocalPack] = useState<LocalPack>('unknown');
   const [finalText,setFinalText] = useState('');
   const [interimText,setInterimText] = useState('');
+  // Actual PCM amplitude, available only on the local desktop audio path.
+  const [inputLevel,setInputLevel] = useState<number | null>(null);
   const [error,setError] = useState('');
   const current = useRef<Recognizer | null>(null);
   const desktopStop = useRef<(() => Promise<{finalText:string}>) | null>(null);
@@ -91,6 +93,7 @@ export function useLiveDictation(sentenceId: string) {
       try {recognizer.stop()} catch { /* recognition may already be stopped */ }
     }
     setInterimText('');
+    setInputLevel(null);
     setStatus('idle');
   },[]);
   const clear = useCallback(() => {
@@ -131,6 +134,7 @@ export function useLiveDictation(sentenceId: string) {
       let closed=false;
       let audioTrack:MediaStreamTrack|null=null;
       let onDeviceEnded:(()=>void)|null=null;
+      let lastLevelUpdate=0;
       const close=():Promise<{finalText:string}>=>{
         if(closed)return Promise.resolve({finalText:''});
         closed=true;
@@ -188,7 +192,18 @@ export function useLiveDictation(sentenceId: string) {
         silent.connect(context.destination);
         node.port.onmessage=event=>{
           if(id!==requestId.current||closed||typeof sessionId!=='string')return;
-          if(event.data instanceof Float32Array)bridge.push(sessionId,event.data);
+          if(event.data instanceof Float32Array){
+            const samples=event.data;
+            bridge.push(sessionId,samples);
+            const now=performance.now();
+            if(now-lastLevelUpdate>=100){
+              lastLevelUpdate=now;
+              let sum=0;
+              for(let i=0;i<samples.length;i++)sum+=samples[i]*samples[i];
+              const rms=Math.sqrt(sum/Math.max(1,samples.length));
+              setInputLevel(Math.min(1,rms*6));
+            }
+          }
         };
         await context.resume();
         if(disposed.current||id!==requestId.current){close();return;}
@@ -199,6 +214,7 @@ export function useLiveDictation(sentenceId: string) {
         if(desktopStop.current===close)desktopStop.current=null;
         if(disposed.current||id!==requestId.current)return;
         setStatus('idle');
+        setInputLevel(null);
         const name=cause instanceof Error?cause.name:'';
         setError(name==='NotAllowedError'?t('dictationPermission')
           :name==='NotFoundError'||name==='NotReadableError'?t('dictationMicrophone'):t('dictationFailed'));
@@ -290,5 +306,5 @@ export function useLiveDictation(sentenceId: string) {
       if(!disposed.current&&id===requestId.current)setStatus('idle');
     }
   },[t]);
-  return {status,active,mode,chooseMode,supported,browserModeAvailable,desktopReason,localPack,noiseReduction,finalText,interimText,error,start,stop,clear,installLocal};
+  return {status,active,mode,chooseMode,supported,browserModeAvailable,desktopReason,localPack,noiseReduction,finalText,interimText,inputLevel,error,start,stop,clear,installLocal};
 }
