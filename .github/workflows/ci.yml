@@ -64,6 +64,10 @@ jobs:
           sudo apt-get install -y -qq xvfb xdotool openbox
       - name: Native Linux Electron window smoke
         run: xvfb-run -a -s "-screen 0 1600x1000x24" node scripts/check-electron-window.mjs
+      - name: Native Electron 125 percent DPI
+        run: VOXNELO_DPI_SCALE=1.25 xvfb-run -a -s "-screen 0 2400x1600x24" node scripts/check-electron-window.mjs
+      - name: Native Electron 150 percent DPI
+        run: VOXNELO_DPI_SCALE=1.5 xvfb-run -a -s "-screen 0 2400x1600x24" node scripts/check-electron-window.mjs
       - name: Upload Electron desktop evidence
         if: always()
         uses: actions/upload-artifact@v4
