@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { Worker } from 'node:worker_threads';
 import type { WebContents } from 'electron';
 
-export type AsrCapability={available:boolean;reason:'ready'|'not-configured'};
+export type AsrCapability={available:boolean;reason:'ready'|'not-configured'|'missing-addon'|'missing-model'};
 export type AsrOpenResult={ok:true;sessionId:string}|{ok:false;reason:'not-configured'|'busy'|'failed'};
 interface Session {id:string;owner:WebContents;worker:Worker;ready:boolean;accepting:boolean;pendingChunks:number;stopTimer:ReturnType<typeof setTimeout>|null;lastText:string;resolveFinish:((result:{finalText:string})=>void)|null;}
 /** At 100ms chunks, stop on >2s of ASR backlog instead of silently dropping speech. */
@@ -12,8 +12,8 @@ const MAX_PENDING_PCM_CHUNKS=20;
 const expected=['encoder.onnx','decoder.onnx','joiner.onnx','tokens.txt'];
 /**
  * Experimental offline recognizer. Never run dynamic addon code from a page:
- * paths are developer-provided at app startup, and unavailable in packaged
- * builds until native binary + model redistribution has been audited.
+ * paths are developer-provided in development or point to resources that a
+ * release maintainer explicitly staged and vetted before creating the installer.
  */
 export class OfflineAsr {
   private session:Session|null=null;
@@ -25,7 +25,8 @@ export class OfflineAsr {
   ){}
   capabilities():AsrCapability{
     if(!this.modelDir||!this.addonPath||!path.isAbsolute(this.modelDir)||!path.isAbsolute(this.addonPath))return {available:false,reason:'not-configured'};
-    if(!existsSync(this.addonPath)||!expected.every(name=>existsSync(path.join(this.modelDir!,name))))return {available:false,reason:'not-configured'};
+    if(!existsSync(this.addonPath))return {available:false,reason:'missing-addon'};
+    if(!expected.every(name=>existsSync(path.join(this.modelDir!,name))))return {available:false,reason:'missing-model'};
     return {available:true,reason:'ready'};
   }
   async open(owner:WebContents):Promise<AsrOpenResult>{
