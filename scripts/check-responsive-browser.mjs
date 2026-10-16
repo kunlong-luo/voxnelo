@@ -103,7 +103,18 @@ try{
   console.error(err);process.exitCode=1;
 }finally{
   if(ws&&ws.readyState===WebSocket.OPEN)ws.close();
-  if(chrome)chrome.kill();
+  if(chrome){
+    if(chrome.exitCode===null){
+      chrome.kill('SIGTERM');
+      await new Promise(resolve=>{
+        chrome.once('exit',resolve);
+        setTimeout(resolve,3000).unref();
+      });
+    }
+  }
   await new Promise(resolve=>server.close(resolve));
-  await rm(profile,{recursive:true,force:true});
+  // Chrome can briefly recreate files while shutting down. On ephemeral CI
+  // machines, a cleanup race must not turn a passing visual check red.
+  await rm(profile,{recursive:true,force:true,maxRetries:6,retryDelay:250})
+    .catch(error=>console.warn('Browser profile cleanup skipped:',error.message));
 }
