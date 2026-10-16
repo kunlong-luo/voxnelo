@@ -3,7 +3,7 @@ import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { FIRST_SENTENCE } from '@voxnelo/content';
-import { database } from '@voxnelo/storage';
+import { database, recordEvent } from '@voxnelo/storage';
 import { App } from '../apps/web/src/App';
 import { LANGUAGE_STORAGE_KEY } from '../apps/web/src/i18n';
 import type { VoxneloDesktopAPI } from '../apps/web/src/desktopBridge';
@@ -36,6 +36,31 @@ describe('App smoke', () => {
     expect(await screen.findByText(FIRST_SENTENCE.english)).toBeTruthy();
     expect(screen.getByRole('button', { name: '换一句' })).toBeTruthy();
     expect(screen.getByRole('button', { name: '我的收藏' })).toBeTruthy();
+  });
+
+  it('P0: resumes the last valid sentence from IndexedDB after relaunch without a false first-phrase visit', async () => {
+    await recordEvent('s012', 'view');
+    await recordEvent('s020', 'practice');
+
+    const first = render(<App />);
+    await waitFor(() => {
+      expect(first.container.querySelector('h1.sentenceText')?.textContent).toBe('I am hungry.');
+    });
+    await waitFor(async () => {
+      const initial = await database.events.where('sentenceId').equals('s001').count();
+      expect(initial).toBe(0);
+    });
+    first.unmount();
+
+    const second = render(<App />);
+    await waitFor(() => {
+      expect(second.container.querySelector('h1.sentenceText')?.textContent).toBe('I am hungry.');
+    });
+    // Persistence remains in IndexedDB; remount does not clear practice and browsing distinctions.
+    const state = await database.states.get('s020');
+    expect(state?.practicedCount).toBe(1);
+    expect(state?.seenCount).toBeGreaterThanOrEqual(1);
+    expect(await database.events.where('sentenceId').equals('s001').count()).toBe(0);
   });
 
   it('桌面导航从窗口顶端铺满高度，标题栏只属于右侧工作区', async () => {
