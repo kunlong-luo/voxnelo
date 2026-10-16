@@ -131,7 +131,7 @@ const strings = {
     "appearanceChoose": "选择{name}主题",
     "appearanceNote": "日落柔光使用单层毛玻璃主卡，北欧纯净使用清晰的实色表面；偏好仅保存在本机。",
     "languageTitle": "界面语言",
-    "languageDesc": "默认跟随系统语言；也可以手动选择，选择只保存在本机。",
+    "languageDesc": "首次使用默认简体中文；可手动选择 English 或跟随系统语言，选择只保存在本机。",
     "languageGroup": "选择界面语言",
     "languageSystem": "跟随系统",
     "languageChinese": "简体中文",
@@ -319,7 +319,7 @@ const strings = {
     "appearanceChoose": "Use {name} theme",
     "appearanceNote": "Sunset Glow uses one softly frosted lesson card. Nordic Pure uses crisp solid surfaces. This setting stays on your device.",
     "languageTitle": "Interface language",
-    "languageDesc": "By default, follow the system language. You can override it locally.",
+    "languageDesc": "First launch defaults to Simplified Chinese. Choose English or Follow system anytime; saved locally.",
     "languageGroup": "Choose interface language",
     "languageSystem": "Follow system",
     "languageChinese": "简体中文",
@@ -392,11 +392,11 @@ export function resolveLocale(setting: LanguageSetting, system = systemLanguage(
   return /^zh(?:-|$)/i.test(system) ? 'zh-CN' : 'en-US';
 }
 export function parseLanguageSetting(value: unknown): LanguageSetting {
-  return value === 'zh-CN' || value === 'en-US' ? value : 'system';
+  return value === 'system' || value === 'zh-CN' || value === 'en-US' ? value : 'zh-CN';
 }
 export function readLanguageSetting(): LanguageSetting {
   try { return parseLanguageSetting(window.localStorage.getItem(LANGUAGE_STORAGE_KEY)); }
-  catch { return 'system'; }
+  catch { return 'zh-CN'; }
 }
 export function saveLanguageSetting(setting: LanguageSetting): void {
   try { window.localStorage.setItem(LANGUAGE_STORAGE_KEY, setting); } catch { /* session only */ }

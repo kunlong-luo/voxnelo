@@ -43,8 +43,8 @@ jobs:
         run: node scripts/check-pages-artifact.mjs
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
+        # Initialize Settings → Pages → Build and deployment → GitHub Actions once as a repository admin.
+        # Do not attempt to create the site with the workflow GITHUB_TOKEN.
       - name: Upload static site
         uses: actions/upload-pages-artifact@v4
         with:

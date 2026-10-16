@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { database } from '@voxnelo/storage';
 import {
   loadSnapshot,
+  mostRecentSentenceId,
   pickNext,
   recordPractice,
   recordView,
@@ -54,6 +55,17 @@ describe('Voxnelo 学习应用服务门面', () => {
     if (snapshot.ok) {
       expect(snapshot.value.states[0]).toMatchObject({ favorite: true, seenCount: 1 });
     }
+  });
+
+  it('restores only known course sentences, never corrupt or removed history IDs', () => {
+    const events = [
+      {sentenceId:'s999',at:200,type:'view' as const},
+      {sentenceId:'s020',at:190,type:'practice' as const},
+      {sentenceId:'s001',at:100,type:'view' as const},
+    ];
+    expect(mostRecentSentenceId(events)).toBe('s020');
+    expect(mostRecentSentenceId([{sentenceId:'s999',at:1,type:'view'}])).toBeUndefined();
+    expect(mostRecentSentenceId([])).toBeUndefined();
   });
 
   it('pickNext 不返回当前句', async () => {
