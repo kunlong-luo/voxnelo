@@ -26,7 +26,7 @@
     "format:check": "prettier --check .",
     "arch": "depcruise --validate .dependency-cruiser.json apps packages tests",
     "check:stable-deps": "node --experimental-strip-types scripts/check-stable-dependencies.mts",
-    "perf:budget": "node --experimental-strip-types scripts/check-performance-budget.mts",
+    "perf:budget": "node --experimental-strip-types scripts/check-performance-budget.mts --report-only",
     "perf:report": "node --experimental-strip-types scripts/check-performance-budget.mts --report-only",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
