@@ -31,7 +31,7 @@ export function PracticeSidebarWidgets({current,stats,recordingBusy,onChooseRela
     {topic:'daily',label:t('sceneDaily'),icon:Coffee},
   ] as const;
   return (
-    <aside className="referenceInsights insightsColumn grid min-w-0 grid-cols-1 content-start gap-3 @min-[600px]/workspace:grid-cols-2 @min-[840px]/workspace:grid-cols-1 @min-[840px]/workspace:grid-rows-[1.3fr_1fr_.95fr_1.1fr]" aria-label={t('localOverview')}>
+    <aside className="referenceInsights insightsColumn grid min-w-0 auto-rows-min grid-cols-1 content-start gap-3 @min-[600px]/workspace:grid-cols-2 @min-[840px]/workspace:grid-cols-1" aria-label={t('localOverview')}>
       <Card className="insightCard progressCard motion-safe:animate-panel-enter motion-safe:[animation-delay:100ms] flex min-h-0 flex-col gap-4 p-4 sm:p-5">
         <div className="insightHeading flex flex-wrap items-center justify-between gap-1"><h2 className="text-sm font-bold">{t('progress')}</h2><span className="insightSideNote text-[10px] text-muted-foreground">{t('localRecord')}</span></div>
         <div className="progressOverview flex flex-wrap items-center gap-3">

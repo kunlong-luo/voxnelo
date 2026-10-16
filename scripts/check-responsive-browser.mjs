@@ -44,7 +44,7 @@ const activate=async(index,klass)=>{
   await until('!!document.querySelector("'+klass+'")');
 };
 const metrics=async()=>{
-  return await evalJs('(()=>{const d=document.documentElement,m=document.querySelector(".mainArea"),g=document.querySelector(".practiceLayout"),b=document.querySelector(".recordAction"),r=b?.getBoundingClientRect();return {scrollWidth:d.scrollWidth,clientWidth:d.clientWidth,mainWidth:Math.round(m.getBoundingClientRect().width),containerName:getComputedStyle(m).containerName,columns:g?getComputedStyle(g).gridTemplateColumns.split(" ").length:null,sidebar:getComputedStyle(document.querySelector(".sidebar")).display!=="none",dock:getComputedStyle(document.querySelector(".mobileNav")).display!=="none",micWidth:Math.round(r?.width||0),micInBounds:!r||(r.left>=-1&&r.right<=innerWidth+1),micTop:Math.round(r?.top||0),micBottom:Math.round(r?.bottom||0),micInFirstViewport:!r||(r.top>=0&&r.bottom<=(innerWidth<640?document.querySelector(".mobileNav").getBoundingClientRect().top:innerHeight))}})()');
+  return await evalJs('(()=>{const d=document.documentElement,m=document.querySelector(".mainArea"),g=document.querySelector(".practiceLayout"),b=document.querySelector(".recordAction"),r=b?.getBoundingClientRect(),p=document.querySelector(".progressCard")?.getBoundingClientRect(),feed=document.querySelector(".feedCard")?.getBoundingClientRect();return {progressHeight:Math.round(p?.height||0),progressBottom:Math.round(p?.bottom||0),feedTop:Math.round(feed?.top||0),scrollWidth:d.scrollWidth,clientWidth:d.clientWidth,mainWidth:Math.round(m.getBoundingClientRect().width),containerName:getComputedStyle(m).containerName,columns:g?getComputedStyle(g).gridTemplateColumns.split(" ").length:null,sidebar:getComputedStyle(document.querySelector(".sidebar")).display!=="none",dock:getComputedStyle(document.querySelector(".mobileNav")).display!=="none",micWidth:Math.round(r?.width||0),micInBounds:!r||(r.left>=-1&&r.right<=innerWidth+1),micTop:Math.round(r?.top||0),micBottom:Math.round(r?.bottom||0),micInFirstViewport:!r||(r.top>=0&&r.bottom<=(innerWidth<640?document.querySelector(".mobileNav").getBoundingClientRect().top:innerHeight))}})()');
 };
 const shot=async(w,h,name)=>{
   await sleep(460); // Capture settled UI, not a half-transparent entrance frame.
@@ -57,6 +57,10 @@ const shot=async(w,h,name)=>{
   if(name==='practice'){
     assert.equal(m.columns,m.mainWidth>=840?2:1,'wrong workbench columns at '+w);
     assert.ok(m.micWidth>=40&&m.micInBounds&&m.micInFirstViewport,'mic not visible on first screen at '+w+': '+JSON.stringify(m));
+    if(m.mainWidth>=840){
+      assert.ok(m.progressHeight>0&&m.progressHeight<320,'insight card stretched beyond its content at '+w+': '+JSON.stringify(m));
+      assert.ok(m.feedTop>=m.progressBottom&&m.feedTop-m.progressBottom<32,'recommended phrases pushed away from progress panel at '+w+': '+JSON.stringify(m));
+    }
   }
   const png=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
   await writeFile(path.join(out,w+'x'+h+'-'+name+'.png'),Buffer.from(png.data,'base64'));
