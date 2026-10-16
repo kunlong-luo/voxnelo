@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain, net, protocol, session, type IpcMainEvent,
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { APP_ORIGIN, APP_SCHEME, THEME_BACKGROUND, WINDOW_SIZE } from '@voxnelo/core';
-import { isAudioOnlyRequest, APP_HOST, isTrustedUrl, resolveLocalFile } from './security';
+import { allowsAudioPermissionCheck, allowsAudioPermissionRequest, APP_HOST, isTrustedUrl, resolveLocalFile } from './security';
 import { LinuxEnglishSpeech } from './linuxSpeech';
 import { LINUX_DESKTOP_FILENAME, resolveLinuxIconPath } from './linuxAppIdentity';
 import { OfflineAsr } from './offlineAsr';
@@ -165,12 +165,13 @@ app.whenReady().then(async () => {
   registerOfflineAsr();
   registerLocalProtocol();
   session.defaultSession.setPermissionRequestHandler((webContents, permission, callback, details) => {
-    const { mediaTypes } = details as { mediaTypes?: unknown };
-    callback(permission === 'media' && isAudioOnlyRequest(mediaTypes) && isTrustedUrl(webContents.getURL(), { isDev }));
+    callback(allowsAudioPermissionRequest(webContents.getURL(), permission, details, { isDev }));
   });
   session.defaultSession.setPermissionCheckHandler(
-    (webContents, permission) =>
-      permission === 'media' && Boolean(webContents) && isTrustedUrl(webContents?.getURL() ?? '', { isDev }),
+    (webContents, permission, requestingOrigin, details) =>
+      allowsAudioPermissionCheck(
+        webContents?.getURL() ?? null, permission, requestingOrigin, details, { isDev },
+      ),
   );
   await createWindow();
   app.on('activate', () => {
