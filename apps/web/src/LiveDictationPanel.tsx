@@ -43,6 +43,9 @@ export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
               :<><AudioLines size={13} className="shrink-0 text-primary" aria-hidden="true"/>{t(dictation.mode==='browser'?'dictationCloudEnabled':'dictationPrivacy')}</>}
           </span>
         </div>
+        {listening&&dictation.inputLevel!==null&&<div className="flex h-6 items-center justify-center gap-1" role="img" aria-label="Live microphone input level">
+          {[0.55,0.8,1,0.7,0.45].map((weight,index)=><span key={index} aria-hidden="true" className="h-5 w-1.5 origin-center rounded-full bg-primary/75 motion-safe:transition-transform motion-safe:duration-100 motion-reduce:transition-none" style={{transform:`scaleY(${Math.max(0.18,Math.min(1,dictation.inputLevel*weight*2.4))})`}}/>)}
+        </div>}
         <div className="dictationTranscript max-h-20 min-h-9 w-full overflow-y-auto rounded-xl bg-muted/55 @min-[560px]/lesson:max-w-110 @min-[560px]/lesson:text-center px-3 py-2 [@media(max-height:680px)]:min-h-8 [@media(max-height:680px)]:py-1.5 text-[13px] leading-5 text-sentence-ink @min-[560px]/lesson:text-sm" data-testid="live-transcript" data-state={listening?'listening':checking?'checking':'idle'}>
           <span aria-live="polite" className={cn('font-medium',!dictation.finalText&&'text-muted-foreground')}>{dictation.finalText||(!dictation.interimText?t('dictationPlaceholder'):'')}</span>
           {dictation.interimText&&<span className="ml-1 text-translation-ink motion-safe:animate-view-enter" aria-label={t('dictationInterim')}>{dictation.interimText}</span>}
