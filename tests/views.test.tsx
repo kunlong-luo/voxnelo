@@ -121,7 +121,7 @@ describe('PracticeView', () => {
     expect(container.querySelector('[data-motion="record-halo"]')).toBeNull();
     expect(container.querySelector('[data-motion="permission-halo"]')).toBeNull();
     expect(container.querySelector('.liveDictation')).toBeTruthy();
-    expect(container.querySelector('.waveformArt')).toBeNull();
+    expect(container.querySelector('.waveformArt')?.getAttribute('aria-hidden')).toBe('true');
     expect(container.querySelector('.practiceLayout')?.className).toContain('motion-safe:animate-view-enter');
 
     rerender(<PracticeView {...basePracticeProps} recorder={stubRecorder({ status: 'requesting' })} recordingBusy />);

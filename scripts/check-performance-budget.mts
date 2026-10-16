@@ -10,7 +10,7 @@ const dir = resolve('dist');
 const reportOnly = process.argv.includes('--report-only');
 const KiB = 1024;
 const budgets = {
-  jsGzip: 168,       // V3 live dictation: measured 165.4 KiB with native browser ASR adapter; +2.4% headroom vs 164, no extra SDK
+  jsGzip: 169,       // U3 visual parity: compact static SVG ribbon adds ~0.2 KiB gzip over 168; no runtime animation/audio SDK
   cssGzip: 24,       // 2026-10-15 baseline: about 6 KiB
   rendererGzip: 240, // HTML, CSS, JS and public brand assets
 };
