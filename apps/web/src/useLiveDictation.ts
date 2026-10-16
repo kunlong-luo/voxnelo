@@ -50,7 +50,7 @@ export function useLiveDictation(sentenceId: string) {
   const active = status !== 'idle';
   // SpeechRecognition can use a vendor network service. The desktop app never
   // opts into that mode, even when the constructor happens to exist.
-  const browserModeAvailable = !Boolean(window.voxneloDesktop);
+  const browserModeAvailable = !window.voxneloDesktop;
   const supported = Boolean(recognizerClass());
   const stop = useCallback(() => {
     ++requestId.current;
@@ -75,11 +75,9 @@ export function useLiveDictation(sentenceId: string) {
     disposed.current=false;
     return () => {
       disposed.current=true;
-      ++requestId.current;
-      current.current?.abort();
-      current.current=null;
+      stop();
     };
-  },[]);
+  },[stop]);
   useEffect(() => { clear(); },[sentenceId,clear]);
   const chooseMode = useCallback((value:DictationMode) => {
     if(value==='browser' && !browserModeAvailable)return;
