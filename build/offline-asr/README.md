@@ -128,6 +128,38 @@ shared libraries still need reviewed codesigning and workable `@loader_path`
 install names. A real streaming speech benchmark is a separate mandatory
 gate for Issue #45. Never run unreviewed native files or use untrusted audio.
 
+## Mandatory real-speech check before packaging a bundled native engine
+
+The `pnpm pack:dir`, `pack:linux`, `pack:windows` and `pack:mac`
+commands, the desktop release workflow, and CI native package checks now run
+`pnpm asr:verify-real` after compiling the isolated ASR worker.
+
+- **README-only default builds** do not include a model and skip the native
+  recognition test. The UI truthfully reports that offline dictation is
+  unavailable.
+- **Any build with `manifest.json`** must provide two environment variables
+  before producing an installer. A missing or invalid sample, native loader
+  failure, empty recognition result, slow inference, or poor reference-match
+  score **fails the package build**.
+
+```bash
+export VOXNELO_ASR_QA_WAV=/absolute/path/to/approved-english-test-16khz-mono-pcm16.wav
+export VOXNELO_ASR_QA_EXPECT="the actual English words spoken in that test recording"
+pnpm pack:dir
+```
+
+The check runs `scripts/benchmark-offline-asr.mts` with the **actual staged**
+`native/index.cjs` and `model/` resources, using the worker compiled from
+the current source. It requires nonempty output, real-time factor no more
+than 1, and word error rate no more than 0.5. The source sample must be an
+approved nonprivate testing recording, never an actual learner's voice.
+
+This is a **minimal real-model integration gate**, not a replacement for
+physical microphone testing, interruption tests, CPU/memory duration tests,
+macOS signed app loader inspection, installation tests, or human license
+and accessibility review. Signed/production release is blocked under
+Issue #45 until those additional checks are evidenced.
+
 ## Release integrity preflight
 
 Before building a desktop package, `pnpm build:electron` runs
