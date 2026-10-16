@@ -204,8 +204,8 @@ function AppScreen({languageSetting,onChangeLanguage}: {
   return (
     <div className={cn("appFrame min-h-dvh bg-background text-foreground",window.voxneloDesktop?.windowControls&&"desktopFrame")}>
       <DesktopTitlebar />
-      <div className="shell flex min-h-dvh items-stretch">
-      <aside className={cn("sidebar sticky top-0 hidden h-dvh w-[clamp(204px,19vw,252px)] shrink-0 flex-col overflow-y-auto border-r border-border/70 bg-sidebar px-3 py-7 text-sidebar-foreground sm:flex max-[1050px]:w-19 max-[1050px]:items-center max-[1050px]:px-2", window.voxneloDesktop?.windowControls && "h-[calc(100dvh-44px)]")}>
+      <div className={cn("shell flex min-h-dvh items-stretch",window.voxneloDesktop?.windowControls&&"min-h-[calc(100dvh-44px)]")}>
+      <aside className={cn("sidebar sticky top-0 hidden h-dvh w-[clamp(204px,19vw,252px)] shrink-0 flex-col overflow-y-auto border-r border-border/70 bg-sidebar px-3 py-7 text-sidebar-foreground sm:flex max-[1050px]:w-19 max-[1050px]:items-center max-[1050px]:px-2", window.voxneloDesktop?.windowControls && "top-11 h-[calc(100dvh-44px)]")}>
         <div className="brand mb-8 flex w-full items-center gap-3 px-2 max-[1050px]:justify-center max-[1050px]:px-0" aria-label="Voxnelo">
           <div className="brandMark flex size-11 shrink-0 items-center justify-center"><img src="brand/voxnelo-mark.svg" alt="" width="44" height="44" className="size-11 rounded-2xl shadow-sm"/></div>
           <div className="brandText max-[1050px]:hidden"><strong className="text-[24px] font-extrabold tracking-[-.065em] text-foreground">Voxnelo</strong></div>
