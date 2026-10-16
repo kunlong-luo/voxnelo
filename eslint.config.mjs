@@ -11,7 +11,7 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   {
     // Node-only tooling is not a browser script; new .mjs checks use process/console.
-    files: ['scripts/**/*.mjs'],
+    files: ['scripts/**/*.{mjs,mts}'],
     languageOptions: { globals: globals.node },
   },
   {
