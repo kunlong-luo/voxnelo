@@ -199,7 +199,7 @@ export function useLiveDictation(sentenceId: string) {
             if(now-lastLevelUpdate>=100){
               lastLevelUpdate=now;
               let sum=0;
-              for(let i=0;i<samples.length;i++)sum+=samples[i]*samples[i];
+              for(let i=0;i<samples.length;i++)sum+=(samples[i]??0)*(samples[i]??0);
               const rms=Math.sqrt(sum/Math.max(1,samples.length));
               setInputLevel(Math.min(1,rms*6));
             }
