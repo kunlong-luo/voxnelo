@@ -42,7 +42,7 @@ const send=(method:string,params:Record<string,unknown>={})=>new Promise<CdpRepl
   const id=++seq, timeout=setTimeout(()=>{pending.delete(id);reject(Error('CDP timeout '+method));},12000);
   pending.set(id,{resolve,reject,timeout});ws.send(JSON.stringify({id,method,params}));
 });
-const evalJs=async <T=string>(expression:string):Promise<T>=>{
+const evalJs=async <T=string,>(expression:string):Promise<T>=>{
   const x=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});
   if(x.exceptionDetails)throw Error('CDP expression failed: '+x.exceptionDetails.text);
   return x.result?.value as T;
