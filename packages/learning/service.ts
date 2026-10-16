@@ -84,6 +84,15 @@ export function pickNext(
   return chooseNext(sentences, states, currentId, recentIds);
 }
 
+/** V0.1 F006: resume the last valid sentence from local IndexedDB history. */
+export function mostRecentSentenceId(
+  events: readonly HistoryEvent[],
+  sentences: readonly Sentence[] = SENTENCES,
+): string | undefined {
+  const knownIds = new Set(sentences.map((item) => item.id));
+  return events.find((event) => knownIds.has(event.sentenceId))?.sentenceId;
+}
+
 export function summarize(states: LearningState[]): LearningStats {
   return calculateStats(states);
 }

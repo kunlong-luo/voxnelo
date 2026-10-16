@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   loadSnapshot,
+  mostRecentSentenceId,
   recordPractice,
   recordView,
   setFlag as saveFlag,
@@ -14,12 +15,15 @@ export function useLearningData(
   sentenceId: string,
   currentId: string,
   recordingUrl: string | null,
+  onRestoreLastSentence: (id: string | undefined) => void,
 ) {
   const [states, setStates] = useState<LearningState[]>([]);
   const [events, setEvents] = useState<HistoryEvent[]>([]);
   const playedRef = useRef<string>('');
   const countedRecordingUrl = useRef<string | null>(null);
   const mountedRef = useRef(false);
+  const restoreCompletedRef = useRef(false);
+  const [historyReady,setHistoryReady] = useState(false);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -33,19 +37,29 @@ export function useLearningData(
     // IndexedDB Promise 可能在卸载后才完成，不能对已销毁的 React 根节点 setState。
     if (!mountedRef.current) return;
     if (result.ok) {
+      if (!restoreCompletedRef.current) {
+        restoreCompletedRef.current = true;
+        // Restore before allowing recordView to write a fake first-sentence visit.
+        onRestoreLastSentence(mostRecentSentenceId(result.value.events));
+        setHistoryReady(true);
+      }
       setStates(result.value.states);
       setEvents(result.value.events);
     } else {
+      if (!restoreCompletedRef.current) {
+        restoreCompletedRef.current = true;
+        setHistoryReady(true);
+      }
       notify(result.error.message);
     }
-  }, [notify]);
+  }, [notify,onRestoreLastSentence]);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
 
   useEffect(() => {
-    if (playedRef.current === sentenceId) return;
+    if (!historyReady || playedRef.current === sentenceId) return;
     playedRef.current = sentenceId;
     void recordView(sentenceId).then(async (result) => {
       if (!mountedRef.current) return;
@@ -55,7 +69,7 @@ export function useLearningData(
       }
       await refresh();
     });
-  }, [sentenceId, refresh, notify]);
+  }, [sentenceId, historyReady, refresh, notify]);
 
   useEffect(() => {
     if (!recordingUrl || countedRecordingUrl.current === recordingUrl) return;
@@ -83,5 +97,5 @@ export function useLearningData(
     [refresh, notify],
   );
 
-  return { states, events, refresh, setFlag };
+  return { states, events, historyReady, refresh, setFlag };
 }
