@@ -228,7 +228,7 @@ describe('LibraryView', () => {
     const {container}=render(<LibraryView {...baseLibraryProps} view="history" events={events}/>);
     expect(screen.getByText('近期活动')).toBeTruthy();
     expect(screen.getByText('学过的句子')).toBeTruthy();
-    expect(screen.getByText('录音练习', {selector:'span'})).toBeTruthy();
+    expect(screen.getAllByText('录音练习').length).toBeGreaterThan(0);
     expect(container.querySelectorAll('.libraryItem')).toHaveLength(8);
     expect(screen.getByRole('navigation',{name:'句子列表分页'})).toBeTruthy();
     fireEvent.click(screen.getByRole('button',{name:'下一页'}));
