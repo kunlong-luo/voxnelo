@@ -213,7 +213,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
         <div className="sidebarHint px-4 text-[10px] font-bold tracking-[.18em] text-muted-foreground uppercase max-[1050px]:hidden">{t('sidebarSpace')}</div>
         <nav className="mt-4 flex w-full flex-col gap-1.5" aria-label={t('navLabel')}>
           {menu.map(({ id, icon: Icon }) => (
-            <Button key={id} variant="ghost" className={cn('navItem group h-12 w-full justify-start rounded-2xl px-4 text-sm font-semibold text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-foreground max-[1050px]:size-12 max-[1050px]:justify-center max-[1050px]:px-0',view===id&&'active bg-card/85 text-primary shadow-sm ring-1 ring-border/40')} aria-label={t(({practice:'navStart',favorites:'navMyFavorites',history:'navRecent',review:'navReviewItems',settings:'navSettings'} as const)[id])} aria-current={view === id ? 'page' : undefined} onClick={() => nav(id)}>
+            <Button key={id} variant="ghost" className={cn('navItem group h-12 w-full justify-start rounded-2xl px-4 text-sm font-semibold text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-foreground transition-[background-color,color,transform] duration-200 motion-safe:hover:translate-x-0.5 max-[1050px]:size-12 max-[1050px]:justify-center max-[1050px]:px-0',view===id&&'active bg-card/85 text-primary shadow-sm ring-1 ring-border/40')} aria-label={t(({practice:'navStart',favorites:'navMyFavorites',history:'navRecent',review:'navReviewItems',settings:'navSettings'} as const)[id])} aria-current={view === id ? 'page' : undefined} onClick={() => nav(id)}>
               <Icon size={20} strokeWidth={1.9} />
               <span className="max-[1050px]:hidden">{t(({practice:'navPractice',favorites:'navFavorites',history:'navHistory',review:'navReview',settings:'navSettings'} as const)[id])}</span>
               {id === 'favorites' && stats.favorites > 0 ? <span className="navCount ml-auto rounded-full bg-secondary px-2 py-0.5 text-[10px] text-secondary-foreground max-[1050px]:hidden">{stats.favorites}</span> : null}
@@ -229,12 +229,14 @@ function AppScreen({languageSetting,onChangeLanguage}: {
           <div className="sidebarVersion px-1 text-[10px] text-muted-foreground">Voxnelo · Early Access {APP_VERSION}</div>
         </div>
       </aside>
-      <div className="mainArea @container/workspace relative min-w-0 flex-1 bg-gradient-to-br from-background via-brand-cream/45 to-brand-mist/35">
+      <div className="mainArea @container/workspace relative min-w-0 flex-1 overflow-clip bg-gradient-to-br from-background via-brand-cream/45 to-brand-mist/35">
+        <div aria-hidden="true" className="pointer-events-none absolute top-10 right-[5%] size-48 rounded-full bg-primary/9 opacity-60 blur-3xl motion-safe:animate-ambient-drift sm:size-64"/>
+        <div aria-hidden="true" className="pointer-events-none absolute bottom-30 left-[12%] size-56 rounded-full bg-brand-blush/35 blur-3xl"/>
         {recorder.status === 'recording' ? (
-          <Button variant="destructive" className="recordingQuickStop fixed right-4 bottom-24 z-60 shadow-xl sm:right-6 sm:bottom-6" onClick={handleRecorder}
+          <Button variant="destructive" className="recordingQuickStop fixed right-4 bottom-24 z-60 shadow-xl motion-safe:animate-soft-pop sm:right-6 sm:bottom-6" onClick={handleRecorder}
             aria-label={t("stopFloating")}><Square size={15} fill="currentColor" aria-hidden="true" /> {t("stopRecording")}</Button>
         ) : null}
-        <main className="content mx-auto w-full max-w-400 px-3 pt-4 pb-25 sm:px-5 sm:py-6 xl:px-8">
+        <main className="content relative z-10 mx-auto w-full max-w-400 px-3 pt-4 pb-25 sm:px-5 sm:py-6 xl:px-8">
           {view === 'practice' ? (
             <PracticeView
               current={current}
@@ -289,7 +291,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
       {/* The compact viewport has its own navigation affordance; no miniature sidebar. */}
       <nav className="mobileNav fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 gap-1 border-t border-border/80 bg-card/95 px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-soft backdrop-blur-xl sm:hidden" aria-label={t('navLabel')}>
         {menu.map(({id,icon:Icon}) => (
-          <Button key={id} variant="ghost" className={cn('mobileNavItem h-14 min-w-0 flex-col gap-1 rounded-xl px-1 py-1 text-[10px]',view===id&&'bg-secondary text-primary')} aria-label={t(({practice:'navStart',favorites:'navMyFavorites',history:'navRecent',review:'navReviewItems',settings:'navSettings'} as const)[id])+' · '+t('navLabel')} aria-current={view===id?'page':undefined} onClick={() => nav(id)}>
+          <Button key={id} variant="ghost" className={cn('mobileNavItem h-14 min-w-0 flex-col gap-1 rounded-xl px-1 py-1 text-[10px] transition-[background-color,color,transform] duration-200 motion-safe:active:scale-[.94]',view===id&&'bg-secondary text-primary')} aria-label={t(({practice:'navStart',favorites:'navMyFavorites',history:'navRecent',review:'navReviewItems',settings:'navSettings'} as const)[id])+' · '+t('navLabel')} aria-current={view===id?'page':undefined} onClick={() => nav(id)}>
             <Icon size={19} strokeWidth={1.9} aria-hidden="true"/>
             <span className="max-w-full truncate">{t(({practice:'navPractice',favorites:'navFavorites',history:'navHistory',review:'navReview',settings:'navSettings'} as const)[id])}</span>
           </Button>
