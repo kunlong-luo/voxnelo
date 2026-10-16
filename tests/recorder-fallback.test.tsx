@@ -57,7 +57,10 @@ describe('Nonblocking microphone fallback', () => {
     render(<PracticeView current={FIRST_SENTENCE} currentState={undefined}
       stats={{viewed:0,practiced:0,favorites:0,review:0}}
       speed="normal" showIpa={false} notice="" recorder={recorder}
-      recordingBusy={false} canGoPrevious={false}
+      dictation={{status:'idle',active:false,mode:'local',chooseMode:()=>undefined,
+        supported:false,browserModeAvailable:true,localPack:'unknown',finalText:'',interimText:'',
+        error:'',start:async()=>undefined,stop:()=>undefined,clear:()=>undefined,installLocal:async()=>undefined}}
+      onStartDictation={()=>undefined} recordingBusy={false} canGoPrevious={false}
       onToggleIpa={()=>undefined} onSpeak={()=>undefined} onToggleSpeed={()=>undefined}
       onRecord={()=>undefined} onToggleFlag={()=>undefined}
       onNext={()=>undefined} onPrevious={()=>undefined} onDismissNotice={()=>undefined}/>);
