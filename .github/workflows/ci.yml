@@ -113,6 +113,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Build renderer and Electron
         run: pnpm build
+      - name: Gate optional native ASR payload on real WAV inference
+        run: pnpm asr:verify-real
       - name: Package unsigned native app (unpacked)
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
