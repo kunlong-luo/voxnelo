@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 
 /** Adapted from resume-craft's stable-dependency policy for Voxnelo workspaces. */
 const prerelease = /(?:^|[^a-z0-9])(alpha|beta|canary|dev|experimental|legacy|next|nightly|rc)(?:[^a-z0-9]|$)/i;
-const sections = ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies'];
+const sections = ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies'] as const;
 const manifests = ['package.json'];
 const workspace = resolve('packages');
 
@@ -16,9 +16,10 @@ if (existsSync(workspace)) {
 
 const violations = [];
 for (const path of manifests) {
-  const data = JSON.parse(readFileSync(resolve(path), 'utf8'));
+  const data = JSON.parse(readFileSync(resolve(path), 'utf8')) as Record<string, unknown>;
   for (const section of sections) {
-    for (const [name, spec] of Object.entries(data[section] ?? {})) {
+    const dependencies = data[section] as Record<string, unknown> | undefined;
+    for (const [name, spec] of Object.entries(dependencies ?? {})) {
       if (typeof spec !== 'string') continue;
       const value = spec.trim().toLowerCase();
       if (value.startsWith('workspace:') || value === 'latest' || value === 'stable') continue;

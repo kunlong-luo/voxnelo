@@ -8,7 +8,8 @@ import path from 'node:path';
 import { Worker } from 'node:worker_threads';
 
 const dir=await mkdtemp(path.join(tmpdir(),'voxnelo-offline-asr-contract-'));
-let worker;
+type WorkerMessage = { type: string; finalText?: string; interimText?: string };
+let worker: Worker | undefined;
 try{
   for(const file of ['encoder.onnx','decoder.onnx','joiner.onnx','tokens.txt'])await writeFile(path.join(dir,file),'test fixture');
   const addon=path.join(dir,'addon.cjs');
@@ -24,11 +25,13 @@ class OnlineRecognizer {
 module.exports={OnlineRecognizer};
 `);
   await access(path.resolve('dist/audio/pcm-worklet.js'));
-  const seen=[];
-  const next=()=>new Promise((resolve,reject)=>{
+  const seen: WorkerMessage[]=[];
+  const next=():Promise<WorkerMessage>=>new Promise((resolve,reject)=>{
+    const active=worker;
+    if(!active){reject(Error('Missing worker'));return;}
     const timeout=setTimeout(()=>reject(Error('Offline worker IPC test timed out')),5000);
-    worker.once('message',data=>{clearTimeout(timeout);resolve(data);});
-    worker.once('error',error=>{clearTimeout(timeout);reject(error);});
+    active.once('message',(data:WorkerMessage)=>{clearTimeout(timeout);resolve(data);});
+    active.once('error',(error:Error)=>{clearTimeout(timeout);reject(error);});
   });
   worker=new Worker(path.resolve('dist-electron/offlineAsrWorker.cjs'),{workerData:{modelDir:dir,addonPath:addon}});
   assert.equal((await next()).type,'ready');

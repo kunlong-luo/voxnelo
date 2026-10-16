@@ -20,7 +20,7 @@ if (!existsSync(join(dir, 'index.html'))) {
   process.exit(1);
 }
 
-function walk(directory) {
+function walk(directory: string): string[] {
   return readdirSync(directory).flatMap((name) => {
     const path = join(directory, name);
     return statSync(path).isDirectory() ? walk(path) : [path];
@@ -31,7 +31,8 @@ const files = walk(dir).map((path) => ({
   rel: relative(dir, path).replaceAll('\\', '/'),
   gzip: gzipSync(readFileSync(path), { level: 9 }).byteLength,
 }));
-const kib = (predicate) => files.filter(predicate)
+type FileSize = (typeof files)[number];
+const kib = (predicate: (file: FileSize) => boolean) => files.filter(predicate)
   .reduce((total, file) => total + file.gzip, 0) / KiB;
 
 const values = {
@@ -42,7 +43,8 @@ const values = {
 
 console.log('\nVoxnelo renderer performance: ' + (reportOnly ? 'report only' : 'enforced'));
 const violations = [];
-for (const [name, amount] of Object.entries(values)) {
+for (const name of Object.keys(values) as Array<keyof typeof budgets>) {
+  const amount = values[name];
   console.log(name + ': ' + amount.toFixed(1) + ' KiB / ' + budgets[name] + ' KiB');
   if (amount > budgets[name]) {
     violations.push(name + ' is over budget (' + amount.toFixed(1) + ' KiB).');

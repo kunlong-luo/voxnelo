@@ -6,6 +6,8 @@ node_modules/
 .pnp.*
 
 # build outputs
+# generated from TypeScript before dev/build
+public/audio/pcm-worklet.js
 dist/
 dist-electron/
 release/

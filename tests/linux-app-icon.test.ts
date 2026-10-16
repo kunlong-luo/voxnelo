@@ -31,9 +31,9 @@ describe('Voxnelo Linux dock and taskbar icon', () => {
   });
 
   it('dev launcher can be registered and removed without changing the global system launcher', () => {
-    expect(config.scripts['icon:linux:dev']).toContain('register-linux-dev-launcher.mjs');
+    expect(config.scripts['icon:linux:dev']).toContain('register-linux-dev-launcher.mts');
     expect(config.scripts['icon:linux:dev:remove']).toContain('--remove');
-    const launcher = readFileSync(path.resolve('scripts/register-linux-dev-launcher.mjs'),'utf8');
+    const launcher = readFileSync(path.resolve('scripts/register-linux-dev-launcher.mts'),'utf8');
     expect(launcher).toContain('app.voxnelo.desktop.desktop');
     expect(launcher).toContain('StartupWMClass=app.voxnelo.desktop');
     expect(launcher).toContain('build');

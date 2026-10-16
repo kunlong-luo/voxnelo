@@ -13,7 +13,7 @@ if (!(await stat(branded)).isFile()) throw new Error('Missing branded icon in st
 if (!html.includes('rel="icon"') || !html.includes('href="brand/voxnelo-mark.svg"')) {
   throw new Error('Missing project-relative favicon');
 }
-const assets = [...html.matchAll(/\b(?:src|href)=["']([^"']+)["']/g)].map(m => m[1]);
+const assets = [...html.matchAll(/\b(?:src|href)=["']([^"']+)["']/g)].flatMap(m => m[1] ? [m[1]] : []);
 for (const ref of assets) {
   if (/^(?:#|data:|https?:)/.test(ref)) continue;
   if (ref.startsWith('/')) throw new Error('Root-absolute static path breaks /voxnelo/: ' + ref);

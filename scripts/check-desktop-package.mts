@@ -25,7 +25,8 @@ const executable=platform==='win32'
   : path.join(contentDir,'MacOS','Voxnelo');
 const bundle=path.join(resources,'app.asar');
 const icon=path.join(resources,'icons','voxnelo.png');
-for(const [label,filename,minBytes] of [['native executable',executable,1024],['asar archive',bundle,1024],['branded PNG',icon,256]]){
+const requiredFiles: Array<[string, string, number]> = [['native executable',executable,1024],['asar archive',bundle,1024],['branded PNG',icon,256]];
+for(const [label,filename,minBytes] of requiredFiles){
   const info=await stat(filename);
   assert.ok(info.isFile()&&info.size>minBytes,label+' missing/empty: '+filename);
 }

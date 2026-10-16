@@ -26,17 +26,17 @@ if (operation === '--remove') {
   process.exit(0);
 }
 if (operation !== undefined) {
-  console.error('Usage: node scripts/register-linux-dev-launcher.mjs [--remove]');
+  console.error('Usage: node --experimental-strip-types scripts/register-linux-dev-launcher.mts [--remove]');
   process.exit(1);
 }
 
 await access(icon);
-function desktopValue(value) {
+function desktopValue(value: string): string {
   // Reject control characters that could inject additional .desktop fields.
   if (/[\r\n]/.test(value)) throw new Error('Invalid path containing a newline');
   return value;
 }
-function execArg(value) {
+function execArg(value: string): string {
   return '"' + desktopValue(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/%/g, '%%') + '"';
 }
 const entry = [
@@ -56,9 +56,9 @@ const entry = [
 
 await mkdir(path.dirname(destination), { recursive: true });
 // Never overwrite an unrelated hand-maintained launcher.
-let previous;
+let previous: string | undefined;
 try { previous = await readFile(destination, 'utf8'); }
-catch (error) { if (error?.code !== 'ENOENT') throw error; }
+catch (error) { if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error; }
 if (previous && previous !== entry && !previous.includes('Name=Voxnelo (Development)')) {
   throw new Error('Refusing to overwrite another launcher: ' + destination);
 }

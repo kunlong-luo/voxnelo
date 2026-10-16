@@ -1,7 +1,7 @@
-import { build } from 'esbuild';
+import { build, type BuildOptions } from 'esbuild';
 import path from 'node:path';
 
-const workspace = (name) => path.resolve(`packages/${name}/index.ts`);
+const workspace = (name: string) => path.resolve(`packages/${name}/index.ts`);
 
 const common = {
   bundle: true,
@@ -18,7 +18,7 @@ const common = {
     '@voxnelo/learning': workspace('learning'),
     '@voxnelo/storage': workspace('storage'),
   },
-};
+} satisfies BuildOptions;
 await Promise.all([
   build({ ...common, entryPoints: ['apps/desktop/main.ts'], outfile: 'dist-electron/main.cjs' }),
   build({ ...common, entryPoints: ['apps/desktop/preload.ts'], outfile: 'dist-electron/preload.cjs' }),
