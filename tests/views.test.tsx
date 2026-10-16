@@ -25,7 +25,7 @@ function stubDictation(overrides:Partial<ReturnType<typeof useLiveDictation>>={}
   return {
     status:'idle' as const, active:false, mode:'local' as const,
     chooseMode:()=>undefined, supported:false, browserModeAvailable:true,
-    localPack:'unknown' as const, finalText:'', interimText:'', error:'',
+    noiseReduction:'unknown' as const,localPack:'unknown' as const, finalText:'', interimText:'', error:'',
     start:async()=>undefined, stop:()=>undefined, clear:()=>undefined, installLocal:async()=>undefined,
     ...overrides,
   };
