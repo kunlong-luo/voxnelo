@@ -59,9 +59,9 @@ export function PracticeCard({current,currentState,speed,showIpa,recorder,dictat
           <div className="sentenceContent flex w-full flex-col items-center justify-center gap-3.5 [@media(max-height:680px)]:gap-1.5">
             <span className="lessonLevel text-[11px] font-bold tracking-[.2em] text-muted-foreground uppercase">{t('speakingPractice')} · {current.level}</span>
             <div ref={sentenceMotionRef} className="sentenceHeading flex max-w-full justify-center">
-              <h1 key={current.id} className="sentenceText max-w-full text-[clamp(2rem,6.25cqi,3.375rem)] leading-[1.2] font-extrabold tracking-[-.035em] wrap-break-word text-sentence-ink">{current.english}</h1>
+              <h1 key={current.id} className="sentenceText max-w-full text-[clamp(2rem,6.25cqi,3.375rem)] leading-[1.2] font-extrabold tracking-[-.035em] wrap-break-word text-sentence-ink motion-safe:animate-sentence-enter">{current.english}</h1>
             </div>
-            <div ref={translationMotionRef} className="flex min-w-0 max-w-full justify-center"><p key={current.id} className="translation text-[17px] leading-7 font-medium text-translation-ink @min-[600px]/lesson:text-xl">{current.chinese}</p></div>
+            <div ref={translationMotionRef} className="flex min-w-0 max-w-full justify-center"><p key={current.id} className="translation text-[17px] leading-7 font-medium text-translation-ink @min-[600px]/lesson:text-xl motion-safe:animate-sentence-enter motion-safe:[animation-delay:60ms]">{current.chinese}</p></div>
             {showIpa && <p className="ipa max-w-full text-sm leading-6 wrap-break-word text-ipa-ink">{current.ipa}</p>}
             <Button variant="ghost" size="sm" className="subtleLink rounded-full text-xs text-primary" onClick={onToggleIpa} aria-expanded={showIpa}><CircleHelp size={14}/>{t(showIpa?'ipaHide':'ipaShow')}</Button>
           </div>
