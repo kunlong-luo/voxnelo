@@ -1,12 +1,17 @@
 // @vitest-environment jsdom
-import { act, cleanup, render, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useLiveDictation } from '../apps/web/src/useLiveDictation';
+import { LiveDictationPanel } from '../apps/web/src/LiveDictationPanel';
 
 let live: ReturnType<typeof useLiveDictation>;
 function Harness() {
   live=useLiveDictation('sentence-one');
   return <div>{live.status}</div>;
+}
+function PanelHarness(){
+  live=useLiveDictation('sentence-one');
+  return <LiveDictationPanel dictation={live} blocked={false} onStart={()=>{void live.start()}}/>;
 }
 const mediaDescriptor=Object.getOwnPropertyDescriptor(navigator,'mediaDevices');
 afterEach(()=>{
@@ -76,6 +81,31 @@ describe('Electron real microphone to local ASR lifecycle',()=>{
     expect(live.finalText).toBe('hello final');
     expect(live.status).toBe('idle');
   });
+  it('allows cancelling microphone permission while checking without starting a stale ASR session',async()=>{
+    const {bridge,track,getUserMedia}=setupDesktop(true);
+    let finishPermission:(()=>void)|undefined;
+    const permission=new Promise<void>(resolve=>{finishPermission=resolve;});
+    getUserMedia.mockImplementationOnce(async()=>{
+      await permission;
+      return {getAudioTracks:()=>[track],getTracks:()=>[track]};
+    });
+    const view=render(<PanelHarness/>);
+    await waitFor(()=>expect(live.supported).toBe(true));
+    const getAction=()=>view.getByRole('button') as HTMLButtonElement;
+    act(()=>fireEvent.click(getAction()));
+    expect(live.status).toBe('checking');
+    expect(getAction().disabled).toBe(false);
+    act(()=>fireEvent.click(getAction()));
+    expect(live.status).toBe('idle');
+    await act(async()=>{
+      finishPermission?.();
+      await Promise.resolve();
+    });
+    expect(track.stop).toHaveBeenCalledTimes(1);
+    expect(bridge.start).not.toHaveBeenCalled();
+    expect(live.finalText).toBe('');
+  });
+
   it('stops when the physical microphone disconnects and reports uncertain DSP honestly',async()=>{
     const {handlers,track,bridge}=setupDesktop(undefined);
     render(<Harness/>);

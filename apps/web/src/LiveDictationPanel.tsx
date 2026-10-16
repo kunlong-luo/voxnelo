@@ -15,9 +15,9 @@ export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
   const checking=dictation.status==='checking';
   return <section className="liveDictation w-full max-w-150 min-w-0 rounded-2xl border border-primary/15 bg-secondary/50 px-3 py-2.5 [@media(max-height:680px)]:py-1.5 text-left shadow-[inset_0_1px_1px_rgba(255,255,255,.65)] @min-[560px]/workspace:px-4" aria-label={t('dictationTitle')}>
     <div className="flex min-w-0 flex-wrap items-center gap-2 [@media(max-height:680px)]:gap-1">
-      <Button className="dictationAction h-10 shrink-0 rounded-xl bg-primary px-3 text-xs font-bold text-primary-foreground shadow-sm [@media(max-height:680px)]:h-9" onClick={listening?dictation.stop:onStart} disabled={blocked||checking||(!listening&&!dictation.supported)} aria-label={t(listening?'dictationStop':checking?'dictationChecking':'dictationStart')}>
-        {listening?<Square size={14} fill="currentColor" aria-hidden="true"/>:<Mic2 size={17} aria-hidden="true"/>}
-        {t(listening?'dictationStop':'dictationTitle')}
+      <Button className="dictationAction h-10 shrink-0 rounded-xl bg-primary px-3 text-xs font-bold text-primary-foreground shadow-sm [@media(max-height:680px)]:h-9" onClick={listening||checking?dictation.stop:onStart} disabled={!listening&&!checking&&(blocked||!dictation.supported)} aria-label={t(listening||checking?'dictationStop':'dictationStart')}>
+        {listening||checking?<Square size={14} fill="currentColor" aria-hidden="true"/>:<Mic2 size={17} aria-hidden="true"/>}
+        {t(listening||checking?'dictationStop':'dictationTitle')}
       </Button>
       <span className="hidden min-w-0 flex-1 items-center gap-1.5 text-[11px] leading-4 font-medium text-translation-ink @min-[440px]/workspace:flex" role="status">
         {listening?<><span aria-hidden="true" className="size-2 shrink-0 rounded-full bg-mic-halo motion-safe:animate-status-breathe"/>{t('dictationListening')}</>
