@@ -93,7 +93,7 @@ export function LibraryView({view,states,events,search,notice,onSearch,onChoose,
         {view==='history'&&<div className="flex flex-wrap items-center gap-2 border-b border-border/55 px-4 py-3 sm:px-5" role="group" aria-label={t('historyFilterLabel')}>
           {([
             ['all','historyFilterAll'],['view','historyFilterViews'],['practice','historyFilterPractices'],
-          ] as const).map(([filter,label])=><Button key={filter} variant={historyFilter===filter?'secondary':'ghost'} size="sm"
+          ] as const).map(([filter,label])=><Button key={filter} variant={historyFilter===filter?'soft':'ghost'} size="sm"
             className={cn('min-h-9 rounded-xl px-3 text-xs font-semibold',historyFilter===filter&&'bg-secondary text-primary shadow-sm')}
             onClick={()=>selectFilter(filter)} aria-pressed={historyFilter===filter}>{t(label)}</Button>)}
         </div>}
