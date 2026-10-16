@@ -28,6 +28,7 @@ coverage/
 test-results/
 playwright-report/
 browser-layout/
+desktop-evidence/
 blob-report/
 
 # logs
