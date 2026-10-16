@@ -74,3 +74,12 @@
 - Windows/macOS hosted runners 执行锁定依赖的构建与 `electron-builder --dir` 无签名打包，断言原生可执行文件、`app.asar`、安装包内品牌 PNG 的存在及有效 PNG 头，macOS 额外检查 Bundle ID 和麦克风权限用途声明。
 - **覆盖边界**：Windows/macOS 的打包检查不是 GUI/真实启动验收；Linux 的强制 Chromium/Electron DPR 也不能完全模拟操作系统字体无障碍放大、多显示器或显示器热插拔。桌面任务栏图标与音频硬件授权仍需要相应平台的人工复核。
 - CI 中不新增生产调试 IPC，也不注入渲染器私有权限。无签名产物仅供测试，不上传用于公开分发。
+
+## 无缝全高左侧导航与局部窗口控制条（2026-10-16）
+
+- Electron 已设置 `frame:false`，旧版 44px 横条**不是操作系统强制要求**，而是 React `DesktopTitlebar` 放在 `shell` 之前、并将导航 `top-11` 和 `h-[calc(100dvh-44px)]` 所致。
+- 新结构为 `shell (display:flex)` 下两列同级 `sidebar` + `mainArea`；导航直接 `top:0; height:100dvh`，品牌行 `pt-3`，不再有顶部 44px 留白/被标题栏跨过的问题。
+- `DesktopTitlebar` 仅作为 `mainArea` 的子元素，占右侧工作区顶部 44px；删掉整行分割边框、侧边栏背景色和玻璃模糊条，视觉上与工作区背景连为一体。保留可拖动的 `window-drag` 和三个 `window-no-drag` 最小化/最大化/关闭按钮；不通过隐藏标题栏来牺牲窗口操作。
+- 浏览器模式不显示 Electron 标题栏，网页版布局无变化；跨平台 Electron 仍需保留 `mac` 控件顺序与原有 Tooltip Portal。
+- CI 在原生 Linux Electron 的正常 DPI、125% 和 150% 下测量 `sidebar.top≈0`、`sidebar.bottom≈window.innerHeight`、`titlebar.top≈0` 和 `titlebar.left≈sidebar.right`，同时继续检查 5 项音频操作入口首屏不截断。三种窗口尺寸生成真实截图供视觉复查。
+- 未改变 Node/Electron IPC 安全边界、语音录音机制或冻结的 V1 产品文档。
