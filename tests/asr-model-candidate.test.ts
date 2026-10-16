@@ -51,7 +51,7 @@ describe('Pinned offline English candidate provisioning',()=>{
   it('rejects corrupted content without leaving a usable or partial model file',async()=>{
     const d=root();
     const expected=fixture('correct', 'expected.onnx');
-    const fetcher=vi.fn(async()=>new Response('incorrect',{status:200})) as unknown as typeof fetch;
+    const fetcher=vi.fn(async()=>new Response('corrupt',{status:200})) as unknown as typeof fetch;
     await expect(prepareEnglishModel(d,[expected],fetcher)).rejects.toThrow(/checksum or size mismatch/);
     expect(readdirSync(d)).toEqual([]);
   });
