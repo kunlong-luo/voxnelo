@@ -221,24 +221,24 @@ function AppScreen({languageSetting,onChangeLanguage}: {
   return (
     <div className={cn("appFrame min-h-dvh bg-background text-foreground",window.voxneloDesktop?.windowControls&&"desktopFrame")}>
       <div className="shell flex min-h-dvh items-stretch">
-      <aside className="sidebar sticky top-0 hidden h-dvh w-[clamp(204px,19vw,252px)] shrink-0 flex-col overflow-y-auto border-r border-border/70 bg-sidebar px-3 pt-3 pb-5 text-sidebar-foreground sm:flex max-[1050px]:w-19 max-[1050px]:items-center max-[1050px]:px-2">
-        <div className="brand mb-6 flex w-full items-center gap-3 px-2 max-[1050px]:justify-center max-[1050px]:px-0" aria-label="Voxnelo">
-          <div className="brandMark flex size-11 shrink-0 items-center justify-center"><img src="brand/voxnelo-mark.svg" alt="" width="44" height="44" className="size-11 rounded-2xl shadow-sm"/></div>
+      <aside className="sidebar sticky top-0 hidden h-dvh w-[clamp(204px,19vw,252px)] shrink-0 flex-col overflow-y-auto border-r border-border/45 bg-gradient-to-b from-sidebar via-sidebar to-brand-cream/55 px-3 pt-4 pb-5 text-sidebar-foreground shadow-[inset_-1px_0_0_rgba(255,255,255,.45)] sm:flex max-[1050px]:w-19 max-[1050px]:items-center max-[1050px]:px-2">
+        <div className="brand mb-7 flex w-full items-center gap-3 rounded-[20px] border border-white/20 bg-card/20 px-2 py-2 max-[1050px]:justify-center max-[1050px]:border-0 max-[1050px]:bg-transparent max-[1050px]:px-0" aria-label="Voxnelo">
+          <div className="brandMark flex size-11 shrink-0 items-center justify-center rounded-2xl bg-card/35 shadow-[0_10px_28px_-14px_rgba(60,80,70,.5)]"><img src="brand/voxnelo-mark.svg" alt="" width="44" height="44" className="size-11 rounded-2xl shadow-sm"/></div>
           <div className="brandText max-[1050px]:hidden"><strong className="text-[24px] font-extrabold tracking-[-.065em] text-foreground">Voxnelo</strong></div>
         </div>
         <div className="sidebarHint px-4 text-[10px] font-bold tracking-[.18em] text-muted-foreground uppercase max-[1050px]:hidden">{t('sidebarSpace')}</div>
-        <nav className="mt-4 flex w-full flex-col gap-1.5" aria-label={t('navLabel')}>
+        <nav className="mt-4 flex w-full flex-col gap-2" aria-label={t('navLabel')}>
           {menu.map(({ id, icon: Icon }) => (
-            <Button key={id} variant="ghost" className={cn('navItem group h-12 w-full justify-start rounded-2xl px-4 text-sm font-semibold text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-foreground transition-[background-color,color,transform] duration-200 motion-safe:hover:translate-x-0.5 max-[1050px]:size-12 max-[1050px]:justify-center max-[1050px]:px-0',view===id&&'active bg-card/85 text-primary shadow-sm ring-1 ring-border/40')} aria-label={t(({practice:'navStart',favorites:'navMyFavorites',history:'navRecent',review:'navReviewItems',settings:'navSettings'} as const)[id])} aria-current={view === id ? 'page' : undefined} onClick={() => nav(id)}>
+            <Button key={id} variant="ghost" className={cn('navItem group relative h-12 w-full justify-start rounded-[17px] border border-transparent px-4 text-sm font-semibold text-sidebar-foreground/80 transition-[background-color,color,transform,box-shadow] duration-200 hover:border-primary/10 hover:bg-sidebar-accent/85 hover:text-foreground motion-safe:hover:translate-x-0.5 max-[1050px]:size-12 max-[1050px]:justify-center max-[1050px]:px-0',view===id&&'active border-primary/20 bg-gradient-to-r from-brand-blush/55 via-card/95 to-card/65 text-primary shadow-[0_10px_30px_-18px_rgba(70,85,72,.48)] ring-1 ring-primary/10 before:absolute before:inset-y-3 before:left-0 before:w-1 before:rounded-full before:bg-primary before:content-[\'\']')} aria-label={t(({practice:'navStart',favorites:'navMyFavorites',history:'navRecent',review:'navReviewItems',settings:'navSettings'} as const)[id])} aria-current={view === id ? 'page' : undefined} onClick={() => nav(id)}>
               <Icon size={20} strokeWidth={1.9} />
               <span className="max-[1050px]:hidden">{t(({practice:'navPractice',favorites:'navFavorites',history:'navHistory',review:'navReview',settings:'navSettings'} as const)[id])}</span>
               {id === 'favorites' && stats.favorites > 0 ? <span className="navCount ml-auto rounded-full bg-secondary px-2 py-0.5 text-[10px] text-secondary-foreground max-[1050px]:hidden">{stats.favorites}</span> : null}
             </Button>
           ))}
         </nav>
-        <div className="sidebarBottom mt-auto flex flex-col gap-4 px-2 pt-8 max-[1050px]:hidden">
-          <div className="tinyPanel privacyPanel flex flex-col gap-2 rounded-2xl border border-border/70 bg-card/55 p-4 text-xs leading-5 text-muted-foreground">
-            <span className="tinyBadge flex size-9 items-center justify-center rounded-xl bg-secondary text-primary"><ShieldCheck size={17} /></span>
+        <div className="sidebarBottom mt-auto flex flex-col gap-4 px-1 pt-8 max-[1050px]:hidden">
+          <div className="tinyPanel privacyPanel flex flex-col gap-2.5 rounded-[24px] border border-white/55 bg-gradient-to-br from-card/85 via-card/60 to-brand-mist/20 p-4.5 text-xs leading-5 text-translation-ink shadow-[0_16px_36px_-28px_rgba(47,73,65,.45)]">
+            <span className="tinyBadge flex size-10 items-center justify-center rounded-[15px] border border-primary/10 bg-secondary/85 text-primary shadow-sm"><ShieldCheck size={17} /></span>
             <strong>{t('sidebarRhythm')}</strong>
             <span>{t('sidebarLocal')}</span>
           </div>
