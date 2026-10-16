@@ -19,7 +19,7 @@ const appRoot=platform==='win32'
   ? path.join(release,base)
   : path.join(release,base,'Voxnelo.app');
 const contentDir=platform==='win32'?appRoot:path.join(appRoot,'Contents');
-const resources=path.join(contentDir,'Resources');
+const resources=path.join(contentDir,platform==='win32'?'resources':'Resources');
 const executable=platform==='win32'
   ? path.join(appRoot,'Voxnelo.exe')
   : path.join(contentDir,'MacOS','Voxnelo');
