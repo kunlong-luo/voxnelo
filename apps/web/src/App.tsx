@@ -73,7 +73,15 @@ function AppScreen({languageSetting,onChangeLanguage}: {
   const current = useMemo(() => SENTENCES.find((item) => item.id === sentenceId) ?? FIRST_SENTENCE, [sentenceId]);
   const recordingBusy = recorder.status === 'requesting' || recorder.status === 'recording';
   const notify = useCallback((message: string) => setNotice(message), []);
-  const { states, events, setFlag } = useLearningData(notify, sentenceId, current.id, recorder.recordingUrl);
+  const restoreLastSentence=useCallback((id:string|undefined)=>{
+    if (!id || !SENTENCES.some(item=>item.id===id)) return;
+    setSentenceId(id);
+    setVisited([id]);
+    setHistoryPosition(0);
+  },[]);
+  const { states, events, setFlag } = useLearningData(
+    notify, sentenceId, current.id, recorder.recordingUrl, restoreLastSentence,
+  );
   const currentState = states.find((item) => item.sentenceId === current.id);
   const stats = summarize(states);
 
