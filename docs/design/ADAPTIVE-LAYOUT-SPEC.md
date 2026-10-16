@@ -67,3 +67,10 @@
 - **原生 IPC**：通过正式窗口控制桥接完成最大化、还原、最小化和重新激活，不通过生产应用额外增加测试用 IPC。
 - **输出**：GitHub Actions artifact `linux-electron-evidence` 包含三档截图和结构化 JSON 报告；至少人眼核对 800×610 的控制区。
 - **不可冒充的覆盖范围**：Linux Xvfb 是虚拟桌面窗口测试，不等于真实 Linux 发行版任务栏图标的人工验收；**Windows 和 macOS 原生窗口、显示比例、多显示器、真实声卡/录音权限仍需独立验收**。不得宣称跨平台 Electron 已经全检。
+
+## 桌面缩放与跨平台打包验证（2026-10-16）
+
+- Linux/X11 原生 Electron 在正常比例以及强制 `deviceScaleFactor=1.25 / 1.5` 下分别启动构建后的应用；校验浏览器 `devicePixelRatio`、`voxnelo://app` origin、preload 桥接、自定义 44px 标题栏、容器查询生效、无横向溢出、五个录音操作首屏可见。产物分别保存在 `desktop-evidence/standard`、`dpi-125` 和 `dpi-150`。
+- Windows/macOS hosted runners 执行锁定依赖的构建与 `electron-builder --dir` 无签名打包，断言原生可执行文件、`app.asar`、安装包内品牌 PNG 的存在及有效 PNG 头，macOS 额外检查 Bundle ID 和麦克风权限用途声明。
+- **覆盖边界**：Windows/macOS 的打包检查不是 GUI/真实启动验收；Linux 的强制 Chromium/Electron DPR 也不能完全模拟操作系统字体无障碍放大、多显示器或显示器热插拔。桌面任务栏图标与音频硬件授权仍需要相应平台的人工复核。
+- CI 中不新增生产调试 IPC，也不注入渲染器私有权限。无签名产物仅供测试，不上传用于公开分发。
