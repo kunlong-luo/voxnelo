@@ -141,6 +141,101 @@ describe('Offline ASR explicit activation and deny-by-default IPC',()=>{
     engine.close();
   });
 
+  it('makes repeated stop requests await the SAME real final recognition flush',async()=>{
+    const dir=root();
+    const addon=path.join(dir,'native.cjs');
+    writeFileSync(addon,'fixture');
+    for(const name of ['encoder.onnx','decoder.onnx','joiner.onnx','tokens.txt'])
+      writeFileSync(path.join(dir,name),'fixture');
+    class WorkerStub extends EventEmitter {
+      postMessage=vi.fn();
+      terminate=vi.fn(async()=>0);
+    }
+    const worker=new WorkerStub();
+    const owner={isDestroyed:()=>false,send:vi.fn(),once:vi.fn()} as unknown as WebContents;
+    const engine=new OfflineAsr(dir,addon,()=>{
+      queueMicrotask(()=>worker.emit('message',{type:'ready'}));
+      return worker as unknown as Worker;
+    });
+    const opened=await engine.open(owner);
+    if(!opened.ok)throw Error('No real worker session opened');
+    const first=engine.stop(owner,opened.sessionId);
+    const second=engine.stop(owner,opened.sessionId);
+    expect(second).toBe(first);
+    expect(worker.postMessage).toHaveBeenCalledTimes(1);
+    expect(worker.postMessage).toHaveBeenCalledWith({type:'finish'});
+    worker.emit('message',{type:'result',finalText:'the finished English sentence',interimText:''});
+    worker.emit('message',{type:'finished'});
+    expect(await first).toEqual({finalText:'the finished English sentence'});
+    expect(await second).toEqual({finalText:'the finished English sentence'});
+    expect(worker.terminate).toHaveBeenCalledTimes(1);
+    engine.close();
+  });
+
+  it('resolves an in-flight startup immediately if its owner is destroyed',async()=>{
+    const dir=root();
+    const addon=path.join(dir,'native.cjs');
+    writeFileSync(addon,'fixture');
+    for(const name of ['encoder.onnx','decoder.onnx','joiner.onnx','tokens.txt'])
+      writeFileSync(path.join(dir,name),'fixture');
+    class WorkerStub extends EventEmitter {
+      postMessage=vi.fn();
+      terminate=vi.fn(async()=>0);
+    }
+    const worker=new WorkerStub();
+    let destroy:(()=>void)|undefined;
+    const owner={
+      isDestroyed:()=>false,send:vi.fn(),
+      once:vi.fn((name:string,fn:()=>void)=>{if(name==='destroyed')destroy=fn;}),
+    } as unknown as WebContents;
+    const engine=new OfflineAsr(dir,addon,()=>worker as unknown as Worker);
+    const pending=engine.open(owner);
+    expect(destroy).toBeTypeOf('function');
+    destroy?.();
+    expect(await pending).toEqual({ok:false,reason:'failed'});
+    expect(worker.terminate).toHaveBeenCalledTimes(1);
+    worker.emit('message',{type:'ready'});
+    expect(await engine.stop(owner,'superseded')).toEqual({finalText:''});
+  });
+
+  it('ignores late messages from an already disposed session when a new one starts',async()=>{
+    const dir=root();
+    const addon=path.join(dir,'native.cjs');
+    writeFileSync(addon,'fixture');
+    for(const name of ['encoder.onnx','decoder.onnx','joiner.onnx','tokens.txt'])
+      writeFileSync(path.join(dir,name),'fixture');
+    class WorkerStub extends EventEmitter {
+      postMessage=vi.fn();
+      terminate=vi.fn(async()=>0);
+    }
+    const workers=[new WorkerStub(),new WorkerStub()];
+    let spawned=0;
+    const owner={isDestroyed:()=>false,send:vi.fn(),once:vi.fn()} as unknown as WebContents;
+    const engine=new OfflineAsr(dir,addon,()=>{
+      const worker=workers[spawned++];
+      if(!worker)throw Error('Unexpected worker');
+      queueMicrotask(()=>worker.emit('message',{type:'ready'}));
+      return worker as unknown as Worker;
+    });
+    const first=await engine.open(owner);
+    if(!first.ok)throw Error('No first session');
+    engine.close();
+    const second=await engine.open(owner);
+    if(!second.ok)throw Error('No second session');
+    workers[0]!.emit('message',{type:'result',finalText:'old sentence',interimText:''});
+    workers[0]!.emit('message',{type:'failure'});
+    workers[0]!.emit('message',{type:'finished'});
+    expect(owner.send).not.toHaveBeenCalled();
+    const final=engine.stop(owner,second.sessionId);
+    workers[1]!.emit('message',{type:'result',finalText:'fresh sentence',interimText:''});
+    workers[1]!.emit('message',{type:'finished'});
+    expect(await final).toEqual({finalText:'fresh sentence'});
+    expect(owner.send).toHaveBeenCalledWith('voxnelo:asr:result',{
+      sessionId:second.sessionId,finalText:'fresh sentence',interimText:'',
+    });
+    engine.close();
+  });
+
   it('does not trust missing/incomplete models or relative addon paths',()=>{
     const dir=root();
     const addon=path.join(dir,'fake-addon.js');
