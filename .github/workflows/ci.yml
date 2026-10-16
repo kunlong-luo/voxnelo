@@ -50,3 +50,13 @@ jobs:
         run: node scripts/check-pages-artifact.mjs
       - name: Renderer size budget
         run: pnpm perf:budget
+      - name: Responsive Chromium screenshots
+        run: node scripts/check-responsive-browser.mjs
+      - name: Upload responsive layout evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-layout-evidence
+          path: browser-layout/
+          retention-days: 14
+          if-no-files-found: ignore
