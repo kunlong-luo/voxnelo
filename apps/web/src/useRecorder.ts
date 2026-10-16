@@ -86,11 +86,13 @@ export function useRecorder() {
       stream.current = null;
       setStatus('idle');
       setError(
-        cause instanceof Error && cause.name === 'NotAllowedError'
+        cause instanceof Error && (cause.name === 'NotAllowedError' || cause.name === 'PermissionDeniedError')
           ? t('recorderPermission')
-          : cause instanceof Error && cause.message === t('recorderUnsupported')
-            ? cause.message
-            : t('recorderFailure'),
+          : cause instanceof Error && ['NotFoundError', 'DevicesNotFoundError', 'NotReadableError', 'TrackStartError', 'OverconstrainedError'].includes(cause.name)
+            ? t('recorderDeviceMissing')
+            : cause instanceof Error && cause.message === t('recorderUnsupported')
+              ? cause.message
+              : t('recorderFailure'),
       );
     } finally {
       requestingRef.current = false;

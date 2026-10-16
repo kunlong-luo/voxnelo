@@ -82,7 +82,7 @@ describe('useRecorder', () => {
       await latest.start();
     });
     expect(latest.status).toBe('idle');
-    expect(latest.error).toBe('麦克风未获授权。你仍然可以听示范和查看短句。');
+    expect(latest.error).toBe('麦克风尚未获授权。您仍可听示范、收藏和练习其他句子。');
   });
 
   it('完整录音流程：请求中→录音中→就绪并产出回听地址', async () => {
