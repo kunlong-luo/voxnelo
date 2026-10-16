@@ -22,7 +22,7 @@ export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
       <span className="hidden min-w-0 flex-1 items-center gap-1.5 text-[11px] leading-4 font-medium text-translation-ink @min-[440px]/workspace:flex" role="status">
         {listening?<><span aria-hidden="true" className="size-2 shrink-0 rounded-full bg-mic-halo motion-safe:animate-status-breathe"/>{t('dictationListening')}</>
           :checking?t('dictationChecking')
-          :<><AudioLines size={14} className="shrink-0 text-primary" aria-hidden="true"/>{t('dictationPrivacy')}</>}
+          :<><AudioLines size={14} className="shrink-0 text-primary" aria-hidden="true"/>{t(dictation.mode==='browser'?'dictationCloudEnabled':'dictationPrivacy')}</>}
       </span>
     </div>
     <div className="dictationTranscript mt-2 min-h-7 max-h-22 overflow-y-auto rounded-xl bg-card/80 px-3 py-1.5 text-xs leading-5 text-sentence-ink [@media(max-height:680px)]:mt-1 [@media(max-height:680px)]:min-h-6 [@media(max-height:680px)]:max-h-13 [@media(max-height:680px)]:py-0.5" data-testid="live-transcript">
