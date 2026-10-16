@@ -68,6 +68,8 @@ jobs:
           sudo apt-get install -y -qq xvfb xdotool openbox
       - name: Native Linux Electron window smoke
         run: xvfb-run -a -s "-screen 0 1600x1000x24" node --experimental-strip-types scripts/check-electron-window.mts
+      - name: Persist learning across an actual Electron process restart
+        run: xvfb-run -a -s "-screen 0 1600x1000x24" node --experimental-strip-types scripts/check-electron-persistence.mts
       - name: Native Electron 125 percent DPI
         run: VOXNELO_DPI_SCALE=1.25 xvfb-run -a -s "-screen 0 2400x1600x24" node --experimental-strip-types scripts/check-electron-window.mts
       - name: Native Electron 150 percent DPI
