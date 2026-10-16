@@ -25,7 +25,7 @@ contextBridge.exposeInMainWorld('voxneloDesktop', {
     capabilities: () => ipcRenderer.invoke('voxnelo:asr:capabilities') as Promise<{available:boolean;reason:'ready'|'not-configured'}>,
     start: () => ipcRenderer.invoke('voxnelo:asr:start') as Promise<{ok:true;sessionId:string}|{ok:false;reason:string}>,
     push: (id:string,samples:Float32Array) => ipcRenderer.send('voxnelo:asr:pcm',id,samples),
-    stop: (id:string) => ipcRenderer.send('voxnelo:asr:stop',id),
+    stop: (id:string) => ipcRenderer.invoke('voxnelo:asr:stop',id) as Promise<{finalText:string}>,
     onResult: (callback:(event:{sessionId:string;finalText:string;interimText:string})=>void) => {
       const listener=(_event:IpcRendererEvent,data:unknown)=>{
         if(data&&typeof data==='object'&&'sessionId' in data&&'finalText' in data&&'interimText' in data
