@@ -8,7 +8,7 @@ import { cn } from './lib/utils';
 
 type ControlPanelProps = Pick<PracticeViewProps, 'recorder'|'recordingBusy'|'speed'|'onSpeak'|'onToggleSpeed'|'onRecord'>;
 
-const utilityButton = 'size-10 rounded-2xl border border-border/65 bg-card/80 text-primary shadow-sm hover:bg-accent hover:shadow-md @min-[440px]/workspace:size-11 @min-[700px]/workspace:size-12';
+const utilityButton = 'size-10 rounded-2xl border border-border/70 bg-card/80 text-foreground/75 shadow-sm transition-[background-color,color,box-shadow] hover:bg-accent hover:text-primary hover:shadow-md @min-[440px]/workspace:size-11 @min-[700px]/workspace:size-12';
 const minorCaption = 'mt-2 max-w-full text-center text-[10px] font-semibold leading-4 text-muted-foreground @min-[560px]/workspace:text-[11px]';
 function ActionSlot({children,label,detail,className}:{
   children:React.ReactNode;label:string;detail?:string;className?:string;
@@ -27,7 +27,7 @@ export function PracticeControlPanel({recorder,recordingBusy,speed,onSpeak,onTog
   const requesting=recorder.status==='requesting';
   const ready=recorder.status==='ready' && Boolean(recorder.recordingUrl);
   return (
-        <section className="lessonActions border-t border-border/55 bg-brand-cream/45 px-3 pt-6 pb-4 sm:px-6" aria-label={t('practiceActions')}>
+        <section className="lessonActions border-t border-border/55 bg-card/30 px-3 pt-5 pb-3 [@media(max-height:680px)]:pt-3 [@media(max-height:680px)]:pb-2 sm:px-6" aria-label={t('practiceActions')}>
           <div className="actionRail grid grid-cols-[repeat(2,minmax(0,1fr))_minmax(60px,1.25fr)_repeat(2,minmax(0,1fr))] items-start gap-0.5 @min-[560px]/workspace:gap-2" data-testid="practice-control-rail">
             <ActionSlot label={t('playDemo')}>
               <Tooltip text={t('playExample')}>
@@ -39,9 +39,9 @@ export function PracticeControlPanel({recorder,recordingBusy,speed,onSpeak,onTog
             </ActionSlot>
             <ActionSlot label={t(requesting?'micPermission':recording?'recordingInProgress':'recordingSecondary')} detail={t(requesting?'micRequestHint':recording?'micRecordingHint':ready?'micReadyHint':'micStartHint')}>
               <div className="relative isolate grid place-items-center">
-                {recording && <span aria-hidden="true" data-motion="record-halo" className="pointer-events-none absolute -inset-2 rounded-[30px] border-2 border-mic-halo/75 motion-safe:animate-record-halo"/>}
+                {recording && <span aria-hidden="true" data-motion="record-halo" className="pointer-events-none absolute -inset-2 rounded-[26px] border-2 border-mic-halo/75 motion-safe:animate-record-halo"/>}
                 {requesting && <span aria-hidden="true" data-motion="permission-halo" className="pointer-events-none absolute -inset-1 rounded-[26px] border-2 border-primary/40 motion-safe:animate-status-breathe"/>}
-                <Button variant="default" size="icon-lg" className={cn('recordAction relative size-11 rounded-xl border border-primary/25 bg-card text-primary shadow-sm @min-[440px]/workspace:size-12 transition-[background-color,box-shadow,transform] duration-200 motion-safe:hover:scale-[1.04] hover:bg-accent motion-reduce:transform-none',recording&&'bg-secondary ring-2 ring-mic-halo/50')} onClick={onRecord} disabled={recordingBusy} aria-label={t(requesting?'micPermission':recording?'micBusy':'micStart')}>
+                <Button variant="default" size="icon-lg" className={cn('recordAction relative size-11 rounded-2xl border border-primary/25 bg-secondary/75 text-primary shadow-sm @min-[440px]/workspace:size-12 transition-[background-color,box-shadow,transform] duration-200 motion-safe:hover:scale-[1.04] hover:bg-accent motion-reduce:transform-none',recording&&'bg-secondary ring-2 ring-mic-halo/50')} onClick={onRecord} disabled={recordingBusy} aria-label={t(requesting?'micPermission':recording?'micBusy':'micStart')}>
                   {requesting?<LoaderCircle size={28} aria-hidden="true" className="motion-safe:animate-spin"/>:<Mic size={23} aria-hidden="true"/>}
                 </Button>
               </div>

@@ -81,6 +81,13 @@ describe('Nordic three-column learning workspace', () => {
     expect(container.querySelector('.actionRail .nextButton')).toBeNull();
     expect(container.querySelector('.lessonFocus .sentenceContent')).toBeTruthy();
     expect(container.querySelector('.lessonFocus .liveDictation')).toBeTruthy();
+    const liveMic=container.querySelector('.liveDictation .dictationAction');
+    const replayMic=container.querySelector('.actionRail .recordAction');
+    expect(liveMic?.className).toContain('rounded-full');
+    expect(liveMic?.className).toContain('bg-[image:var(--mic-gradient)]');
+    expect(replayMic).toBeTruthy();
+    expect(replayMic?.className).not.toContain('bg-[image:var(--mic-gradient)]');
+    expect(container.querySelector('.sentenceText')?.className).toContain('6.25cqi');
     fireEvent.click(screen.getByRole('button', { name: '上一句' }));
     fireEvent.click(screen.getByRole('button', { name: '换一句' }));
     expect(onPrevious).toHaveBeenCalledOnce();
