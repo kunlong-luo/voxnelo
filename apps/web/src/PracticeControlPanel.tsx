@@ -28,7 +28,7 @@ export function PracticeControlPanel({recorder,recordingBusy,speed,onSpeak,onTog
   const ready=recorder.status==='ready' && Boolean(recorder.recordingUrl);
   return (
         <section className="lessonActions border-t border-border/55 bg-card/30 px-3 pt-5 pb-3 [@media(max-height:680px)]:pt-3 [@media(max-height:680px)]:pb-2 sm:px-6" aria-label={t('practiceActions')}>
-          <div className="actionRail grid grid-cols-[repeat(2,minmax(0,1fr))_minmax(60px,1.25fr)_repeat(2,minmax(0,1fr))] items-start gap-0.5 @min-[560px]/workspace:gap-2" data-testid="practice-control-rail">
+          <div className="actionRail grid grid-cols-[repeat(2,minmax(0,1fr))_minmax(60px,1.25fr)_minmax(0,1fr)] items-start gap-0.5 @min-[560px]/workspace:gap-2" data-testid="practice-control-rail">
             <ActionSlot label={t('playDemo')}>
               <Tooltip text={t('playExample')}>
                 <Button variant="outline" size="icon-lg" className={utilityButton} onClick={onSpeak} aria-label={t('playExample')} disabled={recordingBusy}><Volume2 size={21}/></Button>
@@ -37,17 +37,14 @@ export function PracticeControlPanel({recorder,recordingBusy,speed,onSpeak,onTog
             <ActionSlot label={t('speedSlow')} detail={speed==='slow'?'0.75×':t('speedNormal')}>
               <Button variant="outline" size="icon-lg" className={utilityButton} onClick={onToggleSpeed} disabled={recordingBusy} aria-pressed={speed==='slow'} aria-label={t('speedSwitch')}><Turtle size={21}/></Button>
             </ActionSlot>
-            <ActionSlot label={t(requesting?'micPermission':recording?'recordingInProgress':'recordingSecondary')} detail={t(requesting?'micRequestHint':recording?'micRecordingHint':ready?'micReadyHint':'micStartHint')}>
+            <ActionSlot label={t(requesting?'micPermission':recording?'stopRecording':'recordingSecondary')} detail={t(requesting?'micRequestHint':recording?'micRecordingHint':ready?'micReadyHint':'micStartHint')}>
               <div className="relative isolate grid place-items-center">
                 {recording && <span aria-hidden="true" data-motion="record-halo" className="pointer-events-none absolute -inset-2 rounded-[26px] border-2 border-mic-halo/75 motion-safe:animate-record-halo"/>}
                 {requesting && <span aria-hidden="true" data-motion="permission-halo" className="pointer-events-none absolute -inset-1 rounded-[26px] border-2 border-primary/40 motion-safe:animate-status-breathe"/>}
-                <Button variant="default" size="icon-lg" className={cn('recordAction relative size-11 rounded-2xl border border-primary/25 bg-secondary/75 text-primary shadow-sm @min-[440px]/workspace:size-12 transition-[background-color,box-shadow,transform] duration-200 motion-safe:hover:-translate-y-1 motion-safe:hover:scale-[1.04] motion-safe:active:translate-y-0 motion-safe:active:scale-[.97] hover:bg-accent motion-reduce:transform-none',recording&&'bg-secondary ring-2 ring-mic-halo/50')} onClick={onRecord} disabled={recordingBusy} aria-label={t(requesting?'micPermission':recording?'micBusy':'micStart')}>
-                  {requesting?<LoaderCircle size={28} aria-hidden="true" className="motion-safe:animate-spin"/>:<Mic size={23} aria-hidden="true"/>}
+                <Button variant="default" size="icon-lg" className={cn('recordAction relative size-11 rounded-2xl border border-primary/25 bg-secondary/75 text-primary shadow-sm @min-[440px]/workspace:size-12 transition-[background-color,box-shadow,transform] duration-200 motion-safe:hover:-translate-y-1 motion-safe:hover:scale-[1.04] motion-safe:active:translate-y-0 motion-safe:active:scale-[.97] hover:bg-accent motion-reduce:transform-none',recording&&'bg-secondary ring-2 ring-mic-halo/50')} onClick={onRecord} disabled={requesting||(recordingBusy&&!recording)} aria-pressed={recording} aria-label={t(requesting?'micPermission':recording?'stopRecording':'micStart')}>
+                  {requesting?<LoaderCircle size={28} aria-hidden="true" className="motion-safe:animate-spin"/>:recording?<Square size={21} fill="currentColor" aria-hidden="true"/>:<Mic size={23} aria-hidden="true"/>}
                 </Button>
               </div>
-            </ActionSlot>
-            <ActionSlot label={t('stopRecording')}>
-              <Button variant="outline" size="icon-lg" className={utilityButton} onClick={onRecord} disabled={!recording} aria-label={t('stopRecording')}><Square size={20} fill="currentColor"/></Button>
             </ActionSlot>
             <RecordingPlayback key={recorder.recordingUrl??'no-recording'} src={recorder.recordingUrl}/>
           </div>
