@@ -65,7 +65,7 @@ export function PracticeView({
     {topic:'personal',label:t('scenePersonal'),icon:BookOpen},
     {topic:'daily',label:t('sceneDaily'),icon:Coffee},
   ] as const;
-  return <div className="practiceLayout layoutWorkbench grid min-w-0 grid-cols-1 items-stretch gap-3 @min-[840px]/workspace:grid-cols-[minmax(0,1fr)_minmax(220px,28%)] @min-[1040px]/workspace:gap-5">
+  return <div className="practiceLayout layoutWorkbench grid min-w-0 grid-cols-1 items-start gap-3 @min-[840px]/workspace:grid-cols-[minmax(0,1fr)_minmax(220px,28%)] @min-[1040px]/workspace:gap-5">
     <div className="practiceColumn flex min-w-0 flex-col gap-3">
       <Card className="practiceCard referenceLesson flex min-h-[min(700px,calc(100dvh-120px))] min-w-0 flex-1 flex-col overflow-visible border-white/75 bg-gradient-to-br from-card via-card to-brand-mist/35 shadow-soft">
         <header className="cardHeader lessonHeader flex min-h-19 flex-wrap items-center justify-between gap-3 px-5 pt-5 pb-0 sm:px-7 sm:pt-6">
