@@ -46,3 +46,5 @@ class VoxneloPcmProcessor extends AudioWorkletProcessor {
   }
 }
 registerProcessor('voxnelo-pcm-16k', VoxneloPcmProcessor);
+
+export {}; // Allow importing the TypeScript worklet source in unit tests.
