@@ -44,7 +44,7 @@ const activate=async(index,klass)=>{
   await until('!!document.querySelector("'+klass+'")');
 };
 const metrics=async()=>{
-  return await evalJs('(()=>{const d=document.documentElement,m=document.querySelector(".mainArea"),g=document.querySelector(".practiceLayout"),b=document.querySelector(".recordAction"),r=b?.getBoundingClientRect();return {scrollWidth:d.scrollWidth,clientWidth:d.clientWidth,mainWidth:Math.round(m.getBoundingClientRect().width),containerName:getComputedStyle(m).containerName,columns:g?getComputedStyle(g).gridTemplateColumns.split(" ").length:null,sidebar:getComputedStyle(document.querySelector(".sidebar")).display!=="none",dock:getComputedStyle(document.querySelector(".mobileNav")).display!=="none",micWidth:Math.round(r?.width||0),micInBounds:!r||(r.left>=-1&&r.right<=innerWidth+1)}})()');
+  return await evalJs('(()=>{const d=document.documentElement,m=document.querySelector(".mainArea"),g=document.querySelector(".practiceLayout"),b=document.querySelector(".recordAction"),r=b?.getBoundingClientRect();return {scrollWidth:d.scrollWidth,clientWidth:d.clientWidth,mainWidth:Math.round(m.getBoundingClientRect().width),containerName:getComputedStyle(m).containerName,columns:g?getComputedStyle(g).gridTemplateColumns.split(" ").length:null,sidebar:getComputedStyle(document.querySelector(".sidebar")).display!=="none",dock:getComputedStyle(document.querySelector(".mobileNav")).display!=="none",micWidth:Math.round(r?.width||0),micInBounds:!r||(r.left>=-1&&r.right<=innerWidth+1),micTop:Math.round(r?.top||0),micBottom:Math.round(r?.bottom||0),micInFirstViewport:!r||(r.top>=0&&r.bottom<=(innerWidth<640?document.querySelector(".mobileNav").getBoundingClientRect().top:innerHeight))}})()');
 };
 const shot=async(w,h,name)=>{
   const m=await metrics();
@@ -55,7 +55,7 @@ const shot=async(w,h,name)=>{
   assert.equal(m.sidebar,w>=640,'wrong sidebar visibility at '+w);
   if(name==='practice'){
     assert.equal(m.columns,m.mainWidth>=840?2:1,'wrong workbench columns at '+w);
-    assert.ok(m.micWidth>=40&&m.micInBounds,'mic clipped at '+w);
+    assert.ok(m.micWidth>=40&&m.micInBounds&&m.micInFirstViewport,'mic not visible on first screen at '+w+': '+JSON.stringify(m));
   }
   const png=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
   await writeFile(path.join(out,w+'x'+h+'-'+name+'.png'),Buffer.from(png.data,'base64'));
@@ -74,6 +74,11 @@ try{
   ws.addEventListener('message',event=>{const p=JSON.parse(event.data),q=pending.get(p.id);if(!q)return;clearTimeout(q.timeout);pending.delete(p.id);if(p.error)q.reject(Error(JSON.stringify(p.error)));else q.resolve(p.result||{});});
   await send('Page.enable');await send('Runtime.enable');
   await until('!!document.querySelector(".practiceLayout")');
+  // Capture real Chinese typography rather than relying on runner's locale.
+  await activate(4,'.settingsPage');
+  await evalJs('document.querySelectorAll(".languageChoices button")[1].click()');
+  await until('document.documentElement.lang.toLowerCase().startsWith("zh")');
+  await activate(0,'.practiceLayout');
   for(const [w,h] of sizes){
     await send('Emulation.setDeviceMetricsOverride',{width:w,height:h,deviceScaleFactor:1,mobile:false});
     await sleep(150);
