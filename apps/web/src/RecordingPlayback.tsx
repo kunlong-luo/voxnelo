@@ -29,9 +29,9 @@ export function RecordingPlayback({src}:{src:string|null}) {
       onTimeUpdate={event=>setElapsed(event.currentTarget.currentTime)}
       onEnded={()=>setPlaying(false)} onPause={()=>setPlaying(false)}/>}
     <Tooltip text={t(playing?'playbackPause':'playbackStart')}>
-      <Button variant="outline" size="icon-lg" className="size-11 rounded-2xl border-border/65 bg-card/80 text-primary shadow-sm hover:bg-accent sm:size-12" onClick={()=>void toggle()} disabled={!src} aria-label={t(playing?'playbackPause':'playbackStart')}>{playing?<Pause size={21}/>:<Play size={21}/>}</Button>
+      <Button variant="outline" size="icon-lg" className="size-10 rounded-2xl border-border/65 bg-card/80 text-primary shadow-sm hover:bg-accent @min-[440px]/workspace:size-11 @min-[700px]/workspace:size-12" onClick={()=>void toggle()} disabled={!src} aria-label={t(playing?'playbackPause':'playbackStart')}>{playing?<Pause size={21}/>:<Play size={21}/>}</Button>
     </Tooltip>
-    <span className="actionCaption mt-2 text-center text-[11px] font-semibold text-muted-foreground">{t(playing?'playbackPause':'playbackCaption')}</span>
+    <span className="actionCaption mt-2 max-w-full text-center text-[10px] font-semibold leading-4 text-muted-foreground @min-[560px]/workspace:text-[11px]">{t(playing?'playbackPause':'playbackCaption')}</span>
     {src?<><time className="actionAux mt-1 text-center text-[10px] text-muted-foreground">{clock(elapsed)} / {duration>0?clock(duration):'--:--'}</time>
       <Progress label={t('playbackProgress')} value={elapsed} max={duration>0?duration:1} className="replayProgress mt-1 h-1 w-[85%]"/></>
       :<span className="actionAux mt-1 text-center text-[10px] text-muted-foreground">{t('playbackUnavailable')}</span>}
