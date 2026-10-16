@@ -19,7 +19,7 @@ const mandatory = [
   'model/tokens.txt',
 ];
 const shaPattern = /^[0-9a-f]{64}$/i;
-const relativePathPattern = /^(?:model|native)\/[a-zA-Z0-9_.\/-]+$/;
+const relativePathPattern = /^(?:model|native)\/[a-zA-Z0-9_./-]+$/;
 
 function safeRelative(name: string): boolean {
   return relativePathPattern.test(name)
