@@ -173,6 +173,31 @@ describe('useRecorder', () => {
     expect(stopTrack).toHaveBeenCalledTimes(1);
     expect(MockMediaRecorder.instances).toHaveLength(0);
   });
+  it('切句清理录音后撤销旧 Blob URL，迟到的回放地址不保留', async () => {
+    mockDevices(() => Promise.resolve(fakeStream()));
+    render(<Harness />);
+    await act(async () => { await latest.start(); });
+    const instance = MockMediaRecorder.instances[0];
+    if (!instance) throw new Error('expected recorder instance');
+    act(() => { instance.ondataavailable?.({ data: new Blob(['voice']) }); latest.stop(); });
+    expect(latest.status).toBe('ready');
+    act(() => { latest.clearAudio(); });
+    expect(latest.recordingUrl).toBeNull();
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:mock');
+  });
+
+  it('组件卸载后清理已有录音 Blob URL', async () => {
+    mockDevices(() => Promise.resolve(fakeStream()));
+    const view = render(<Harness />);
+    await act(async () => { await latest.start(); });
+    const instance = MockMediaRecorder.instances[0];
+    if (!instance) throw new Error('expected recorder instance');
+    act(() => { instance.ondataavailable?.({ data: new Blob(['voice']) }); latest.stop(); });
+    expect(latest.status).toBe('ready');
+    view.unmount();
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:mock');
+  });
+
   it('没有录到声音时报错', async () => {
     mockDevices(() => Promise.resolve(fakeStream()));
     render(<Harness />);
