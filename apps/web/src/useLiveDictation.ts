@@ -54,7 +54,12 @@ export function useLiveDictation(sentenceId: string) {
   // SpeechRecognition can use a vendor network service. The desktop app never
   // opts into that mode, even when the constructor happens to exist.
   const browserModeAvailable = !window.voxneloDesktop;
-  const supported = window.voxneloDesktop ? desktopAvailable : Boolean(recognizerClass());
+  // Electron may expose Chromium's *on-device* SpeechRecognition even when the
+  // optional native ONNX addon is not configured. Never use its cloud mode here.
+  const localBrowserRecognition = Boolean(recognizerClass()?.available);
+  const supported = window.voxneloDesktop
+    ? desktopAvailable || localBrowserRecognition
+    : Boolean(recognizerClass());
   useEffect(()=>{
     const bridge=window.voxneloDesktop?.asr;
     if(!bridge)return;
@@ -113,8 +118,12 @@ export function useLiveDictation(sentenceId: string) {
     const Ctor=recognizerClass();
     setError('');
     const bridge=window.voxneloDesktop?.asr;
-    if(window.voxneloDesktop){
-      if(mode!=='local'||!bridge||!desktopAvailable){setError(t('dictationLocalRequired'));return;}
+    if(window.voxneloDesktop && mode!=='local'){
+      setError(t('dictationLocalRequired'));
+      return;
+    }
+    if(window.voxneloDesktop && desktopAvailable){
+      if(!bridge){setError(t('dictationLocalRequired'));return;}
       const id=++requestId.current;
       setStatus('checking');
       let media:MediaStream|null=null;
@@ -198,7 +207,7 @@ export function useLiveDictation(sentenceId: string) {
         return;
       }
     }
-    if(!Ctor){setError(t('dictationUnsupported'));return;}
+    if(!Ctor){setError(t(window.voxneloDesktop?'dictationLocalRequired':'dictationUnsupported'));return;}
     if(mode==='browser'&&!browserModeAvailable){setError(t('dictationLocalRequired'));return;}
     const id=++requestId.current;
     setStatus('checking');
