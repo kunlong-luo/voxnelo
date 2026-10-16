@@ -6,7 +6,7 @@ import { Button } from './components/ui/button';
 import { cn } from './lib/utils';
 import { useI18n } from './i18n';
 
-/** Frameless Electron chrome: only actual window controls, without product
+/** Frameless workspace-local chrome: no full-width top strip over the sidebar; only window controls, without product
  * logo, heading, breadcrumb or extra toolbars. Browser preview renders none.
  */
 export function DesktopTitlebar() {
@@ -56,7 +56,7 @@ export function DesktopTitlebar() {
   if (!controls) return null;
 
   return (
-    <header className={cn('appTitlebar window-drag sticky top-0 z-50 flex h-11 min-h-11 shrink-0 items-center border-b border-border/70 bg-sidebar/90 px-3 backdrop-blur-xl',isMac?'mac justify-start':'justify-end')} aria-label={t("windowTitle")}>
+    <header className={cn('appTitlebar window-drag relative z-50 flex h-11 min-h-11 shrink-0 items-center px-3',isMac?'mac justify-start':'justify-end')} aria-label={t("windowTitle")}>
       {buttons}
     </header>
   );
