@@ -65,7 +65,7 @@ export function PracticeCard({current,currentState,speed,showIpa,recorder,dictat
             {showIpa && <p className="ipa max-w-full text-sm leading-6 wrap-break-word text-ipa-ink">{current.ipa}</p>}
             <Button variant="ghost" size="sm" className="subtleLink rounded-full text-xs text-primary" onClick={onToggleIpa} aria-expanded={showIpa}><CircleHelp size={14}/>{t(showIpa?'ipaHide':'ipaShow')}</Button>
           </div>
-          <div className="pointer-events-none hidden w-full max-w-145 opacity-70 [@media(min-height:780px)]:block" aria-hidden="true"><WaveformArt/></div>
+          <div className="pointer-events-none hidden w-full max-w-145 opacity-70 [@media(min-height:1000px)]:block" aria-hidden="true"><WaveformArt/></div>
           <LiveDictationPanel dictation={dictation} blocked={recorder.status==='requesting'||recorder.status==='recording'} onStart={onStartDictation}/>
         </div>
         <PracticeControlPanel recorder={recorder} recordingBusy={recordingBusy} speed={speed} onSpeak={onSpeak} onToggleSpeed={onToggleSpeed} onRecord={onRecord} />
