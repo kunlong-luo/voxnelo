@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { BarChart3, Clock3, MessageCircle, Settings2, ShieldCheck, Square, Star, type LucideIcon } from 'lucide-react';
 import {
   APP_VERSION,
@@ -61,6 +62,8 @@ function AppScreen({languageSetting,onChangeLanguage}: {
   onChangeLanguage: (next: LanguageSetting) => void;
 }) {
   const {t} = useI18n();
+  // React replaces the direct page node on navigation, so attach motion here.
+  const [pageMotionRef]=useAutoAnimate<HTMLElement>({duration:500,easing:'ease-in-out'});
   const [sentenceId, setSentenceId] = useState(FIRST_SENTENCE.id);
   const [view, setView] = useState<View>('practice');
   const [visited, setVisited] = useState<string[]>([FIRST_SENTENCE.id]);
@@ -229,7 +232,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
         <div className="sidebarHint px-4 text-[10px] font-bold tracking-[.18em] text-muted-foreground uppercase max-[1050px]:hidden">{t('sidebarSpace')}</div>
         <nav className="mt-4 flex w-full flex-col gap-2" aria-label={t('navLabel')}>
           {menu.map(({ id, icon: Icon }) => (
-            <Button key={id} variant="ghost" className={cn('navItem group relative h-12 w-full justify-start rounded-[17px] border border-transparent px-4 text-sm font-semibold text-sidebar-foreground/80 transition-[background-color,color,transform,box-shadow] duration-200 hover:border-primary/10 hover:bg-sidebar-accent/85 hover:text-foreground motion-safe:hover:translate-x-0.5 max-[1050px]:size-12 max-[1050px]:justify-center max-[1050px]:px-0',view===id&&'active border-primary/20 bg-gradient-to-r from-brand-blush/55 via-card/95 to-card/65 text-primary shadow-[0_10px_30px_-18px_rgba(70,85,72,.48)] ring-1 ring-primary/10 before:absolute before:inset-y-3 before:left-0 before:w-1 before:rounded-full before:bg-primary before:content-[\'\']')} aria-label={t(({practice:'navStart',favorites:'navMyFavorites',history:'navRecent',review:'navReviewItems',settings:'navSettings'} as const)[id])} aria-current={view === id ? 'page' : undefined} onClick={() => nav(id)}>
+            <Button key={id} variant="ghost" className={cn('navItem group relative h-12 w-full justify-start rounded-[17px] border border-transparent px-4 text-sm font-semibold text-sidebar-foreground/80 transition-[background-color,color,transform,box-shadow] duration-400 hover:border-primary/10 hover:bg-sidebar-accent/85 hover:text-foreground motion-safe:hover:translate-x-0.5 max-[1050px]:size-12 max-[1050px]:justify-center max-[1050px]:px-0',view===id&&'active motion-safe:animate-soft-pop border-primary/20 bg-gradient-to-r from-brand-blush/55 via-card/95 to-card/65 text-primary shadow-[0_10px_30px_-18px_rgba(70,85,72,.48)] ring-1 ring-primary/10 before:absolute before:inset-y-3 before:left-0 before:w-1 before:rounded-full before:bg-primary before:content-[\'\']')} aria-label={t(({practice:'navStart',favorites:'navMyFavorites',history:'navRecent',review:'navReviewItems',settings:'navSettings'} as const)[id])} aria-current={view === id ? 'page' : undefined} onClick={() => nav(id)}>
               <Icon size={20} strokeWidth={1.9} />
               <span className="max-[1050px]:hidden">{t(({practice:'navPractice',favorites:'navFavorites',history:'navHistory',review:'navReview',settings:'navSettings'} as const)[id])}</span>
               {id === 'favorites' && stats.favorites > 0 ? <span className="navCount ml-auto rounded-full bg-secondary px-2 py-0.5 text-[10px] text-secondary-foreground max-[1050px]:hidden">{stats.favorites}</span> : null}
@@ -247,13 +250,14 @@ function AppScreen({languageSetting,onChangeLanguage}: {
       </aside>
       <div className="mainArea @container/workspace relative min-w-0 flex-1 overflow-clip bg-background bg-[image:var(--workspace-gradient)]">
         <DesktopTitlebar />
-        <div aria-hidden="true" className="pointer-events-none absolute top-10 right-[5%] size-48 rounded-full bg-primary/9 opacity-60 blur-3xl motion-safe:animate-ambient-drift sm:size-64"/>
-        <div aria-hidden="true" className="pointer-events-none absolute bottom-30 left-[12%] size-56 rounded-full bg-brand-blush/35 blur-3xl"/>
+        <div aria-hidden="true" data-motion="ambient-drift" className="pointer-events-none absolute -top-12 right-[2%] size-56 rounded-full bg-primary/18 blur-3xl motion-safe:animate-ambient-drift sm:size-88"/>
+        <div aria-hidden="true" data-motion="ambient-breathe" className="pointer-events-none absolute bottom-15 left-[4%] size-64 rounded-full bg-brand-blush/55 blur-3xl motion-safe:animate-ambient-breathe sm:size-100"/>
+        <div aria-hidden="true" data-motion="ambient-breathe-secondary" className="pointer-events-none absolute top-[40%] right-[16%] size-48 rounded-full bg-brand-mist/50 blur-3xl motion-safe:animate-ambient-breathe motion-safe:[animation-delay:-3.5s] sm:size-74"/>
         {recorder.status === 'recording' ? (
           <Button variant="destructive" className="recordingQuickStop fixed right-4 bottom-24 z-60 shadow-xl motion-safe:animate-soft-pop sm:right-6 sm:bottom-6" onClick={handleRecorder}
             aria-label={t("stopFloating")}><Square size={15} fill="currentColor" aria-hidden="true" /> {t("stopRecording")}</Button>
         ) : null}
-        <main className="content relative z-10 mx-auto w-full max-w-400 px-3 pt-4 pb-25 sm:px-5 sm:py-6 xl:px-8">
+        <main ref={pageMotionRef} className="content relative z-10 mx-auto w-full max-w-400 px-3 pt-4 pb-25 sm:px-5 sm:py-6 xl:px-8">
           {view === 'practice' ? (
             <PracticeView
               current={current}

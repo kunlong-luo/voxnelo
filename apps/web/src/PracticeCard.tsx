@@ -1,3 +1,4 @@
+import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { ArrowRight, Bookmark, BookOpen, ChevronLeft, CircleHelp, Heart } from 'lucide-react';
 import { SENTENCES, type Sentence } from '@voxnelo/learning';
 import type { PracticeViewProps } from './PracticeTypes';
@@ -23,13 +24,17 @@ const topics:Record<Sentence['topic'],TranslationKey> = {
 export function PracticeCard({current,currentState,speed,showIpa,recorder,dictation,recordingBusy,canGoPrevious,onStartDictation,
   onToggleIpa,onSpeak,onToggleSpeed,onRecord,onToggleFlag,onNext,onPrevious}:PracticeCardProps) {
   const {t}=useI18n();
+  // Stable parent + keyed child: each next sentence now triggers a real DOM transition.
+  const [sentenceMotionRef]=useAutoAnimate<HTMLDivElement>({duration:540,easing:'ease-in-out'});
+  const [translationMotionRef]=useAutoAnimate<HTMLDivElement>({duration:460,easing:'ease-in-out'});
   const position=SENTENCES.findIndex(item=>item.id===current.id);
   const index=position<0?1:position+1;
   const favorite=Boolean(currentState?.favorite);
   const review=Boolean(currentState?.review);
   return (
-      <Card className="practiceCard referenceLesson flex min-h-[min(700px,calc(100dvh-120px))] min-w-0 flex-1 flex-col overflow-visible rounded-[28px] border border-glass-edge bg-glass-surface shadow-glass backdrop-blur-[var(--glass-blur)]">
-        <header className="cardHeader lessonHeader flex min-h-19 [@media(max-height:680px)]:min-h-16 flex-wrap items-center justify-between gap-3 px-5 pt-5 pb-0 [@media(max-height:680px)]:pt-3 sm:px-7 sm:pt-6">
+      <Card className="practiceCard referenceLesson relative isolate flex min-h-[min(700px,calc(100dvh-120px))] min-w-0 flex-1 flex-col overflow-visible rounded-[28px] border border-glass-edge bg-glass-surface shadow-glass backdrop-blur-[var(--glass-blur)]">
+        <div aria-hidden="true" data-motion="lesson-breathe" className="pointer-events-none absolute inset-x-[12%] top-[16%] h-55 rounded-[50%] bg-brand-blush/24 blur-3xl motion-safe:animate-ambient-breathe motion-safe:[animation-delay:-1.7s]"/>
+        <header className="cardHeader lessonHeader relative flex min-h-19 [@media(max-height:680px)]:min-h-16 flex-wrap items-center justify-between gap-3 px-5 pt-5 pb-0 [@media(max-height:680px)]:pt-3 sm:px-7 sm:pt-6">
           <div className="lessonProgress flex min-w-22 flex-col gap-2" aria-label={t('coursePosition',{index,total:SENTENCES.length})}>
             <span className="lessonCount text-sm font-extrabold tracking-tight tabular-nums text-foreground">{String(index).padStart(2,'0')} <span className="font-medium text-muted-foreground">/ {SENTENCES.length}</span></span>
             <Progress label={t('coursePosition',{index,total:SENTENCES.length})} value={index} max={SENTENCES.length} className="h-1.5 w-24"/>
@@ -53,10 +58,10 @@ export function PracticeCard({current,currentState,speed,showIpa,recorder,dictat
         <div className="lessonFocus @container/lesson flex min-h-64 min-w-0 flex-1 flex-col items-center justify-center gap-6 px-4 py-7 text-center [@media(max-height:680px)]:min-h-48 [@media(max-height:680px)]:gap-1.5 [@media(max-height:680px)]:py-1 @min-[560px]/workspace:px-7 @min-[700px]/workspace:min-h-[clamp(12rem,calc(100dvh-365px),20rem)]">
           <div className="sentenceContent flex w-full flex-col items-center justify-center gap-3.5 [@media(max-height:680px)]:gap-1.5">
             <span className="lessonLevel text-[11px] font-bold tracking-[.2em] text-muted-foreground uppercase">{t('speakingPractice')} · {current.level}</span>
-            <div className="sentenceHeading flex max-w-full justify-center">
+            <div ref={sentenceMotionRef} className="sentenceHeading flex max-w-full justify-center">
               <h1 key={current.id} className="sentenceText max-w-full text-[clamp(2rem,6.25cqi,3.375rem)] leading-[1.2] font-extrabold tracking-[-.035em] wrap-break-word text-sentence-ink motion-safe:animate-sentence-enter">{current.english}</h1>
             </div>
-            <p className="translation text-[17px] leading-7 font-medium text-translation-ink @min-[600px]/lesson:text-xl">{current.chinese}</p>
+            <div ref={translationMotionRef} className="flex min-w-0 max-w-full justify-center"><p key={current.id} className="translation text-[17px] leading-7 font-medium text-translation-ink @min-[600px]/lesson:text-xl motion-safe:animate-sentence-enter motion-safe:[animation-delay:60ms]">{current.chinese}</p></div>
             {showIpa && <p className="ipa max-w-full text-sm leading-6 wrap-break-word text-ipa-ink">{current.ipa}</p>}
             <Button variant="ghost" size="sm" className="subtleLink rounded-full text-xs text-primary" onClick={onToggleIpa} aria-expanded={showIpa}><CircleHelp size={14}/>{t(showIpa?'ipaHide':'ipaShow')}</Button>
           </div>
