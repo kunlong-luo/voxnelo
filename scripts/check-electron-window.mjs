@@ -14,7 +14,9 @@ import path from 'node:path';
 
 if(process.platform!=='linux')throw Error('Linux desktop smoke requires X11');
 if(!process.env.DISPLAY)throw Error('Use xvfb-run -a node scripts/check-electron-window.mjs');
-const resultDir=path.resolve('desktop-evidence');
+const scale=Number(process.env.VOXNELO_DPI_SCALE||'1');
+if(![1,1.25,1.5].includes(scale))throw Error('Unsupported test DPI: '+scale);
+const resultDir=path.resolve('desktop-evidence',scale===1?'standard':'dpi-'+Math.round(scale*100));
 await mkdir(resultDir,{recursive:true});
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 const freePort=async()=>new Promise((resolve,reject)=>{
@@ -48,12 +50,13 @@ const until=async(expression,timeoutMs=10000)=>{
   throw Error('Timed out: '+expression);
 };
 const xdo=(...args)=>execFileSync('xdotool',args,{encoding:'utf8',timeout:6000}).trim();
-const viewport=async()=>evaluate('(()=>{const d=document.documentElement;const mic=document.querySelector(".recordAction")?.getBoundingClientRect(),rail=document.querySelector(".actionRail")?.getBoundingClientRect(),title=document.querySelector(".appTitlebar")?.getBoundingClientRect();const nav=document.querySelector(".mobileNav");return {width:innerWidth,height:innerHeight,scrollWidth:d.scrollWidth,clientWidth:d.clientWidth,chromeHeight:title?.height||0,chromePresent:!!title,mainContainer:getComputedStyle(document.querySelector(".mainArea")).containerName,desktopPreload:!!window.voxneloDesktop?.windowControls,desktopPlatform:window.voxneloDesktop?.platform,scheme:location.protocol,practice:!!document.querySelector(".practiceLayout"),micBottom:Math.round(mic?.bottom||0),micTop:Math.round(mic?.top||0),railBottom:Math.round(rail?.bottom||0),mobileNav:getComputedStyle(nav).display!=="none"}})()');
+const viewport=async()=>evaluate('(()=>{const d=document.documentElement;const mic=document.querySelector(".recordAction")?.getBoundingClientRect(),rail=document.querySelector(".actionRail")?.getBoundingClientRect(),title=document.querySelector(".appTitlebar")?.getBoundingClientRect();const nav=document.querySelector(".mobileNav");return {width:innerWidth,height:innerHeight,scrollWidth:d.scrollWidth,clientWidth:d.clientWidth,chromeHeight:title?.height||0,chromePresent:!!title,mainContainer:getComputedStyle(document.querySelector(".mainArea")).containerName,desktopPreload:!!window.voxneloDesktop?.windowControls,desktopPlatform:window.voxneloDesktop?.platform,scheme:location.protocol,practice:!!document.querySelector(".practiceLayout"),micBottom:Math.round(mic?.bottom||0),micTop:Math.round(mic?.top||0),railBottom:Math.round(rail?.bottom||0),mobileNav:getComputedStyle(nav).display!=="none",devicePixelRatio:devicePixelRatio}})()');
 const snapshot=async(label,expectedWidth,expectedHeight)=>{
   await delay(550);
   const state=await viewport();
   report.push({label,...state});
   assert.ok(state.desktopPreload,'Electron preload bridge missing');
+  assert.ok(Math.abs(state.devicePixelRatio-scale)<.08,'Electron DPR mismatch at '+label+': '+JSON.stringify(state));
   assert.equal(state.desktopPlatform,'linux','platform bridge mismatch');
   assert.equal(state.scheme,'voxnelo:','local app protocol not used');
   assert.ok(state.chromePresent&&Math.abs(state.chromeHeight-44)<=1,'custom frame missing/wrong height');
@@ -74,6 +77,7 @@ try{
   await delay(800);
   electron=spawn(path.resolve('node_modules/.bin/electron'),[
     '.', '--no-sandbox','--disable-gpu','--disable-dev-shm-usage',
+    '--force-device-scale-factor='+scale,
     '--remote-debugging-port='+port
   ],{
     cwd:path.resolve('.'),
@@ -121,6 +125,7 @@ try{
   if(!winId)throw Error('Electron native top-level window not found via X11');
   await snapshot('1160x760-electron',1160,760);
 
+  if(scale===1) {
   xdo('windowsize',winId,'800','610');
   await until('Math.abs(innerWidth-800)<=25&&Math.abs(innerHeight-610)<=25');
   await snapshot('800x610-electron',800,610);
@@ -149,6 +154,14 @@ try{
 
   const reduced=await evaluate('(()=>{const media=matchMedia("(prefers-reduced-motion: reduce)");return {supported:typeof media.matches==="boolean",style:getComputedStyle(document.querySelector(".practiceLayout")).animationName}})()');
   report.push({label:'motion-availability',...reduced});
+  } else {
+    // DPI integration tests use the app's actual native window with a scaled
+    // display. Avoid resizing with X11 physical pixels: these do not represent
+    // Electron DIP consistently across compositors.
+    const scaled=await viewport();
+    assert.equal(scaled.mobileNav,false,'Desktop navigation hidden under high DPI');
+    report.push({label:'high-dpi-native-window',...scaled});
+  }
   await writeFile(path.join(resultDir,'report.json'),JSON.stringify({result:'passed',report},null,2));
   console.log('Native Linux Electron smoke passed:',report.map(r=>r.label).join(', '));
 }catch(error){
