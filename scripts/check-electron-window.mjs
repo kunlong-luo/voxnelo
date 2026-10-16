@@ -48,7 +48,7 @@ const until=async(expression,timeoutMs=10000)=>{
   throw Error('Timed out: '+expression);
 };
 const xdo=(...args)=>execFileSync('xdotool',args,{encoding:'utf8',timeout:6000}).trim();
-const viewport=async()=>evaluate('(()=>{const d=document.documentElement;const mic=document.querySelector(".recordAction")?.getBoundingClientRect(),title=document.querySelector(".appTitlebar")?.getBoundingClientRect();const nav=document.querySelector(".mobileNav");return {width:innerWidth,height:innerHeight,scrollWidth:d.scrollWidth,clientWidth:d.clientWidth,chromeHeight:title?.height||0,chromePresent:!!title,mainContainer:getComputedStyle(document.querySelector(".mainArea")).containerName,desktopPreload:!!window.voxneloDesktop?.windowControls,desktopPlatform:window.voxneloDesktop?.platform,scheme:location.protocol,practice:!!document.querySelector(".practiceLayout"),micBottom:Math.round(mic?.bottom||0),micTop:Math.round(mic?.top||0),mobileNav:getComputedStyle(nav).display!=="none"}})()');
+const viewport=async()=>evaluate('(()=>{const d=document.documentElement;const mic=document.querySelector(".recordAction")?.getBoundingClientRect(),rail=document.querySelector(".actionRail")?.getBoundingClientRect(),title=document.querySelector(".appTitlebar")?.getBoundingClientRect();const nav=document.querySelector(".mobileNav");return {width:innerWidth,height:innerHeight,scrollWidth:d.scrollWidth,clientWidth:d.clientWidth,chromeHeight:title?.height||0,chromePresent:!!title,mainContainer:getComputedStyle(document.querySelector(".mainArea")).containerName,desktopPreload:!!window.voxneloDesktop?.windowControls,desktopPlatform:window.voxneloDesktop?.platform,scheme:location.protocol,practice:!!document.querySelector(".practiceLayout"),micBottom:Math.round(mic?.bottom||0),micTop:Math.round(mic?.top||0),railBottom:Math.round(rail?.bottom||0),mobileNav:getComputedStyle(nav).display!=="none"}})()');
 const snapshot=async(label,expectedWidth,expectedHeight)=>{
   await delay(550);
   const state=await viewport();
@@ -63,6 +63,7 @@ const snapshot=async(label,expectedWidth,expectedHeight)=>{
     'Electron native viewport wrong for '+label+': '+JSON.stringify(state));
   assert.ok(state.scrollWidth<=state.clientWidth+1,'Electron horizontal overflow '+label);
   assert.ok(state.micBottom>state.micTop&&state.micBottom<=state.height-8,'microphone not first-screen accessible '+label+': '+JSON.stringify(state));
+  assert.ok(state.railBottom>state.micBottom&&state.railBottom<=state.height-8,'audio-action labels clipped '+label+': '+JSON.stringify(state));
   assert.equal(state.mobileNav,false,'unexpected mobile dock in desktop window');
   const png=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
   await writeFile(path.join(resultDir,label+'.png'),Buffer.from(png.data,'base64'));
