@@ -252,12 +252,12 @@ function AppScreen({languageSetting,onChangeLanguage}: {
         <DesktopTitlebar />
         <div aria-hidden="true" data-motion="ambient-drift" className="pointer-events-none absolute -top-12 right-[2%] size-56 rounded-full bg-primary/18 blur-3xl motion-safe:animate-ambient-drift sm:size-88"/>
         <div aria-hidden="true" data-motion="ambient-breathe" className="pointer-events-none absolute bottom-15 left-[4%] size-64 rounded-full bg-brand-blush/55 blur-3xl motion-safe:animate-ambient-breathe sm:size-100"/>
-        <div aria-hidden="true" data-motion="ambient-breathe-secondary" className="pointer-events-none absolute top-[40%] right-[16%] size-48 rounded-full bg-brand-mist/50 blur-3xl motion-safe:animate-ambient-breathe motion-safe:[animation-delay:-3.5s] sm:size-74"/>
+        <div aria-hidden="true" data-motion="ambient-breathe-secondary" className="pointer-events-none absolute top-[40%] right-[16%] size-48 rounded-full bg-brand-mist/35 blur-3xl motion-safe:animate-ambient-breathe motion-safe:[animation-delay:-3.5s] sm:size-74"/>
         {recorder.status === 'recording' ? (
           <Button variant="destructive" className="recordingQuickStop fixed right-4 bottom-24 z-60 shadow-xl motion-safe:animate-soft-pop sm:right-6 sm:bottom-6" onClick={handleRecorder}
             aria-label={t("stopFloating")}><Square size={15} fill="currentColor" aria-hidden="true" /> {t("stopRecording")}</Button>
         ) : null}
-        <main ref={pageMotionRef} className="content relative z-10 mx-auto w-full max-w-400 px-3 pt-4 pb-25 sm:px-5 sm:py-6 xl:px-8">
+        <main ref={pageMotionRef} className="content relative z-10 mx-auto w-full max-w-380 px-4 pt-6 pb-28 sm:px-7 sm:py-9 lg:px-10 lg:py-11 2xl:px-14 2xl:py-14">
           {view === 'practice' ? (
             <PracticeView
               current={current}
