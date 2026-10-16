@@ -1,30 +1,35 @@
 #!/usr/bin/env node
 /**
- * Inspect actual unpacked macOS/Windows Electron artifacts. No binary launch:
+ * Inspect unpacked Linux/macOS/Windows bundles and Linux installer outputs. No binary launch:
  * hosted runners do not guarantee an interactive OS user session.
  */
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
-import { readFile, readdir, stat } from 'node:fs/promises';
+import { open, readFile, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 
 const platform=process.platform;
-if(platform!=='darwin'&&platform!=='win32')throw Error('Packaging checks require macOS or Windows');
+if(platform!=='darwin'&&platform!=='win32'&&platform!=='linux')throw Error('Packaging checks require Linux, macOS or Windows');
 const release=path.resolve('release');
 const directories=(await readdir(release,{withFileTypes:true})).filter(entry=>entry.isDirectory()).map(entry=>entry.name);
 const base=platform==='win32'
   ? directories.find(name=>name==='win-unpacked')
-  : directories.find(name=>/^mac(?:-arm64|-x64)?$/.test(name));
+  : platform==='darwin'
+    ? directories.find(name=>/^mac(?:-arm64|-x64)?$/.test(name))
+    : directories.find(name=>/^linux(?:-arm64|-x64)?-unpacked$/.test(name));
 assert.ok(base,'Unpacked '+platform+' desktop output missing from '+release+': '+directories.join(','));
-const appRoot=platform==='win32'
-  ? path.join(release,base)
-  : path.join(release,base,'Voxnelo.app');
-const contentDir=platform==='win32'?appRoot:path.join(appRoot,'Contents');
-const resources=path.join(contentDir,platform==='win32'?'resources':'Resources');
+const appRoot=platform==='darwin'
+  ? path.join(release,base,'Voxnelo.app')
+  : path.join(release,base);
+const contentDir=platform==='darwin'?path.join(appRoot,'Contents'):appRoot;
+const resources=path.join(contentDir,platform==='darwin'?'Resources':'resources');
 const executable=platform==='win32'
   ? path.join(appRoot,'Voxnelo.exe')
-  : path.join(contentDir,'MacOS','Voxnelo');
+  : platform==='darwin'
+    ? path.join(contentDir,'MacOS','Voxnelo')
+    : path.join(appRoot,existsSync(path.join(appRoot,'voxnelo'))?'voxnelo':'Voxnelo');
 const bundle=path.join(resources,'app.asar');
 const icon=path.join(resources,'icons','voxnelo.png');
 const requiredFiles: Array<[string, string, number]> = [['native executable',executable,1024],['asar archive',bundle,1024],['branded PNG',icon,256]];
@@ -59,12 +64,41 @@ if(existsSync(asrStagingManifest)){
   assert.equal(existsSync(copiedAsrManifest),false,'Unexpected ASR model manifest in default package');
   asrChecks.push('no unreviewed default ASR payload');
 }
+const linuxChecks:string[]=[];
+if(platform==='linux'){
+  const files=(await readdir(release)).filter(name=>name.toLowerCase().includes('voxnelo'));
+  const deb=files.find(name=>name.endsWith('.deb'));
+  const appImage=files.find(name=>name.endsWith('.AppImage'));
+  assert.ok(deb,'Missing Voxnelo .deb installer in release/');
+  assert.ok(appImage,'Missing Voxnelo .AppImage installer in release/');
+  const readPrefix=async(filename:string,length:number)=>{
+    const handle=await open(filename,'r');
+    try{
+      const bytes=Buffer.alloc(length);
+      const read=await handle.read(bytes,0,length,0);
+      assert.equal(read.bytesRead,length,'Incomplete installer header: '+filename);
+      return bytes;
+    }finally{await handle.close();}
+  };
+  const debPath=path.join(release,deb);
+  const appImagePath=path.join(release,appImage);
+  for(const filename of [debPath,appImagePath]){
+    const info=await stat(filename);
+    assert.ok(info.isFile()&&info.size>1024*1024,'Installer missing or unexpectedly small: '+filename);
+  }
+  assert.equal((await readPrefix(debPath,8)).toString('ascii'),'!<arch>\n','Invalid Debian archive');
+  assert.equal((await readPrefix(appImagePath,4)).toString('hex'),'7f454c46','AppImage is not an ELF executable');
+  const metadata=spawnSync('dpkg-deb',['--field',debPath,'Package'],{encoding:'utf8'});
+  assert.equal(metadata.status,0,'dpkg-deb could not inspect installer: '+metadata.stderr);
+  assert.match(metadata.stdout.trim(),/^voxnelo$/i,'Wrong Debian package identity');
+  linuxChecks.push('deb archive and package identity','AppImage ELF header','both installers nonempty');
+}
 const report={
   platform,
   output:base,
   appRoot:path.relative(path.resolve('.'),appRoot),
   icon:path.relative(path.resolve('.'),icon),
-  tested:['native executable','asar','bundled branded icon','brand PNG magic',...(platform==='darwin'?['CFBundleIdentifier','NSMicrophoneUsageDescription']:[]),...asrChecks],
+  tested:['native executable','asar','bundled branded icon','brand PNG magic',...(platform==='darwin'?['CFBundleIdentifier','NSMicrophoneUsageDescription']:[]),...linuxChecks,...asrChecks],
   launched:false,
 };
 console.log('Cross-platform package integrity passed:',JSON.stringify(report));
