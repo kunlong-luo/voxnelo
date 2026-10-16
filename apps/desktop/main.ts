@@ -5,6 +5,7 @@ import { APP_ORIGIN, APP_SCHEME, THEME_BACKGROUND, WINDOW_SIZE } from '@voxnelo/
 import { isAudioOnlyRequest, APP_HOST, isTrustedUrl, resolveLocalFile } from './security';
 import { LinuxEnglishSpeech } from './linuxSpeech';
 import { LINUX_DESKTOP_FILENAME, resolveLinuxIconPath } from './linuxAppIdentity';
+import { OfflineAsr } from './offlineAsr';
 
 // Electron 推荐的标准安全自定义协议：允许 IndexedDB 使用持久且一致的 origin。
 // 注册必须发生在 app ready 之前；不允许 bypassCSP。
@@ -22,6 +23,11 @@ const isDev = !app.isPackaged && Boolean(devServer);
 const rendererDir = path.join(__dirname, '..', 'dist');
 const appOrigin = APP_ORIGIN;
 const linuxSpeech = new LinuxEnglishSpeech();
+// Developer-only opt-in until model redistribution, native modules and signing are verified.
+const offlineAsr = new OfflineAsr(
+  app.isPackaged ? null : process.env.VOXNELO_ASR_MODEL_DIR ?? null,
+  app.isPackaged ? null : process.env.VOXNELO_ASR_ADDON_PATH ?? null,
+);
 
 /**
  * Window IPC is intentionally narrower than a general-purpose ipcRenderer bridge.
@@ -58,6 +64,26 @@ function registerLinuxSpeech(): void {
   });
   ipcMain.on('voxnelo:speech:cancel', (event) => {
     if (process.platform === 'linux' && authorizedWindow(event)) linuxSpeech.cancel();
+  });
+}
+
+function registerOfflineAsr():void{
+  ipcMain.handle('voxnelo:asr:capabilities',(event)=>{
+    if(!authorizedWindow(event))return {available:false,reason:'not-configured'};
+    return offlineAsr.capabilities();
+  });
+  ipcMain.handle('voxnelo:asr:start',async(event)=>{
+    const window=authorizedWindow(event);
+    if(!window)return {ok:false,reason:'failed'};
+    return offlineAsr.open(window.webContents);
+  });
+  ipcMain.on('voxnelo:asr:pcm',(event,id:unknown,samples:unknown)=>{
+    const window=authorizedWindow(event);
+    if(window)offlineAsr.push(window.webContents,id,samples);
+  });
+  ipcMain.on('voxnelo:asr:stop',(event,id:unknown)=>{
+    const window=authorizedWindow(event);
+    if(window)offlineAsr.stop(window.webContents,id);
   });
 }
 
@@ -130,6 +156,7 @@ async function createWindow(): Promise<void> {
 app.whenReady().then(async () => {
   registerWindowControls();
   registerLinuxSpeech();
+  registerOfflineAsr();
   registerLocalProtocol();
   session.defaultSession.setPermissionRequestHandler((webContents, permission, callback, details) => {
     const { mediaTypes } = details as { mediaTypes?: unknown };
@@ -147,5 +174,6 @@ app.whenReady().then(async () => {
 
 app.on('window-all-closed', () => {
   linuxSpeech.cancel();
+  offlineAsr.close();
   if (process.platform !== 'darwin') app.quit();
 });
