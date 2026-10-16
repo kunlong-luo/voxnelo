@@ -241,8 +241,8 @@ describe('useRecorder', () => {
     const stopOldTrack = vi.fn(), stopNewTrack = vi.fn();
     let count = 0;
     mockDevices(() => {
-      count += 1;
-      return Promise.resolve({ getTracks: () => [{ stop: count === 1 ? stopOldTrack : stopNewTrack }] } as unknown as MediaStream);
+      const session = ++count;
+      return Promise.resolve({ getTracks: () => [{ stop: session === 1 ? stopOldTrack : stopNewTrack }] } as unknown as MediaStream);
     });
     render(<Harness />);
     await act(async () => { await latest.start(); });
