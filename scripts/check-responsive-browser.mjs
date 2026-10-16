@@ -1,0 +1,110 @@
+#!/usr/bin/env node
+// Browser geometry and screenshot smoke; Node 22 WebSocket + Chromium, no deps.
+import assert from 'node:assert/strict';
+import { spawn, spawnSync } from 'node:child_process';
+import { createServer } from 'node:http';
+import { mkdtemp, readFile, mkdir, writeFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+
+const out = path.resolve('browser-layout'), root=path.resolve('dist');
+const sizes = [[320,640],[390,844],[640,720],[800,610],[1160,760],[1440,900]];
+const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.json':'application/json','.png':'image/png','.woff2':'font/woff2'};
+const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+const bins=[process.env.CHROME_BIN,'google-chrome','google-chrome-stable','chromium','chromium-browser'].filter(Boolean);
+const executable=bins.find(bin=>spawnSync(bin.includes('/')?'test':'which',[bin.includes('/')?'-x':bin,...(bin.includes('/')?[]:[])].filter(Boolean)).status===0);
+// In the absolute path case, test -x requires the executable argument.
+const chromeBin=executable||bins.find(bin=>bin.includes('/')&&spawnSync('test',['-x',bin]).status===0);
+if(!chromeBin)throw Error('Chromium not found; set CHROME_BIN');
+await mkdir(out,{recursive:true});
+const server=createServer(async(req,res)=>{
+  const url=new URL(req.url||'/','http://localhost');
+  const file=path.resolve(root,'.'+(url.pathname==='/'?'/index.html':decodeURIComponent(url.pathname)));
+  if(!file.startsWith(root+path.sep)){res.writeHead(403).end();return;}
+  try {const data=await readFile(file);res.writeHead(200,{'Content-Type':mime[path.extname(file)]||'application/octet-stream'}).end(data);}
+  catch{res.writeHead(404).end();}
+});
+await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+const url='http://127.0.0.1:'+server.address().port+'/index.html';
+const profile=await mkdtemp(path.join(tmpdir(),'voxnelo-cdp-'));
+let chrome, ws, seq=0;const pending=new Map(), report=[];
+const send=(method,params={})=>new Promise((resolve,reject)=>{
+  const id=++seq, timeout=setTimeout(()=>{pending.delete(id);reject(Error('CDP timeout '+method));},12000);
+  pending.set(id,{resolve,reject,timeout});ws.send(JSON.stringify({id,method,params}));
+});
+const evalJs=async expression=>{
+  const x=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});
+  if(x.exceptionDetails)throw Error('CDP expression failed: '+x.exceptionDetails.text);
+  return x.result?.value;
+};
+const until=async expression=>{
+  for(let i=0;i<70;i++){try{if(await evalJs(expression))return;}catch{}await sleep(100);}
+  throw Error('Condition never met: '+expression);
+};
+const activate=async(index,klass)=>{
+  await evalJs('(()=>{const nav=document.querySelector(innerWidth<640?".mobileNav":".sidebar nav");nav.querySelectorAll("button")['+index+'].click()})()');
+  await until('!!document.querySelector("'+klass+'")');
+};
+const metrics=async()=>{
+  return await evalJs('(()=>{const d=document.documentElement,m=document.querySelector(".mainArea"),g=document.querySelector(".practiceLayout"),b=document.querySelector(".recordAction"),r=b?.getBoundingClientRect();return {scrollWidth:d.scrollWidth,clientWidth:d.clientWidth,mainWidth:Math.round(m.getBoundingClientRect().width),containerName:getComputedStyle(m).containerName,columns:g?getComputedStyle(g).gridTemplateColumns.split(" ").length:null,sidebar:getComputedStyle(document.querySelector(".sidebar")).display!=="none",dock:getComputedStyle(document.querySelector(".mobileNav")).display!=="none",micWidth:Math.round(r?.width||0),micInBounds:!r||(r.left>=-1&&r.right<=innerWidth+1)}})()');
+};
+const shot=async(w,h,name)=>{
+  const m=await metrics();
+  report.push({size:[w,h],page:name,...m});
+  assert.ok(m.scrollWidth<=m.clientWidth+1,'horizontal overflow '+w+'x'+h+' '+name+': '+JSON.stringify(m));
+  assert.ok(m.containerName.includes('workspace'),'named container query not applied');
+  assert.equal(m.dock,w<640,'wrong bottom nav visibility at '+w);
+  assert.equal(m.sidebar,w>=640,'wrong sidebar visibility at '+w);
+  if(name==='practice'){
+    assert.equal(m.columns,m.mainWidth>=840?2:1,'wrong workbench columns at '+w);
+    assert.ok(m.micWidth>=40&&m.micInBounds,'mic clipped at '+w);
+  }
+  const png=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  await writeFile(path.join(out,w+'x'+h+'-'+name+'.png'),Buffer.from(png.data,'base64'));
+};
+try{
+  chrome=spawn(chromeBin,['--headless=new','--disable-gpu','--no-sandbox','--disable-dev-shm-usage',
+    '--no-first-run','--remote-allow-origins=*','--remote-debugging-port=0','--user-data-dir='+profile,'--window-size=1440,900',url],{stdio:'ignore'});
+  let port=0;
+  for(let i=0;i<100;i++){try{const s=await readFile(path.join(profile,'DevToolsActivePort'),'utf8');port=Number(s.split('\n')[0]);if(port)break;}catch{}await sleep(100);}
+  if(!port)throw Error('Chrome remote debugging did not start');
+  const targets=await(await fetch('http://127.0.0.1:'+port+'/json/list')).json();
+  const target=targets.find(t=>t.type==='page');
+  if(!target)throw Error('No Chrome page');
+  ws=new WebSocket(target.webSocketDebuggerUrl);
+  await new Promise((resolve,reject)=>{ws.addEventListener('open',resolve,{once:true});ws.addEventListener('error',reject,{once:true});});
+  ws.addEventListener('message',event=>{const p=JSON.parse(event.data),q=pending.get(p.id);if(!q)return;clearTimeout(q.timeout);pending.delete(p.id);p.error?q.reject(Error(JSON.stringify(p.error))):q.resolve(p.result||{});});
+  await send('Page.enable');await send('Runtime.enable');
+  await until('!!document.querySelector(".practiceLayout")');
+  for(const [w,h] of sizes){
+    await send('Emulation.setDeviceMetricsOverride',{width:w,height:h,deviceScaleFactor:1,mobile:false});
+    await sleep(150);
+    await shot(w,h,'practice');
+    await activate(4,'.settingsPage');await shot(w,h,'settings');
+    await activate(1,'.libraryPage');await shot(w,h,'library');
+    await activate(0,'.practiceLayout');
+  }
+  await send('Page.addScriptToEvaluateOnNewDocument',{source:
+    'Object.defineProperty(navigator,"mediaDevices",{configurable:true,value:{getUserMedia:async()=>({getTracks:()=>[{stop(){}}]})}});'+
+    'window.MediaRecorder=class {static isTypeSupported(){return true;}state="inactive";mimeType="audio/webm";onstop=null;start(){this.state="recording";}stop(){this.state="inactive";this.onstop?.();}};'
+  });
+  await send('Emulation.setDeviceMetricsOverride',{width:320,height:640,deviceScaleFactor:1,mobile:false});
+  await send('Page.reload',{ignoreCache:true});await until('!!document.querySelector(".recordAction")');
+  await evalJs('document.querySelector(".recordAction").click()');
+  await until('!!document.querySelector(".recordingQuickStop")');
+  const s=await evalJs('(()=>{const a=document.querySelector(".recordingQuickStop").getBoundingClientRect(),b=document.querySelector(".mobileNav").getBoundingClientRect();return{top:a.top,bottom:a.bottom,right:a.right,dockTop:b.top}})()');
+  assert.ok(s.top>=0&&s.right<=321&&s.bottom<=s.dockTop,'recording stop hidden behind mobile nav '+JSON.stringify(s));
+  await evalJs('document.querySelector(".recordingQuickStop").click()');
+  await until('!document.querySelector(".recordingQuickStop")');
+  report.push({size:[320,640],page:'recording stop',...s});
+  await writeFile(path.join(out,'report.json'),JSON.stringify(report,null,2));
+  console.log('Browser responsive check passed: '+report.length+' samples with screenshots.');
+}catch(err){
+  await writeFile(path.join(out,'report.json'),JSON.stringify({error:String(err.stack||err),report},null,2));
+  console.error(err);process.exitCode=1;
+}finally{
+  if(ws&&ws.readyState===WebSocket.OPEN)ws.close();
+  if(chrome)chrome.kill();
+  await new Promise(resolve=>server.close(resolve));
+  await rm(profile,{recursive:true,force:true});
+}
