@@ -293,7 +293,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
               onBackToPractice={() => nav('practice')}
             />
           ) : (
-            <LibraryView
+            <LibraryView key={view}
               view={view}
               states={states}
               events={events}
