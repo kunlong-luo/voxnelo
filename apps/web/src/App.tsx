@@ -257,7 +257,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
           <Button variant="destructive" className="recordingQuickStop fixed right-4 bottom-24 z-60 shadow-xl motion-safe:animate-soft-pop sm:right-6 sm:bottom-6" onClick={handleRecorder}
             aria-label={t("stopFloating")}><Square size={15} fill="currentColor" aria-hidden="true" /> {t("stopRecording")}</Button>
         ) : null}
-        <main ref={pageMotionRef} className="content relative z-10 mx-auto w-full max-w-380 px-3 pt-3 pb-28 sm:px-7 sm:py-9 lg:px-10 lg:py-8 2xl:px-14 2xl:py-12">
+        <main ref={pageMotionRef} className="content relative z-10 mx-auto w-full max-w-380 px-3 pt-3 pb-28 sm:px-7 sm:py-4 lg:px-10 lg:py-8 2xl:px-14 2xl:py-12">
           {view === 'practice' ? (
             <PracticeView
               current={current}
