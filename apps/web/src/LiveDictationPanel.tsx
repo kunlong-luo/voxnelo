@@ -29,6 +29,7 @@ export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
       <span aria-live="polite" className={cn('font-medium',!dictation.finalText&&'text-muted-foreground')}>{dictation.finalText||(!dictation.interimText?t('dictationPlaceholder'):'')}</span>
       {dictation.interimText&&<span className="ml-1 text-translation-ink" aria-label={t('dictationInterim')}>{dictation.interimText}</span>}
     </div>
+    {!dictation.supported&&<p role="status" className="mt-1.5 text-[11px] leading-4 text-translation-ink">{t('dictationUnsupported')}</p>}
     {dictation.error&&<p role="status" className="mt-1.5 text-[11px] leading-4 text-translation-ink">{dictation.error}</p>}
     {dictation.localPack==='downloadable'&&dictation.mode==='local'&&<Button variant="outline" size="sm" className="mt-2 h-8 text-[11px]" onClick={()=>void dictation.installLocal()} disabled={checking}><Download size={14}/>{t('dictationInstallPack')}</Button>}
     {dictation.supported&&dictation.browserModeAvailable&&!listening&&!checking&&<div className="mt-1.5 flex flex-wrap items-center gap-1.5">
