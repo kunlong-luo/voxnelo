@@ -6,6 +6,7 @@ import { isAudioOnlyRequest, APP_HOST, isTrustedUrl, resolveLocalFile } from './
 import { LinuxEnglishSpeech } from './linuxSpeech';
 import { LINUX_DESKTOP_FILENAME, resolveLinuxIconPath } from './linuxAppIdentity';
 import { OfflineAsr } from './offlineAsr';
+import { resolveAsrAssets } from './asrAssets';
 
 // Electron 推荐的标准安全自定义协议：允许 IndexedDB 使用持久且一致的 origin。
 // 注册必须发生在 app ready 之前；不允许 bypassCSP。
@@ -23,11 +24,15 @@ const isDev = !app.isPackaged && Boolean(devServer);
 const rendererDir = path.join(__dirname, '..', 'dist');
 const appOrigin = APP_ORIGIN;
 const linuxSpeech = new LinuxEnglishSpeech();
-// Developer-only opt-in until model redistribution, native modules and signing are verified.
-const offlineAsr = new OfflineAsr(
-  app.isPackaged ? null : process.env.VOXNELO_ASR_MODEL_DIR ?? null,
-  app.isPackaged ? null : process.env.VOXNELO_ASR_ADDON_PATH ?? null,
-);
+// Production may use vetted resources bundled explicitly by the release builder.
+// No network download, renderer-provided paths, or implicit native loading.
+const asrAssets = resolveAsrAssets({
+  isPackaged: app.isPackaged,
+  resourcesPath: process.resourcesPath,
+  developerModelDir: process.env.VOXNELO_ASR_MODEL_DIR,
+  developerAddonPath: process.env.VOXNELO_ASR_ADDON_PATH,
+});
+const offlineAsr = new OfflineAsr(asrAssets.modelDir, asrAssets.addonPath);
 
 /**
  * Window IPC is intentionally narrower than a general-purpose ipcRenderer bridge.
