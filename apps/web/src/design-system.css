@@ -54,13 +54,13 @@
 :root {
   color-scheme: light;
   --radius: 1.35rem;
-  --background: #f5f7f2;
+  --background: #f7f8f5;
   --foreground: #273f3a;
   --card: #ffffff;
   --card-foreground: #273f3a;
   --popover: #264a44;
   --popover-foreground: #ffffff;
-  --primary: #367e6e;
+  --primary: #477f83;
   --primary-foreground: #ffffff;
   --secondary: #e8f2ea;
   --secondary-foreground: #31665b;
@@ -71,7 +71,7 @@
   --destructive: #b95662;
   --border: #dce7de;
   --ring: #4a9787;
-  --sidebar: #eaf2eb;
+  --sidebar: #e8f0ea;
   --sidebar-foreground: #324e45;
   --sidebar-accent: #d6e7d9;
   --brand-blush: #f6e8e3;
@@ -90,6 +90,7 @@
   --mic-halo: #50a68d;
   --mic-foreground: #ffffff;
   --canvas-glow: rgba(204,226,218,.38);
+  --workspace-gradient: linear-gradient(120deg,#f7f8f5 0%,#fbfcf9 72%,#edf3ee 100%);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'Noto Sans CJK SC', sans-serif;
 }
 :root[data-theme="sunset"] {
@@ -129,6 +130,7 @@
   --mic-halo: #50ae99;
   --mic-foreground: #1a202c;
   --canvas-glow: rgba(244,192,164,.35);
+  --workspace-gradient: linear-gradient(125deg,#f7f1ec 0%,#fff8f1 52%,#f0eee8 100%);
 }
 @layer base {
   * { box-sizing: border-box; border-color: var(--border); }
