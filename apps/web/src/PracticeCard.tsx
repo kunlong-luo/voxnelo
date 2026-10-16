@@ -1,0 +1,72 @@
+import { ArrowRight, Bookmark, BookOpen, ChevronLeft, CircleHelp, Heart } from 'lucide-react';
+import { SENTENCES, type Sentence } from '@voxnelo/learning';
+import type { PracticeViewProps } from './PracticeTypes';
+import { PracticeControlPanel } from './PracticeControlPanel';
+import { WaveformArt } from './WaveformArt';
+import { Tooltip } from './Tooltip';
+import { useI18n, type TranslationKey } from './i18n';
+import { Badge } from './components/ui/badge';
+import { Button } from './components/ui/button';
+import { Card } from './components/ui/card';
+import { Progress } from './components/ui/progress';
+import { cn } from './lib/utils';
+
+type PracticeCardProps = Omit<PracticeViewProps, 'stats'|'notice'|'onChooseRelated'|'onDismissNotice'>;
+
+const topics:Record<Sentence['topic'],TranslationKey> = {
+  greetings:'topicGreetings',personal:'topicPersonal',needs:'topicNeeds',
+  learning:'topicLearning',daily:'topicDaily'
+};
+
+/** Single glass surface, typographic hierarchy and persistent lesson controls. */
+export function PracticeCard({current,currentState,speed,showIpa,recorder,recordingBusy,canGoPrevious,
+  onToggleIpa,onSpeak,onToggleSpeed,onRecord,onToggleFlag,onNext,onPrevious}:PracticeCardProps) {
+  const {t}=useI18n();
+  const position=SENTENCES.findIndex(item=>item.id===current.id);
+  const index=position<0?1:position+1;
+  const favorite=Boolean(currentState?.favorite);
+  const review=Boolean(currentState?.review);
+  return (
+      <Card className="practiceCard referenceLesson flex min-h-[min(700px,calc(100dvh-120px))] min-w-0 flex-1 flex-col overflow-visible border-glass-edge bg-glass-surface shadow-glass backdrop-blur-[var(--glass-blur)]">
+        <header className="cardHeader lessonHeader flex min-h-19 flex-wrap items-center justify-between gap-3 px-5 pt-5 pb-0 sm:px-7 sm:pt-6">
+          <div className="lessonProgress flex min-w-22 flex-col gap-2" aria-label={t('coursePosition',{index,total:SENTENCES.length})}>
+            <span className="lessonCount text-sm font-extrabold tracking-tight tabular-nums text-foreground">{String(index).padStart(2,'0')} <span className="font-medium text-muted-foreground">/ {SENTENCES.length}</span></span>
+            <Progress label={t('coursePosition',{index,total:SENTENCES.length})} value={index} max={SENTENCES.length} className="h-1.5 w-24"/>
+          </div>
+          <div className="lessonHeaderActions flex min-w-0 items-center gap-2">
+            <Badge className="pill max-w-44 truncate max-[950px]:max-w-29"><BookOpen size={14}/>{t(topics[current.topic])}</Badge>
+            <div className="sentenceFlags inline-flex items-center gap-1 rounded-2xl border border-border/60 bg-muted/60 p-1" role="group" aria-label={t('navFavorites')+' / '+t('navReview')}>
+              <Tooltip text={t(favorite?'favoriteRemove':'favoriteAdd')} placement="bottom">
+                <Button variant="ghost" size="icon-sm" className={cn('lessonFavorite flagButton text-muted-foreground hover:text-primary',favorite&&'bg-secondary text-primary')} onClick={()=>onToggleFlag('favorite')} aria-label={t(favorite?'favoriteRemove':'favoriteAdd')} aria-pressed={favorite}>
+                  <Heart key={favorite?'favorite-on':'favorite-off'} size={19} fill={favorite?'currentColor':'none'} className="motion-safe:animate-soft-pop"/>
+                </Button>
+              </Tooltip>
+              <Tooltip text={t(review?'reviewRemove':'reviewAdd')} placement="bottom">
+                <Button variant="ghost" size="icon-sm" className={cn('reviewIconButton flagButton text-muted-foreground hover:text-primary',review&&'bg-secondary text-primary')} onClick={()=>onToggleFlag('review')} aria-label={t(review?'reviewRemove':'reviewAdd')} aria-pressed={review}>
+                  <Bookmark key={review?'review-on':'review-off'} size={19} fill={review?'currentColor':'none'} className="motion-safe:animate-soft-pop"/>
+                </Button>
+              </Tooltip>
+            </div>
+          </div>
+        </header>
+        <div className="lessonFocus @container/lesson flex min-h-64 min-w-0 flex-1 flex-col items-center justify-center gap-4 px-4 py-6 text-center [@media(max-height:680px)]:gap-2 [@media(max-height:680px)]:py-2 @min-[560px]/workspace:px-8 @min-[700px]/workspace:min-h-[clamp(12rem,calc(100dvh-365px),20rem)]">
+          <div className="sentenceContent flex w-full flex-col items-center justify-center gap-3">
+            <span className="lessonLevel text-[11px] font-bold tracking-[.2em] text-muted-foreground uppercase">{t('speakingPractice')} · {current.level}</span>
+            <div className="sentenceHeading flex max-w-full justify-center">
+              <h1 key={current.id} className="sentenceText max-w-full text-[clamp(1.875rem,5.4cqi,2.625rem)] leading-[1.22] font-extrabold tracking-[-.018em] wrap-break-word text-sentence-ink motion-safe:animate-sentence-enter">{current.english}</h1>
+            </div>
+            <p className="translation text-base leading-7 font-medium text-translation-ink sm:text-lg">{current.chinese}</p>
+            {showIpa && <p className="ipa max-w-full text-sm leading-6 wrap-break-word text-ipa-ink">{current.ipa}</p>}
+            <Button variant="ghost" size="sm" className="subtleLink rounded-full text-xs text-primary" onClick={onToggleIpa} aria-expanded={showIpa}><CircleHelp size={14}/>{t(showIpa?'ipaHide':'ipaShow')}</Button>
+          </div>
+          <div className="wavePanel mx-auto w-full max-w-150 opacity-80 motion-safe:animate-panel-enter motion-safe:[animation-delay:90ms]"><WaveformArt/></div>
+        </div>
+        <PracticeControlPanel recorder={recorder} recordingBusy={recordingBusy} speed={speed} onSpeak={onSpeak} onToggleSpeed={onToggleSpeed} onRecord={onRecord} />
+        <footer className="cardFooter referenceFooter grid min-h-18 grid-cols-[minmax(95px,1fr)_auto_minmax(95px,1fr)] items-center gap-2 rounded-b-[var(--radius)] border-t border-border/60 bg-card/75 px-4 py-3 sm:px-6">
+          <Button variant="outline" size="sm" className="prevButton pagerButton justify-self-start text-primary" onClick={onPrevious} disabled={!canGoPrevious} aria-label={t('previous')}><ChevronLeft size={16}/>{t('previous')}</Button>
+          <span className="footerHint text-center text-[10px] text-muted-foreground max-[1050px]:hidden">{t('footerHint')}</span>
+          <Button variant="outline" size="sm" className="nextButton pagerButton col-start-3 justify-self-end text-primary" onClick={onNext} disabled={recordingBusy} aria-label={t('nextAccessible')}>{t('next')}<ArrowRight size={16}/></Button>
+        </footer>
+      </Card>
+  );
+}
