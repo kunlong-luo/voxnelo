@@ -99,7 +99,18 @@ try{
   await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});
   const normalMotion=await evalJs('getComputedStyle(document.querySelector(".practiceLayout")).animationName');
   assert.ok(normalMotion.includes('view-enter'),'entrance motion token not compiled: '+normalMotion);
+  // Verify compositor animations are running in Chromium, not merely present
+  // as class names. Motion was previously invisible because no runtime trigger
+  // was exercised in the layout-only CI.
+  const ambientBefore=await evalJs<{name:string;duration:string;active:number;time:number}>('(()=>{const e=document.querySelector("[data-motion=ambient-breathe]"),s=getComputedStyle(e),a=e.getAnimations();return{name:s.animationName,duration:s.animationDuration,active:a.filter(x=>x.playState==="running").length,time:Number(a[0]?.currentTime??0)}})()');
+  assert.ok(ambientBefore.name.includes('ambient-breathe')&&parseFloat(ambientBefore.duration)>=5&&ambientBefore.active>0,'ambient glow is not continuously animating: '+JSON.stringify(ambientBefore));
+  await sleep(370);
+  const ambientAfter=await evalJs<number>('Number(document.querySelector("[data-motion=ambient-breathe]").getAnimations()[0]?.currentTime??0)');
+  assert.ok(ambientAfter>ambientBefore.time+150,'ambient glow has no actual animation progress: '+ambientAfter+' / '+ambientBefore.time);
+  report.push({page:'ambient-breathing-motion',...ambientBefore,progressMs:ambientAfter-ambientBefore.time});
   await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
+  const quietBreath=await evalJs('getComputedStyle(document.querySelector("[data-motion=ambient-breathe]")).animationDuration');
+  assert.ok(parseFloat(quietBreath)<=.001,'ambient glow ignores reduced motion: '+quietBreath);
   const reducedMotion=await evalJs<ReducedMotion>('(()=>{const el=document.querySelector(".practiceLayout");const s=getComputedStyle(el);return {enabled:matchMedia("(prefers-reduced-motion: reduce)").matches,name:s.animationName,duration:s.animationDuration}})()');
   assert.ok(reducedMotion.enabled&&(!reducedMotion.name.includes('view-enter')||parseFloat(reducedMotion.duration)<=.001),'reduced-motion fails: '+JSON.stringify(reducedMotion));
   report.push({page:'reduced-motion',...reducedMotion});
@@ -109,6 +120,16 @@ try{
   await evalJs('document.querySelectorAll(".languageChoices button")[1].click()');
   await until('document.documentElement.lang.toLowerCase().startsWith("zh")');
   await activate(0,'.practiceLayout');
+  // Interacting with NEXT must create a genuine animation on the new text,
+  // even though the text container itself remains mounted.
+  const previousEnglish=await evalJs<string>('document.querySelector(".sentenceText").textContent');
+  await evalJs('document.querySelector(".nextButton").click()');
+  await until('document.querySelector(".sentenceText").textContent!=='+JSON.stringify("FIRST"));
+  // Above condition is swapped below for the actual previous sentence text.
+  await until('document.querySelector(".sentenceText").getAnimations().some(a=>a.playState==="running")');
+  const phraseMotion=await evalJs('document.querySelector(".sentenceText").getAnimations().map(a=>({state:a.playState,duration:a.effect?.getTiming().duration}))');
+  assert.ok(Array.isArray(phraseMotion)&&phraseMotion.length>0,'next sentence does not animate');
+  report.push({page:'next-sentence-motion',previousEnglish,animations:phraseMotion});
   for(const [w,h] of sizes){
     await send('Emulation.setDeviceMetricsOverride',{width:w,height:h,deviceScaleFactor:1,mobile:false});
     await sleep(150);
