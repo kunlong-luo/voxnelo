@@ -21,7 +21,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "arch": "depcruise --validate .dependency-cruiser.json apps packages tests",
-    "check:stable-deps": "node scripts/check-stable-dependencies.mjs",
+    "check:stable-deps": "node --experimental-strip-types scripts/check-stable-dependencies.mts",
     "perf:budget": "node scripts/check-performance-budget.mjs",
     "perf:report": "node scripts/check-performance-budget.mjs --report-only",
     "test": "vitest run",
@@ -34,7 +34,7 @@
     "pack:mac": "pnpm build && electron-builder --mac dmg",
     "icon:linux:dev": "node scripts/register-linux-dev-launcher.mjs",
     "icon:linux:dev:remove": "node scripts/register-linux-dev-launcher.mjs --remove",
-    "ui:check": "node scripts/check-ui-style-architecture.mjs"
+    "ui:check": "node --experimental-strip-types scripts/check-ui-style-architecture.mts"
   },
   "dependencies": {
     "dexie": "^4.2.0",
