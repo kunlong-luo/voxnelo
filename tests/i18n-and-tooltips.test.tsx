@@ -43,7 +43,7 @@ describe('Chinese-first bilingual UI (V0.1 PRD F001)', () => {
     expect(screen.getByRole('button',{name:'开口跟读'})).toBeTruthy();
     fireEvent.click(screen.getByRole('button',{name:'设置'}));
     expect(screen.getByRole('heading',{name:'界面语言'})).toBeTruthy();
-    expect(screen.getByRole('button',{name:/简体中文/}).getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByRole('button',{name:/^简体中文/}).getAttribute('aria-pressed')).toBe('true');
     fireEvent.click(screen.getByRole('button',{name:/English/}));
     expect(document.documentElement.lang).toBe('en-US');
     expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('en-US');
