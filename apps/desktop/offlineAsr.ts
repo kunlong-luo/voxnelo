@@ -53,8 +53,14 @@ export class OfflineAsr {
           dispose();
         }
       });
-      worker.on('error',()=>{dispose();settle({ok:false,reason:'failed'});});
-      worker.on('exit',()=>{dispose();settle({ok:false,reason:'failed'});});
+      const workerFailed=()=>{
+        if(this.session!==session)return;
+        if(session.ready&&!owner.isDestroyed())owner.send('voxnelo:asr:error',{sessionId:id});
+        dispose();
+        settle({ok:false,reason:'failed'});
+      };
+      worker.on('error',workerFailed);
+      worker.on('exit',workerFailed);
       owner.once('destroyed',dispose);
     });
   }
