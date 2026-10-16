@@ -10,8 +10,8 @@ export function PracticeView({current,currentState,stats,speed,showIpa,notice,re
   canGoPrevious,onStartDictation,onToggleIpa,onSpeak,onToggleSpeed,onRecord,onToggleFlag,onNext,onPrevious,
   onChooseRelated,onDismissNotice}:PracticeViewProps) {
   const {t}=useI18n();
-  return <div className="practiceLayout layoutWorkbench grid min-w-0 grid-cols-1 items-start gap-3 motion-safe:animate-view-enter @min-[840px]/workspace:grid-cols-[minmax(0,1fr)_minmax(220px,28%)] @min-[1040px]/workspace:gap-5">
-    <div className="practiceColumn flex min-w-0 flex-col gap-3">
+  return <div className="practiceLayout layoutWorkbench grid min-w-0 grid-cols-1 items-start gap-5 motion-safe:animate-view-enter @min-[840px]/workspace:grid-cols-[minmax(0,1fr)_minmax(230px,28%)] @min-[1040px]/workspace:gap-7 @min-[1200px]/workspace:gap-9">
+    <div className="practiceColumn flex min-w-0 flex-col gap-5">
       <PracticeCard current={current} currentState={currentState} speed={speed} showIpa={showIpa}
         recorder={recorder} dictation={dictation} recordingBusy={recordingBusy} canGoPrevious={canGoPrevious} onStartDictation={onStartDictation}
         onToggleIpa={onToggleIpa} onSpeak={onSpeak} onToggleSpeed={onToggleSpeed}
