@@ -60,6 +60,15 @@ describe('Nordic three-column learning workspace', () => {
       />,
     );
 
+    // These assertions protect the container-driven layout contract; actual
+    // pixel overflow and viewport behavior still require browser screenshots.
+    const layout = container.querySelector('.practiceLayout');
+    expect(layout?.classList.contains('grid-cols-1')).toBe(true);
+    expect(layout?.className).toContain('@min-[840px]/workspace:grid-cols-');
+    expect(container.querySelector('.lessonFocus')?.classList.contains('@container/lesson')).toBe(true);
+    expect(container.querySelector('.referenceInsights')?.className).toContain('@min-[600px]/workspace:grid-cols-2');
+    expect(container.querySelector('.practiceCard')?.className).not.toContain('min-h-[700px]');
+
     const footer = container.querySelector('.referenceFooter');
     expect(footer?.querySelectorAll('.pagerButton')).toHaveLength(2);
     expect(container.querySelectorAll('.actionRail > .actionSlot')).toHaveLength(5);

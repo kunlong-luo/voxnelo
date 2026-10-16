@@ -50,3 +50,68 @@ jobs:
         run: node scripts/check-pages-artifact.mjs
       - name: Renderer size budget
         run: pnpm perf:budget
+      - name: Ensure CJK fonts for bilingual screenshot checks
+        run: |
+          if ! fc-match 'Noto Sans CJK SC' | grep -q 'NotoSansCJK'; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq fonts-noto-cjk
+          fi
+      - name: Responsive Chromium screenshots
+        run: node scripts/check-responsive-browser.mjs
+      - name: Install X11 tools for native Electron smoke
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb xdotool openbox
+      - name: Native Linux Electron window smoke
+        run: xvfb-run -a -s "-screen 0 1600x1000x24" node scripts/check-electron-window.mjs
+      - name: Native Electron 125 percent DPI
+        run: VOXNELO_DPI_SCALE=1.25 xvfb-run -a -s "-screen 0 2400x1600x24" node scripts/check-electron-window.mjs
+      - name: Native Electron 150 percent DPI
+        run: VOXNELO_DPI_SCALE=1.5 xvfb-run -a -s "-screen 0 2400x1600x24" node scripts/check-electron-window.mjs
+      - name: Upload Electron desktop evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-electron-evidence
+          path: desktop-evidence/
+          retention-days: 14
+          if-no-files-found: ignore
+      - name: Upload responsive layout evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-layout-evidence
+          path: browser-layout/
+          retention-days: 14
+          if-no-files-found: ignore
+
+  desktop-package:
+    name: Desktop package integrity (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Setup pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          version: 12.11.2
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build renderer and Electron
+        run: pnpm build
+      - name: Package unsigned native app (unpacked)
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: pnpm exec electron-builder --dir --publish never
+      - name: Assert bundle and Voxnelo identity
+        run: node scripts/check-desktop-package.mjs

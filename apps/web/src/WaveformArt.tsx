@@ -16,7 +16,7 @@ const ribbons = Array.from({ length: 9 }, (_, line) => {
 
 export function WaveformArt() {
   return (
-    <svg className="waveformArt h-auto max-h-22 w-full" viewBox="0 0 780 132" preserveAspectRatio="none"
+    <svg className="waveformArt h-auto max-h-22 w-full [@media(max-height:680px)]:max-h-12" viewBox="0 0 780 132" preserveAspectRatio="none"
       aria-hidden="true" focusable="false">
       <defs>
         <linearGradient id="nordicRhythm" x1="0" y1="0" x2="1" y2="0">

@@ -1,4 +1,4 @@
-import { ArrowRight, Bookmark, BookOpen, ChevronLeft, ChevronRight, CircleHelp, Coffee, Heart, Lightbulb, MessageCircle, Mic, ShieldCheck, Square, Turtle, Volume2, VolumeX, X } from 'lucide-react';
+import { ArrowRight, Bookmark, BookOpen, ChevronLeft, ChevronRight, CircleHelp, Coffee, Heart, Lightbulb, MessageCircle, Mic, LoaderCircle, ShieldCheck, Square, Turtle, Volume2, VolumeX, X } from 'lucide-react';
 import { SENTENCES, type LearningState, type LearningStats, type Sentence } from '@voxnelo/learning';
 import type { useRecorder } from './useRecorder';
 import { RecordingPlayback } from './RecordingPlayback';
@@ -29,8 +29,8 @@ const tips:Record<Sentence['topic'],TranslationKey> = {
   greetings:'tipGreetings',personal:'tipPersonal',needs:'tipNeeds',
   learning:'tipLearning',daily:'tipDaily'
 };
-const utilityButton = 'size-11 rounded-2xl border border-border/65 bg-card/80 text-primary shadow-sm hover:bg-accent hover:shadow-md sm:size-12';
-const minorCaption = 'mt-2 text-center text-[11px] font-semibold leading-4 text-muted-foreground';
+const utilityButton = 'size-10 rounded-2xl border border-border/65 bg-card/80 text-primary shadow-sm hover:bg-accent hover:shadow-md @min-[440px]/workspace:size-11 @min-[700px]/workspace:size-12';
+const minorCaption = 'mt-2 max-w-full text-center text-[10px] font-semibold leading-4 text-muted-foreground @min-[560px]/workspace:text-[11px]';
 function ActionSlot({children,label,detail,className}:{
   children:React.ReactNode;label:string;detail?:string;className?:string;
 }) {
@@ -65,9 +65,9 @@ export function PracticeView({
     {topic:'personal',label:t('scenePersonal'),icon:BookOpen},
     {topic:'daily',label:t('sceneDaily'),icon:Coffee},
   ] as const;
-  return <div className="practiceLayout layoutWorkbench grid min-h-[max(720px,calc(100dvh-114px))] grid-cols-[minmax(0,1fr)_clamp(198px,23vw,294px)] items-stretch gap-3 min-[1100px]:gap-5 max-[870px]:grid-cols-[minmax(0,1fr)_194px]">
+  return <div className="practiceLayout layoutWorkbench grid min-w-0 grid-cols-1 items-start gap-3 motion-safe:animate-view-enter @min-[840px]/workspace:grid-cols-[minmax(0,1fr)_minmax(220px,28%)] @min-[1040px]/workspace:gap-5">
     <div className="practiceColumn flex min-w-0 flex-col gap-3">
-      <Card className="practiceCard referenceLesson flex min-h-[700px] flex-1 flex-col overflow-visible border-white/75 bg-gradient-to-br from-card via-card to-brand-mist/35 shadow-soft">
+      <Card className="practiceCard referenceLesson flex min-h-[min(700px,calc(100dvh-120px))] min-w-0 flex-1 flex-col overflow-visible border-white/75 bg-gradient-to-br from-card via-card to-brand-mist/35 shadow-soft">
         <header className="cardHeader lessonHeader flex min-h-19 flex-wrap items-center justify-between gap-3 px-5 pt-5 pb-0 sm:px-7 sm:pt-6">
           <div className="lessonProgress flex min-w-22 flex-col gap-2" aria-label={t('coursePosition',{index,total:SENTENCES.length})}>
             <span className="lessonCount text-sm font-extrabold tracking-tight tabular-nums text-foreground">{String(index).padStart(2,'0')} <span className="font-medium text-muted-foreground">/ {SENTENCES.length}</span></span>
@@ -78,31 +78,31 @@ export function PracticeView({
             <div className="sentenceFlags inline-flex items-center gap-1 rounded-2xl border border-border/60 bg-muted/60 p-1" role="group" aria-label={t('navFavorites')+' / '+t('navReview')}>
               <Tooltip text={t(favorite?'favoriteRemove':'favoriteAdd')} placement="bottom">
                 <Button variant="ghost" size="icon-sm" className={cn('lessonFavorite flagButton text-muted-foreground hover:text-primary',favorite&&'bg-secondary text-primary')} onClick={()=>onToggleFlag('favorite')} aria-label={t(favorite?'favoriteRemove':'favoriteAdd')} aria-pressed={favorite}>
-                  <Heart size={19} fill={favorite?'currentColor':'none'}/>
+                  <Heart key={favorite?'favorite-on':'favorite-off'} size={19} fill={favorite?'currentColor':'none'} className="motion-safe:animate-soft-pop"/>
                 </Button>
               </Tooltip>
               <Tooltip text={t(review?'reviewRemove':'reviewAdd')} placement="bottom">
                 <Button variant="ghost" size="icon-sm" className={cn('reviewIconButton flagButton text-muted-foreground hover:text-primary',review&&'bg-secondary text-primary')} onClick={()=>onToggleFlag('review')} aria-label={t(review?'reviewRemove':'reviewAdd')} aria-pressed={review}>
-                  <Bookmark size={19} fill={review?'currentColor':'none'}/>
+                  <Bookmark key={review?'review-on':'review-off'} size={19} fill={review?'currentColor':'none'} className="motion-safe:animate-soft-pop"/>
                 </Button>
               </Tooltip>
             </div>
           </div>
         </header>
-        <div className="lessonFocus flex min-h-80 flex-1 flex-col items-center justify-center gap-4 px-5 py-8 text-center sm:px-9">
+        <div className="lessonFocus @container/lesson flex min-h-64 min-w-0 flex-1 flex-col items-center justify-center gap-4 px-4 py-6 text-center [@media(max-height:680px)]:gap-2 [@media(max-height:680px)]:py-2 @min-[560px]/workspace:px-8 @min-[700px]/workspace:min-h-[clamp(12rem,calc(100dvh-365px),20rem)]">
           <div className="sentenceContent flex w-full flex-col items-center justify-center gap-3">
             <span className="lessonLevel text-[11px] font-bold tracking-[.2em] text-muted-foreground uppercase">{t('speakingPractice')} · {current.level}</span>
             <div className="sentenceHeading flex max-w-full justify-center">
-              <h1 key={current.id} className="sentenceText max-w-full text-[clamp(30px,3.7vw,54px)] leading-[1.18] font-extrabold tracking-[-.055em] wrap-break-word text-foreground motion-safe:animate-sentence-enter">{current.english}</h1>
+              <h1 key={current.id} className="sentenceText max-w-full text-[clamp(1.75rem,7cqi,3.5rem)] leading-[1.18] font-extrabold tracking-[-.055em] wrap-break-word text-foreground motion-safe:animate-sentence-enter">{current.english}</h1>
             </div>
             <p className="translation text-base leading-7 text-muted-foreground sm:text-lg">{current.chinese}</p>
             {showIpa && <p className="ipa max-w-full text-sm leading-6 wrap-break-word text-muted-foreground">{current.ipa}</p>}
             <Button variant="ghost" size="sm" className="subtleLink rounded-full text-xs text-primary" onClick={onToggleIpa} aria-expanded={showIpa}><CircleHelp size={14}/>{t(showIpa?'ipaHide':'ipaShow')}</Button>
           </div>
-          <div className="wavePanel mx-auto w-full max-w-150 opacity-80"><WaveformArt/></div>
+          <div className="wavePanel mx-auto w-full max-w-150 opacity-80 motion-safe:animate-panel-enter motion-safe:[animation-delay:90ms]"><WaveformArt/></div>
         </div>
         <section className="lessonActions border-t border-border/55 bg-brand-cream/45 px-3 pt-6 pb-4 sm:px-6" aria-label={t('practiceActions')}>
-          <div className="actionRail grid grid-cols-[repeat(2,minmax(0,1fr))_minmax(75px,1.35fr)_repeat(2,minmax(0,1fr))] items-start gap-1 sm:gap-2" data-testid="practice-control-rail">
+          <div className="actionRail grid grid-cols-[repeat(2,minmax(0,1fr))_minmax(60px,1.25fr)_repeat(2,minmax(0,1fr))] items-start gap-0.5 @min-[560px]/workspace:gap-2" data-testid="practice-control-rail">
             <ActionSlot label={t('playDemo')}>
               <Tooltip text={t('playExample')}>
                 <Button variant="outline" size="icon-lg" className={utilityButton} onClick={onSpeak} aria-label={t('playExample')} disabled={recordingBusy}><Volume2 size={21}/></Button>
@@ -112,14 +112,20 @@ export function PracticeView({
               <Button variant="outline" size="icon-lg" className={utilityButton} onClick={onToggleSpeed} disabled={recordingBusy} aria-pressed={speed==='slow'} aria-label={t('speedSwitch')}><Turtle size={21}/></Button>
             </ActionSlot>
             <ActionSlot label={t(requesting?'micPermission':recording?'recordingInProgress':'micStart')} detail={t('micStartHint')}>
-              <Button variant="default" size="icon-lg" className={cn('recordAction size-17 rounded-[24px] bg-primary text-white shadow-[0_12px_28px_-10px_var(--shadow-color)] hover:scale-[1.04] hover:bg-primary/90 motion-reduce:transform-none',recording&&'ring-6 ring-destructive/15')} onClick={onRecord} disabled={recordingBusy} aria-label={t(requesting?'micPermission':recording?'micBusy':'micStart')}><Mic size={30}/></Button>
+              <div className="relative isolate grid place-items-center">
+                {recording && <span aria-hidden="true" data-motion="record-halo" className="pointer-events-none absolute -inset-2 rounded-[30px] border-2 border-destructive/55 motion-safe:animate-record-halo"/>}
+                {requesting && <span aria-hidden="true" data-motion="permission-halo" className="pointer-events-none absolute -inset-1 rounded-[26px] border-2 border-primary/40 motion-safe:animate-status-breathe"/>}
+                <Button variant="default" size="icon-lg" className={cn('recordAction relative size-15 rounded-[22px] bg-primary @min-[440px]/workspace:size-17 text-white shadow-[0_12px_28px_-10px_var(--shadow-color)] motion-safe:hover:scale-[1.04] hover:bg-primary/90 motion-reduce:transform-none',recording&&'ring-2 ring-destructive/50')} onClick={onRecord} disabled={recordingBusy} aria-label={t(requesting?'micPermission':recording?'micBusy':'micStart')}>
+                  {requesting?<LoaderCircle size={28} aria-hidden="true" className="motion-safe:animate-spin"/>:<Mic size={30} aria-hidden="true"/>}
+                </Button>
+              </div>
             </ActionSlot>
             <ActionSlot label={t('stopRecording')}>
               <Button variant="outline" size="icon-lg" className={utilityButton} onClick={onRecord} disabled={!recording} aria-label={t('stopRecording')}><Square size={20} fill="currentColor"/></Button>
             </ActionSlot>
             <RecordingPlayback key={recorder.recordingUrl??'no-recording'} src={recorder.recordingUrl}/>
           </div>
-          {recording?<p className="recordingStatus mt-5 text-center text-xs text-destructive" role="status">{t('recordingStatus')}</p>
+          {recording?<p className="recordingStatus mt-5 flex items-center justify-center gap-2 text-center text-xs font-semibold text-destructive" role="status"><span aria-hidden="true" className="size-2 rounded-full bg-destructive motion-safe:animate-status-breathe"/>{t('recordingStatus')}</p>
             :requesting?<p className="recordingStatus mt-5 text-center text-xs text-muted-foreground" role="status">{t('permissionHint')}</p>
             :<p className="practicePrompt mt-5 flex items-center justify-center gap-1 text-center text-[10px] leading-4 text-muted-foreground"><ShieldCheck size={13}/>{t('privacyRecording')}</p>}
           {recorder.error && <p className="warning mt-2 rounded-xl bg-destructive/10 p-3 text-xs text-destructive" role="alert">{recorder.error}</p>}
@@ -135,8 +141,8 @@ export function PracticeView({
         <Button variant="ghost" size="icon-sm" onClick={onDismissNotice} aria-label={t('closeNotice')}><X size={15}/></Button>
       </div>}
     </div>
-    <aside className="referenceInsights insightsColumn grid min-w-0 grid-rows-[1.3fr_1fr_.95fr_1.1fr] gap-3" aria-label={t('localOverview')}>
-      <Card className="insightCard progressCard flex min-h-0 flex-col gap-4 p-4 sm:p-5">
+    <aside className="referenceInsights insightsColumn grid min-w-0 grid-cols-1 content-start gap-3 @min-[600px]/workspace:grid-cols-2 @min-[840px]/workspace:grid-cols-1 @min-[840px]/workspace:grid-rows-[1.3fr_1fr_.95fr_1.1fr]" aria-label={t('localOverview')}>
+      <Card className="insightCard progressCard motion-safe:animate-panel-enter motion-safe:[animation-delay:100ms] flex min-h-0 flex-col gap-4 p-4 sm:p-5">
         <div className="insightHeading flex flex-wrap items-center justify-between gap-1"><h2 className="text-sm font-bold">{t('progress')}</h2><span className="insightSideNote text-[10px] text-muted-foreground">{t('localRecord')}</span></div>
         <div className="progressOverview flex flex-wrap items-center gap-3">
           <div className="progressDonut grid size-17 shrink-0 place-items-center rounded-full p-2" role="img" aria-label={t('viewedCount',{viewed:stats.viewed,total:SENTENCES.length})} style={{background:'conic-gradient(var(--primary) '+stats.viewed/SENTENCES.length*100+'%,var(--muted) 0)'}}>
@@ -147,20 +153,20 @@ export function PracticeView({
         <div className="miniMetrics grid grid-cols-3 gap-1.5"><Metric count={stats.practiced} label={t('practiced')}/><Metric count={stats.favorites} label={t('favorited')}/><Metric count={stats.review} label={t('toReview')}/></div>
         <p className="progressCopy mt-auto text-[10px] leading-4 text-muted-foreground">{t('progressDisclaimer')}</p>
       </Card>
-      <Card className="insightCard feedCard flex min-h-0 flex-col gap-3 p-4 sm:p-5">
+      <Card className="insightCard feedCard motion-safe:animate-panel-enter motion-safe:[animation-delay:165ms] flex min-h-0 flex-col gap-3 p-4 sm:p-5">
         <div className="insightHeading flex items-center justify-between gap-1"><h2 className="text-sm font-bold">{t('relatedPhrases')}</h2><span className="insightSideNote text-[10px] text-muted-foreground">{t('sameTopic')}</span></div>
-        <div className="feedStrip grid min-h-0 flex-1 content-start gap-2 overflow-auto" aria-label={t('relatedPhrasesAria')}>
+        <div className="feedStrip grid min-h-0 flex-1 content-start gap-2 @min-[840px]/workspace:overflow-auto" aria-label={t('relatedPhrasesAria')}>
           {related.map(item=><Button variant="ghost" className="feedItem h-auto min-h-10 w-full justify-between rounded-xl bg-muted/40 px-3 py-2 text-left hover:bg-accent" key={item.id} disabled={recordingBusy||!onChooseRelated} onClick={()=>onChooseRelated?.(item)} aria-label={t('practiceSentence',{english:item.english})}>
             <span className="flex min-w-0 flex-col gap-1"><span className="truncate text-[10px] font-normal text-muted-foreground">{item.chinese}</span><strong className="truncate text-[11px] text-foreground">{item.english}</strong></span><ChevronRight size={15} className="shrink-0 text-primary"/>
           </Button>)}
         </div>
       </Card>
-      <Card className="insightCard tipCard flex min-h-0 flex-col gap-3 bg-gradient-to-br from-brand-cream via-card to-brand-blush/45 p-4 sm:p-5">
+      <Card className="insightCard tipCard motion-safe:animate-panel-enter motion-safe:[animation-delay:230ms] flex min-h-0 flex-col gap-3 bg-gradient-to-br from-brand-cream via-card to-brand-blush/45 p-4 sm:p-5">
         <div className="insightHeading flex items-center gap-2"><Lightbulb size={17} className="text-primary"/><h2 className="text-sm font-bold">{t('learningTip')}</h2></div>
         <p className="text-xs leading-6 text-foreground/80">{t(tips[current.topic])}</p>
         <small className="mt-auto border-t border-border/50 pt-3 text-[10px] leading-4 text-muted-foreground">{t('tipFooter')}</small>
       </Card>
-      <Card className="insightCard sceneCard flex min-h-0 flex-col gap-3 p-4 sm:p-5">
+      <Card className="insightCard sceneCard motion-safe:animate-panel-enter motion-safe:[animation-delay:295ms] flex min-h-0 flex-col gap-3 p-4 sm:p-5">
         <div className="insightHeading flex items-center gap-2"><MessageCircle size={17} className="text-primary"/><h2 className="text-sm font-bold">{t('relatedScenes')}</h2></div>
         <div className="sceneGrid grid grid-cols-3 gap-2">
           {scenes.map(({topic,label,icon:Icon})=>{const first=SENTENCES.find(item=>item.topic===topic);return first?<Button key={topic} size="sm" variant="soft" className={'sceneThumb scene-'+topic+' h-auto min-h-18 flex-col gap-2 rounded-xl px-1 py-2 text-center'} disabled={recordingBusy||!onChooseRelated} onClick={()=>onChooseRelated?.(first)} aria-label={t('practiceScene',{name:label})}><Icon size={19}/><span className="max-w-full text-[9px] whitespace-normal">{label}</span></Button>:null})}

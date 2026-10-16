@@ -73,6 +73,30 @@ describe('PracticeView', () => {
     expect((screen.getByRole('button', { name: '换一句' }) as HTMLButtonElement).disabled).toBe(true);
   });
 
+  it('录音动效只在真实录音状态出现，申请权限时使用独立状态提示', () => {
+    const { container, rerender } = render(<PracticeView {...basePracticeProps} />);
+    expect(container.querySelector('[data-motion="record-halo"]')).toBeNull();
+    expect(container.querySelector('[data-motion="permission-halo"]')).toBeNull();
+    expect(container.querySelector('.waveformArt')?.getAttribute('aria-hidden')).toBe('true');
+    expect(container.querySelector('.practiceLayout')?.className).toContain('motion-safe:animate-view-enter');
+
+    rerender(<PracticeView {...basePracticeProps} recorder={stubRecorder({ status: 'requesting' })} recordingBusy />);
+    const requesting = container.querySelector('[data-motion="permission-halo"]');
+    expect(requesting?.getAttribute('aria-hidden')).toBe('true');
+    expect(container.querySelector('[data-motion="record-halo"]')).toBeNull();
+    expect((screen.getByRole('button', { name: '正在获取权限' }) as HTMLButtonElement).disabled).toBe(true);
+
+    rerender(<PracticeView {...basePracticeProps} recorder={stubRecorder({ status: 'recording' })} recordingBusy />);
+    const halo = container.querySelector('[data-motion="record-halo"]');
+    expect(halo?.getAttribute('aria-hidden')).toBe('true');
+    expect(container.querySelector('[data-motion="permission-halo"]')).toBeNull();
+    expect((screen.getByRole('button', { name: '结束录音' }) as HTMLButtonElement).disabled).toBe(false);
+
+    rerender(<PracticeView {...basePracticeProps} recorder={stubRecorder({ status: 'idle' })} />);
+    expect(container.querySelector('[data-motion="record-halo"]')).toBeNull();
+    expect(container.querySelector('[data-motion="permission-halo"]')).toBeNull();
+  });
+
   it('收藏态显示已收藏', () => {
     render(
       <PracticeView
