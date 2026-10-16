@@ -20,6 +20,6 @@ export function resolveAsrAssets(options: AsrAssetOptions): {modelDir:string|nul
   }
   return {
     modelDir: path.join(options.resourcesPath, 'offline-asr', 'model'),
-    addonPath: path.join(options.resourcesPath, 'offline-asr', 'native', 'sherpa-onnx.node'),
+    addonPath: path.join(options.resourcesPath, 'offline-asr', 'native', 'index.cjs'),
   };
 }

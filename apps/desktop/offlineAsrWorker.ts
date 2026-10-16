@@ -1,6 +1,6 @@
 import { parentPort, workerData } from 'node:worker_threads';
 import { createRequire } from 'node:module';
-import path from 'node:path';
+import { createOnlineRecognizerConfig } from './asrConfig';
 
 type Stream = { acceptWaveform(input:{samples:Float32Array;sampleRate:number}):void; inputFinished():void };
 type Recognizer = {
@@ -32,28 +32,12 @@ const decode=()=>{
   }
 };
 try{
-  // Package is opt-in and resolved only from developer-configured absolute path.
-  const requireFromHere=createRequire(path.join(modelDir,'package.json'));
-  const addon=requireFromHere(addonPath) as Module;
-  recognizer=new addon.OnlineRecognizer({
-    featConfig:{sampleRate:16000,featureDim:80},
-    modelConfig:{
-      transducer:{
-        encoder:path.join(modelDir,'encoder.onnx'),
-        decoder:path.join(modelDir,'decoder.onnx'),
-        joiner:path.join(modelDir,'joiner.onnx'),
-      },
-      tokens:path.join(modelDir,'tokens.txt'),
-      numThreads:2,
-      debug:0,
-      provider:'cpu',
-    },
-    decodingMethod:'greedy_search',
-    enableEndpoint:true,
-    rule1MinTrailingSilence:2.4,
-    rule2MinTrailingSilence:1.2,
-    rule3MinUtteranceLength:15,
-  });
+  // The approved CJS adapter provides OnlineRecognizer. The low-level
+  // sherpa-onnx.node binary alone does not implement this public API.
+  const requireFromHere=createRequire(addonPath);
+  const addon=requireFromHere(addonPath) as Partial<Module>;
+  if (typeof addon.OnlineRecognizer !== 'function') throw Error('Missing OnlineRecognizer adapter');
+  recognizer=new addon.OnlineRecognizer(createOnlineRecognizerConfig(modelDir));
   stream=recognizer.createStream();
   parent.postMessage({type:'ready'});
   parent.on('message',(message:Message)=>{

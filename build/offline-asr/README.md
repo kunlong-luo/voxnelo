@@ -1,22 +1,64 @@
-# Optional offline speech engine (release staging)
+# Optional offline English streaming ASR — release staging
 
-This folder is copied to the Electron application's `resources/offline-asr/` directory.
+**The public repository and ordinary release build do not ship ASR binaries or
+model weights.** The default desktop app must report that offline dictation is
+unavailable; microphone recording/playback is independent.
 
-**No model or native executable is shipped in the public repository.**
-Voxnelo will report offline dictation unavailable until a release maintainer
-has completed license, signature, native ABI and actual speech QA checks,
-then staged these files *before* packaging:
+Only a release maintainer may stage assets here before invoking electron-builder.
+They must separately audit model and native-code licenses, redistribution rights,
+platform ABI, dynamic library dependencies, and real English speech recognition.
 
-- `native/sherpa-onnx.node` — audited Node native addon for the target OS/CPU.
-- `model/encoder.onnx`
-- `model/decoder.onnx`
-- `model/joiner.onnx`
-- `model/tokens.txt`
+```text
+build/offline-asr/
+  README.md
+  model/
+    encoder.onnx
+    decoder.onnx
+    joiner.onnx
+    tokens.txt
+  native/
+    index.cjs           # vetted CommonJS public API adapter
+    ...                 # its native .node file AND all platform shared libraries
+```
 
-These model filenames correspond to a streaming transducer. Other model
-architectures require adapter updates, not renaming unrelated model files.
+## Critical native API detail
 
-Do not commit model weights or native binaries to Git by default.
-Do not download arbitrary executables from the UI or accept paths from IPC.
-Electron packaging copies the contents present in this directory at build time.
-See Issue #45 for the release-blocking, real-device validation requirements.
+Do **not** copy only `sherpa-onnx.node` into `native/` or rename it to
+`index.cjs`. The low-level native addon does **not** itself expose
+`new OnlineRecognizer(config)`; that class is supplied by the
+`sherpa-onnx-node` JavaScript binding. `native/index.cjs` must be a
+reviewed, **self-contained, platform-specific CommonJS entrypoint** exporting
+`OnlineRecognizer` from the public binding, and must resolve its actual
+`.node`, `.dll`, `.dylib`, `.so` and wrapper support files **inside**
+`native/`. No network downloads or access to external user-installed
+packages are allowed at runtime.
+
+On macOS do not assume that `DYLD_LIBRARY_PATH` is preserved for a signed
+Electron application; resolve transitive native dependencies using reviewed
+bundle-relative loader paths and validate on real signed builds. Windows x64,
+macOS x64/arm64 and Linux x64/arm64 need platform-specific binaries.
+
+The model layout above is a **streaming transducer**. Do not rename files from
+an offline Whisper or a CTC model to match it. `apps/desktop/asrConfig.ts`
+defines the sherpa-onnx-node `OnlineRecognizer` contract used by the worker.
+
+Candidate for evaluation, **not approved for shipping without human review**:
+[`sherpa-onnx-streaming-zipformer-en-2023-02-21`](https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-02-21)
+(model card states Apache-2.0). Map the correct **matching** encoder,
+decoder, joiner and tokens into the four expected names. Use the matching
+model family's int8 encoder/joiner only after verifying decode quality and
+compatibility. Record the exact model revision and hashes in release evidence.
+
+Official references:
+- https://k2-fsa.github.io/sherpa/onnx/javascript-api/examples/api_streaming_asr.html
+- https://k2-fsa.github.io/sherpa/onnx/javascript-api/install.html
+- https://github.com/k2-fsa/sherpa-onnx/issues/2622 (Electron/macOS loader concerns)
+
+**Acceptance gate:** run actual 16 kHz PCM inference (e.g. with
+`scripts/benchmark-offline-asr.mts` and an approved test WAV) on every
+supported architecture. Verify meaningful interim/final text, error rate,
+real-time factor, microphone permissions, CPU/memory, closed-window cleanup,
+and packaged code signing. CI fake-worker tests do not satisfy this gate.
+
+Never commit native binaries, model weights, or private microphone captures.
+See Issue #45 for the release checklist.

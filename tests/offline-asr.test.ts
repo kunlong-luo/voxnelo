@@ -26,7 +26,7 @@ describe('Trusted offline ASR bundle discovery',()=>{
       developerAddonPath:'/tmp/untrusted.node',
     });
     expect(resolved.modelDir).toBe(path.join('tmp','Voxnelo','resources','offline-asr','model'));
-    expect(resolved.addonPath).toBe(path.join('tmp','Voxnelo','resources','offline-asr','native','sherpa-onnx.node'));
+    expect(resolved.addonPath).toBe(path.join('tmp','Voxnelo','resources','offline-asr','native','index.cjs'));
   });
 
   it('preserves developer-only absolute paths without allowing IPC path selection',()=>{
