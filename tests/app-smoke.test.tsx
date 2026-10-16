@@ -6,8 +6,9 @@ import { FIRST_SENTENCE } from '@voxnelo/content';
 import { database } from '@voxnelo/storage';
 import { App } from '../apps/web/src/App';
 import { LANGUAGE_STORAGE_KEY } from '../apps/web/src/i18n';
+import type { VoxneloDesktopAPI } from '../apps/web/src/desktopBridge';
 
-afterEach(cleanup);
+afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
 beforeEach(async () => {
   localStorage.setItem(LANGUAGE_STORAGE_KEY, 'zh-CN');
@@ -35,6 +36,34 @@ describe('App smoke', () => {
     expect(await screen.findByText(FIRST_SENTENCE.english)).toBeTruthy();
     expect(screen.getByRole('button', { name: '换一句' })).toBeTruthy();
     expect(screen.getByRole('button', { name: '我的收藏' })).toBeTruthy();
+  });
+
+  it('桌面导航从窗口顶端铺满高度，标题栏只属于右侧工作区', async () => {
+    vi.stubGlobal('voxneloDesktop', {
+      platform: 'linux', version: '0.1.0',
+      windowControls: {
+        minimize: vi.fn(), toggleMaximize: vi.fn(), close: vi.fn(),
+        isMaximized: vi.fn().mockResolvedValue(false),
+        onMaximizeChange: () => () => undefined,
+      },
+    } satisfies VoxneloDesktopAPI);
+    const view = render(<App />);
+    await screen.findByText(FIRST_SENTENCE.english);
+    const shell = view.container.querySelector('.shell');
+    const sidebar = shell?.querySelector(':scope > .sidebar');
+    const main = shell?.querySelector(':scope > .mainArea');
+    const titlebar = main?.querySelector(':scope > .appTitlebar');
+    expect(sidebar).toBeTruthy();
+    expect(main).toBeTruthy();
+    expect(titlebar).toBeTruthy();
+    expect(view.container.querySelector('.appFrame > .appTitlebar')).toBeNull();
+    expect(sidebar?.className).toContain('top-0');
+    expect(sidebar?.className).toContain('h-dvh');
+    expect(sidebar?.className).not.toContain('top-11');
+    expect(sidebar?.className).not.toContain('calc(100dvh-44px)');
+    expect(titlebar?.className).not.toContain('border-b');
+    expect(titlebar?.className).not.toContain('bg-sidebar');
+    expect(titlebar?.querySelectorAll('.windowControl')).toHaveLength(3);
   });
 
   it('窄屏使用底部导航，导航行为与侧栏保持一致', async () => {
