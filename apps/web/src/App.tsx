@@ -228,7 +228,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
           <div className="sidebarVersion px-1 text-[10px] text-muted-foreground">Voxnelo · Early Access {APP_VERSION}</div>
         </div>
       </aside>
-      <div className="mainArea @container/workspace relative min-w-0 flex-1 overflow-clip bg-gradient-to-br from-background via-brand-cream/45 to-brand-mist/35">
+      <div className="mainArea @container/workspace relative min-w-0 flex-1 overflow-clip bg-background bg-[image:var(--workspace-gradient)]">
         <DesktopTitlebar />
         <div aria-hidden="true" className="pointer-events-none absolute top-10 right-[5%] size-48 rounded-full bg-primary/9 opacity-60 blur-3xl motion-safe:animate-ambient-drift sm:size-64"/>
         <div aria-hidden="true" className="pointer-events-none absolute bottom-30 left-[12%] size-56 rounded-full bg-brand-blush/35 blur-3xl"/>
