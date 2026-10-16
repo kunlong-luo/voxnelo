@@ -48,3 +48,27 @@
 - IPC 输入仅接受 16 kHz 单声道浮点 PCM 的 1–3200 样本音频块，且每个值必须是有限的 [-1,1] 数值；识别会话只属于创建它的 Voxnelo 主窗口。窗口关闭立即终止 worker。
 - 真实识别仅来自 addon 模型结果。测试可以使用模仿 worker 的固定事件验证协议，但不能把该测试称为真实语音准确性测试。
 - 音频采集不发往云端；浏览器的在线识别选项仍需单独显式同意。真实降噪效果要通过 `track.getSettings().noiseSuppression` 和噪声条件实测，Web Speech 路径不能自动共享 AudioWorklet 音频流。
+
+## 实测模型选择与许可证门槛（2026-10-16）
+
+官方 sherpa-onnx 示例确认 `OnlineRecognizer` 支持增量解码、`isEndpoint`、`inputFinished`。目前可供实验比较的英语流式模型之一为 `sherpa-onnx-streaming-zipformer-en-2023-06-26`，但**不能据此认定已经获得权重再分发许可**：模型镜像的卡片标注 Apache-2.0，而上游训练权重的许可证来源仍有待厘清（见 https://github.com/k2-fsa/icefall/issues/2102 ）。正式将模型写入 Windows/macOS/Linux 安装包前，必须核对原始权重、模型卡、作者授权、第三方数据及构建产物许可；不能只根据下载页面标签进行商业分发。
+
+新增纯本地开发工具 `scripts/benchmark-offline-asr.mjs`，开发者可使用经过授权且已部署的英语模型进行真实基准测试，无任何自动下载和云端上传。
+
+```bash
+pnpm build:electron
+VOXNELO_ASR_MODEL_DIR=/absolute/english-stream-model \
+VOXNELO_ASR_ADDON_PATH=/absolute/sherpa-onnx-node \
+node scripts/benchmark-offline-asr.mjs \
+  --wav /absolute/english-16khz-mono-pcm16.wav \
+  --expect "How are you today"
+```
+
+结果输出真实模型推理耗时、输入音频时长、实时系数（RTF）、最终文字与可选英语词错误率（WER）；注意**单条音频的 WER 并不代表总体英语口音识别水平**。应建立多口音、语速、安静/噪音条件的获许可语料测试集，并以 P50/P95 词延迟、CPU、内存、掉帧、误触发和端点准确性作为发布门槛。默认 CI 只做隔离 Worker 的模拟协议测试，真实模型需在已授权的专门开发/发布机器上运行。
+
+### 稳定性加固
+
+- 主进程只接受所属窗口及当前会话的有效 16 kHz `Float32Array`，限制队列最大 **20 × 100ms ≈ 2 秒**；worker 每解码一块返回 `drained`。过载时明确报错并立即结束会话，不会无声丢失学习者的话。
+- 系统麦克风轨道发出 `ended` 时立即停止监听并释放音轨、`AudioContext`、IPC 会话，同时提示设备不可用。
+- `MediaStreamTrack.getSettings().noiseSuppression===true` 时才能报告“设备已开启降噪”，否则显示“已请求降噪，效果未确认”。即使其值为 true，仍不保证能隔离邻近人的声音；不得把采集配置冒充经实测的降噪品质。
+- 单元测试覆盖真实 UI Hook 的模拟设备断开、音轨采集的 NS 标记、正确清理，及主进程的无界积压防护、恶意 PCM 拒绝、非会话所有者 IPC 拒绝和句尾 flush。
