@@ -96,7 +96,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -119,5 +119,18 @@ jobs:
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
         run: pnpm exec electron-builder --dir --publish never
-      - name: Assert bundle and Voxnelo identity
+      - name: Package Linux installers (deb and AppImage)
+        if: runner.os == 'Linux'
+        run: pnpm exec electron-builder --linux deb AppImage --publish never
+      - name: Assert bundle, installers and Voxnelo identity
         run: node --experimental-strip-types scripts/check-desktop-package.mts
+      - name: Upload Linux installers for CI review
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: voxnelo-linux-pr-installers
+          path: |
+            release/*.deb
+            release/*.AppImage
+          retention-days: 7
+          if-no-files-found: error
