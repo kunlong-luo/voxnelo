@@ -81,9 +81,10 @@ function registerOfflineAsr():void{
     const window=authorizedWindow(event);
     if(window)offlineAsr.push(window.webContents,id,samples);
   });
-  ipcMain.on('voxnelo:asr:stop',(event,id:unknown)=>{
+  ipcMain.handle('voxnelo:asr:stop',(event,id:unknown)=>{
     const window=authorizedWindow(event);
-    if(window)offlineAsr.stop(window.webContents,id);
+    if(!window)return {finalText:''};
+    return offlineAsr.stop(window.webContents,id);
   });
 }
 
