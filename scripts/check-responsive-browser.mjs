@@ -47,6 +47,7 @@ const metrics=async()=>{
   return await evalJs('(()=>{const d=document.documentElement,m=document.querySelector(".mainArea"),g=document.querySelector(".practiceLayout"),b=document.querySelector(".recordAction"),r=b?.getBoundingClientRect();return {scrollWidth:d.scrollWidth,clientWidth:d.clientWidth,mainWidth:Math.round(m.getBoundingClientRect().width),containerName:getComputedStyle(m).containerName,columns:g?getComputedStyle(g).gridTemplateColumns.split(" ").length:null,sidebar:getComputedStyle(document.querySelector(".sidebar")).display!=="none",dock:getComputedStyle(document.querySelector(".mobileNav")).display!=="none",micWidth:Math.round(r?.width||0),micInBounds:!r||(r.left>=-1&&r.right<=innerWidth+1),micTop:Math.round(r?.top||0),micBottom:Math.round(r?.bottom||0),micInFirstViewport:!r||(r.top>=0&&r.bottom<=(innerWidth<640?document.querySelector(".mobileNav").getBoundingClientRect().top:innerHeight))}})()');
 };
 const shot=async(w,h,name)=>{
+  await sleep(460); // Capture settled UI, not a half-transparent entrance frame.
   const m=await metrics();
   report.push({size:[w,h],page:name,...m});
   assert.ok(m.scrollWidth<=m.clientWidth+1,'horizontal overflow '+w+'x'+h+' '+name+': '+JSON.stringify(m));
@@ -75,6 +76,14 @@ try{
   ws.addEventListener('message',event=>{const p=JSON.parse(event.data),q=pending.get(p.id);if(!q)return;clearTimeout(q.timeout);pending.delete(p.id);if(p.error)q.reject(Error(JSON.stringify(p.error)));else q.resolve(p.result||{});});
   await send('Page.enable');await send('Runtime.enable');
   await until('!!document.querySelector(".practiceLayout")');
+  await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});
+  const normalMotion=await evalJs('getComputedStyle(document.querySelector(".practiceLayout")).animationName');
+  assert.ok(normalMotion.includes('view-enter'),'entrance motion token not compiled: '+normalMotion);
+  await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
+  const reducedMotion=await evalJs('(()=>{const el=document.querySelector(".practiceLayout");const s=getComputedStyle(el);return {enabled:matchMedia("(prefers-reduced-motion: reduce)").matches,name:s.animationName,duration:s.animationDuration}})()');
+  assert.ok(reducedMotion.enabled&&(!reducedMotion.name.includes('view-enter')||parseFloat(reducedMotion.duration)<=.001),'reduced-motion fails: '+JSON.stringify(reducedMotion));
+  report.push({page:'reduced-motion',...reducedMotion});
+  await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});
   // Capture real Chinese typography rather than relying on runner's locale.
   await activate(4,'.settingsPage');
   await evalJs('document.querySelectorAll(".languageChoices button")[1].click()');
@@ -96,6 +105,13 @@ try{
   await send('Page.reload',{ignoreCache:true});await until('!!document.querySelector(".recordAction")');
   await evalJs('document.querySelector(".recordAction").click()');
   await until('!!document.querySelector(".recordingQuickStop")');
+  const liveAnimation=await evalJs('getComputedStyle(document.querySelector("[data-motion=record-halo]")).animationName');
+  assert.ok(liveAnimation.includes('record-halo'),'recording halo did not animate: '+liveAnimation);
+  await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
+  const quietHalo=await evalJs('getComputedStyle(document.querySelector("[data-motion=record-halo]")).animationDuration');
+  assert.ok(parseFloat(quietHalo)<=.001,'recording ring ignores reduced-motion: '+quietHalo);
+  await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});
+  report.push({page:'recording-motion',normal:liveAnimation,reducedDuration:quietHalo});
   const s=await evalJs('(()=>{const a=document.querySelector(".recordingQuickStop").getBoundingClientRect(),b=document.querySelector(".mobileNav").getBoundingClientRect();return{top:a.top,bottom:a.bottom,right:a.right,dockTop:b.top}})()');
   assert.ok(s.top>=0&&s.right<=321&&s.bottom<=s.dockTop,'recording stop hidden behind mobile nav '+JSON.stringify(s));
   await evalJs('document.querySelector(".recordingQuickStop").click()');
