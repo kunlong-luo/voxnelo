@@ -10,10 +10,21 @@ export type DesktopSpeechResult =
   | { ok: true; wavBase64: string }
   | { ok: false; reason: 'not-installed' | 'failed' | 'cancelled' | 'invalid' };
 
+export interface OfflineAsrResult {sessionId:string;finalText:string;interimText:string}
+export interface VoxneloOfflineAsr {
+  capabilities():Promise<{available:boolean;reason:'ready'|'not-configured'}>;
+  start():Promise<{ok:true;sessionId:string}|{ok:false;reason:'not-configured'|'busy'|'failed'}>;
+  push(sessionId:string,samples:Float32Array):void;
+  stop(sessionId:string):void;
+  onResult(listener:(result:OfflineAsrResult)=>void):()=>void;
+  onError(listener:(sessionId:string)=>void):()=>void;
+}
+
 export interface VoxneloDesktopAPI {
   platform: string;
   version: string;
   windowControls: VoxneloWindowControls;
+  asr?: VoxneloOfflineAsr;
   speech?: {
     synthesizeEnglish(text: string, speed: 'normal' | 'slow'): Promise<DesktopSpeechResult>;
     cancel(): void;
