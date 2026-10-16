@@ -6,9 +6,18 @@ import type { WebContents } from 'electron';
 
 export type AsrCapability={available:boolean;reason:'ready'|'not-configured'|'missing-addon'|'missing-model'};
 export type AsrOpenResult={ok:true;sessionId:string}|{ok:false;reason:'not-configured'|'busy'|'failed'};
-interface Session {id:string;owner:WebContents;worker:Worker;ready:boolean;accepting:boolean;pendingChunks:number;stopTimer:ReturnType<typeof setTimeout>|null;lastText:string;resolveFinish:((result:{finalText:string})=>void)|null;}
+interface Session {
+  id:string;owner:WebContents;worker:Worker;ready:boolean;accepting:boolean;
+  pendingChunks:number;stopTimer:ReturnType<typeof setTimeout>|null;
+  lastText:string;finishPromise:Promise<{finalText:string}>|null;
+  resolveFinish:((result:{finalText:string})=>void)|null;
+  resolveOpen:((result:AsrOpenResult)=>void)|null;
+}
 /** At 100ms chunks, stop on >2s of ASR backlog instead of silently dropping speech. */
 const MAX_PENDING_PCM_CHUNKS=20;
+// Native decoding can need several seconds to flush the last speech frames.
+// Do not truncate the final transcript after only 1.5 seconds.
+const FINISH_GRACE_MS=8000;
 const expected=['encoder.onnx','decoder.onnx','joiner.onnx','tokens.txt'];
 /**
  * Experimental offline recognizer. Never run dynamic addon code from a page:
@@ -39,14 +48,21 @@ export class OfflineAsr {
     }catch{
       return {ok:false,reason:'failed'};
     }
-    const session:Session={id,owner,worker,ready:false,accepting:false,pendingChunks:0,stopTimer:null,lastText:'',resolveFinish:null};
+    const session:Session={id,owner,worker,ready:false,accepting:false,pendingChunks:0,stopTimer:null,lastText:'',finishPromise:null,resolveFinish:null,resolveOpen:null};
     this.session=session;
     return new Promise(resolve=>{
       let settled=false;
-      const settle=(result:AsrOpenResult)=>{if(settled)return;settled=true;clearTimeout(timeout);resolve(result);};
+      const settle=(result:AsrOpenResult)=>{
+        if(settled)return;
+        settled=true;session.resolveOpen=null;clearTimeout(timeout);resolve(result);
+      };
+      session.resolveOpen=settle;
       const dispose=()=>{if(this.session===session)this.dispose(session);};
       const timeout=setTimeout(()=>{dispose();settle({ok:false,reason:'failed'});},12000);
       worker.on('message',(message:unknown)=>{
+        // A terminated worker can still have queued messages. Never publish
+        // them or mark a superseded session ready.
+        if(this.session!==session)return;
         if(!message||typeof message!=='object'||!('type' in message))return;
         const result=message as {type:string;finalText?:unknown;interimText?:unknown};
         if(result.type==='ready'){
@@ -95,20 +111,30 @@ export class OfflineAsr {
   stop(owner:WebContents,id:unknown):Promise<{finalText:string}>{
     const s=this.session;
     if(!s||s.owner!==owner||id!==s.id)return Promise.resolve({finalText:''});
-    if(!s.accepting)return Promise.resolve({finalText:s.lastText});
+    if(!s.accepting)return s.finishPromise??Promise.resolve({finalText:s.lastText});
     s.accepting=false;
-    return new Promise(resolve=>{
+    s.finishPromise=new Promise(resolve=>{
       s.resolveFinish=resolve;
-      s.worker.postMessage({type:'finish'});
-      s.stopTimer=setTimeout(()=>this.dispose(s),1500);
+      try{
+        s.worker.postMessage({type:'finish'});
+        s.stopTimer=setTimeout(()=>this.dispose(s),FINISH_GRACE_MS);
+      }catch{
+        this.dispose(s);
+      }
     });
+    return s.finishPromise;
   }
   close():void{if(this.session)this.dispose(this.session);}
   private dispose(s:Session):void{
     if(this.session!==s)return;
     this.session=null;
     if(s.stopTimer)clearTimeout(s.stopTimer);
+    // Window closure or explicit shutdown can interrupt the startup handshake.
+    // Settle immediately rather than hanging until the 12-second timeout.
+    s.resolveOpen?.({ok:false,reason:'failed'});
+    s.resolveOpen=null;
     s.resolveFinish?.({finalText:s.lastText});
+    s.resolveFinish=null;
     void s.worker.terminate();
   }
 }
