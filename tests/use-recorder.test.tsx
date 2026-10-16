@@ -90,7 +90,7 @@ describe('useRecorder', () => {
     render(<Harness />);
     await act(async () => { await latest.start(); });
     expect(latest.status).toBe('idle');
-    expect(latest.error).toBe('未找到可用麦克风或设备被占用，请检查连接后重试。');
+    expect(latest.error).toBe('暂未检测到可用麦克风，可以先畅听示范或收藏喜欢的句子。');
     expect(latest.recordingUrl).toBeNull();
     expect(MockMediaRecorder.instances).toHaveLength(0);
   });
