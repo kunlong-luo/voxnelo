@@ -220,6 +220,26 @@ describe('LibraryView', () => {
     expect(screen.getByText('这里暂时还没有短句')).toBeTruthy();
   });
 
+  it('历史按真实事件分页，日期时间与活动筛选可操作',()=>{
+    const events=Array.from({length:19},(_,i)=>({
+      id:i+1,sentenceId:FIRST_SENTENCE.id,at:Date.UTC(2026,9,16,10,i),
+      type:(i%3===0?'practice':'view') as 'practice'|'view',
+    }));
+    const {container}=render(<LibraryView {...baseLibraryProps} view="history" events={events}/>);
+    expect(screen.getByText('近期活动')).toBeTruthy();
+    expect(screen.getByText('学过的句子')).toBeTruthy();
+    expect(screen.getByText('录音练习', {selector:'span'})).toBeTruthy();
+    expect(container.querySelectorAll('.libraryItem')).toHaveLength(8);
+    expect(screen.getByRole('navigation',{name:'句子列表分页'})).toBeTruthy();
+    fireEvent.click(screen.getByRole('button',{name:'下一页'}));
+    expect(container.querySelectorAll('.libraryItem')).toHaveLength(8);
+    fireEvent.click(screen.getByRole('button',{name:'下一页'}));
+    expect(container.querySelectorAll('.libraryItem')).toHaveLength(3);
+    fireEvent.click(screen.getByRole('button',{name:'录音练习'}));
+    expect(container.querySelectorAll('.libraryItem')).toHaveLength(7);
+    expect(screen.queryByRole('navigation',{name:'句子列表分页'})).toBeNull();
+  });
+
   it('收藏列表可点回练习', () => {
     const onChoose = vi.fn();
     render(
