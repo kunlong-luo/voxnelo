@@ -15,6 +15,17 @@ try{
   const addon=path.join(dir,'addon.cjs');
   await writeFile(addon,`
 class OnlineRecognizer {
+  constructor(config){
+    const model=config?.modelConfig;
+    if(config.featConfig?.sampleRate!==16000||
+       typeof model?.transducer?.encoder!=='string'||
+       typeof model?.transducer?.decoder!=='string'||
+       typeof model?.transducer?.joiner!=='string'||
+       !model?.tokens||config.decodingMethod!=='greedy_search'||
+       config.enableEndpoint!==true){
+      throw Error('Incorrect upstream sherpa-onnx-node OnlineRecognizer config');
+    }
+  }
   createStream(){return {acceptWaveform(o){this.samples=o.samples;this.pending=true;},inputFinished(){this.finished=true;}};}
   isReady(stream){return !!stream.pending;}
   decode(stream){stream.pending=false;stream.text='hello world';}
