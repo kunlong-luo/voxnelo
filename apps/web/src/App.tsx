@@ -231,7 +231,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
       </aside>
       <div className="mainArea @container/workspace relative min-w-0 flex-1 bg-gradient-to-br from-background via-brand-cream/45 to-brand-mist/35">
         {recorder.status === 'recording' ? (
-          <Button variant="destructive" className="recordingQuickStop fixed right-6 bottom-6 z-60 shadow-xl" onClick={handleRecorder}
+          <Button variant="destructive" className="recordingQuickStop fixed right-4 bottom-24 z-60 shadow-xl sm:right-6 sm:bottom-6" onClick={handleRecorder}
             aria-label={t("stopFloating")}><Square size={15} fill="currentColor" aria-hidden="true" /> {t("stopRecording")}</Button>
         ) : null}
         <main className="content mx-auto w-full max-w-400 px-3 pt-4 pb-25 sm:px-5 sm:py-6 xl:px-8">
