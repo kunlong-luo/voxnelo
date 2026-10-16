@@ -5,7 +5,9 @@ import { useI18n, type TranslationKey } from './i18n';
 import { Button } from './components/ui/button';
 import { Card } from './components/ui/card';
 
-type SidebarWidgetsProps = Pick<PracticeViewProps,'current'|'stats'|'recordingBusy'|'onChooseRelated'>;
+type SidebarWidgetsProps = Pick<PracticeViewProps,'current'|'stats'|'recordingBusy'> & {
+  onChooseRelated: PracticeViewProps['onChooseRelated'];
+};
 
 const tips:Record<Sentence['topic'],TranslationKey> = {
   greetings:'tipGreetings',personal:'tipPersonal',needs:'tipNeeds',
