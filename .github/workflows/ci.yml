@@ -31,7 +31,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - name: Reject prerelease dependencies
-        run: node scripts/check-stable-dependencies.mjs
+        run: node --experimental-strip-types scripts/check-stable-dependencies.mts
       - name: Install lockfile
         run: pnpm install --frozen-lockfile
       - name: Typecheck
@@ -51,7 +51,7 @@ jobs:
       - name: Check real-model benchmark CLI syntax (no download or native model)
         run: node --check scripts/benchmark-offline-asr.mjs
       - name: Validate static Pages assets
-        run: node scripts/check-pages-artifact.mjs
+        run: node --experimental-strip-types scripts/check-pages-artifact.mts
       - name: Renderer size budget
         run: pnpm perf:budget
       - name: Ensure CJK fonts for bilingual screenshot checks
