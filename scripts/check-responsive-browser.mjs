@@ -25,7 +25,7 @@ const server=createServer(async(req,res)=>{
 await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
 const url='http://127.0.0.1:'+server.address().port+'/index.html';
 const profile=await mkdtemp(path.join(tmpdir(),'voxnelo-cdp-'));
-let chrome, ws, seq=0;const pending=new Map(), report=[];
+let chrome, ws, seq=0, chromeOutput="";const pending=new Map(), report=[];
 const send=(method,params={})=>new Promise((resolve,reject)=>{
   const id=++seq, timeout=setTimeout(()=>{pending.delete(id);reject(Error('CDP timeout '+method));},12000);
   pending.set(id,{resolve,reject,timeout});ws.send(JSON.stringify({id,method,params}));
@@ -62,10 +62,11 @@ const shot=async(w,h,name)=>{
 };
 try{
   chrome=spawn(chromeBin,['--headless=new','--disable-gpu','--no-sandbox','--disable-dev-shm-usage',
-    '--no-first-run','--remote-allow-origins=*','--remote-debugging-port=0','--user-data-dir='+profile,'--window-size=1440,900',url],{stdio:'ignore'});
+    '--no-first-run','--remote-allow-origins=*','--remote-debugging-port=0','--user-data-dir='+profile,'--window-size=1440,900',url],{stdio:['ignore','ignore','pipe']});
+  chrome.stderr.on('data',chunk=>{ chromeOutput=(chromeOutput+String(chunk)).slice(-6000); });
   let port=0;
-  for(let i=0;i<100;i++){try{const s=await readFile(path.join(profile,'DevToolsActivePort'),'utf8');port=Number(s.split('\n')[0]);if(port)break;}catch { /* Chrome is starting. */ } await sleep(100);}
-  if(!port)throw Error('Chrome remote debugging did not start');
+  for(let i=0;i<300;i++){try{const s=await readFile(path.join(profile,'DevToolsActivePort'),'utf8');port=Number(s.split('\n')[0]);if(port)break;}catch { /* Chrome is starting. */ } if(chrome.exitCode!==null)break; await sleep(100);}
+  if(!port)throw Error('Chrome debugging did not start (exit='+chrome.exitCode+'): '+chromeOutput);
   const targets=await(await fetch('http://127.0.0.1:'+port+'/json/list')).json();
   const target=targets.find(t=>t.type==='page');
   if(!target)throw Error('No Chrome page');
