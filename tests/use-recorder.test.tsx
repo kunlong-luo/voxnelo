@@ -85,6 +85,38 @@ describe('useRecorder', () => {
     expect(latest.error).toBe('麦克风尚未获授权。您仍可听示范、收藏和练习其他句子。');
   });
 
+  it('麦克风设备不可用时显示设备提示且不生成录音', async () => {
+    mockDevices(() => Promise.reject(Object.assign(new Error('missing'), { name: 'NotFoundError' })));
+    render(<Harness />);
+    await act(async () => { await latest.start(); });
+    expect(latest.status).toBe('idle');
+    expect(latest.error).toBe('暂未检测到可用麦克风，可以先畅听示范或收藏喜欢的句子。');
+    expect(latest.recordingUrl).toBeNull();
+    expect(MockMediaRecorder.instances).toHaveLength(0);
+  });
+
+  it('重复发起录音权限请求时只请求一次麦克风', async () => {
+    let grant: ((stream: MediaStream) => void) | undefined;
+    const getUserMedia = vi.fn(() => new Promise<MediaStream>((resolve) => { grant = resolve; }));
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true, value: { getUserMedia },
+    });
+    render(<Harness />);
+    let first!: Promise<void>;
+    let second!: Promise<void>;
+    act(() => {
+      first = latest.start();
+      second = latest.start();
+    });
+    expect(getUserMedia).toHaveBeenCalledTimes(1);
+    await act(async () => {
+      grant?.(fakeStream());
+      await Promise.all([first, second]);
+    });
+    expect(latest.status).toBe('recording');
+    expect(MockMediaRecorder.instances).toHaveLength(1);
+  });
+
   it('完整录音流程：请求中→录音中→就绪并产出回听地址', async () => {
     mockDevices(() => Promise.resolve(fakeStream()));
     render(<Harness />);
