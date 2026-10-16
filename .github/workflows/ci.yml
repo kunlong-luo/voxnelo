@@ -58,6 +58,20 @@ jobs:
           fi
       - name: Responsive Chromium screenshots
         run: node scripts/check-responsive-browser.mjs
+      - name: Install X11 tools for native Electron smoke
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb xdotool openbox
+      - name: Native Linux Electron window smoke
+        run: xvfb-run -a -s "-screen 0 1600x1000x24" node scripts/check-electron-window.mjs
+      - name: Upload Electron desktop evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-electron-evidence
+          path: desktop-evidence/
+          retention-days: 14
+          if-no-files-found: ignore
       - name: Upload responsive layout evidence
         if: always()
         uses: actions/upload-artifact@v4
