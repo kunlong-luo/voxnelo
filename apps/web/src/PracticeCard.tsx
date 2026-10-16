@@ -27,7 +27,7 @@ export function PracticeCard({current,currentState,speed,showIpa,recorder,dictat
   const favorite=Boolean(currentState?.favorite);
   const review=Boolean(currentState?.review);
   return (
-      <Card className="practiceCard referenceLesson flex min-h-[min(700px,calc(100dvh-120px))] min-w-0 flex-1 flex-col overflow-visible border-glass-edge bg-glass-surface shadow-glass backdrop-blur-[var(--glass-blur)]">
+      <Card className="practiceCard referenceLesson flex min-h-[min(700px,calc(100dvh-120px))] min-w-0 flex-1 flex-col overflow-visible rounded-[28px] border border-glass-edge bg-glass-surface shadow-glass backdrop-blur-[var(--glass-blur)]">
         <header className="cardHeader lessonHeader flex min-h-19 flex-wrap items-center justify-between gap-3 px-5 pt-5 pb-0 sm:px-7 sm:pt-6">
           <div className="lessonProgress flex min-w-22 flex-col gap-2" aria-label={t('coursePosition',{index,total:SENTENCES.length})}>
             <span className="lessonCount text-sm font-extrabold tracking-tight tabular-nums text-foreground">{String(index).padStart(2,'0')} <span className="font-medium text-muted-foreground">/ {SENTENCES.length}</span></span>
@@ -49,13 +49,13 @@ export function PracticeCard({current,currentState,speed,showIpa,recorder,dictat
             </div>
           </div>
         </header>
-        <div className="lessonFocus @container/lesson flex min-h-64 min-w-0 flex-1 flex-col items-center justify-center gap-4 px-4 py-6 text-center [@media(max-height:680px)]:min-h-48 [@media(max-height:680px)]:gap-1 [@media(max-height:680px)]:py-1 @min-[560px]/workspace:px-8 @min-[700px]/workspace:min-h-[clamp(12rem,calc(100dvh-365px),20rem)]">
-          <div className="sentenceContent flex w-full flex-col items-center justify-center gap-3 [@media(max-height:680px)]:gap-1.5">
+        <div className="lessonFocus @container/lesson flex min-h-64 min-w-0 flex-1 flex-col items-center justify-center gap-6 px-4 py-7 text-center [@media(max-height:680px)]:min-h-48 [@media(max-height:680px)]:gap-2 [@media(max-height:680px)]:py-2 @min-[560px]/workspace:px-7 @min-[700px]/workspace:min-h-[clamp(12rem,calc(100dvh-365px),20rem)]">
+          <div className="sentenceContent flex w-full flex-col items-center justify-center gap-3.5 [@media(max-height:680px)]:gap-1.5">
             <span className="lessonLevel text-[11px] font-bold tracking-[.2em] text-muted-foreground uppercase">{t('speakingPractice')} · {current.level}</span>
             <div className="sentenceHeading flex max-w-full justify-center">
-              <h1 key={current.id} className="sentenceText max-w-full text-[clamp(1.875rem,5.4cqi,2.625rem)] leading-[1.22] font-extrabold tracking-[-.018em] wrap-break-word text-sentence-ink motion-safe:animate-sentence-enter">{current.english}</h1>
+              <h1 key={current.id} className="sentenceText max-w-full text-[clamp(2rem,6.25cqi,3.375rem)] leading-[1.2] font-extrabold tracking-[-.035em] wrap-break-word text-sentence-ink motion-safe:animate-sentence-enter">{current.english}</h1>
             </div>
-            <p className="translation text-base leading-7 font-medium text-translation-ink sm:text-lg">{current.chinese}</p>
+            <p className="translation text-[17px] leading-7 font-medium text-translation-ink @min-[600px]/lesson:text-xl">{current.chinese}</p>
             {showIpa && <p className="ipa max-w-full text-sm leading-6 wrap-break-word text-ipa-ink">{current.ipa}</p>}
             <Button variant="ghost" size="sm" className="subtleLink rounded-full text-xs text-primary" onClick={onToggleIpa} aria-expanded={showIpa}><CircleHelp size={14}/>{t(showIpa?'ipaHide':'ipaShow')}</Button>
           </div>
