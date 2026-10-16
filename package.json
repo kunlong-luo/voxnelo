@@ -111,7 +111,7 @@
       "target": "dmg",
       "category": "public.app-category.education",
       "extendInfo": {
-        "NSMicrophoneUsageDescription": "Voxnelo 只会在你主动录音时使用麦克风。录音默认不会上传或长期保存。"
+        "NSMicrophoneUsageDescription": "Voxnelo 仅在你主动开始实时听写或录制回听时使用麦克风。本地识别和录音默认不会上传音频。"
       }
     },
     "extraResources": [
