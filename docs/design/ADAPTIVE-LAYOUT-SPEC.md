@@ -56,3 +56,14 @@
 **无障碍与性能**：所有新增循环/入场动画都在 `motion-safe` 下启用，`prefers-reduced-motion: reduce` 时 CSS 动画时间被强制最小化；保留完整图标和文案，不依赖动效传递信息。浏览器 CI 会检测普通/减少动画偏好下的 computed styles，除响应式图片外保留输出证据；继续执行当前 JS/CSS gzip 预算，避免引入运行时。
 
 **验收重点**：切换页面可读性、键盘焦点与录音停止可达性优先于动效；浏览器截图需待 420ms 入场完成后拍摄，防止半透明状态被误判为实际设计颜色。
+
+## Linux Electron 原生窗口集成验收（2026-10-16）
+
+浏览器/CDP 页面测试仍保留，但不代替原生窗口测试。CI 安装 `Xvfb + Openbox + xdotool` 并直接以 `electron .` 启动**构建后的真实桌面应用**；脚本 `scripts/check-electron-window.mjs` 连接其调试页采集原生截图，所有测试操作仅存在于 CI 脚本，不在生产代码增加特殊通道。
+
+- **协议与沙盒**：启动地址必须为 `voxnelo://app/index.html`，preload 仅提供 `platform/version/windowControls/speech`；主页面无 `require` 与 `process`。
+- **真实窗口几何**：检查 1160×760、800×610、1440×900 三档尺寸，窗口标题栏为 44px、`@container/workspace` 生效、无横向溢出、无错误底部手机导航。
+- **首屏操作**：核心录音麦克风及整条五按钮的标签、辅助文案必须在 800×610 和更大窗口的首屏，不能只验证麦克风本体。短高度下英文句子展示区用 `clamp(12rem, calc(100dvh - 365px), 20rem)` 弹性收缩，而非截断控制区。
+- **原生 IPC**：通过正式窗口控制桥接完成最大化、还原、最小化和重新激活，不通过生产应用额外增加测试用 IPC。
+- **输出**：GitHub Actions artifact `linux-electron-evidence` 包含三档截图和结构化 JSON 报告；至少人眼核对 800×610 的控制区。
+- **不可冒充的覆盖范围**：Linux Xvfb 是虚拟桌面窗口测试，不等于真实 Linux 发行版任务栏图标的人工验收；**Windows 和 macOS 原生窗口、显示比例、多显示器、真实声卡/录音权限仍需独立验收**。不得宣称跨平台 Electron 已经全检。
