@@ -32,6 +32,49 @@ export function isAudioOnlyRequest(mediaTypes: unknown): boolean {
   return Array.isArray(mediaTypes) && mediaTypes.length > 0 && mediaTypes.every((type) => type === 'audio');
 }
 
+/** Deny permission requests from subframes with an untrusted origin.
+ * Electron exposes the top-level WebContents URL even for subframe requests.
+ */
+export function allowsAudioPermissionRequest(
+  webContentsUrl: string,
+  permission: string,
+  details: { mediaTypes?: unknown; requestingUrl?: unknown },
+  options: TrustOptions,
+): boolean {
+  return permission === 'media' &&
+    isAudioOnlyRequest(details.mediaTypes) &&
+    typeof details.requestingUrl === 'string' &&
+    isTrustedUrl(webContentsUrl, options) &&
+    isTrustedUrl(details.requestingUrl, options);
+}
+
+/** Permission checks are separate from permission requests in Electron.
+ * Only the trusted main frame may check audio capture; never grant camera
+ * or screen capture through this callback.
+ */
+export function allowsAudioPermissionCheck(
+  webContentsUrl: string | null,
+  permission: string,
+  requestingOrigin: string,
+  details: {
+    isMainFrame?: boolean;
+    mediaType?: string;
+    requestingUrl?: string;
+    securityOrigin?: string;
+  },
+  options: TrustOptions,
+): boolean {
+  return permission === 'media' &&
+    details.isMainFrame === true &&
+    details.mediaType !== 'video' &&
+    details.mediaType !== 'unknown' &&
+    webContentsUrl !== null &&
+    isTrustedUrl(webContentsUrl, options) &&
+    isTrustedUrl(requestingOrigin, options) &&
+    (details.requestingUrl === undefined || isTrustedUrl(details.requestingUrl, options)) &&
+    (details.securityOrigin === undefined || isTrustedUrl(details.securityOrigin, options));
+}
+
 /**
  * 本地协议路径解析：返回 rendererDir 内的绝对路径，目录穿越返回 null。
  * decodeURIComponent 抛错时由调用方按 400 处理（行为与原内联实现一致）。

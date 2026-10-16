@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { isAudioOnlyRequest, isTrustedUrl, resolveLocalFile } from '../apps/desktop/security';
+import { allowsAudioPermissionCheck, allowsAudioPermissionRequest, isAudioOnlyRequest, isTrustedUrl, resolveLocalFile } from '../apps/desktop/security';
 
 describe('Voxnelo V0.1 主进程安全守卫', () => {
   describe('isTrustedUrl', () => {
@@ -42,6 +42,44 @@ describe('Voxnelo V0.1 主进程安全守卫', () => {
       expect(isAudioOnlyRequest([])).toBe(false);
       expect(isAudioOnlyRequest(undefined)).toBe(false);
       expect(isAudioOnlyRequest('audio')).toBe(false);
+    });
+  });
+
+  describe('Electron audio permission origin and device policy', () => {
+    const top='voxnelo://app/index.html';
+    const trustedRequest={mediaTypes:['audio'],requestingUrl:top};
+    const options={isDev:false};
+    it('only the trusted top-level application may request audio', () => {
+      expect(allowsAudioPermissionRequest(top,'media',trustedRequest,options)).toBe(true);
+      expect(allowsAudioPermissionRequest('https://attacker.example/','media',trustedRequest,options)).toBe(false);
+      expect(allowsAudioPermissionRequest(top,'media',{...trustedRequest,requestingUrl:'https://attacker.example/frame'},options)).toBe(false);
+      expect(allowsAudioPermissionRequest(top,'media',{mediaTypes:['audio']},options)).toBe(false);
+      expect(allowsAudioPermissionRequest(top,'media',{...trustedRequest,requestingUrl:'not a url'},options)).toBe(false);
+    });
+    it('rejects camera, mixed media, display capture and unrelated permissions', () => {
+      expect(allowsAudioPermissionRequest(top,'media',{...trustedRequest,mediaTypes:['video']},options)).toBe(false);
+      expect(allowsAudioPermissionRequest(top,'media',{...trustedRequest,mediaTypes:['audio','video']},options)).toBe(false);
+      expect(allowsAudioPermissionRequest(top,'display-capture',trustedRequest,options)).toBe(false);
+      expect(allowsAudioPermissionRequest(top,'geolocation',trustedRequest,options)).toBe(false);
+    });
+    it('permission checks reject subframes and foreign origins independently', () => {
+      const details={isMainFrame:true,mediaType:'audio',requestingUrl:top,securityOrigin:'voxnelo://app'};
+      expect(allowsAudioPermissionCheck(top,'media','voxnelo://app',details,options)).toBe(true);
+      expect(allowsAudioPermissionCheck(top,'media','https://attacker.example',details,options)).toBe(false);
+      expect(allowsAudioPermissionCheck(top,'media','voxnelo://app',{...details,isMainFrame:false},options)).toBe(false);
+      expect(allowsAudioPermissionCheck(top,'media','voxnelo://app',{...details,mediaType:'video'},options)).toBe(false);
+      expect(allowsAudioPermissionCheck(top,'media','voxnelo://app',{...details,mediaType:'unknown'},options)).toBe(false);
+      expect(allowsAudioPermissionCheck(top,'display-capture','voxnelo://app',details,options)).toBe(false);
+      expect(allowsAudioPermissionCheck(top,'media','voxnelo://app',{...details,requestingUrl:'https://attacker.example'},options)).toBe(false);
+      expect(allowsAudioPermissionCheck(top,'media','voxnelo://app',{...details,securityOrigin:'https://attacker.example'},options)).toBe(false);
+      expect(allowsAudioPermissionCheck(null,'media','voxnelo://app',details,options)).toBe(false);
+    });
+    it('development-only origin can request audio, but cannot grant production or other dev sites', () => {
+      const dev='http://127.0.0.1:3000/index.html';
+      expect(allowsAudioPermissionRequest(dev,'media',{mediaTypes:['audio'],requestingUrl:dev},{isDev:true})).toBe(true);
+      expect(allowsAudioPermissionRequest(dev,'media',{mediaTypes:['audio'],requestingUrl:top},{isDev:true})).toBe(false);
+      expect(allowsAudioPermissionCheck(dev,'media','http://127.0.0.1:3000',{isMainFrame:true,mediaType:'audio',requestingUrl:dev},{isDev:true})).toBe(true);
+      expect(allowsAudioPermissionCheck(dev,'media','http://127.0.0.1:3001',{isMainFrame:true,mediaType:'audio',requestingUrl:dev},{isDev:true})).toBe(false);
     });
   });
 
