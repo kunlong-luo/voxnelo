@@ -17,7 +17,12 @@ const expected=['encoder.onnx','decoder.onnx','joiner.onnx','tokens.txt'];
  */
 export class OfflineAsr {
   private session:Session|null=null;
-  constructor(private readonly modelDir:string|null,private readonly addonPath:string|null){}
+  constructor(
+    private readonly modelDir:string|null,
+    private readonly addonPath:string|null,
+    private readonly spawnWorker:(data:{modelDir:string|null;addonPath:string|null})=>Worker=
+      data=>new Worker(path.join(__dirname,'offlineAsrWorker.cjs'),{workerData:data}),
+  ){}
   capabilities():AsrCapability{
     if(!this.modelDir||!this.addonPath||!path.isAbsolute(this.modelDir)||!path.isAbsolute(this.addonPath))return {available:false,reason:'not-configured'};
     if(!existsSync(this.addonPath)||!expected.every(name=>existsSync(path.join(this.modelDir!,name))))return {available:false,reason:'not-configured'};
@@ -27,9 +32,12 @@ export class OfflineAsr {
     if(this.session)return {ok:false,reason:'busy'};
     if(!this.capabilities().available)return {ok:false,reason:'not-configured'};
     const id=randomUUID();
-    const worker=new Worker(path.join(__dirname,'offlineAsrWorker.cjs'),{
-      workerData:{modelDir:this.modelDir,addonPath:this.addonPath},
-    });
+    let worker:Worker;
+    try{
+      worker=this.spawnWorker({modelDir:this.modelDir,addonPath:this.addonPath});
+    }catch{
+      return {ok:false,reason:'failed'};
+    }
     const session:Session={id,owner,worker,ready:false,accepting:false,pendingChunks:0,stopTimer:null,lastText:'',resolveFinish:null};
     this.session=session;
     return new Promise(resolve=>{
