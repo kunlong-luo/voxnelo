@@ -49,7 +49,8 @@
   --animate-soft-pop: soft-pop 250ms cubic-bezier(.2,.85,.3,1.3) both;
   --animate-record-halo: record-halo 2000ms ease-in-out infinite;
   --animate-status-breathe: status-breathe 1700ms ease-in-out infinite;
-  --animate-ambient-drift: ambient-drift 12s ease-in-out infinite alternate;
+  --animate-ambient-drift: ambient-drift 10s ease-in-out infinite alternate;
+  --animate-ambient-breathe: ambient-breathe 7.5s ease-in-out infinite alternate;
 }
 :root {
   color-scheme: light;
@@ -169,8 +170,14 @@
   50% { transform: scale(1.04); opacity: 1; }
 }
 @keyframes ambient-drift {
-  from { transform: translate3d(-9px,0,0); opacity: .45; }
-  to { transform: translate3d(12px,10px,0); opacity: .8; }
+  from { transform: translate3d(-24px,-12px,0); opacity: .62; }
+  to { transform: translate3d(28px,18px,0); opacity: .96; }
+}
+/* A continuously visible, compositor-friendly page atmosphere, not a sound wave.
+ * Keep motion on non-interactive glow layers so text and controls remain steady. */
+@keyframes ambient-breathe {
+  from { transform: scale(.92); opacity: .52; }
+  to { transform: scale(1.13); opacity: .98; }
 }
 @layer utilities {
   .window-drag { -webkit-app-region: drag; }
