@@ -93,6 +93,7 @@
     ],
     "asar": true,
     "linux": {
+      "maintainer": "Voxnelo <40263163+kunlong-luo@users.noreply.github.com>",
       "icon": "build/icon.png",
       "target": [
         "deb",
