@@ -13,35 +13,44 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 if(process.platform!=='linux')throw Error('Linux desktop smoke requires X11');
-if(!process.env.DISPLAY)throw Error('Use xvfb-run -a node scripts/check-electron-window.mjs');
+if(!process.env.DISPLAY)throw Error('Use xvfb-run -a node --experimental-strip-types scripts/check-electron-window.mts');
 const scale=Number(process.env.VOXNELO_DPI_SCALE||'1');
 if(![1,1.25,1.5].includes(scale))throw Error('Unsupported test DPI: '+scale);
 const resultDir=path.resolve('desktop-evidence',scale===1?'standard':'dpi-'+Math.round(scale*100));
 await mkdir(resultDir,{recursive:true});
-const delay=ms=>new Promise(r=>setTimeout(r,ms));
-const freePort=async()=>new Promise((resolve,reject)=>{
+const delay=(ms:number)=>new Promise<void>(r=>setTimeout(r,ms));
+const freePort=async():Promise<number>=>new Promise((resolve,reject)=>{
   const server=createServer();
   server.once('error',reject);
   server.listen(0,'127.0.0.1',()=>{
-    const port=server.address().port;
+    const address=server.address();
+    if(!address||typeof address==='string'){reject(Error('No TCP port'));return;}
+    const port=address.port;
     server.close(()=>resolve(port));
   });
 });
-const port=await freePort(), report=[];
-let wm, electron, socket, sequence=0, stderr='';
-const pending=new Map();
-const send=(method,params={})=>new Promise((resolve,reject)=>{
+type CdpReply={result?:{value?:unknown};exceptionDetails?:{text:string};data?:string;[key:string]:unknown};
+type DesktopMetrics={width:number;height:number;scrollWidth:number;clientWidth:number;chromeHeight:number;chromePresent:boolean;chromeTop:number;chromeLeft:number;sidebarTop:number;sidebarBottom:number;sidebarRight:number;mainContainer:string;desktopPreload:boolean;desktopPlatform:string;scheme:string;practice:boolean;micBottom:number;micTop:number;railBottom:number;mobileNav:boolean;devicePixelRatio:number};
+const port=await freePort();
+const report:Array<{label:string;[key:string]:unknown}>=[];
+let wm:ReturnType<typeof spawn>|undefined;
+let electron:ReturnType<typeof spawn>|undefined;
+let socket:WebSocket|undefined;
+let sequence=0,stderr='';
+const pending=new Map<number,{resolve:(response:CdpReply)=>void;reject:(reason:Error)=>void;timeout:ReturnType<typeof setTimeout>}>();
+const send=(method:string,params:Record<string,unknown>={})=>new Promise<CdpReply>((resolve,reject)=>{
+  if(!socket){reject(Error('Electron WebSocket is unavailable'));return;}
   const id=++sequence;
   const timeout=setTimeout(()=>{pending.delete(id);reject(Error('Electron CDP timeout: '+method));},12000);
   pending.set(id,{resolve,reject,timeout});
   socket.send(JSON.stringify({id,method,params}));
 });
-const evaluate=async expression=>{
+const evaluate=async <T=string,>(expression:string):Promise<T>=>{
   const response=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});
   if(response.exceptionDetails)throw Error('Electron renderer eval failed: '+response.exceptionDetails.text);
-  return response.result?.value;
+  return response.result?.value as T;
 };
-const until=async(expression,timeoutMs=10000)=>{
+const until=async(expression:string,timeoutMs=10000):Promise<void>=>{
   const began=Date.now();
   while(Date.now()-began<timeoutMs){
     try{if(await evaluate(expression))return;}catch{/* Renderer can reload during startup. */}
@@ -49,9 +58,9 @@ const until=async(expression,timeoutMs=10000)=>{
   }
   throw Error('Timed out: '+expression);
 };
-const xdo=(...args)=>execFileSync('xdotool',args,{encoding:'utf8',timeout:6000}).trim();
-const viewport=async()=>evaluate('(()=>{const d=document.documentElement;const mic=document.querySelector(".recordAction")?.getBoundingClientRect(),rail=document.querySelector(".actionRail")?.getBoundingClientRect(),title=document.querySelector(".appTitlebar")?.getBoundingClientRect(),sidebar=document.querySelector(".sidebar")?.getBoundingClientRect();const nav=document.querySelector(".mobileNav");return {width:innerWidth,height:innerHeight,scrollWidth:d.scrollWidth,clientWidth:d.clientWidth,chromeHeight:title?.height||0,chromePresent:!!title,chromeTop:Math.round(title?.top??-1),chromeLeft:Math.round(title?.left??-1),sidebarTop:Math.round(sidebar?.top??-1),sidebarBottom:Math.round(sidebar?.bottom??-1),sidebarRight:Math.round(sidebar?.right??-1),mainContainer:getComputedStyle(document.querySelector(".mainArea")).containerName,desktopPreload:!!window.voxneloDesktop?.windowControls,desktopPlatform:window.voxneloDesktop?.platform,scheme:location.protocol,practice:!!document.querySelector(".practiceLayout"),micBottom:Math.round(mic?.bottom||0),micTop:Math.round(mic?.top||0),railBottom:Math.round(rail?.bottom||0),mobileNav:getComputedStyle(nav).display!=="none",devicePixelRatio:devicePixelRatio}})()');
-const snapshot=async(label,expectedWidth,expectedHeight)=>{
+const xdo=(...args:string[])=>execFileSync('xdotool',args,{encoding:'utf8',timeout:6000}).trim();
+const viewport=async()=>evaluate<DesktopMetrics>('(()=>{const d=document.documentElement;const mic=document.querySelector(".recordAction")?.getBoundingClientRect(),rail=document.querySelector(".actionRail")?.getBoundingClientRect(),title=document.querySelector(".appTitlebar")?.getBoundingClientRect(),sidebar=document.querySelector(".sidebar")?.getBoundingClientRect();const nav=document.querySelector(".mobileNav");return {width:innerWidth,height:innerHeight,scrollWidth:d.scrollWidth,clientWidth:d.clientWidth,chromeHeight:title?.height||0,chromePresent:!!title,chromeTop:Math.round(title?.top??-1),chromeLeft:Math.round(title?.left??-1),sidebarTop:Math.round(sidebar?.top??-1),sidebarBottom:Math.round(sidebar?.bottom??-1),sidebarRight:Math.round(sidebar?.right??-1),mainContainer:getComputedStyle(document.querySelector(".mainArea")).containerName,desktopPreload:!!window.voxneloDesktop?.windowControls,desktopPlatform:window.voxneloDesktop?.platform,scheme:location.protocol,practice:!!document.querySelector(".practiceLayout"),micBottom:Math.round(mic?.bottom||0),micTop:Math.round(mic?.top||0),railBottom:Math.round(rail?.bottom||0),mobileNav:getComputedStyle(nav).display!=="none",devicePixelRatio:devicePixelRatio}})()');
+const snapshot=async(label:string,expectedWidth:number,expectedHeight:number):Promise<void>=>{
   await delay(550);
   const state=await viewport();
   report.push({label,...state});
@@ -73,6 +82,7 @@ const snapshot=async(label,expectedWidth,expectedHeight)=>{
   assert.ok(state.railBottom>state.micBottom&&state.railBottom<=state.height-8,'audio-action labels clipped '+label+': '+JSON.stringify(state));
   assert.equal(state.mobileNav,false,'unexpected mobile dock in desktop window');
   const png=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  if(typeof png.data!=='string')throw Error('Missing Electron screenshot');
   await writeFile(path.join(resultDir,label+'.png'),Buffer.from(png.data,'base64'));
 };
 try{
@@ -88,14 +98,14 @@ try{
     env:{...process.env,ELECTRON_DISABLE_SECURITY_WARNINGS:'false'},
     stdio:['ignore','ignore','pipe']
   });
-  electron.stderr.on('data',chunk=>{stderr=(stderr+String(chunk)).slice(-8000);});
+  electron.stderr?.on('data',(chunk:Buffer)=>{stderr=(stderr+String(chunk)).slice(-8000);});
   let wsUrl;
   for(let attempt=0;attempt<200;attempt++){
     if(electron.exitCode!==null)throw Error('Electron process exited '+electron.exitCode+': '+stderr);
     try{
       const response=await fetch('http://127.0.0.1:'+port+'/json/list');
       if(response.ok){
-        const pages=await response.json();
+        const pages=await response.json() as Array<{type:string;url:string;webSocketDebuggerUrl:string}>;
         const page=pages.find(p=>p.type==='page'&&(p.url||'').startsWith('voxnelo://app/'));
         if(page){wsUrl=page.webSocketDebuggerUrl;break;}
       }
@@ -103,13 +113,16 @@ try{
     await delay(150);
   }
   if(!wsUrl)throw Error('Electron page not found on CDP: '+stderr);
-  socket=new WebSocket(wsUrl);
-  await new Promise((resolve,reject)=>{
-    socket.addEventListener('open',resolve,{once:true});
-    socket.addEventListener('error',reject,{once:true});
+  const activeSocket=new WebSocket(wsUrl);
+  socket=activeSocket;
+  await new Promise<void>((resolve,reject)=>{
+    activeSocket.addEventListener('open',()=>resolve(),{once:true});
+    activeSocket.addEventListener('error',()=>reject(Error('Electron WebSocket failed')),{once:true});
   });
-  socket.addEventListener('message',e=>{
-    const packet=JSON.parse(e.data), entry=pending.get(packet.id);
+  activeSocket.addEventListener('message',e=>{
+    const packet=JSON.parse(String(e.data)) as {id?:number;error?:unknown;result?:CdpReply};
+    if(packet.id===undefined)return;
+    const entry=pending.get(packet.id);
     if(!entry)return;
     clearTimeout(entry.timeout);pending.delete(packet.id);
     if(packet.error)entry.reject(Error(JSON.stringify(packet.error)));
@@ -119,7 +132,7 @@ try{
   await send('Runtime.enable');
   await until('document.readyState==="complete"&&!!document.querySelector(".practiceLayout")&&!!window.voxneloDesktop?.windowControls');
   // Check renderer security surface; the test does not widen the preload API.
-  const secure=await evaluate('({node:typeof window.require,process:typeof window.process,bridgeKeys:Object.keys(window.voxneloDesktop).sort()})');
+  const secure=await evaluate<{node:string;process:string;bridgeKeys:string[]}>('({node:typeof window.require,process:typeof window.process,bridgeKeys:Object.keys(window.voxneloDesktop).sort()})');
   assert.equal(secure.node,'undefined','unsafe Node integration');
   assert.equal(secure.process,'undefined','unsafe process exposed in renderer');
   assert.deepEqual(secure.bridgeKeys,['asr','platform','speech','version','windowControls'],'unexpected preload capability');
@@ -158,7 +171,7 @@ try{
   xdo('windowactivate','--sync',winId);
   await until('!!document.querySelector(".appTitlebar")');
 
-  const reduced=await evaluate('(()=>{const media=matchMedia("(prefers-reduced-motion: reduce)");return {supported:typeof media.matches==="boolean",style:getComputedStyle(document.querySelector(".practiceLayout")).animationName}})()');
+  const reduced=await evaluate<{supported:boolean;style:string}>('(()=>{const media=matchMedia("(prefers-reduced-motion: reduce)");return {supported:typeof media.matches==="boolean",style:getComputedStyle(document.querySelector(".practiceLayout")).animationName}})()');
   report.push({label:'motion-availability',...reduced});
   } else {
     // DPI integration tests use the app's actual native window with a scaled
@@ -171,7 +184,7 @@ try{
   await writeFile(path.join(resultDir,'report.json'),JSON.stringify({result:'passed',report},null,2));
   console.log('Native Linux Electron smoke passed:',report.map(r=>r.label).join(', '));
 }catch(error){
-  await writeFile(path.join(resultDir,'report.json'),JSON.stringify({result:'failed',error:String(error.stack||error),stderr,report},null,2));
+  await writeFile(path.join(resultDir,'report.json'),JSON.stringify({result:'failed',error:String(error instanceof Error?(error.stack??error.message):error),stderr,report},null,2));
   console.error(error);process.exitCode=1;
 }finally{
   if(socket&&socket.readyState===WebSocket.OPEN)socket.close();
