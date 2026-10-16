@@ -13,11 +13,15 @@ export function useRecorder() {
   const urlRef = useRef<string | null>(null);
   const disposedRef = useRef(false);
   const requestingRef = useRef(false);
+  // Invalidates delayed MediaRecorder events when the user clears or changes a sentence.
+  const generationRef = useRef(0);
 
   const clearAudio = useCallback(() => {
+    generationRef.current += 1;
     if (urlRef.current) URL.revokeObjectURL(urlRef.current);
     urlRef.current = null;
     setRecordingUrl(null);
+    setStatus('idle');
   }, []);
 
   const stop = useCallback(() => {
@@ -31,6 +35,7 @@ export function useRecorder() {
     requestingRef.current = true;
     setError(null);
     clearAudio();
+    const generation = generationRef.current;
     setStatus('requesting');
     try {
       if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
@@ -38,7 +43,7 @@ export function useRecorder() {
       }
       const granted = await navigator.mediaDevices.getUserMedia({ audio: { noiseSuppression: true, echoCancellation: true, autoGainControl: true, channelCount: 1 }, video: false });
       // 窗口可能在系统权限弹窗尚未关闭时已经卸载。
-      if (disposedRef.current) {
+      if (disposedRef.current || generation !== generationRef.current) {
         granted.getTracks().forEach((track) => track.stop());
         return;
       }
@@ -55,7 +60,9 @@ export function useRecorder() {
       let failed = false;
       mediaRecorder.onstop = () => {
         granted.getTracks().forEach((track) => track.stop());
-        if (failed || disposedRef.current) return;
+        if (stream.current === granted) stream.current = null;
+        if (recorder.current === mediaRecorder) recorder.current = null;
+        if (failed || disposedRef.current || generation !== generationRef.current) return;
         if (chunks.length) {
           const blob = new Blob(chunks, { type: mediaRecorder.mimeType || 'audio/webm' });
           const objectUrl = URL.createObjectURL(blob);
@@ -73,7 +80,7 @@ export function useRecorder() {
         granted.getTracks().forEach((track) => track.stop());
         if (stream.current === granted) stream.current = null;
         if (recorder.current === mediaRecorder) recorder.current = null;
-        if (!disposedRef.current) {
+        if (!disposedRef.current && generation === generationRef.current) {
           setStatus('idle');
           setError(t('recorderInterrupted'));
         }
@@ -81,7 +88,7 @@ export function useRecorder() {
       mediaRecorder.start();
       setStatus('recording');
     } catch (cause) {
-      if (disposedRef.current) return;
+      if (disposedRef.current || generation !== generationRef.current) return;
       stream.current?.getTracks().forEach((track) => track.stop());
       stream.current = null;
       setStatus('idle');
@@ -104,6 +111,7 @@ export function useRecorder() {
       disposedRef.current = false;
       return () => {
         disposedRef.current = true;
+        generationRef.current += 1;
         if (recorder.current) recorder.current.onstop = null;
         if (recorder.current?.state === 'recording') recorder.current.stop();
         stream.current?.getTracks().forEach((track) => track.stop());
