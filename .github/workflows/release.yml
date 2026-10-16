@@ -44,6 +44,8 @@ jobs:
         run: pnpm test
       - name: Build
         run: pnpm build
+      - name: Require true offline ASR recognition for models included in candidate
+        run: pnpm asr:verify-real
       - name: Package unsigned bundle
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
