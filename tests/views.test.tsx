@@ -64,7 +64,7 @@ describe('PracticeView', () => {
   it('练习台有横向五个音频操作入口与真实课程进度，不渲染虚构学习成绩', () => {
     render(<PracticeView {...basePracticeProps} />);
     const rail = screen.getByTestId('practice-control-rail');
-    expect(rail.children).toHaveLength(5);
+    expect(rail.children).toHaveLength(4);
     expect(screen.getByRole('button', { name: '上一句' })).toBeTruthy();
     expect(screen.getByRole('button', { name: '换一句' })).toBeTruthy();
     const progress = screen.getByRole('progressbar', { name: '课程位置，第 1 句，共 40 句' });
@@ -73,7 +73,8 @@ describe('PracticeView', () => {
     expect(screen.getByText('录音尝试句')).toBeTruthy();
     expect(screen.queryByText('连续天数')).toBeNull();
     expect(screen.queryByText('发音准确率')).toBeNull();
-    expect(screen.getByRole('button', { name: '结束录音' }).hasAttribute('disabled')).toBe(true);
+    expect(screen.queryByRole('button', { name: '结束录音' })).toBeNull();
+    expect(screen.getByRole('button', { name: '开口跟读' }).getAttribute('aria-pressed')).toBe('false');
     expect(screen.getByRole('button', { name: '回听刚才的录音' }).hasAttribute('disabled')).toBe(true);
   });
 
@@ -85,7 +86,7 @@ describe('PracticeView', () => {
     expect(sidebar).toBeTruthy();
     expect(lesson?.className).toContain('bg-glass-surface');
     expect(lesson?.className).toContain('backdrop-blur-[var(--glass-blur)]');
-    expect(lesson?.querySelector('.actionRail')?.children).toHaveLength(5);
+    expect(lesson?.querySelector('.actionRail')?.children).toHaveLength(4);
     expect(sidebar?.querySelectorAll('.insightCard')).toHaveLength(4);
     expect(sidebar?.querySelector('.progressDonut')).toBeTruthy();
     expect(lesson?.querySelector('.insightCard')).toBeNull();
@@ -107,9 +108,16 @@ describe('PracticeView', () => {
     expect((screen.getByRole('button',{name:'开口跟读'}) as HTMLButtonElement).disabled).toBe(true);
   });
 
-  it('录音中只有结束录音可用，避免切换语速、播放示范或误启动录音', () => {
-    render(<PracticeView {...basePracticeProps} recorder={stubRecorder({ status: 'recording' })} recordingBusy />);
-    expect((screen.getByRole('button', { name: '录音进行中' }) as HTMLButtonElement).disabled).toBe(true);
+  it('同一个录音按钮点击开始，录音中改为可点击的结束按钮，其他操作锁定', () => {
+    const onRecord=vi.fn();
+    const {rerender}=render(<PracticeView {...basePracticeProps} onRecord={onRecord}/>);
+    fireEvent.click(screen.getByRole('button',{name:'开口跟读'}));
+    expect(onRecord).toHaveBeenCalledOnce();
+    rerender(<PracticeView {...basePracticeProps} recorder={stubRecorder({ status: 'recording' })} recordingBusy onRecord={onRecord}/>);
+    expect(screen.queryByRole('button',{name:'开口跟读'})).toBeNull();
+    expect(screen.getByRole('button',{name:'结束录音'}).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(screen.getByRole('button',{name:'结束录音'}));
+    expect(onRecord).toHaveBeenCalledTimes(2);
     expect((screen.getByRole('button', { name: '结束录音' }) as HTMLButtonElement).disabled).toBe(false);
     expect((screen.getByRole('button', { name: '播放标准朗读' }) as HTMLButtonElement).disabled).toBe(true);
     expect((screen.getByRole('button', { name: '切换语速' }) as HTMLButtonElement).disabled).toBe(true);
@@ -129,6 +137,7 @@ describe('PracticeView', () => {
     expect(requesting?.getAttribute('aria-hidden')).toBe('true');
     expect(container.querySelector('[data-motion="record-halo"]')).toBeNull();
     expect((screen.getByRole('button', { name: '正在获取权限' }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.queryByRole('button', {name:'结束录音'})).toBeNull();
 
     rerender(<PracticeView {...basePracticeProps} recorder={stubRecorder({ status: 'recording' })} recordingBusy />);
     const halo = container.querySelector('[data-motion="record-halo"]');
