@@ -118,4 +118,4 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
         run: pnpm exec electron-builder --dir --publish never
       - name: Assert bundle and Voxnelo identity
-        run: node scripts/check-desktop-package.mjs
+        run: node --experimental-strip-types scripts/check-desktop-package.mts
