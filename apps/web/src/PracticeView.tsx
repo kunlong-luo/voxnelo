@@ -29,8 +29,8 @@ const tips:Record<Sentence['topic'],TranslationKey> = {
   greetings:'tipGreetings',personal:'tipPersonal',needs:'tipNeeds',
   learning:'tipLearning',daily:'tipDaily'
 };
-const utilityButton = 'size-11 rounded-2xl border border-border/65 bg-card/80 text-primary shadow-sm hover:bg-accent hover:shadow-md sm:size-12';
-const minorCaption = 'mt-2 text-center text-[11px] font-semibold leading-4 text-muted-foreground';
+const utilityButton = 'size-10 rounded-2xl border border-border/65 bg-card/80 text-primary shadow-sm hover:bg-accent hover:shadow-md @min-[440px]/workspace:size-11 @min-[700px]/workspace:size-12';
+const minorCaption = 'mt-2 max-w-full text-center text-[10px] font-semibold leading-4 text-muted-foreground @min-[560px]/workspace:text-[11px]';
 function ActionSlot({children,label,detail,className}:{
   children:React.ReactNode;label:string;detail?:string;className?:string;
 }) {
@@ -65,9 +65,9 @@ export function PracticeView({
     {topic:'personal',label:t('scenePersonal'),icon:BookOpen},
     {topic:'daily',label:t('sceneDaily'),icon:Coffee},
   ] as const;
-  return <div className="practiceLayout layoutWorkbench grid min-h-[max(720px,calc(100dvh-114px))] grid-cols-[minmax(0,1fr)_clamp(198px,23vw,294px)] items-stretch gap-3 min-[1100px]:gap-5 max-[870px]:grid-cols-[minmax(0,1fr)_194px]">
+  return <div className="practiceLayout layoutWorkbench grid min-w-0 grid-cols-1 items-stretch gap-3 @min-[840px]/workspace:grid-cols-[minmax(0,1fr)_minmax(220px,28%)] @min-[1040px]/workspace:gap-5">
     <div className="practiceColumn flex min-w-0 flex-col gap-3">
-      <Card className="practiceCard referenceLesson flex min-h-[700px] flex-1 flex-col overflow-visible border-white/75 bg-gradient-to-br from-card via-card to-brand-mist/35 shadow-soft">
+      <Card className="practiceCard referenceLesson flex min-h-[min(700px,calc(100dvh-120px))] min-w-0 flex-1 flex-col overflow-visible border-white/75 bg-gradient-to-br from-card via-card to-brand-mist/35 shadow-soft">
         <header className="cardHeader lessonHeader flex min-h-19 flex-wrap items-center justify-between gap-3 px-5 pt-5 pb-0 sm:px-7 sm:pt-6">
           <div className="lessonProgress flex min-w-22 flex-col gap-2" aria-label={t('coursePosition',{index,total:SENTENCES.length})}>
             <span className="lessonCount text-sm font-extrabold tracking-tight tabular-nums text-foreground">{String(index).padStart(2,'0')} <span className="font-medium text-muted-foreground">/ {SENTENCES.length}</span></span>
@@ -89,11 +89,11 @@ export function PracticeView({
             </div>
           </div>
         </header>
-        <div className="lessonFocus flex min-h-80 flex-1 flex-col items-center justify-center gap-4 px-5 py-8 text-center sm:px-9">
+        <div className="lessonFocus @container/lesson flex min-h-64 min-w-0 flex-1 flex-col items-center justify-center gap-4 px-4 py-6 text-center @min-[560px]/workspace:px-8 @min-[700px]/workspace:min-h-80">
           <div className="sentenceContent flex w-full flex-col items-center justify-center gap-3">
             <span className="lessonLevel text-[11px] font-bold tracking-[.2em] text-muted-foreground uppercase">{t('speakingPractice')} · {current.level}</span>
             <div className="sentenceHeading flex max-w-full justify-center">
-              <h1 key={current.id} className="sentenceText max-w-full text-[clamp(30px,3.7vw,54px)] leading-[1.18] font-extrabold tracking-[-.055em] wrap-break-word text-foreground motion-safe:animate-sentence-enter">{current.english}</h1>
+              <h1 key={current.id} className="sentenceText max-w-full text-[clamp(1.75rem,7cqi,3.5rem)] leading-[1.18] font-extrabold tracking-[-.055em] wrap-break-word text-foreground motion-safe:animate-sentence-enter">{current.english}</h1>
             </div>
             <p className="translation text-base leading-7 text-muted-foreground sm:text-lg">{current.chinese}</p>
             {showIpa && <p className="ipa max-w-full text-sm leading-6 wrap-break-word text-muted-foreground">{current.ipa}</p>}
@@ -102,7 +102,7 @@ export function PracticeView({
           <div className="wavePanel mx-auto w-full max-w-150 opacity-80"><WaveformArt/></div>
         </div>
         <section className="lessonActions border-t border-border/55 bg-brand-cream/45 px-3 pt-6 pb-4 sm:px-6" aria-label={t('practiceActions')}>
-          <div className="actionRail grid grid-cols-[repeat(2,minmax(0,1fr))_minmax(75px,1.35fr)_repeat(2,minmax(0,1fr))] items-start gap-1 sm:gap-2" data-testid="practice-control-rail">
+          <div className="actionRail grid grid-cols-[repeat(2,minmax(0,1fr))_minmax(60px,1.25fr)_repeat(2,minmax(0,1fr))] items-start gap-0.5 @min-[560px]/workspace:gap-2" data-testid="practice-control-rail">
             <ActionSlot label={t('playDemo')}>
               <Tooltip text={t('playExample')}>
                 <Button variant="outline" size="icon-lg" className={utilityButton} onClick={onSpeak} aria-label={t('playExample')} disabled={recordingBusy}><Volume2 size={21}/></Button>
@@ -112,7 +112,7 @@ export function PracticeView({
               <Button variant="outline" size="icon-lg" className={utilityButton} onClick={onToggleSpeed} disabled={recordingBusy} aria-pressed={speed==='slow'} aria-label={t('speedSwitch')}><Turtle size={21}/></Button>
             </ActionSlot>
             <ActionSlot label={t(requesting?'micPermission':recording?'recordingInProgress':'micStart')} detail={t('micStartHint')}>
-              <Button variant="default" size="icon-lg" className={cn('recordAction size-17 rounded-[24px] bg-primary text-white shadow-[0_12px_28px_-10px_var(--shadow-color)] hover:scale-[1.04] hover:bg-primary/90 motion-reduce:transform-none',recording&&'ring-6 ring-destructive/15')} onClick={onRecord} disabled={recordingBusy} aria-label={t(requesting?'micPermission':recording?'micBusy':'micStart')}><Mic size={30}/></Button>
+              <Button variant="default" size="icon-lg" className={cn('recordAction size-15 rounded-[22px] bg-primary @min-[440px]/workspace:size-17 text-white shadow-[0_12px_28px_-10px_var(--shadow-color)] hover:scale-[1.04] hover:bg-primary/90 motion-reduce:transform-none',recording&&'ring-6 ring-destructive/15')} onClick={onRecord} disabled={recordingBusy} aria-label={t(requesting?'micPermission':recording?'micBusy':'micStart')}><Mic size={30}/></Button>
             </ActionSlot>
             <ActionSlot label={t('stopRecording')}>
               <Button variant="outline" size="icon-lg" className={utilityButton} onClick={onRecord} disabled={!recording} aria-label={t('stopRecording')}><Square size={20} fill="currentColor"/></Button>
@@ -135,7 +135,7 @@ export function PracticeView({
         <Button variant="ghost" size="icon-sm" onClick={onDismissNotice} aria-label={t('closeNotice')}><X size={15}/></Button>
       </div>}
     </div>
-    <aside className="referenceInsights insightsColumn grid min-w-0 grid-rows-[1.3fr_1fr_.95fr_1.1fr] gap-3" aria-label={t('localOverview')}>
+    <aside className="referenceInsights insightsColumn grid min-w-0 grid-cols-1 content-start gap-3 @min-[600px]/workspace:grid-cols-2 @min-[840px]/workspace:grid-cols-1 @min-[840px]/workspace:grid-rows-[1.3fr_1fr_.95fr_1.1fr]" aria-label={t('localOverview')}>
       <Card className="insightCard progressCard flex min-h-0 flex-col gap-4 p-4 sm:p-5">
         <div className="insightHeading flex flex-wrap items-center justify-between gap-1"><h2 className="text-sm font-bold">{t('progress')}</h2><span className="insightSideNote text-[10px] text-muted-foreground">{t('localRecord')}</span></div>
         <div className="progressOverview flex flex-wrap items-center gap-3">
@@ -149,7 +149,7 @@ export function PracticeView({
       </Card>
       <Card className="insightCard feedCard flex min-h-0 flex-col gap-3 p-4 sm:p-5">
         <div className="insightHeading flex items-center justify-between gap-1"><h2 className="text-sm font-bold">{t('relatedPhrases')}</h2><span className="insightSideNote text-[10px] text-muted-foreground">{t('sameTopic')}</span></div>
-        <div className="feedStrip grid min-h-0 flex-1 content-start gap-2 overflow-auto" aria-label={t('relatedPhrasesAria')}>
+        <div className="feedStrip grid min-h-0 flex-1 content-start gap-2 @min-[840px]/workspace:overflow-auto" aria-label={t('relatedPhrasesAria')}>
           {related.map(item=><Button variant="ghost" className="feedItem h-auto min-h-10 w-full justify-between rounded-xl bg-muted/40 px-3 py-2 text-left hover:bg-accent" key={item.id} disabled={recordingBusy||!onChooseRelated} onClick={()=>onChooseRelated?.(item)} aria-label={t('practiceSentence',{english:item.english})}>
             <span className="flex min-w-0 flex-col gap-1"><span className="truncate text-[10px] font-normal text-muted-foreground">{item.chinese}</span><strong className="truncate text-[11px] text-foreground">{item.english}</strong></span><ChevronRight size={15} className="shrink-0 text-primary"/>
           </Button>)}
