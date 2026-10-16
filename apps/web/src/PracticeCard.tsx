@@ -49,8 +49,8 @@ export function PracticeCard({current,currentState,speed,showIpa,recorder,dictat
             </div>
           </div>
         </header>
-        <div className="lessonFocus @container/lesson flex min-h-64 min-w-0 flex-1 flex-col items-center justify-center gap-4 px-4 py-6 text-center [@media(max-height:680px)]:gap-2 [@media(max-height:680px)]:py-2 @min-[560px]/workspace:px-8 @min-[700px]/workspace:min-h-[clamp(12rem,calc(100dvh-365px),20rem)]">
-          <div className="sentenceContent flex w-full flex-col items-center justify-center gap-3">
+        <div className="lessonFocus @container/lesson flex min-h-64 min-w-0 flex-1 flex-col items-center justify-center gap-4 px-4 py-6 text-center [@media(max-height:680px)]:min-h-48 [@media(max-height:680px)]:gap-1 [@media(max-height:680px)]:py-1 @min-[560px]/workspace:px-8 @min-[700px]/workspace:min-h-[clamp(12rem,calc(100dvh-365px),20rem)]">
+          <div className="sentenceContent flex w-full flex-col items-center justify-center gap-3 [@media(max-height:680px)]:gap-1.5">
             <span className="lessonLevel text-[11px] font-bold tracking-[.2em] text-muted-foreground uppercase">{t('speakingPractice')} · {current.level}</span>
             <div className="sentenceHeading flex max-w-full justify-center">
               <h1 key={current.id} className="sentenceText max-w-full text-[clamp(1.875rem,5.4cqi,2.625rem)] leading-[1.22] font-extrabold tracking-[-.018em] wrap-break-word text-sentence-ink motion-safe:animate-sentence-enter">{current.english}</h1>
