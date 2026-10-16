@@ -1,3 +1,4 @@
+import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { BookOpen, BookOpenCheck, ChevronRight, Coffee, Lightbulb, MessageCircle, ShieldCheck } from 'lucide-react';
 import { SENTENCES, type Sentence } from '@voxnelo/learning';
 import type { PracticeViewProps } from './PracticeTypes';
@@ -24,6 +25,7 @@ function Metric({count,label}: {count:number;label:string}) {
 /** Local study statistics and related phrases; never mock proficiency scores. */
 export function PracticeSidebarWidgets({current,stats,recordingBusy,onChooseRelated}:SidebarWidgetsProps) {
   const {t}=useI18n();
+  const [relatedListRef]=useAutoAnimate<HTMLDivElement>();
   const related=SENTENCES.filter(item=>item.topic===current.topic && item.id!==current.id).slice(0,4);
   const progressPercent=Math.max(0,Math.min(100,stats.viewed/SENTENCES.length*100));
   const scenes = [
@@ -46,7 +48,7 @@ export function PracticeSidebarWidgets({current,stats,recordingBusy,onChooseRela
       </Card>
       <Card className="insightCard feedCard motion-safe:animate-panel-enter motion-safe:[animation-delay:165ms] flex min-h-0 flex-col gap-3 border-border/65 bg-card/90 p-4 shadow-sm sm:p-5">
         <div className="insightHeading flex items-center justify-between gap-1"><h2 className="text-sm font-bold">{t('relatedPhrases')}</h2><span className="insightSideNote text-[11px] text-muted-foreground">{t('sameTopic')}</span></div>
-        <div className="feedStrip grid min-h-0 flex-1 content-start gap-2" aria-label={t('relatedPhrasesAria')}>
+        <div ref={relatedListRef} className="feedStrip grid min-h-0 flex-1 content-start gap-2" aria-label={t('relatedPhrasesAria')}>
           {related.map((item,i)=><Button variant="ghost" className="feedItem group h-auto min-h-12 w-full min-w-0 items-center justify-between gap-2 rounded-xl border border-transparent bg-muted/45 px-2.5 py-2.5 text-left transition-[border-color,background-color] hover:border-primary/20 hover:bg-accent focus-visible:border-primary" key={item.id} disabled={recordingBusy||!onChooseRelated} onClick={()=>onChooseRelated?.(item)} aria-label={t('practiceSentence',{english:item.english})}><span aria-hidden="true" className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-card/85 text-[10px] font-semibold tabular-nums text-primary">{String(i+1).padStart(2,'0')}</span>
             <span className="flex min-w-0 flex-1 flex-col gap-0.5 text-left"><strong className="line-clamp-2 text-xs leading-4 font-semibold wrap-break-word whitespace-normal text-foreground">{item.english}</strong><span className="line-clamp-2 text-[11px] leading-4 wrap-break-word whitespace-normal text-muted-foreground">{item.chinese}</span></span><ChevronRight size={15} className="shrink-0 text-primary/75 transition-transform motion-safe:group-hover:translate-x-0.5" aria-hidden="true"/>
           </Button>)}
