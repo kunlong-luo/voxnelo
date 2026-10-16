@@ -63,6 +63,7 @@ try{
         if(!(message.samples instanceof Float32Array)||message.samples.length>3200)return;
         stream.acceptWaveform({samples:message.samples,sampleRate:16000});
         decode();
+        parent.postMessage({type:'drained'});
       } else if(message.type==='finish'){
         stopping=true;
         stream.inputFinished();
