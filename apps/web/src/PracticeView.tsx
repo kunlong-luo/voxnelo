@@ -89,7 +89,7 @@ export function PracticeView({
             </div>
           </div>
         </header>
-        <div className="lessonFocus @container/lesson flex min-h-64 min-w-0 flex-1 flex-col items-center justify-center gap-4 px-4 py-6 text-center @min-[560px]/workspace:px-8 @min-[700px]/workspace:min-h-80">
+        <div className="lessonFocus @container/lesson flex min-h-64 min-w-0 flex-1 flex-col items-center justify-center gap-4 px-4 py-6 text-center @min-[560px]/workspace:px-8 @min-[700px]/workspace:min-h-[clamp(12rem,calc(100dvh-365px),20rem)]">
           <div className="sentenceContent flex w-full flex-col items-center justify-center gap-3">
             <span className="lessonLevel text-[11px] font-bold tracking-[.2em] text-muted-foreground uppercase">{t('speakingPractice')} · {current.level}</span>
             <div className="sentenceHeading flex max-w-full justify-center">
