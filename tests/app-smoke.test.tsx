@@ -37,6 +37,23 @@ describe('App smoke', () => {
     expect(screen.getByRole('button', { name: '我的收藏' })).toBeTruthy();
   });
 
+  it('窄屏使用底部导航，导航行为与侧栏保持一致', async () => {
+    const view = render(<App />);
+    const mainArea = view.container.querySelector('.mainArea');
+    const mobileNav = view.container.querySelector('.mobileNav');
+    expect(mainArea?.classList.contains('@container/workspace')).toBe(true);
+    expect(mobileNav?.classList.contains('sm:hidden')).toBe(true);
+    const favoriteButton = mobileNav?.querySelector('button[aria-label^="我的收藏"]');
+    expect(favoriteButton).toBeTruthy();
+    fireEvent.click(favoriteButton!);
+    await waitFor(() => expect(view.container.querySelector('.libraryPage')).toBeTruthy());
+    expect(favoriteButton?.getAttribute('aria-current')).toBe('page');
+    const practiceButton = mobileNav?.querySelector('button[aria-label^="开始练习"]');
+    expect(practiceButton).toBeTruthy();
+    fireEvent.click(practiceButton!);
+    await waitFor(() => expect(view.container.querySelector('.practiceLayout')).toBeTruthy());
+  });
+
   it('右方向键换到下一句', async () => {
     const view = render(<App />);
     await screen.findByText(FIRST_SENTENCE.english);
