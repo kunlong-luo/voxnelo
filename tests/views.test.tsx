@@ -84,7 +84,7 @@ describe('PracticeView', () => {
     const requesting = container.querySelector('[data-motion="permission-halo"]');
     expect(requesting?.getAttribute('aria-hidden')).toBe('true');
     expect(container.querySelector('[data-motion="record-halo"]')).toBeNull();
-    expect((screen.getByRole('button', { name: '正在申请麦克风权限' }) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button', { name: '正在获取权限' }) as HTMLButtonElement).disabled).toBe(true);
 
     rerender(<PracticeView {...basePracticeProps} recorder={stubRecorder({ status: 'recording' })} recordingBusy />);
     const halo = container.querySelector('[data-motion="record-halo"]');
