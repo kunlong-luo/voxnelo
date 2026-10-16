@@ -35,7 +35,7 @@ export function PracticeSidebarWidgets({current,stats,recordingBusy,onChooseRela
   ] as const;
   return (
     <aside className="referenceInsights insightsColumn grid min-w-0 auto-rows-min grid-cols-1 content-start gap-5 @min-[600px]/workspace:grid-cols-2 @min-[840px]/workspace:grid-cols-1" aria-label={t('localOverview')}>
-      <Card className="insightCard progressCard motion-safe:animate-panel-enter motion-safe:[animation-delay:100ms] transition-[transform,box-shadow,border-color] duration-300 ease-out motion-safe:hover:-translate-y-1 hover:border-primary/20 hover:shadow-glass flex min-h-0 flex-col gap-5 border-border/65 bg-card/90 p-5 shadow-sm sm:p-6">
+      <Card className="insightCard progressCard motion-safe:animate-panel-enter motion-safe:[animation-delay:100ms] transition-[transform,box-shadow,border-color] duration-300 ease-out motion-safe:hover:-translate-y-1 hover:border-primary/20 hover:shadow-glass flex min-h-0 flex-col gap-3 border-border/65 bg-card/90 p-4 shadow-sm sm:p-5">
         <div className="insightHeading flex flex-wrap items-center justify-between gap-1"><h2 className="flex items-center gap-2 text-sm font-bold"><BookOpenCheck size={16} className="text-primary" aria-hidden="true"/>{t('progress')}</h2><span className="insightSideNote rounded-full bg-secondary/65 px-2 py-1 text-[10px] font-medium text-secondary-foreground">{t('localRecord')}</span></div>
         <div className="progressOverview flex flex-wrap items-center gap-3">
           <div className="progressDonut grid size-19 shrink-0 place-items-center rounded-full p-1.5" role="img" aria-label={t('viewedCount',{viewed:stats.viewed,total:SENTENCES.length})} style={{background:'conic-gradient(var(--primary) '+progressPercent+'%,var(--muted) 0)'}}>
