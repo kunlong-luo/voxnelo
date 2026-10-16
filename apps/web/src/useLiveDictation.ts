@@ -47,6 +47,7 @@ export function useLiveDictation(sentenceId: string) {
   const current = useRef<Recognizer | null>(null);
   const desktopStop = useRef<(() => Promise<{finalText:string}>) | null>(null);
   const [desktopAvailable,setDesktopAvailable] = useState(false);
+  const [noiseReduction,setNoiseReduction] = useState<'unknown'|'enabled'|'unverified'>('unknown');
   const requestId = useRef(0);
   const disposed = useRef(false);
   const active = status !== 'idle';
@@ -92,6 +93,7 @@ export function useLiveDictation(sentenceId: string) {
     stop();
     ++requestId.current; // Reject any late final result from the old sentence.
     setFinalText('');
+    setNoiseReduction('unknown');
     setError('');
   },[stop]);
   useEffect(() => {
@@ -121,10 +123,13 @@ export function useLiveDictation(sentenceId: string) {
       let unsubscribeError:(()=>void)|null=null;
       let sessionId:string|null=null;
       let closed=false;
+      let audioTrack:MediaStreamTrack|null=null;
+      let onDeviceEnded:(()=>void)|null=null;
       const close=():Promise<{finalText:string}>=>{
         if(closed)return Promise.resolve({finalText:''});
         closed=true;
         unsubscribe?.();unsubscribeError?.();
+        if(audioTrack&&onDeviceEnded)audioTrack.removeEventListener('ended',onDeviceEnded);
         const final=sessionId?bridge.stop(sessionId):Promise.resolve({finalText:''});
         media?.getTracks().forEach(track=>track.stop());
         if(context)void context.close();
@@ -135,7 +140,16 @@ export function useLiveDictation(sentenceId: string) {
           audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1},
           video:false,
         });
-        if(disposed.current||id!==requestId.current){close();return;}
+        if(disposed.current||id!==requestId.current){void close();return;}
+        audioTrack=media.getAudioTracks()[0]??null;
+        const settings=audioTrack?.getSettings();
+        setNoiseReduction(settings?.noiseSuppression===true?'enabled':'unverified');
+        onDeviceEnded=()=>{
+          if(closed||id!==requestId.current||disposed.current)return;
+          setError(t('dictationMicrophone'));
+          stop();
+        };
+        audioTrack?.addEventListener('ended',onDeviceEnded);
         const opened=await bridge.start();
         if(disposed.current||id!==requestId.current){
           if(opened.ok)bridge.stop(opened.sessionId);
@@ -179,7 +193,7 @@ export function useLiveDictation(sentenceId: string) {
         if(disposed.current||id!==requestId.current)return;
         setStatus('idle');
         const name=cause instanceof Error?cause.name:'';
-        setError(name==='NotAllowedError'?' '+t('dictationPermission')
+        setError(name==='NotAllowedError'?t('dictationPermission')
           :name==='NotFoundError'||name==='NotReadableError'?t('dictationMicrophone'):t('dictationFailed'));
         return;
       }
@@ -269,5 +283,5 @@ export function useLiveDictation(sentenceId: string) {
       if(!disposed.current&&id===requestId.current)setStatus('idle');
     }
   },[t]);
-  return {status,active,mode,chooseMode,supported,browserModeAvailable,localPack,finalText,interimText,error,start,stop,clear,installLocal};
+  return {status,active,mode,chooseMode,supported,browserModeAvailable,localPack,noiseReduction,finalText,interimText,error,start,stop,clear,installLocal};
 }
