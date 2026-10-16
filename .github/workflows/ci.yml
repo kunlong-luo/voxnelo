@@ -47,9 +47,9 @@ jobs:
       - name: Build
         run: pnpm build
       - name: Validate offline ASR worker IPC transport (mock inference only)
-        run: node scripts/check-offline-asr-worker.mjs
+        run: node --experimental-strip-types scripts/check-offline-asr-worker.mts
       - name: Check real-model benchmark CLI syntax (no download or native model)
-        run: node --check scripts/benchmark-offline-asr.mjs
+        run: node --experimental-strip-types --check scripts/benchmark-offline-asr.mts
       - name: Validate static Pages assets
         run: node --experimental-strip-types scripts/check-pages-artifact.mts
       - name: Renderer size budget
