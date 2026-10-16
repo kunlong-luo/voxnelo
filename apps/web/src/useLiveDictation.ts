@@ -174,8 +174,9 @@ export function useLiveDictation(sentenceId: string) {
           setError(t('dictationFailed'));
           stop();
         });
-        context=new AudioContext({sampleRate:16000,latencyHint:'interactive'});
-        if(context.sampleRate!==16000)throw new Error('Unexpected microphone sample rate');
+        // The worklet resamples the actual output sample rate to 16 kHz.
+        // Forcing AudioContext({sampleRate:16000}) fails on some sound devices.
+        context=new AudioContext({latencyHint:'interactive'});
         await context.audioWorklet.addModule(new URL('audio/pcm-worklet.js',window.location.href).href);
         if(disposed.current||id!==requestId.current){close();return;}
         const source=context.createMediaStreamSource(media);
