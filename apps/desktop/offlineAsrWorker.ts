@@ -15,7 +15,7 @@ if(!parent)throw new Error('Offline ASR must run in an isolated worker');
 const {addonPath,modelDir}=workerData as Init;
 let recognizer:Recognizer;
 let stream:Stream;
-let completed:string[]=[];
+const completed:string[]=[];
 let currentText='';
 let stopping=false;
 const report=()=>parent.postMessage({type:'result',finalText:completed.join(' '),interimText:currentText});
