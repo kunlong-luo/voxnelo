@@ -6,7 +6,7 @@ import type { WebContents } from 'electron';
 
 export type AsrCapability={available:boolean;reason:'ready'|'not-configured'};
 export type AsrOpenResult={ok:true;sessionId:string}|{ok:false;reason:'not-configured'|'busy'|'failed'};
-interface Session {id:string;owner:WebContents;worker:Worker;ready:boolean;accepting:boolean;stopTimer:ReturnType<typeof setTimeout>|null;}
+interface Session {id:string;owner:WebContents;worker:Worker;ready:boolean;accepting:boolean;stopTimer:ReturnType<typeof setTimeout>|null;lastText:string;resolveFinish:((result:{finalText:string})=>void)|null;}
 const expected=['encoder.onnx','decoder.onnx','joiner.onnx','tokens.txt'];
 /**
  * Experimental offline recognizer. Never run dynamic addon code from a page:
@@ -28,7 +28,7 @@ export class OfflineAsr {
     const worker=new Worker(path.join(__dirname,'offlineAsrWorker.cjs'),{
       workerData:{modelDir:this.modelDir,addonPath:this.addonPath},
     });
-    const session:Session={id,owner,worker,ready:false,accepting:false,stopTimer:null};
+    const session:Session={id,owner,worker,ready:false,accepting:false,stopTimer:null,lastText:'',resolveFinish:null};
     this.session=session;
     return new Promise(resolve=>{
       let settled=false;
@@ -44,6 +44,7 @@ export class OfflineAsr {
           // Do not send arbitrary worker data: bound strings only.
           const finalText=typeof result.finalText==='string'?result.finalText.slice(0,8000):'';
           const interimText=typeof result.interimText==='string'?result.interimText.slice(0,1000):'';
+          session.lastText=finalText || session.lastText;
           owner.send('voxnelo:asr:result',{sessionId:id,finalText,interimText});
         }else if(result.type==='failure'){
           if(session.ready&&!owner.isDestroyed())owner.send('voxnelo:asr:error',{sessionId:id});
@@ -65,18 +66,23 @@ export class OfflineAsr {
     for(const value of input){if(!Number.isFinite(value)||Math.abs(value)>1)return;}
     s.worker.postMessage({type:'pcm',samples:input});
   }
-  stop(owner:WebContents,id:unknown):void{
+  stop(owner:WebContents,id:unknown):Promise<{finalText:string}>{
     const s=this.session;
-    if(!s||s.owner!==owner||id!==s.id)return;
+    if(!s||s.owner!==owner||id!==s.id)return Promise.resolve({finalText:''});
+    if(!s.accepting)return Promise.resolve({finalText:s.lastText});
     s.accepting=false;
-    s.worker.postMessage({type:'finish'});
-    s.stopTimer=setTimeout(()=>this.dispose(s),1500);
+    return new Promise(resolve=>{
+      s.resolveFinish=resolve;
+      s.worker.postMessage({type:'finish'});
+      s.stopTimer=setTimeout(()=>this.dispose(s),1500);
+    });
   }
   close():void{if(this.session)this.dispose(this.session);}
   private dispose(s:Session):void{
     if(this.session!==s)return;
     this.session=null;
     if(s.stopTimer)clearTimeout(s.stopTimer);
+    s.resolveFinish?.({finalText:s.lastText});
     void s.worker.terminate();
   }
 }
