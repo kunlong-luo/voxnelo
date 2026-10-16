@@ -3,8 +3,8 @@ import path from 'node:path';
 export interface AsrAssetOptions {
   isPackaged: boolean;
   resourcesPath: string;
-  developerModelDir?: string;
-  developerAddonPath?: string;
+  developerModelDir?: string | undefined;
+  developerAddonPath?: string | undefined;
 }
 
 /**
