@@ -22,6 +22,8 @@ export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
   return <section className="liveDictation mx-auto w-full max-w-140 min-w-0 rounded-[28px] border border-primary/12 bg-card/45 px-3 py-3 [@media(max-height:680px)]:py-2 text-left shadow-[0_18px_35px_-30px_rgba(57,76,67,.4)] @min-[560px]/lesson:border-transparent @min-[560px]/lesson:bg-transparent @min-[560px]/lesson:shadow-none @min-[560px]/lesson:px-4 @min-[560px]/lesson:py-2" aria-label={t('dictationTitle')}>
     <div className="flex min-w-0 items-center gap-3 @min-[560px]/lesson:flex-col @min-[560px]/lesson:gap-3">
       <div className="relative isolate grid shrink-0 place-items-center">
+        {/* A calm ambient light, NOT a fake live audio waveform. */}
+        <span aria-hidden="true" data-motion="mic-breathe" className="pointer-events-none absolute -inset-5 rounded-full bg-primary/22 blur-xl motion-safe:animate-ambient-breathe motion-safe:[animation-delay:-2s]"/>
         {listening&&<span aria-hidden="true" className="pointer-events-none absolute -inset-1.5 rounded-full border-2 border-mic-halo/65 motion-safe:animate-record-halo"/>}
         <Button
           className={cn('dictationAction relative size-17 shrink-0 rounded-full border-[3px] border-card bg-[image:var(--mic-gradient)] p-0 text-mic-foreground shadow-[0_12px_28px_-13px_rgba(74,76,59,.5)] ring-1 ring-primary/15 transition-[transform,box-shadow] duration-200 motion-safe:hover:scale-[1.04] motion-reduce:transform-none [@media(max-height:680px)]:size-16 @min-[560px]/lesson:size-22',!dictation.supported&&!busy&&'opacity-70')}
