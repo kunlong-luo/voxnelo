@@ -7,7 +7,7 @@
  *   node scripts/benchmark-offline-asr.mjs --wav /abs/sample.wav --expect "how are you"
  */
 import { readFileSync } from 'node:fs';
-import { isAbsolute, join, resolve } from 'node:path';
+import { isAbsolute, resolve } from 'node:path';
 import { Worker } from 'node:worker_threads';
 import { performance } from 'node:perf_hooks';
 
