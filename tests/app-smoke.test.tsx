@@ -153,7 +153,7 @@ describe('App smoke', () => {
     try {
       const view = render(<App />);
       fireEvent.click(screen.getByRole('button', { name: '开口跟读' }));
-      expect(await screen.findByText('结束录音')).toBeTruthy();
+      expect(await screen.findByRole('button', { name: '结束录音' })).toBeTruthy();
       expect((screen.getByRole('button', { name: '播放标准朗读' }) as HTMLButtonElement).disabled).toBe(true);
       fireEvent.click(screen.getByRole('button', { name: '我的收藏' }));
       expect(screen.getByText('请先结束当前录音，再切换页面。')).toBeTruthy();
