@@ -59,6 +59,75 @@ A successful benchmark requires a nonempty transcript, real-time factor
 greater than 0.5. The benchmark must use **genuine** inference results.
 Passing one sample does not establish installation or real-microphone QA.
 
+## Stage the reviewed native Node binding, not just a .node binary
+
+Voxnelo now provides an explicit native integration command:
+`pnpm asr:native:stage`. It consumes **already obtained, locally reviewed**
+sources and does not perform network downloads or execute vendor code.
+This makes a complete, reviewable `build/offline-asr/` release staging tree.
+
+Review the matching **sherpa-onnx-node** package release before running this.
+From the upstream package, the `lib/` wrapper directory must contain
+`streaming-asr.js`, `addon.js` and `addon-static-import.js`. Supply the
+separately audited `sherpa-onnx.node` file and the full set of matching
+native shared libraries, flattened into their own input directory.
+The tool creates a self-contained `native/index.cjs` entry and
+`native/package.json` containing `{"type":"commonjs"}`. This matters
+because Voxnelo itself is an ES module project while the upstream native
+Node wrapper expects CommonJS `require()` relative to its own directory.
+
+The reviewed source inventory is an **independent input**, not an integrity
+manifest generated from unapproved downloaded binaries. Example
+`/absolute/review.json`:
+
+```json
+{
+  "platform": "linux",
+  "arch": "x64",
+  "modelRevision": "bfbb11950302dad9955f8ede01f0e768595e4fba",
+  "modelTokensSha256": "64 lowercase SHA-256 hex characters from reviewed tokens.txt",
+  "nativePackage": "sherpa-onnx-node",
+  "nativeVersion": "the exact audited npm version",
+  "nativeLicense": "Apache-2.0",
+  "nativeSource": "a pinned upstream release URL",
+  "nativeFilesSha256": {
+    "streaming-asr.js": "reviewed 64-char SHA-256",
+    "addon.js": "reviewed 64-char SHA-256",
+    "addon-static-import.js": "reviewed 64-char SHA-256",
+    "sherpa-onnx.node": "reviewed 64-char SHA-256",
+    "libonnxruntime.so": "reviewed 64-char SHA-256"
+  }
+}
+```
+
+Include **every** shared library in the review inventory; the library names
+in this example are illustrative, not instructions to guess the library list.
+The tool refuses missing dependencies, mismatched checksums, symlinks,
+unreviewed files, cross-platform architecture mismatches, and a destination
+that already contains release assets. Stage only assets for the OS/CPU on
+which the release builder is running. The original README remains intact.
+
+```bash
+pnpm asr:model:prepare
+pnpm asr:native:stage \
+  --model /absolute/.cache/voxnelo/offline-asr/english-zipformer/model \
+  --wrapper /absolute/audited/sherpa-onnx-node/lib \
+  --binary /absolute/audited/sherpa-onnx.node \
+  --libs /absolute/audited/platform-shared-libraries \
+  --review /absolute/review.json \
+  --out /absolute/Voxnelo/build/offline-asr
+pnpm asr:check-staging
+pnpm pack:dir
+```
+
+The packaging integrity check independently verifies that all staged
+files and manifest survive electron-builder unchanged under
+`resources/offline-asr/`. **This does not verify Electron ABI, library loader
+paths, signatures, redistribution permission or speech accuracy.** On macOS,
+shared libraries still need reviewed codesigning and workable `@loader_path`
+install names. A real streaming speech benchmark is a separate mandatory
+gate for Issue #45. Never run unreviewed native files or use untrusted audio.
+
 ## Release integrity preflight
 
 Before building a desktop package, `pnpm build:electron` runs
