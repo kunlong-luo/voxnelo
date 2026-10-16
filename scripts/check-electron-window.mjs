@@ -50,7 +50,7 @@ const until=async(expression,timeoutMs=10000)=>{
   throw Error('Timed out: '+expression);
 };
 const xdo=(...args)=>execFileSync('xdotool',args,{encoding:'utf8',timeout:6000}).trim();
-const viewport=async()=>evaluate('(()=>{const d=document.documentElement;const mic=document.querySelector(".recordAction")?.getBoundingClientRect(),rail=document.querySelector(".actionRail")?.getBoundingClientRect(),title=document.querySelector(".appTitlebar")?.getBoundingClientRect();const nav=document.querySelector(".mobileNav");return {width:innerWidth,height:innerHeight,scrollWidth:d.scrollWidth,clientWidth:d.clientWidth,chromeHeight:title?.height||0,chromePresent:!!title,mainContainer:getComputedStyle(document.querySelector(".mainArea")).containerName,desktopPreload:!!window.voxneloDesktop?.windowControls,desktopPlatform:window.voxneloDesktop?.platform,scheme:location.protocol,practice:!!document.querySelector(".practiceLayout"),micBottom:Math.round(mic?.bottom||0),micTop:Math.round(mic?.top||0),railBottom:Math.round(rail?.bottom||0),mobileNav:getComputedStyle(nav).display!=="none",devicePixelRatio:devicePixelRatio}})()');
+const viewport=async()=>evaluate('(()=>{const d=document.documentElement;const mic=document.querySelector(".recordAction")?.getBoundingClientRect(),rail=document.querySelector(".actionRail")?.getBoundingClientRect(),title=document.querySelector(".appTitlebar")?.getBoundingClientRect(),sidebar=document.querySelector(".sidebar")?.getBoundingClientRect();const nav=document.querySelector(".mobileNav");return {width:innerWidth,height:innerHeight,scrollWidth:d.scrollWidth,clientWidth:d.clientWidth,chromeHeight:title?.height||0,chromePresent:!!title,chromeTop:Math.round(title?.top??-1),chromeLeft:Math.round(title?.left??-1),sidebarTop:Math.round(sidebar?.top??-1),sidebarBottom:Math.round(sidebar?.bottom??-1),sidebarRight:Math.round(sidebar?.right??-1),mainContainer:getComputedStyle(document.querySelector(".mainArea")).containerName,desktopPreload:!!window.voxneloDesktop?.windowControls,desktopPlatform:window.voxneloDesktop?.platform,scheme:location.protocol,practice:!!document.querySelector(".practiceLayout"),micBottom:Math.round(mic?.bottom||0),micTop:Math.round(mic?.top||0),railBottom:Math.round(rail?.bottom||0),mobileNav:getComputedStyle(nav).display!=="none",devicePixelRatio:devicePixelRatio}})()');
 const snapshot=async(label,expectedWidth,expectedHeight)=>{
   await delay(550);
   const state=await viewport();
@@ -60,6 +60,10 @@ const snapshot=async(label,expectedWidth,expectedHeight)=>{
   assert.equal(state.desktopPlatform,'linux','platform bridge mismatch');
   assert.equal(state.scheme,'voxnelo:','local app protocol not used');
   assert.ok(state.chromePresent&&Math.abs(state.chromeHeight-44)<=1,'custom frame missing/wrong height');
+  assert.ok(Math.abs(state.sidebarTop)<=1,'left sidebar does not reach window top '+label+': '+JSON.stringify(state));
+  assert.ok(state.sidebarBottom>=state.height-1,'left sidebar not full-height '+label+': '+JSON.stringify(state));
+  assert.ok(state.chromeTop>=-1&&state.chromeTop<=1,'workspace titlebar not flush to top '+label+': '+JSON.stringify(state));
+  assert.ok(Math.abs(state.chromeLeft-state.sidebarRight)<=1,'titlebar still spans the left sidebar '+label+': '+JSON.stringify(state));
   assert.equal(state.mainContainer,'workspace','container query not applied');
   assert.ok(state.practice,'practice not rendered');
   assert.ok(Math.abs(state.width-expectedWidth)<=25&&Math.abs(state.height-expectedHeight)<=25,
