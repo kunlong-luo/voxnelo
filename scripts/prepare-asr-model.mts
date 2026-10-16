@@ -6,7 +6,7 @@
  */
 import { createHash, randomUUID } from 'node:crypto';
 import { createReadStream, createWriteStream } from 'node:fs';
-import { mkdir, rename, rm, stat } from 'node:fs/promises';
+import { lstat, mkdir, rename, rm } from 'node:fs/promises';
 import { Readable, Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import path from 'node:path';
@@ -82,7 +82,7 @@ export async function prepareEnglishModel(
     if (!SAFE_FILENAME.test(file.target) || !SAFE_FILENAME.test(file.source))
       throw Error('Unsafe model filename');
     const output = path.join(destination,file.target);
-    const existing = await stat(output).catch((error:unknown) => {
+    const existing = await lstat(output).catch((error:unknown) => {
       if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return null;
       throw error;
     });
