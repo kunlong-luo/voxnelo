@@ -203,10 +203,9 @@ function AppScreen({languageSetting,onChangeLanguage}: {
 
   return (
     <div className={cn("appFrame min-h-dvh bg-background text-foreground",window.voxneloDesktop?.windowControls&&"desktopFrame")}>
-      <DesktopTitlebar />
-      <div className={cn("shell flex min-h-dvh items-stretch",window.voxneloDesktop?.windowControls&&"min-h-[calc(100dvh-44px)]")}>
-      <aside className={cn("sidebar sticky top-0 hidden h-dvh w-[clamp(204px,19vw,252px)] shrink-0 flex-col overflow-y-auto border-r border-border/70 bg-sidebar px-3 py-7 text-sidebar-foreground sm:flex max-[1050px]:w-19 max-[1050px]:items-center max-[1050px]:px-2", window.voxneloDesktop?.windowControls && "top-11 h-[calc(100dvh-44px)]")}>
-        <div className="brand mb-8 flex w-full items-center gap-3 px-2 max-[1050px]:justify-center max-[1050px]:px-0" aria-label="Voxnelo">
+      <div className="shell flex min-h-dvh items-stretch">
+      <aside className="sidebar sticky top-0 hidden h-dvh w-[clamp(204px,19vw,252px)] shrink-0 flex-col overflow-y-auto border-r border-border/70 bg-sidebar px-3 pt-3 pb-5 text-sidebar-foreground sm:flex max-[1050px]:w-19 max-[1050px]:items-center max-[1050px]:px-2">
+        <div className="brand mb-6 flex w-full items-center gap-3 px-2 max-[1050px]:justify-center max-[1050px]:px-0" aria-label="Voxnelo">
           <div className="brandMark flex size-11 shrink-0 items-center justify-center"><img src="brand/voxnelo-mark.svg" alt="" width="44" height="44" className="size-11 rounded-2xl shadow-sm"/></div>
           <div className="brandText max-[1050px]:hidden"><strong className="text-[24px] font-extrabold tracking-[-.065em] text-foreground">Voxnelo</strong></div>
         </div>
@@ -230,6 +229,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
         </div>
       </aside>
       <div className="mainArea @container/workspace relative min-w-0 flex-1 overflow-clip bg-gradient-to-br from-background via-brand-cream/45 to-brand-mist/35">
+        <DesktopTitlebar />
         <div aria-hidden="true" className="pointer-events-none absolute top-10 right-[5%] size-48 rounded-full bg-primary/9 opacity-60 blur-3xl motion-safe:animate-ambient-drift sm:size-64"/>
         <div aria-hidden="true" className="pointer-events-none absolute bottom-30 left-[12%] size-56 rounded-full bg-brand-blush/35 blur-3xl"/>
         {recorder.status === 'recording' ? (
