@@ -19,7 +19,27 @@ build/offline-asr/
   native/
     index.cjs           # vetted CommonJS public API adapter
     ...                 # its native .node file AND all platform shared libraries
+  manifest.json         # complete, version-pinned SHA-256 file inventory
 ```
+
+## Release integrity preflight
+
+Before building a desktop package, `pnpm build:electron` runs
+`pnpm asr:check-staging`. README-only staging passes (dictation remains
+unavailable). **Any** staged model/native file requires a `manifest.json`
+containing all of:
+
+- `modelId`, `modelSource`, `modelRevision` (full 40-character upstream Git commit)
+- `modelLicense`, `nativePackage`, `nativeVersion`, `nativeLicense`
+- `sha256`: a map of **every** path under `model/` and `native/` to its
+  64-character SHA-256 digest, including the CJS entry, .node library and
+  platform DLL/dylib/so dependencies
+
+The preflight compares all files and SHA-256 hashes, rejects missing/extra
+files, symlinks and traversals, and refuses an incomplete native payload.
+These checks are only **integrity controls**: copying a self-authored manifest
+does not prove authenticity, model quality, binary safety, license clearance or
+compatibility. All of those still require a maintainer's human release review.
 
 ## Critical native API detail
 
