@@ -1,4 +1,4 @@
-import { AudioLines, CheckCircle2, Download, Mic2, ShieldCheck, Square } from 'lucide-react';
+import { AudioLines, Download, Mic2, ShieldCheck, Square } from 'lucide-react';
 import type { useLiveDictation } from './useLiveDictation';
 import { useI18n } from './i18n';
 import { Button } from './components/ui/button';
