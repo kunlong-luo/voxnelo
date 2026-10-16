@@ -205,22 +205,22 @@ function AppScreen({languageSetting,onChangeLanguage}: {
     <div className={cn("appFrame min-h-dvh bg-background text-foreground",window.voxneloDesktop?.windowControls&&"desktopFrame")}>
       <DesktopTitlebar />
       <div className="shell flex min-h-dvh items-stretch">
-      <aside className="sidebar sticky top-0 flex h-dvh w-56 shrink-0 flex-col overflow-y-auto border-r border-border/70 bg-sidebar px-3 py-7 text-sidebar-foreground max-[900px]:w-19 max-[900px]:items-center max-[900px]:px-2 sm:w-60">
-        <div className="brand mb-8 flex w-full items-center gap-3 px-2 max-[900px]:justify-center max-[900px]:px-0" aria-label="Voxnelo">
+      <aside className={cn("sidebar sticky top-0 hidden h-dvh w-[clamp(204px,19vw,252px)] shrink-0 flex-col overflow-y-auto border-r border-border/70 bg-sidebar px-3 py-7 text-sidebar-foreground sm:flex max-[1050px]:w-19 max-[1050px]:items-center max-[1050px]:px-2", window.voxneloDesktop?.windowControls && "h-[calc(100dvh-44px)]")}>
+        <div className="brand mb-8 flex w-full items-center gap-3 px-2 max-[1050px]:justify-center max-[1050px]:px-0" aria-label="Voxnelo">
           <div className="brandMark flex size-11 shrink-0 items-center justify-center"><img src="brand/voxnelo-mark.svg" alt="" width="44" height="44" className="size-11 rounded-2xl shadow-sm"/></div>
-          <div className="brandText max-[900px]:hidden"><strong className="text-[24px] font-extrabold tracking-[-.065em] text-foreground">Voxnelo</strong></div>
+          <div className="brandText max-[1050px]:hidden"><strong className="text-[24px] font-extrabold tracking-[-.065em] text-foreground">Voxnelo</strong></div>
         </div>
-        <div className="sidebarHint px-4 text-[10px] font-bold tracking-[.18em] text-muted-foreground uppercase max-[900px]:hidden">{t('sidebarSpace')}</div>
+        <div className="sidebarHint px-4 text-[10px] font-bold tracking-[.18em] text-muted-foreground uppercase max-[1050px]:hidden">{t('sidebarSpace')}</div>
         <nav className="mt-4 flex w-full flex-col gap-1.5" aria-label={t('navLabel')}>
           {menu.map(({ id, icon: Icon }) => (
-            <Button key={id} variant="ghost" className={cn('navItem group h-12 w-full justify-start rounded-2xl px-4 text-sm font-semibold text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-foreground max-[900px]:size-12 max-[900px]:justify-center max-[900px]:px-0',view===id&&'active bg-card/85 text-primary shadow-sm ring-1 ring-border/40')} aria-label={t(({practice:'navStart',favorites:'navMyFavorites',history:'navRecent',review:'navReviewItems',settings:'navSettings'} as const)[id])} aria-current={view === id ? 'page' : undefined} onClick={() => nav(id)}>
+            <Button key={id} variant="ghost" className={cn('navItem group h-12 w-full justify-start rounded-2xl px-4 text-sm font-semibold text-sidebar-foreground/75 hover:bg-sidebar-accent hover:text-foreground max-[1050px]:size-12 max-[1050px]:justify-center max-[1050px]:px-0',view===id&&'active bg-card/85 text-primary shadow-sm ring-1 ring-border/40')} aria-label={t(({practice:'navStart',favorites:'navMyFavorites',history:'navRecent',review:'navReviewItems',settings:'navSettings'} as const)[id])} aria-current={view === id ? 'page' : undefined} onClick={() => nav(id)}>
               <Icon size={20} strokeWidth={1.9} />
-              <span className="max-[900px]:hidden">{t(({practice:'navPractice',favorites:'navFavorites',history:'navHistory',review:'navReview',settings:'navSettings'} as const)[id])}</span>
-              {id === 'favorites' && stats.favorites > 0 ? <span className="navCount ml-auto rounded-full bg-secondary px-2 py-0.5 text-[10px] text-secondary-foreground max-[900px]:hidden">{stats.favorites}</span> : null}
+              <span className="max-[1050px]:hidden">{t(({practice:'navPractice',favorites:'navFavorites',history:'navHistory',review:'navReview',settings:'navSettings'} as const)[id])}</span>
+              {id === 'favorites' && stats.favorites > 0 ? <span className="navCount ml-auto rounded-full bg-secondary px-2 py-0.5 text-[10px] text-secondary-foreground max-[1050px]:hidden">{stats.favorites}</span> : null}
             </Button>
           ))}
         </nav>
-        <div className="sidebarBottom mt-auto flex flex-col gap-4 px-2 pt-8 max-[900px]:hidden">
+        <div className="sidebarBottom mt-auto flex flex-col gap-4 px-2 pt-8 max-[1050px]:hidden">
           <div className="tinyPanel privacyPanel flex flex-col gap-2 rounded-2xl border border-border/70 bg-card/55 p-4 text-xs leading-5 text-muted-foreground">
             <span className="tinyBadge flex size-9 items-center justify-center rounded-xl bg-secondary text-primary"><ShieldCheck size={17} /></span>
             <strong>{t('sidebarRhythm')}</strong>
@@ -229,12 +229,12 @@ function AppScreen({languageSetting,onChangeLanguage}: {
           <div className="sidebarVersion px-1 text-[10px] text-muted-foreground">Voxnelo · Early Access {APP_VERSION}</div>
         </div>
       </aside>
-      <div className="mainArea relative min-w-0 flex-1 bg-gradient-to-br from-background via-brand-cream/45 to-brand-mist/35">
+      <div className="mainArea @container/workspace relative min-w-0 flex-1 bg-gradient-to-br from-background via-brand-cream/45 to-brand-mist/35">
         {recorder.status === 'recording' ? (
           <Button variant="destructive" className="recordingQuickStop fixed right-6 bottom-6 z-60 shadow-xl" onClick={handleRecorder}
             aria-label={t("stopFloating")}><Square size={15} fill="currentColor" aria-hidden="true" /> {t("stopRecording")}</Button>
         ) : null}
-        <main className="content mx-auto w-full max-w-400 px-3 py-4 sm:px-5 sm:py-6 xl:px-8">
+        <main className="content mx-auto w-full max-w-400 px-3 pt-4 pb-25 sm:px-5 sm:py-6 xl:px-8">
           {view === 'practice' ? (
             <PracticeView
               current={current}
@@ -286,6 +286,15 @@ function AppScreen({languageSetting,onChangeLanguage}: {
         </main>
       </div>
       </div>
+      {/* The compact viewport has its own navigation affordance; no miniature sidebar. */}
+      <nav className="mobileNav fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 gap-1 border-t border-border/80 bg-card/95 px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-soft backdrop-blur-xl sm:hidden" aria-label={t('navLabel')}>
+        {menu.map(({id,icon:Icon}) => (
+          <Button key={id} variant="ghost" className={cn('mobileNavItem h-14 min-w-0 flex-col gap-1 rounded-xl px-1 py-1 text-[10px]',view===id&&'bg-secondary text-primary')} aria-label={t(({practice:'navStart',favorites:'navMyFavorites',history:'navRecent',review:'navReviewItems',settings:'navSettings'} as const)[id])+' · '+t('navLabel')} aria-current={view===id?'page':undefined} onClick={() => nav(id)}>
+            <Icon size={19} strokeWidth={1.9} aria-hidden="true"/>
+            <span className="max-w-full truncate">{t(({practice:'navPractice',favorites:'navFavorites',history:'navHistory',review:'navReview',settings:'navSettings'} as const)[id])}</span>
+          </Button>
+        ))}
+      </nav>
     </div>
   );
 }
