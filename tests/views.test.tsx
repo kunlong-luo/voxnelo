@@ -64,6 +64,20 @@ describe('PracticeView', () => {
     expect(screen.getByRole('button', { name: '回听刚才的录音' }).hasAttribute('disabled')).toBe(true);
   });
 
+  it('V3 独立组件组合不改变练习卡和学习侧栏的真实结构', () => {
+    const {container}=render(<PracticeView {...basePracticeProps} />);
+    const lesson=container.querySelector('.practiceColumn > .practiceCard');
+    const sidebar=container.querySelector('.practiceLayout > .referenceInsights');
+    expect(lesson).toBeTruthy();
+    expect(sidebar).toBeTruthy();
+    expect(lesson?.className).toContain('bg-glass-surface');
+    expect(lesson?.className).toContain('backdrop-blur-[var(--glass-blur)]');
+    expect(lesson?.querySelector('.actionRail')?.children).toHaveLength(5);
+    expect(sidebar?.querySelectorAll('.insightCard')).toHaveLength(4);
+    expect(sidebar?.querySelector('.progressDonut')).toBeTruthy();
+    expect(lesson?.querySelector('.insightCard')).toBeNull();
+  });
+
   it('录音中只有结束录音可用，避免切换语速、播放示范或误启动录音', () => {
     render(<PracticeView {...basePracticeProps} recorder={stubRecorder({ status: 'recording' })} recordingBusy />);
     expect((screen.getByRole('button', { name: '录音进行中' }) as HTMLButtonElement).disabled).toBe(true);
