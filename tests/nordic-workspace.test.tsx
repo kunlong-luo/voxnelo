@@ -50,7 +50,7 @@ describe('Nordic three-column learning workspace', () => {
     expect(onChooseRelated).toHaveBeenCalledWith(expect.objectContaining({ topic: 'personal' }));
   });
 
-  it('centers the five practice actions and gives previous/next a symmetric footer', () => {
+  it('centers the four practice actions and gives previous/next a symmetric footer', () => {
     const onNext = vi.fn();
     const onPrevious = vi.fn();
     const onToggleFlag = vi.fn();
@@ -77,7 +77,7 @@ describe('Nordic three-column learning workspace', () => {
 
     const footer = container.querySelector('.referenceFooter');
     expect(footer?.querySelectorAll('.pagerButton')).toHaveLength(2);
-    expect(container.querySelectorAll('.actionRail > .actionSlot')).toHaveLength(5);
+    expect(container.querySelectorAll('.actionRail > .actionSlot')).toHaveLength(4);
     expect(container.querySelector('.actionRail .nextButton')).toBeNull();
     expect(container.querySelector('.lessonFocus .sentenceContent')).toBeTruthy();
     expect(container.querySelector('.lessonFocus .liveDictation')).toBeTruthy();

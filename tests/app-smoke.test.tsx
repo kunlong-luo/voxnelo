@@ -153,13 +153,14 @@ describe('App smoke', () => {
     try {
       const view = render(<App />);
       fireEvent.click(screen.getByRole('button', { name: '开口跟读' }));
-      expect(await screen.findByText('结束录音')).toBeTruthy();
+      expect(await screen.findByRole('button', { name: '结束录音' })).toBeTruthy();
       expect((screen.getByRole('button', { name: '播放标准朗读' }) as HTMLButtonElement).disabled).toBe(true);
       fireEvent.click(screen.getByRole('button', { name: '我的收藏' }));
       expect(screen.getByText('请先结束当前录音，再切换页面。')).toBeTruthy();
       expect(screen.getByText(FIRST_SENTENCE.english)).toBeTruthy();
-      // 浮动停止按钮不在顶部窗口栏中，仍不依赖主卡片的滚动位置。
-      fireEvent.click(screen.getByRole('button', { name: '悬浮快速停止录音' }));
+      // Same recording action must remain enabled and stop the actual MediaRecorder.
+      expect((screen.getByRole('button', { name: '结束录音' }) as HTMLButtonElement).disabled).toBe(false);
+      fireEvent.click(screen.getByRole('button', { name: '结束录音' }));
       expect(stopTrack).toHaveBeenCalled();
       view.unmount();
       expect(stopTrack).toHaveBeenCalled();
