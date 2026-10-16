@@ -45,7 +45,7 @@ const send=(method:string,params:Record<string,unknown>={})=>new Promise<CdpRepl
   pending.set(id,{resolve,reject,timeout});
   socket.send(JSON.stringify({id,method,params}));
 });
-const evaluate=async <T=string>(expression:string):Promise<T>=>{
+const evaluate=async <T=string,>(expression:string):Promise<T>=>{
   const response=await send('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});
   if(response.exceptionDetails)throw Error('Electron renderer eval failed: '+response.exceptionDetails.text);
   return response.result?.value as T;
