@@ -19,12 +19,12 @@ export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
   const listening=dictation.status==='listening';
   const checking=dictation.status==='checking';
   const busy=listening||checking;
-  return <section className="liveDictation mx-auto w-full max-w-140 min-w-0 rounded-[28px] border border-primary/12 bg-card/60 px-3 py-3 text-left shadow-[0_18px_35px_-30px_rgba(57,76,67,.4)] @min-[560px]/lesson:px-4 @min-[560px]/lesson:py-3.5" aria-label={t('dictationTitle')}>
+  return <section className="liveDictation mx-auto w-full max-w-140 min-w-0 rounded-[28px] border border-primary/12 bg-card/60 px-3 py-3 [@media(max-height:680px)]:py-2 text-left shadow-[0_18px_35px_-30px_rgba(57,76,67,.4)] @min-[560px]/lesson:px-4 @min-[560px]/lesson:py-3.5" aria-label={t('dictationTitle')}>
     <div className="flex min-w-0 items-center gap-3 @min-[560px]/lesson:gap-4">
       <div className="relative isolate grid shrink-0 place-items-center">
         {listening&&<span aria-hidden="true" className="pointer-events-none absolute -inset-1.5 rounded-full border-2 border-mic-halo/65 motion-safe:animate-record-halo"/>}
         <Button
-          className={cn('dictationAction relative size-17 shrink-0 rounded-full border-[3px] border-card bg-[image:var(--mic-gradient)] p-0 text-mic-foreground shadow-[0_12px_28px_-13px_rgba(74,76,59,.5)] ring-1 ring-primary/15 transition-[transform,box-shadow] duration-200 motion-safe:hover:scale-[1.04] motion-reduce:transform-none @min-[560px]/lesson:size-19',!dictation.supported&&!busy&&'opacity-70')}
+          className={cn('dictationAction relative size-17 shrink-0 rounded-full border-[3px] border-card bg-[image:var(--mic-gradient)] p-0 text-mic-foreground shadow-[0_12px_28px_-13px_rgba(74,76,59,.5)] ring-1 ring-primary/15 transition-[transform,box-shadow] duration-200 motion-safe:hover:scale-[1.04] motion-reduce:transform-none [@media(max-height:680px)]:size-16 @min-[560px]/lesson:size-19',!dictation.supported&&!busy&&'opacity-70')}
           onClick={busy?dictation.stop:onStart}
           disabled={!busy&&(blocked||!dictation.supported)}
           aria-label={t(busy?'dictationStop':'dictationStart')}
@@ -41,15 +41,18 @@ export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
               :<><AudioLines size={13} className="shrink-0 text-primary" aria-hidden="true"/>{t(dictation.mode==='browser'?'dictationCloudEnabled':'dictationPrivacy')}</>}
           </span>
         </div>
-        <div className="dictationTranscript max-h-20 min-h-9 overflow-y-auto rounded-xl bg-muted/55 px-3 py-2 text-[13px] leading-5 text-sentence-ink @min-[560px]/lesson:text-sm" data-testid="live-transcript">
+        <div className="dictationTranscript max-h-20 min-h-9 overflow-y-auto rounded-xl bg-muted/55 px-3 py-2 [@media(max-height:680px)]:min-h-8 [@media(max-height:680px)]:py-1.5 text-[13px] leading-5 text-sentence-ink @min-[560px]/lesson:text-sm" data-testid="live-transcript">
           <span aria-live="polite" className={cn('font-medium',!dictation.finalText&&'text-muted-foreground')}>{dictation.finalText||(!dictation.interimText?t('dictationPlaceholder'):'')}</span>
           {dictation.interimText&&<span className="ml-1 text-translation-ink" aria-label={t('dictationInterim')}>{dictation.interimText}</span>}
         </div>
       </div>
     </div>
-    {!dictation.supported&&<p role="status" className="mt-2 text-[11px] leading-4 text-translation-ink">
-      {t(window.voxneloDesktop?(dictation.desktopReason==='missing-model'?'dictationModelMissing':dictation.desktopReason==='missing-addon'?'dictationAddonMissing':'dictationLocalRequired'):'dictationUnsupported')}
-    </p>}
+    {!dictation.supported&&<>
+      <p role="status" className="mt-2 hidden text-[11px] leading-4 text-translation-ink @min-[440px]/lesson:block">
+        {t(window.voxneloDesktop?(dictation.desktopReason==='missing-model'?'dictationModelMissing':dictation.desktopReason==='missing-addon'?'dictationAddonMissing':'dictationLocalRequired'):'dictationUnsupported')}
+      </p>
+      <p role="status" className="mt-1 text-[11px] leading-4 text-translation-ink @min-[440px]/lesson:hidden">{t('dictationUnavailableShort')}</p>
+    </>
     {listening&&window.voxneloDesktop&&dictation.noiseReduction!=='unknown'&&<p className="mt-2 flex items-center gap-1.5 text-[11px] leading-4 text-translation-ink">
       <ShieldCheck size={13} aria-hidden="true"/>{t(dictation.noiseReduction==='enabled'?'dictationNoiseEnabled':'dictationNoiseUnverified')}
     </p>}
