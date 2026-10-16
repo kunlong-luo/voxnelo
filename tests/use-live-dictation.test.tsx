@@ -99,6 +99,26 @@ describe('Local-first live dictation',()=>{
     expect(latest.error).toContain('本地英语识别');
     expect(FakeRecognizer.instances).toHaveLength(1);
   });
+  it('Electron can use locally supported Chromium ASR without native ONNX setup',async()=>{
+    const capabilities=vi.fn(async()=>({available:false,reason:'not-configured'}));
+    vi.stubGlobal('voxneloDesktop',{platform:'linux',asr:{capabilities}});
+    render(<Harness/>);
+    await act(async()=>{await Promise.resolve()});
+    expect(latest.supported).toBe(true);
+    await act(async()=>{await latest.start()});
+    expect(FakeRecognizer.available).toHaveBeenCalledWith({langs:['en-US'],processLocally:true});
+    expect(FakeRecognizer.instances[0]?.processLocally).toBe(true);
+    expect(latest.status).toBe('listening');
+  });
+  it('desktop never falls back to cloud recognition when on-device pack is absent',async()=>{
+    FakeRecognizer.available.mockResolvedValue('unavailable');
+    vi.stubGlobal('voxneloDesktop',{platform:'linux',asr:{capabilities:vi.fn(async()=>({available:false,reason:'not-configured'}))}});
+    render(<Harness/>);
+    await act(async()=>{await Promise.resolve();await latest.start()});
+    expect(FakeRecognizer.instances).toHaveLength(0);
+    expect(latest.status).toBe('idle');
+    expect(latest.mode).toBe('local');
+  });
   it('clears live recognition on sentence change and ignores stale results',async()=>{
     const {rerender}=render(<Harness sentence="one"/>);
     await act(async()=>{await latest.start()});
