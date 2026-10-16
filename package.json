@@ -119,6 +119,10 @@
       {
         "from": "build/icon.png",
         "to": "icons/voxnelo.png"
+      },
+      {
+        "from": "build/offline-asr",
+        "to": "offline-asr"
       }
     ]
   },
