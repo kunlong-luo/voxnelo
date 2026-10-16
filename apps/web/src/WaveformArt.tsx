@@ -1,34 +1,22 @@
-/**
- * Quiet Nordic decorative rhythm lines. Not a microphone waveform,
- * acoustic measurement, pronunciation score or recording visualization.
- */
-const ribbons = Array.from({ length: 7 }, (_, line) => {
-  const points = Array.from({ length: 61 }, (_, index) => {
-    const t = index / 60;
-    const envelope = Math.pow(Math.sin(Math.PI * t), 1.7);
-    const waves = Math.sin(t * 13 * Math.PI + line * .35) * 13 +
-      Math.sin(t * 7 * Math.PI - line * .6) * 8;
-    const y = 66 + envelope * (waves + (line - 3) * 4);
-    return (index === 0 ? 'M ' : 'L ') + (t * 780).toFixed(1) + ' ' + y.toFixed(1);
-  });
-  return points.join(' ');
-});
-
+/** Decorative rhythm only: never an audio level, VAD result or live transcript. */
 export function WaveformArt() {
-  return (
-    <svg className="waveformArt h-auto max-h-22 w-full [@media(max-height:680px)]:max-h-12" viewBox="0 0 780 132" preserveAspectRatio="none"
-      aria-hidden="true" focusable="false">
-      <defs>
-        <linearGradient id="nordicRhythm" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="var(--brand-mist)" />
-          <stop offset="38%" stopColor="var(--primary)" />
-          <stop offset="65%" stopColor="var(--primary)" />
-          <stop offset="100%" stopColor="var(--brand-mist)" />
-        </linearGradient>
-      </defs>
-      <g fill="none" stroke="url(#nordicRhythm)" strokeWidth="1.7" strokeLinecap="round" opacity=".78">
-        {ribbons.map((path, index) => <path d={path} key={index} />)}
-      </g>
-    </svg>
-  );
+  return <svg className="waveformArt h-auto max-h-22 w-full [@media(max-height:680px)]:max-h-12"
+    viewBox="0 0 780 132" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="voxneloRhythm" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stopColor="var(--brand-blush)"/>
+        <stop offset="40%" stopColor="var(--primary)"/>
+        <stop offset="75%" stopColor="var(--brand-mist)"/>
+        <stop offset="100%" stopColor="var(--primary)"/>
+      </linearGradient>
+      <path id="voxneloRibbon" d="M 0 66 C 100 66 130 68 190 56 S 280 105 350 54 S 444 22 505 65 S 602 91 660 65 S 750 66 780 66"/>
+    </defs>
+    <g fill="none" stroke="url(#voxneloRhythm)" strokeWidth="1.8" strokeLinecap="round" opacity=".63">
+      <use href="#voxneloRibbon" transform="translate(0 -12)"/>
+      <use href="#voxneloRibbon" transform="translate(0 -6)"/>
+      <use href="#voxneloRibbon"/>
+      <use href="#voxneloRibbon" transform="translate(0 6)"/>
+      <use href="#voxneloRibbon" transform="translate(0 12)"/>
+    </g>
+  </svg>;
 }
