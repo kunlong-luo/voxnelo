@@ -22,7 +22,7 @@ contextBridge.exposeInMainWorld('voxneloDesktop', {
   version: APP_VERSION,
   windowControls,
   asr: {
-    capabilities: () => ipcRenderer.invoke('voxnelo:asr:capabilities') as Promise<{available:boolean;reason:'ready'|'not-configured'}>,
+    capabilities: () => ipcRenderer.invoke('voxnelo:asr:capabilities') as Promise<{available:boolean;reason:'ready'|'not-configured'|'missing-addon'|'missing-model'}>,
     start: () => ipcRenderer.invoke('voxnelo:asr:start') as Promise<{ok:true;sessionId:string}|{ok:false;reason:string}>,
     push: (id:string,samples:Float32Array) => ipcRenderer.send('voxnelo:asr:pcm',id,samples),
     stop: (id:string) => ipcRenderer.invoke('voxnelo:asr:stop',id) as Promise<{finalText:string}>,

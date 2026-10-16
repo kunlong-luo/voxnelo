@@ -13,6 +13,9 @@ dist-electron/
 release/
 build/*
 !build/icon.png
+!build/offline-asr/
+build/offline-asr/*
+!build/offline-asr/README.md
 out/
 *.tsbuildinfo
 

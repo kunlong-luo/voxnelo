@@ -39,7 +39,7 @@ function setupDesktop(noiseSuppression?:boolean) {
   const source={connect:vi.fn()};
   const gain={gain:{value:1},connect:vi.fn()};
   const audioContext={
-    sampleRate:16000,
+    sampleRate:48000,
     audioWorklet:{addModule:vi.fn(async()=>undefined)},
     createMediaStreamSource:vi.fn(()=>source),
     createGain:vi.fn(()=>gain),
@@ -60,6 +60,8 @@ describe('Electron real microphone to local ASR lifecycle',()=>{
     await waitFor(()=>expect(live.supported).toBe(true));
     await act(async()=>{await live.start()});
     expect(live.status).toBe('listening');
+    // The worklet resamples the device's native 48 kHz stream to 16 kHz.
+    expect(audioContext.sampleRate).toBe(48000);
     expect(live.noiseReduction).toBe('enabled');
     expect(getUserMedia).toHaveBeenCalledWith({
       audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1},

@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { OfflineAsr } from '../apps/desktop/offlineAsr';
+import { resolveAsrAssets } from '../apps/desktop/asrAssets';
 
 const roots:string[]=[];
 afterEach(()=>roots.splice(0).forEach(dir=>rmSync(dir,{recursive:true,force:true})));
@@ -15,6 +16,47 @@ function root() {
   roots.push(dir);
   return dir;
 }
+
+describe('Trusted offline ASR bundle discovery',()=>{
+  it('reads pre-vetted assets only from packaged application resources',()=>{
+    const resolved=resolveAsrAssets({
+      isPackaged:true,
+      resourcesPath:path.join('tmp','Voxnelo','resources'),
+      developerModelDir:'/tmp/untrusted-model',
+      developerAddonPath:'/tmp/untrusted.node',
+    });
+    expect(resolved.modelDir).toBe(path.join('tmp','Voxnelo','resources','offline-asr','model'));
+    expect(resolved.addonPath).toBe(path.join('tmp','Voxnelo','resources','offline-asr','native','sherpa-onnx.node'));
+  });
+
+  it('preserves developer-only absolute paths without allowing IPC path selection',()=>{
+    const resolved=resolveAsrAssets({
+      isPackaged:false,resourcesPath:'/unused',
+      developerModelDir:'/opt/verified/model',
+      developerAddonPath:'/opt/verified/native.node',
+    });
+    expect(resolved).toEqual({
+      modelDir:'/opt/verified/model',
+      addonPath:'/opt/verified/native.node',
+    });
+    expect(resolveAsrAssets({isPackaged:false,resourcesPath:'/unused'}))
+      .toEqual({modelDir:null,addonPath:null});
+  });
+
+  it('distinguishes missing native module and model files from a ready bundle',()=>{
+    const dir=root();
+    const modelDir=path.join(dir,'model');
+    mkdirSync(modelDir);
+    const addon=path.join(dir,'native.node');
+    const engine=new OfflineAsr(modelDir,addon);
+    expect(engine.capabilities()).toEqual({available:false,reason:'missing-addon'});
+    writeFileSync(addon,'test-only fixture');
+    expect(engine.capabilities()).toEqual({available:false,reason:'missing-model'});
+    for(const name of ['encoder.onnx','decoder.onnx','joiner.onnx','tokens.txt'])
+      writeFileSync(path.join(modelDir,name),'fixture');
+    expect(engine.capabilities()).toEqual({available:true,reason:'ready'});
+  });
+});
 
 describe('Offline ASR explicit activation and deny-by-default IPC',()=>{
   it('does not start native inference without developer-installed model and addon',async()=>{
