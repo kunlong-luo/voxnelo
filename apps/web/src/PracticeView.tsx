@@ -67,7 +67,7 @@ export function PracticeView({
   ] as const;
   return <div className="practiceLayout layoutWorkbench grid min-w-0 grid-cols-1 items-start gap-3 motion-safe:animate-view-enter @min-[840px]/workspace:grid-cols-[minmax(0,1fr)_minmax(220px,28%)] @min-[1040px]/workspace:gap-5">
     <div className="practiceColumn flex min-w-0 flex-col gap-3">
-      <Card className="practiceCard referenceLesson flex min-h-[min(700px,calc(100dvh-120px))] min-w-0 flex-1 flex-col overflow-visible border-white/75 bg-gradient-to-br from-card via-card to-brand-mist/35 shadow-soft">
+      <Card className="practiceCard referenceLesson flex min-h-[min(700px,calc(100dvh-120px))] min-w-0 flex-1 flex-col overflow-visible border-glass-edge bg-glass-surface shadow-glass backdrop-blur-[var(--glass-blur)]">
         <header className="cardHeader lessonHeader flex min-h-19 flex-wrap items-center justify-between gap-3 px-5 pt-5 pb-0 sm:px-7 sm:pt-6">
           <div className="lessonProgress flex min-w-22 flex-col gap-2" aria-label={t('coursePosition',{index,total:SENTENCES.length})}>
             <span className="lessonCount text-sm font-extrabold tracking-tight tabular-nums text-foreground">{String(index).padStart(2,'0')} <span className="font-medium text-muted-foreground">/ {SENTENCES.length}</span></span>
@@ -93,10 +93,10 @@ export function PracticeView({
           <div className="sentenceContent flex w-full flex-col items-center justify-center gap-3">
             <span className="lessonLevel text-[11px] font-bold tracking-[.2em] text-muted-foreground uppercase">{t('speakingPractice')} · {current.level}</span>
             <div className="sentenceHeading flex max-w-full justify-center">
-              <h1 key={current.id} className="sentenceText max-w-full text-[clamp(1.75rem,7cqi,3.5rem)] leading-[1.18] font-extrabold tracking-[-.055em] wrap-break-word text-foreground motion-safe:animate-sentence-enter">{current.english}</h1>
+              <h1 key={current.id} className="sentenceText max-w-full text-[clamp(1.875rem,5.4cqi,2.625rem)] leading-[1.22] font-extrabold tracking-[-.018em] wrap-break-word text-sentence-ink motion-safe:animate-sentence-enter">{current.english}</h1>
             </div>
-            <p className="translation text-base leading-7 text-muted-foreground sm:text-lg">{current.chinese}</p>
-            {showIpa && <p className="ipa max-w-full text-sm leading-6 wrap-break-word text-muted-foreground">{current.ipa}</p>}
+            <p className="translation text-base leading-7 font-medium text-translation-ink sm:text-lg">{current.chinese}</p>
+            {showIpa && <p className="ipa max-w-full text-sm leading-6 wrap-break-word text-ipa-ink">{current.ipa}</p>}
             <Button variant="ghost" size="sm" className="subtleLink rounded-full text-xs text-primary" onClick={onToggleIpa} aria-expanded={showIpa}><CircleHelp size={14}/>{t(showIpa?'ipaHide':'ipaShow')}</Button>
           </div>
           <div className="wavePanel mx-auto w-full max-w-150 opacity-80 motion-safe:animate-panel-enter motion-safe:[animation-delay:90ms]"><WaveformArt/></div>
@@ -113,9 +113,9 @@ export function PracticeView({
             </ActionSlot>
             <ActionSlot label={t(requesting?'micPermission':recording?'recordingInProgress':'micStart')} detail={t('micStartHint')}>
               <div className="relative isolate grid place-items-center">
-                {recording && <span aria-hidden="true" data-motion="record-halo" className="pointer-events-none absolute -inset-2 rounded-[30px] border-2 border-destructive/55 motion-safe:animate-record-halo"/>}
+                {recording && <span aria-hidden="true" data-motion="record-halo" className="pointer-events-none absolute -inset-2 rounded-[30px] border-2 border-mic-halo/75 motion-safe:animate-record-halo"/>}
                 {requesting && <span aria-hidden="true" data-motion="permission-halo" className="pointer-events-none absolute -inset-1 rounded-[26px] border-2 border-primary/40 motion-safe:animate-status-breathe"/>}
-                <Button variant="default" size="icon-lg" className={cn('recordAction relative size-15 rounded-[22px] bg-primary @min-[440px]/workspace:size-17 text-white shadow-[0_12px_28px_-10px_var(--shadow-color)] motion-safe:hover:scale-[1.04] hover:bg-primary/90 motion-reduce:transform-none',recording&&'ring-2 ring-destructive/50')} onClick={onRecord} disabled={recordingBusy} aria-label={t(requesting?'micPermission':recording?'micBusy':'micStart')}>
+                <Button variant="default" size="icon-lg" className={cn('recordAction relative size-15 rounded-[22px] bg-primary bg-[image:var(--mic-gradient)] @min-[440px]/workspace:size-17 text-mic-foreground shadow-[0_12px_28px_-10px_var(--shadow-color)] transition-[filter,box-shadow,transform] duration-200 motion-safe:hover:scale-[1.04] hover:brightness-105 motion-reduce:transform-none',recording&&'ring-2 ring-mic-halo/50')} onClick={onRecord} disabled={recordingBusy} aria-label={t(requesting?'micPermission':recording?'micBusy':'micStart')}>
                   {requesting?<LoaderCircle size={28} aria-hidden="true" className="motion-safe:animate-spin"/>:<Mic size={30} aria-hidden="true"/>}
                 </Button>
               </div>
@@ -125,10 +125,10 @@ export function PracticeView({
             </ActionSlot>
             <RecordingPlayback key={recorder.recordingUrl??'no-recording'} src={recorder.recordingUrl}/>
           </div>
-          {recording?<p className="recordingStatus mt-5 flex items-center justify-center gap-2 text-center text-xs font-semibold text-destructive" role="status"><span aria-hidden="true" className="size-2 rounded-full bg-destructive motion-safe:animate-status-breathe"/>{t('recordingStatus')}</p>
+          {recording?<p className="recordingStatus mt-5 flex items-center justify-center gap-2 text-center text-xs font-semibold text-primary" role="status"><span aria-hidden="true" className="size-2 rounded-full bg-mic-halo motion-safe:animate-status-breathe"/>{t('recordingStatus')}</p>
             :requesting?<p className="recordingStatus mt-5 text-center text-xs text-muted-foreground" role="status">{t('permissionHint')}</p>
             :<p className="practicePrompt mt-5 flex items-center justify-center gap-1 text-center text-[10px] leading-4 text-muted-foreground"><ShieldCheck size={13}/>{t('privacyRecording')}</p>}
-          {recorder.error && <p className="warning mt-2 rounded-xl bg-destructive/10 p-3 text-xs text-destructive" role="alert">{recorder.error}</p>}
+          {recorder.error && <p className="warning mt-2 flex items-start gap-2 rounded-xl border border-border/70 bg-secondary/55 p-3 text-xs leading-5 text-translation-ink" role="status"><CircleHelp size={16} className="mt-0.5 shrink-0 text-primary" aria-hidden="true"/>{recorder.error}</p>}
         </section>
         <footer className="cardFooter referenceFooter grid min-h-18 grid-cols-[minmax(95px,1fr)_auto_minmax(95px,1fr)] items-center gap-2 rounded-b-[var(--radius)] border-t border-border/60 bg-card/75 px-4 py-3 sm:px-6">
           <Button variant="outline" size="sm" className="prevButton pagerButton justify-self-start text-primary" onClick={onPrevious} disabled={!canGoPrevious} aria-label={t('previous')}><ChevronLeft size={16}/>{t('previous')}</Button>
