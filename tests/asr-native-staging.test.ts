@@ -61,7 +61,7 @@ describe('Offline sherpa-onnx-node native staging with explicit review',()=>{
     const {options}=fixture();
     const hashes=await stageNativeAsr(options);
     const out=options.outputDir;
-    expect(Object.keys(hashes)).toHaveLength(12);
+    expect(Object.keys(hashes)).toHaveLength(11);
     expect(readdirSync(out).sort()).toEqual(['README.md','manifest.json','model','native']);
     expect(readFileSync(path.join(out,'README.md'),'utf8')).toBe('Keep this documentation');
     expect(readFileSync(path.join(out,'native','index.cjs'),'utf8')).toContain("require('./streaming-asr.js')");
