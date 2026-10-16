@@ -45,7 +45,7 @@ export function useLiveDictation(sentenceId: string) {
   const [interimText,setInterimText] = useState('');
   const [error,setError] = useState('');
   const current = useRef<Recognizer | null>(null);
-  const desktopStop = useRef<(() => void) | null>(null);
+  const desktopStop = useRef<(() => Promise<{finalText:string}>) | null>(null);
   const [desktopAvailable,setDesktopAvailable] = useState(false);
   const requestId = useRef(0);
   const disposed = useRef(false);
@@ -66,10 +66,16 @@ export function useLiveDictation(sentenceId: string) {
     return ()=>{alive=false;};
   },[]);
   const stop = useCallback(() => {
-    ++requestId.current;
+    const generation=++requestId.current;
     const closeDesktop=desktopStop.current;
     desktopStop.current=null;
-    closeDesktop?.();
+    if(closeDesktop){
+      void closeDesktop().then(result=>{
+        if(!disposed.current&&requestId.current===generation&&result.finalText){
+          setFinalText(result.finalText);
+        }
+      }).catch(()=>{ /* offline engine may already be gone */ });
+    }
     const recognizer=current.current;
     current.current=null;
     if(recognizer) {
@@ -84,6 +90,7 @@ export function useLiveDictation(sentenceId: string) {
   },[]);
   const clear = useCallback(() => {
     stop();
+    ++requestId.current; // Reject any late final result from the old sentence.
     setFinalText('');
     setError('');
   },[stop]);
@@ -114,13 +121,14 @@ export function useLiveDictation(sentenceId: string) {
       let unsubscribeError:(()=>void)|null=null;
       let sessionId:string|null=null;
       let closed=false;
-      const close=()=>{
-        if(closed)return;
+      const close=():Promise<{finalText:string}>=>{
+        if(closed)return Promise.resolve({finalText:''});
         closed=true;
         unsubscribe?.();unsubscribeError?.();
-        if(sessionId)bridge.stop(sessionId);
+        const final=sessionId?bridge.stop(sessionId):Promise.resolve({finalText:''});
         media?.getTracks().forEach(track=>track.stop());
         if(context)void context.close();
+        return final;
       };
       try{
         media=await navigator.mediaDevices.getUserMedia({
