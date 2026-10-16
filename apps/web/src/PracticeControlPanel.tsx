@@ -1,4 +1,4 @@
-import { CircleHelp, LoaderCircle, Mic, ShieldCheck, Square, Turtle, Volume2 } from 'lucide-react';
+import { CheckCircle2, CircleHelp, LoaderCircle, Mic, ShieldCheck, Square, Turtle, Volume2 } from 'lucide-react';
 import type { PracticeViewProps } from './PracticeTypes';
 import { RecordingPlayback } from './RecordingPlayback';
 import { Tooltip } from './Tooltip';
@@ -25,6 +25,7 @@ export function PracticeControlPanel({recorder,recordingBusy,speed,onSpeak,onTog
   const {t}=useI18n();
   const recording=recorder.status==='recording';
   const requesting=recorder.status==='requesting';
+  const ready=recorder.status==='ready' && Boolean(recorder.recordingUrl);
   return (
         <section className="lessonActions border-t border-border/55 bg-brand-cream/45 px-3 pt-6 pb-4 sm:px-6" aria-label={t('practiceActions')}>
           <div className="actionRail grid grid-cols-[repeat(2,minmax(0,1fr))_minmax(60px,1.25fr)_repeat(2,minmax(0,1fr))] items-start gap-0.5 @min-[560px]/workspace:gap-2" data-testid="practice-control-rail">
@@ -36,7 +37,7 @@ export function PracticeControlPanel({recorder,recordingBusy,speed,onSpeak,onTog
             <ActionSlot label={t('speedSlow')} detail={speed==='slow'?'0.75×':t('speedNormal')}>
               <Button variant="outline" size="icon-lg" className={utilityButton} onClick={onToggleSpeed} disabled={recordingBusy} aria-pressed={speed==='slow'} aria-label={t('speedSwitch')}><Turtle size={21}/></Button>
             </ActionSlot>
-            <ActionSlot label={t(requesting?'micPermission':recording?'recordingInProgress':'micStart')} detail={t('micStartHint')}>
+            <ActionSlot label={t(requesting?'micPermission':recording?'recordingInProgress':'micStart')} detail={t(requesting?'micRequestHint':recording?'micRecordingHint':ready?'micReadyHint':'micStartHint')}>
               <div className="relative isolate grid place-items-center">
                 {recording && <span aria-hidden="true" data-motion="record-halo" className="pointer-events-none absolute -inset-2 rounded-[30px] border-2 border-mic-halo/75 motion-safe:animate-record-halo"/>}
                 {requesting && <span aria-hidden="true" data-motion="permission-halo" className="pointer-events-none absolute -inset-1 rounded-[26px] border-2 border-primary/40 motion-safe:animate-status-breathe"/>}
@@ -52,6 +53,7 @@ export function PracticeControlPanel({recorder,recordingBusy,speed,onSpeak,onTog
           </div>
           {recording?<p className="recordingStatus mt-5 flex items-center justify-center gap-2 text-center text-xs font-semibold text-primary" role="status"><span aria-hidden="true" className="size-2 rounded-full bg-mic-halo motion-safe:animate-status-breathe"/>{t('recordingStatus')}</p>
             :requesting?<p className="recordingStatus mt-5 text-center text-xs text-muted-foreground" role="status">{t('permissionHint')}</p>
+            :ready?<p className="recordingReady mt-4 flex items-center justify-center gap-1.5 text-center text-xs font-medium leading-5 text-primary" role="status"><CheckCircle2 size={15} className="shrink-0" aria-hidden="true"/>{t('recordingReadyStatus')}</p>
             :<p className="practicePrompt mt-5 flex items-center justify-center gap-1 text-center text-[10px] leading-4 text-muted-foreground"><ShieldCheck size={13}/>{t('privacyRecording')}</p>}
           {recorder.error && <p className="warning mt-2 flex items-start gap-2 rounded-xl border border-border/70 bg-secondary/55 p-3 text-xs leading-5 text-translation-ink" role="status"><CircleHelp size={16} className="mt-0.5 shrink-0 text-primary" aria-hidden="true"/>{recorder.error}</p>}
         </section>

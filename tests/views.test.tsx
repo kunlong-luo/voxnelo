@@ -111,6 +111,37 @@ describe('PracticeView', () => {
     expect(container.querySelector('[data-motion="permission-halo"]')).toBeNull();
   });
 
+  it('右侧推荐短句可读并保持真实点击导航，录音期间禁用跳转', () => {
+    const onChooseRelated = vi.fn();
+    const {container,rerender}=render(<PracticeView {...basePracticeProps} onChooseRelated={onChooseRelated}/>);
+    const items=container.querySelectorAll('.feedItem');
+    expect(items).toHaveLength(4);
+    const first=items.item(0);
+    if(!first)throw new Error('Expected related phrase item');
+    expect(first.querySelector('strong')?.className).toContain('line-clamp-2');
+    expect(first.querySelector('strong')?.className).not.toContain('truncate');
+    expect(first.querySelector('span.text-muted-foreground')?.className).toContain('line-clamp-2');
+    fireEvent.click(first);
+    expect(onChooseRelated).toHaveBeenCalledTimes(1);
+    expect(onChooseRelated.mock.calls[0]?.[0]?.topic).toBe(FIRST_SENTENCE.topic);
+    rerender(<PracticeView {...basePracticeProps} recordingBusy onChooseRelated={onChooseRelated}/>);
+    expect((container.querySelector('.feedItem') as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('录音完成后显示真实可回听状态，且不同于录音中或权限申请', () => {
+    const {container,rerender}=render(<PracticeView {...basePracticeProps} recorder={stubRecorder({status:'ready',recordingUrl:'blob:verified'})}/>);
+    expect(screen.getByText('录音已完成，可以回听自己的声音。')).toBeTruthy();
+    expect(screen.getByText('可再次录音')).toBeTruthy();
+    expect((screen.getByRole('button',{name:'回听刚才的录音'}) as HTMLButtonElement).disabled).toBe(false);
+    expect(container.querySelector('[data-motion="record-halo"]')).toBeNull();
+    rerender(<PracticeView {...basePracticeProps} recorder={stubRecorder({status:'recording'})} recordingBusy/>);
+    expect(screen.queryByText('录音已完成，可以回听自己的声音。')).toBeNull();
+    expect(screen.getByText('点击结束完成录音')).toBeTruthy();
+    rerender(<PracticeView {...basePracticeProps} recorder={stubRecorder({status:'requesting'})} recordingBusy/>);
+    expect(screen.getByText('等待麦克风权限')).toBeTruthy();
+    expect(container.querySelector('[data-motion="record-halo"]')).toBeNull();
+  });
+
   it('收藏态显示已收藏', () => {
     render(
       <PracticeView
