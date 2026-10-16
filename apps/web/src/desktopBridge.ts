@@ -12,7 +12,7 @@ export type DesktopSpeechResult =
 
 export interface OfflineAsrResult {sessionId:string;finalText:string;interimText:string}
 export interface VoxneloOfflineAsr {
-  capabilities():Promise<{available:boolean;reason:'ready'|'not-configured'}>;
+  capabilities():Promise<{available:boolean;reason:'ready'|'not-configured'|'missing-addon'|'missing-model'}>;
   start():Promise<{ok:true;sessionId:string}|{ok:false;reason:'not-configured'|'busy'|'failed'}>;
   push(sessionId:string,samples:Float32Array):void;
   stop(sessionId:string):Promise<{finalText:string}>;
