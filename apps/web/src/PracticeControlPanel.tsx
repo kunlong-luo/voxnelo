@@ -27,7 +27,7 @@ export function PracticeControlPanel({recorder,recordingBusy,speed,onSpeak,onTog
   const requesting=recorder.status==='requesting';
   const ready=recorder.status==='ready' && Boolean(recorder.recordingUrl);
   return (
-        <section className="lessonActions border-t border-border/55 bg-card/30 px-3 pt-5 pb-3 sm:px-6" aria-label={t('practiceActions')}>
+        <section className="lessonActions border-t border-border/55 bg-card/30 px-3 pt-5 pb-3 [@media(max-height:680px)]:pt-3 [@media(max-height:680px)]:pb-2 sm:px-6" aria-label={t('practiceActions')}>
           <div className="actionRail grid grid-cols-[repeat(2,minmax(0,1fr))_minmax(60px,1.25fr)_repeat(2,minmax(0,1fr))] items-start gap-0.5 @min-[560px]/workspace:gap-2" data-testid="practice-control-rail">
             <ActionSlot label={t('playDemo')}>
               <Tooltip text={t('playExample')}>
