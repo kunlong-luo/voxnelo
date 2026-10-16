@@ -27,6 +27,7 @@ coverage/
 *.lcov
 test-results/
 playwright-report/
+browser-layout/
 blob-report/
 
 # logs
