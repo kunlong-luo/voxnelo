@@ -91,6 +91,8 @@ try{
   await delay(800);
   electron=spawn(path.resolve('node_modules/.bin/electron'),[
     '.', '--no-sandbox','--disable-gpu','--disable-dev-shm-usage',
+    // Fake microphone is CI-only; do NOT bypass Chromium's permission decision.
+    '--use-fake-device-for-media-stream',
     '--force-device-scale-factor='+scale,
     '--remote-debugging-port='+port
   ],{
@@ -136,6 +138,20 @@ try{
   assert.equal(secure.node,'undefined','unsafe Node integration');
   assert.equal(secure.process,'undefined','unsafe process exposed in renderer');
   assert.deepEqual(secure.bridgeKeys,['asr','platform','speech','version','windowControls'],'unexpected preload capability');
+  if(scale===1){
+    // Real Chromium getUserMedia flow, fake audio input only. This exercises
+    // both production Electron permission handlers without system hardware.
+    const mic=await evaluate<{ok:boolean;audioTracks:number;error?:string}>(`(async()=>{
+      try{
+        const stream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
+        const audioTracks=stream.getAudioTracks().length;
+        stream.getTracks().forEach(track=>track.stop());
+        return {ok:true,audioTracks};
+      }catch(error){return {ok:false,audioTracks:0,error:String(error)}}
+    })()`);
+    assert.ok(mic.ok&&mic.audioTracks===1,'Trusted microphone permission blocked: '+JSON.stringify(mic));
+    report.push({label:'real-electron-microphone-permission',...mic});
+  }
   const offline=await evaluate('window.voxneloDesktop.asr.capabilities()');
   assert.deepEqual(offline,{available:false,reason:'not-configured'},'Packaged/default Electron must not implicitly load native ASR or a cloud provider');
   report.push({label:'context-isolation',...secure});
