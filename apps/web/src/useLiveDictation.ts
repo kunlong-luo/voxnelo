@@ -45,15 +45,31 @@ export function useLiveDictation(sentenceId: string) {
   const [interimText,setInterimText] = useState('');
   const [error,setError] = useState('');
   const current = useRef<Recognizer | null>(null);
+  const desktopStop = useRef<(() => void) | null>(null);
+  const [desktopAvailable,setDesktopAvailable] = useState(false);
   const requestId = useRef(0);
   const disposed = useRef(false);
   const active = status !== 'idle';
   // SpeechRecognition can use a vendor network service. The desktop app never
   // opts into that mode, even when the constructor happens to exist.
   const browserModeAvailable = !window.voxneloDesktop;
-  const supported = Boolean(recognizerClass());
+  const supported = window.voxneloDesktop ? desktopAvailable : Boolean(recognizerClass());
+  useEffect(()=>{
+    const bridge=window.voxneloDesktop?.asr;
+    if(!bridge)return;
+    let alive=true;
+    void bridge.capabilities().then(cap=>{
+      if(!alive)return;
+      setDesktopAvailable(cap.available);
+      setLocalPack(cap.available?'available':'unavailable');
+    }).catch(()=>{if(alive)setDesktopAvailable(false);});
+    return ()=>{alive=false;};
+  },[]);
   const stop = useCallback(() => {
     ++requestId.current;
+    const closeDesktop=desktopStop.current;
+    desktopStop.current=null;
+    closeDesktop?.();
     const recognizer=current.current;
     current.current=null;
     if(recognizer) {
@@ -87,6 +103,79 @@ export function useLiveDictation(sentenceId: string) {
     if(status!=='idle')return;
     const Ctor=recognizerClass();
     setError('');
+    const bridge=window.voxneloDesktop?.asr;
+    if(window.voxneloDesktop){
+      if(mode!=='local'||!bridge||!desktopAvailable){setError(t('dictationLocalRequired'));return;}
+      const id=++requestId.current;
+      setStatus('checking');
+      let media:MediaStream|null=null;
+      let context:AudioContext|null=null;
+      let unsubscribe:(()=>void)|null=null;
+      let unsubscribeError:(()=>void)|null=null;
+      let sessionId:string|null=null;
+      let closed=false;
+      const close=()=>{
+        if(closed)return;
+        closed=true;
+        unsubscribe?.();unsubscribeError?.();
+        if(sessionId)bridge.stop(sessionId);
+        media?.getTracks().forEach(track=>track.stop());
+        if(context)void context.close();
+      };
+      try{
+        media=await navigator.mediaDevices.getUserMedia({
+          audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1},
+          video:false,
+        });
+        if(disposed.current||id!==requestId.current){close();return;}
+        const opened=await bridge.start();
+        if(disposed.current||id!==requestId.current){
+          if(opened.ok)bridge.stop(opened.sessionId);
+          close();return;
+        }
+        if(!opened.ok)throw new Error('offline ASR not ready');
+        sessionId=opened.sessionId;
+        desktopStop.current=close;
+        unsubscribe=bridge.onResult(result=>{
+          if(id!==requestId.current||result.sessionId!==sessionId||disposed.current)return;
+          setFinalText(result.finalText);
+          setInterimText(result.interimText);
+        });
+        unsubscribeError=bridge.onError(failed=>{
+          if(id!==requestId.current||failed!==sessionId||disposed.current)return;
+          setError(t('dictationFailed'));
+          stop();
+        });
+        context=new AudioContext({sampleRate:16000,latencyHint:'interactive'});
+        if(context.sampleRate!==16000)throw new Error('Unexpected microphone sample rate');
+        await context.audioWorklet.addModule(new URL('audio/pcm-worklet.js',window.location.href).href);
+        if(disposed.current||id!==requestId.current){close();return;}
+        const source=context.createMediaStreamSource(media);
+        const node=new AudioWorkletNode(context,'voxnelo-pcm-16k');
+        const silent=context.createGain();
+        silent.gain.value=0;
+        source.connect(node);
+        node.connect(silent);
+        silent.connect(context.destination);
+        node.port.onmessage=event=>{
+          if(id!==requestId.current||closed||typeof sessionId!=='string')return;
+          if(event.data instanceof Float32Array)bridge.push(sessionId,event.data);
+        };
+        await context.resume();
+        if(disposed.current||id!==requestId.current){close();return;}
+        setStatus('listening');
+        return;
+      }catch(cause){
+        close();
+        if(desktopStop.current===close)desktopStop.current=null;
+        if(disposed.current||id!==requestId.current)return;
+        setStatus('idle');
+        const name=cause instanceof Error?cause.name:'';
+        setError(name==='NotAllowedError'?' '+t('dictationPermission')
+          :name==='NotFoundError'||name==='NotReadableError'?t('dictationMicrophone'):t('dictationFailed'));
+        return;
+      }
+    }
     if(!Ctor){setError(t('dictationUnsupported'));return;}
     if(mode==='browser'&&!browserModeAvailable){setError(t('dictationLocalRequired'));return;}
     const id=++requestId.current;
@@ -155,7 +244,7 @@ export function useLiveDictation(sentenceId: string) {
       if(id!==requestId.current)return;
       current.current=null;setStatus('idle');setError(t('dictationFailed'));
     }
-  },[status,mode,browserModeAvailable,t]);
+  },[status,mode,browserModeAvailable,desktopAvailable,stop,t]);
   const installLocal = useCallback(async()=>{
     const Ctor=recognizerClass();
     if(!Ctor?.install)return setError(t('dictationLocalRequired'));
