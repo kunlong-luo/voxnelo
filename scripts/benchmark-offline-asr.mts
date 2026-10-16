@@ -10,6 +10,7 @@ import { readFileSync } from 'node:fs';
 import { isAbsolute, resolve } from 'node:path';
 import { Worker } from 'node:worker_threads';
 import { performance } from 'node:perf_hooks';
+import { requireRealAsrQuality } from '../apps/desktop/asrAcceptance.ts';
 
 const argv=process.argv.slice(2);
 const option=(name:string):string|undefined=>{
@@ -121,6 +122,9 @@ try{
     transcript:transcript||interim,
     ...(expected?{reference:expected,wordErrorRate:wordErrorRate(expected,transcript||interim)}:{}),
   };
+  // Fail the process rather than reporting a green benchmark for empty text,
+  // excessive latency, or unacceptable real-model recognition errors.
+  requireRealAsrQuality(result);
   console.log(JSON.stringify(result,null,2));
 }finally{
   if(worker)await worker.terminate();

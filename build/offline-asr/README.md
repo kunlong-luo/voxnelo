@@ -22,6 +22,43 @@ build/offline-asr/
   manifest.json         # complete, version-pinned SHA-256 file inventory
 ```
 
+## Pinned English model candidate (not an installer asset)
+
+`pnpm asr:model:prepare` downloads the English streaming Zipformer transducer
+into the ignored `.cache/voxnelo/offline-asr/english-zipformer/model/` directory.
+It requests an immutable upstream revision
+`bfbb11950302dad9955f8ede01f0e768595e4fba`, validates full SHA-256
+digests and exact byte counts for the encoder, decoder and joiner, and retains
+the fixed-revision `tokens.txt` with a recorded SHA-256. Downloads stream
+to temporary files and only become available after validation.
+
+The upstream-tested model combination is an int8 encoder + FP32 decoder +
+int8 joiner (not an arbitrary mix of the two decoder formats). Its expected
+size is approximately 130 MB. The Hugging Face model card marks the source
+Apache-2.0; independent review of model provenance, downstream dependencies,
+redistribution and any notices remains required.
+
+**This command does not enable dictation in the stock app** and does not
+copy a model to `build/offline-asr/`. The native Node API adapter/binaries
+still require separate platform-specific, audited preparation. Model
+preparation is explicit, not a background download from a microphone UI.
+
+Once the real native adapter is staged for an approved target and
+`pnpm build` succeeds, run the real engine test (not a mock):
+
+```bash
+VOXNELO_ASR_MODEL_DIR=/absolute/path/to/model \
+VOXNELO_ASR_ADDON_PATH=/absolute/path/to/native/index.cjs \
+node --experimental-strip-types scripts/benchmark-offline-asr.mts \
+  --wav /absolute/path/to/approved-English-16k-mono.wav \
+  --expect "the spoken words in the approved test audio"
+```
+
+A successful benchmark requires a nonempty transcript, real-time factor
+(RTF) no greater than 1, and (with `--expect`) word error rate no
+greater than 0.5. The benchmark must use **genuine** inference results.
+Passing one sample does not establish installation or real-microphone QA.
+
 ## Release integrity preflight
 
 Before building a desktop package, `pnpm build:electron` runs
