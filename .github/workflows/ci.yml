@@ -50,6 +50,8 @@ jobs:
         run: node --experimental-strip-types scripts/check-offline-asr-worker.mts
       - name: Check real-model benchmark CLI syntax (no download or native model)
         run: node --experimental-strip-types --check scripts/benchmark-offline-asr.mts
+      - name: Check release checksum manifest CLI syntax
+        run: node --experimental-strip-types --check scripts/write-candidate-manifest.mts
       - name: Validate static Pages assets
         run: node --experimental-strip-types scripts/check-pages-artifact.mts
       - name: Renderer size budget
@@ -139,6 +141,9 @@ jobs:
           test "$(dpkg-query -W -f='${Status}' fonts-noto-cjk)" = 'install ok installed'
           dpkg -L voxnelo | grep -Eq '^/usr/share/applications/[^/]+\.desktop$'
           echo "apt install verified: Voxnelo, CJK fonts, desktop launcher"
+      - name: Verify SHA-256 candidate manifest on Linux
+        if: runner.os == 'Linux'
+        run: node --experimental-strip-types scripts/write-candidate-manifest.mts
       - name: Upload Linux installers for CI review
         if: runner.os == 'Linux'
         uses: actions/upload-artifact@v4
@@ -147,5 +152,7 @@ jobs:
           path: |
             release/*.deb
             release/*.AppImage
+            release/SHA256SUMS-*.txt
+            release/candidate-manifest-*.json
           retention-days: 7
           if-no-files-found: error
