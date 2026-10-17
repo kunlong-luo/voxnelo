@@ -197,7 +197,7 @@ try{
   await evalJs('document.querySelector(".recordAction").click()');
   await until('!!document.querySelector(".recordingQuickStop")');
   const liveAnimation=await evalJs('getComputedStyle(document.querySelector("[data-motion=record-halo]")).animationName');
-  assert.ok(liveAnimation.includes('record-halo'),'recording halo did not animate: '+liveAnimation);
+  assert.ok(liveAnimation.includes('live-pulse'),'recording halo did not animate: '+liveAnimation);
   await evalJs('document.documentElement.dataset.motion="off"');
   const quietHalo=await evalJs('getComputedStyle(document.querySelector("[data-motion=record-halo]")).animationDuration');
   assert.ok(parseFloat(quietHalo)<=.001,'Manual motion OFF did not stop the recording halo: '+quietHalo);
