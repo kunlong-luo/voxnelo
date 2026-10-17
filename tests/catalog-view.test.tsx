@@ -13,20 +13,20 @@ const setup=()=> {
 };
 
 describe('Voxnelo searchable course catalog',()=>{
-  it('shows the expanded catalog and paginates at 20 expressions per page',()=>{
+  it('shows the expanded catalog and paginates at six expressions per page',()=>{
     const view=setup();
     expect(SENTENCES).toHaveLength(280);
     expect(screen.getByTestId('catalog-count').textContent).toContain('280');
-    expect(view.container.querySelectorAll('.catalogItem')).toHaveLength(20);
+    expect(view.container.querySelectorAll('.catalogItem')).toHaveLength(6);
     fireEvent.click(screen.getByRole('button',{name:'下一页'}));
-    expect(view.container.querySelectorAll('.catalogItem')).toHaveLength(20);
-    expect(screen.getByRole('navigation',{name:'句子列表分页'}).textContent).toContain('2 / 14');
+    expect(view.container.querySelectorAll('.catalogItem')).toHaveLength(6);
+    expect(screen.getByRole('navigation',{name:'句子列表分页'}).textContent).toContain('2 / 47');
   });
   it('filters scenes without losing original stable sentence IDs',()=>{
     const view=setup();
     const scene=screen.getByRole('group',{name:'按场景筛选句子'});
     fireEvent.click(within(scene).getByRole('button',{name:'餐厅点餐'}));
-    expect(view.container.querySelectorAll('.catalogItem')).toHaveLength(20);
+    expect(view.container.querySelectorAll('.catalogItem')).toHaveLength(6);
     const dish=SENTENCES.find(item=>item.english==="I'd like a table for two.");
     expect(dish?.id).toBe('s101');
     fireEvent.click(screen.getByRole('button',{name:/I'd like a table for two/}));
