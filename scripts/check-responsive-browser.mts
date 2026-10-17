@@ -144,7 +144,7 @@ try{
   // Local desktop scrolling: the window and sidebar remain fixed while only
   // the workspace and each phrase/history list may scroll.
   await activate(1,'.catalogPage');
-  const localScroll=await evalJs<{frame:string;workspace:string;catalog:string;visible:number}>('(()=>({frame:getComputedStyle(document.querySelector(".appFrame")).overflowY,workspace:getComputedStyle(document.querySelector(".content")).overflowY,catalog:getComputedStyle(document.querySelector(".catalog-grid")).overflowY,visible:document.querySelectorAll(".catalogItem").length}))()');
+  const localScroll=await evalJs<{frame:string;workspace:string;catalog:string;visible:number}>('(()=>({frame:getComputedStyle(document.querySelector(".appFrame")).overflowY,workspace:getComputedStyle(document.querySelector(".content")).overflowY,catalog:getComputedStyle(document.querySelector("[data-testid=catalog-grid]")).overflowY,visible:document.querySelectorAll(".catalogItem").length}))()');
   assert.equal(localScroll.frame,'hidden','Desktop page should not own the scrollbar');
   assert.equal(localScroll.workspace,'auto','Workspace should own its overflow');
   assert.equal(localScroll.catalog,'auto','Catalog should scroll locally');
