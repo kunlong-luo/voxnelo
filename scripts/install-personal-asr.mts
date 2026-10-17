@@ -14,6 +14,7 @@ import { existsSync } from 'node:fs';
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import { homedir, tmpdir } from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { ENGLISH_MODEL, prepareEnglishModel } from './prepare-asr-model.mts';
 import { stageInternalAsrCandidate } from './stage-asr-pilot.mts';
 
@@ -72,7 +73,7 @@ export async function installPersonalAsr(
   }
 }
 
-if(process.argv[1]&&path.resolve(process.argv[1])===new URL(import.meta.url).pathname){
+if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
   if(process.argv.length!==2)throw Error('Usage: pnpm asr:personal:install (Linux only)');
   await installPersonalAsr();
 }
