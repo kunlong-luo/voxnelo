@@ -1,4 +1,4 @@
-import { ArrowLeft, AudioLines, BookOpenText, Bug, Check, CircleHelp, ExternalLink, GitBranch, Github, Info, Languages, Lightbulb, Palette, ShieldCheck, Settings2 } from 'lucide-react';
+import { ArrowLeft, AudioLines, BookOpenText, Bug, Check, CircleHelp, ExternalLink, GitBranch, Info, Languages, Lightbulb, Palette, ShieldCheck, Settings2 } from 'lucide-react';
 import { APP_VERSION, SUPPORT_LINKS } from '@voxnelo/core';
 import type { AppearanceTheme } from './appearance';
 import { useI18n, type LanguageSetting } from './i18n';
@@ -89,7 +89,7 @@ export function SettingsView({
         <p className="text-xs leading-6 text-muted-foreground">{t('aboutSummary')}</p>
         <div className="flex flex-wrap gap-2">
           <a href={SUPPORT_LINKS.repository} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({variant:'outline',size:'sm'}),'min-w-0 whitespace-normal text-center')}>
-            <Github size={16} aria-hidden="true"/>{t('aboutSource')}<ExternalLink size={13} aria-hidden="true"/>
+            <GitBranch size={16} aria-hidden="true"/>{t('aboutSource')}<ExternalLink size={13} aria-hidden="true"/>
           </a>
           <a href={SUPPORT_LINKS.license} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({variant:'outline',size:'sm'}),'min-w-0 whitespace-normal text-center')}>
             <GitBranch size={16} aria-hidden="true"/>{t('aboutLicenseLink')}<ExternalLink size={13} aria-hidden="true"/>
