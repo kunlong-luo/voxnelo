@@ -91,6 +91,14 @@ if(platform==='linux'){
   const metadata=spawnSync('dpkg-deb',['--field',debPath,'Package'],{encoding:'utf8'});
   assert.equal(metadata.status,0,'dpkg-deb could not inspect installer: '+metadata.stderr);
   assert.match(metadata.stdout.trim(),/^voxnelo$/i,'Wrong Debian package identity');
+  // Electron-builder/FPM may silently replace Chinese package metadata with
+  // question marks under a non-UTF-8 environment. Test the actual .deb metadata
+  // shown by Linux package managers (not merely package.json).
+  const description=spawnSync('dpkg-deb',['--field',debPath,'Description'],{encoding:'utf8'});
+  assert.equal(description.status,0,'dpkg-deb could not inspect installer description: '+description.stderr);
+  assert.match(description.stdout,/Voxnelo - English speaking practice/,'Debian package synopsis missing or corrupted');
+  assert.match(description.stdout,/Free, local-first English speaking practice/,'Debian package description missing or corrupted');
+  assert.doesNotMatch(description.stdout,/\?{2,}|\uFFFD/,'Debian package description contains replacement characters');
   const dependencies=spawnSync('dpkg-deb',['--field',debPath,'Depends'],{encoding:'utf8'});
   assert.equal(dependencies.status,0,'dpkg-deb could not inspect dependencies: '+dependencies.stderr);
   assert.match(dependencies.stdout,/(?:^|[,\s])fonts-noto-cjk(?:[,\s(]|$)/,'Debian installer must provide Chinese CJK font support');
