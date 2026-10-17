@@ -58,7 +58,7 @@ const strings = {
     "dictationPrivacy": "默认仅使用设备端语音识别；录音是独立功能。",
     "dictationUnsupported": "当前环境没有可用的实时语音识别接口，录音功能仍可使用。",
     "dictationUnavailableShort": "本机听写引擎尚不可用 · 可用录制回听",
-    "dictationLocalRequired": "本地英语听写暂未就绪，仍可正常使用录音回听。",
+    "dictationLocalRequired": "本地英语识别暂未就绪，实时听写暂不可用；录音回听仍可正常使用。",
     "dictationAddonMissing": "离线识别组件尚不可用，录音回听不受影响。",
     "dictationModelMissing": "离线英语模型尚未就绪，录音回听不受影响。",
     "dictationHelp": "查看听写帮助与反馈",
