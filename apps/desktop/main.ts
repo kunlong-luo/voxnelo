@@ -25,12 +25,14 @@ const rendererDir = path.join(__dirname, '..', 'dist');
 const appOrigin = APP_ORIGIN;
 const linuxSpeech = new LinuxEnglishSpeech();
 // Production may use vetted resources bundled explicitly by the release builder.
-// No network download, renderer-provided paths, or implicit native loading.
+// No network download or renderer-provided paths. Personal ASR is an explicit,
+// pinned user-side install; public installer assets remain separately gated.
 const asrAssets = resolveAsrAssets({
   isPackaged: app.isPackaged,
   resourcesPath: process.resourcesPath,
   developerModelDir: process.env.VOXNELO_ASR_MODEL_DIR,
   developerAddonPath: process.env.VOXNELO_ASR_ADDON_PATH,
+  personalDataDir: path.join(app.getPath('appData'), 'voxnelo'),
 });
 const offlineAsr = new OfflineAsr(asrAssets.modelDir, asrAssets.addonPath);
 
