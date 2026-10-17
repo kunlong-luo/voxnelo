@@ -2,6 +2,8 @@
 
 > 这不是正式发布的离线 ASR，也**不会**将模型、原生二进制或用户音频添加至 GitHub 公开包。当前公开 DEB/AppImage 仍是 README-only ASR（听写不可用）。这一步需要用户主动执行并自行审阅上游许可。录音回放与 ASR 是独立功能。
 
+> V0.1 候选版生成和 SHA-256 清单见 `docs/engineering/V0.1-RC-PLAYBOOK.md`。个人安装成功也不构成 #45 正式三平台流式识别验收证据；不可据此把已公开发行状态标为通过。
+
 ## 在 Pop!_OS / Ubuntu 上启用本地内测
 
 1. 安装包含此改动的 Voxnelo DEB 并**退出** Voxnelo。
