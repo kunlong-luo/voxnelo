@@ -51,6 +51,7 @@
   --animate-status-breathe: status-breathe 1700ms ease-in-out infinite;
   --animate-ambient-drift: ambient-drift 10s ease-in-out infinite alternate;
   --animate-ambient-breathe: ambient-breathe 7.5s ease-in-out infinite alternate;
+  --animate-ribbon-flow: ribbon-flow 3.6s ease-in-out infinite alternate;
 }
 :root {
   color-scheme: light;
@@ -172,6 +173,11 @@
 @keyframes ambient-drift {
   from { transform: translate3d(-24px,-12px,0); opacity: .62; }
   to { transform: translate3d(28px,18px,0); opacity: .96; }
+}
+/* Five independent, decorative ribbon layers: motion is NOT microphone input. */
+@keyframes ribbon-flow {
+  from { transform: translate3d(0,-5px,0) scaleY(.94); opacity: .38; }
+  to { transform: translate3d(0,5px,0) scaleY(1.07); opacity: .86; }
 }
 /* A continuously visible, compositor-friendly page atmosphere, not a sound wave.
  * Keep motion on non-interactive glow layers so text and controls remain steady. */
