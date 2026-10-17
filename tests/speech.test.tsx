@@ -13,7 +13,8 @@ class MockUtterance {
 }
 class MockAudio {
   static instances: MockAudio[] = [];
-  play = vi.fn().mockResolvedValue(undefined);
+  static playImpl: () => Promise<void> = () => Promise.resolve();
+  play = vi.fn(() => MockAudio.playImpl());
   pause = vi.fn();
   load = vi.fn();
   removeAttribute = vi.fn();
@@ -49,6 +50,7 @@ afterEach(() => {
   Reflect.deleteProperty(window, 'voxneloDesktop');
   MockUtterance.instances = [];
   MockAudio.instances = [];
+  MockAudio.playImpl = () => Promise.resolve();
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
@@ -94,6 +96,18 @@ describe('speech', () => {
     expect(result.ok).toBe(false);
     expect(result.message).toContain('未找到可用的英语语音');
   });
+  it('切句中止 Linux TTS 播放时不误报设备播放失败', async () => {
+    mockSynthesis([]);
+    nativeSpeech();
+    let failPlayback: ((error: Error) => void) | undefined;
+    MockAudio.playImpl = () => new Promise<void>((_resolve, reject) => { failPlayback = reject; });
+    const pending = speakEnglish('Hello!');
+    await vi.waitFor(() => expect(failPlayback).toBeTypeOf('function'));
+    stopSpeech();
+    failPlayback?.(new Error('AbortError: play() interrupted by pause'));
+    expect(await pending).toEqual({ok:false,cancelled:true});
+  });
+
   it('cancelled native request cannot play stale audio', async () => {
     mockSynthesis([]);
     let resolveRequest: (result: {ok: true;wavBase64:string}) => void = () => undefined;
