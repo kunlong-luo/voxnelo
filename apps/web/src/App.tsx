@@ -22,7 +22,7 @@ import { SettingsView } from './SettingsView';
 import { DesktopTitlebar } from './DesktopTitlebar';
 import { Button } from './components/ui/button';
 import { cn } from './lib/utils';
-import { applyAppearance, readAppearance, saveAppearance, type AppearanceTheme } from './appearance';
+import { applyAppearance, readAppearance, saveAppearance, applyMotion, readMotionEnabled, saveMotionEnabled, type AppearanceTheme } from './appearance';
 import { I18nProvider, readLanguageSetting, resolveLocale, saveLanguageSetting, setDocumentLocale, useI18n, type LanguageSetting } from './i18n';
 
 const menu: { id: View; label: string; accessibleLabel: string; icon: LucideIcon }[] = [
@@ -75,6 +75,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
   const [notice, setNotice] = useState('');
   const [search, setSearch] = useState('');
   const [appearance, setAppearance] = useState<AppearanceTheme>(readAppearance);
+  const [motionEnabled, setMotionEnabled] = useState(readMotionEnabled);
   const recorder = useRecorder();
   const dictation = useLiveDictation(sentenceId);
   const current = useMemo(() => SENTENCES.find((item) => item.id === sentenceId) ?? FIRST_SENTENCE, [sentenceId]);
@@ -100,6 +101,11 @@ function AppScreen({languageSetting,onChangeLanguage}: {
     applyAppearance(appearance);
   }, [appearance]);
 
+  useEffect(() => {applyMotion(motionEnabled);}, [motionEnabled]);
+  const changeMotion = (next:boolean) => {
+    setMotionEnabled(next);
+    saveMotionEnabled(next);
+  };
   const changeAppearance = (next: AppearanceTheme) => {
     setAppearance(next);
     saveAppearance(next);
@@ -224,17 +230,17 @@ function AppScreen({languageSetting,onChangeLanguage}: {
   };
 
   return (
-    <div className={cn("appFrame min-h-dvh bg-background text-foreground sm:h-dvh sm:overflow-hidden",window.voxneloDesktop?.windowControls&&"desktopFrame")}>
+    <div className={cn("appFrame min-h-dvh bg-background bg-[image:var(--workspace-gradient)] text-foreground sm:h-dvh sm:overflow-hidden",window.voxneloDesktop?.windowControls&&"desktopFrame")}>
       <div className="shell flex min-h-dvh items-stretch sm:h-dvh sm:overflow-hidden">
-      <aside className="sidebar sticky top-0 hidden h-dvh w-[clamp(204px,19vw,252px)] shrink-0 flex-col overflow-y-auto border-r border-border/45 bg-gradient-to-b from-sidebar via-sidebar to-brand-cream/55 px-3 pt-4 pb-5 text-sidebar-foreground shadow-[inset_-1px_0_0_rgba(255,255,255,.45)] sm:flex max-[1050px]:w-19 max-[1050px]:items-center max-[1050px]:px-2">
-        <div className="brand mb-7 flex w-full items-center gap-3 rounded-[20px] border border-white/20 bg-card/20 px-2 py-2 max-[1050px]:justify-center max-[1050px]:border-0 max-[1050px]:bg-transparent max-[1050px]:px-0" aria-label="Voxnelo">
+      <aside className="sidebar sticky top-0 hidden h-dvh w-[clamp(204px,19vw,252px)] shrink-0 flex-col overflow-y-auto border-r border-white/50 bg-sidebar/90 px-3 pt-4 pb-5 text-sidebar-foreground shadow-[inset_-1px_0_0_rgba(255,255,255,.65),12px_0_35px_-30px_rgba(99,68,54,.32)] backdrop-blur-md sm:flex max-[1050px]:w-19 max-[1050px]:items-center max-[1050px]:px-2">
+        <div className="brand mb-7 flex w-full items-center gap-3 rounded-[22px] border border-white/55 bg-card/45 px-2 py-2 shadow-[0_12px_30px_-24px_rgba(67,49,39,.32)] max-[1050px]:justify-center max-[1050px]:border-0 max-[1050px]:bg-transparent max-[1050px]:px-0" aria-label="Voxnelo">
           <div className="brandMark flex size-11 shrink-0 items-center justify-center rounded-2xl bg-card/35 shadow-[0_10px_28px_-14px_rgba(60,80,70,.5)]"><img src="brand/voxnelo-mark.svg" alt="" width="44" height="44" className="size-11 rounded-2xl shadow-sm"/></div>
           <div className="brandText max-[1050px]:hidden"><strong className="text-[24px] font-extrabold tracking-[-.065em] text-foreground">Voxnelo</strong></div>
         </div>
         <div className="sidebarHint px-4 text-[10px] font-bold tracking-[.18em] text-muted-foreground uppercase max-[1050px]:hidden">{t('sidebarSpace')}</div>
         <nav className="mt-4 flex w-full flex-col gap-2" aria-label={t('navLabel')}>
           {menu.map(({ id, icon: Icon }) => (
-            <Button key={id} variant="ghost" className={cn('navItem group relative h-12 w-full justify-start rounded-[17px] border border-transparent px-4 text-sm font-semibold text-sidebar-foreground/80 transition-[background-color,color,transform,box-shadow] duration-400 hover:border-primary/10 hover:bg-sidebar-accent/85 hover:text-foreground motion-safe:hover:translate-x-0.5 max-[1050px]:size-12 max-[1050px]:justify-center max-[1050px]:px-0',view===id&&'active motion-safe:animate-soft-pop border-primary/20 bg-gradient-to-r from-brand-blush/55 via-card/95 to-card/65 text-primary shadow-[0_10px_30px_-18px_rgba(70,85,72,.48)] ring-1 ring-primary/10 before:absolute before:inset-y-3 before:left-0 before:w-1 before:rounded-full before:bg-primary before:content-[\'\']')} aria-label={t(({practice:'navStart',catalog:'navCatalogExplore',favorites:'navMyFavorites',history:'navRecent',review:'navReviewItems',settings:'navSettings'} as const)[id])} aria-current={view === id ? 'page' : undefined} onClick={() => nav(id)}>
+            <Button key={id} variant="ghost" className={cn('navItem group relative h-12 w-full justify-start rounded-[17px] border border-transparent px-4 text-sm font-semibold text-sidebar-foreground/80 transition-[background-color,color,transform,box-shadow] duration-400 hover:border-primary/10 hover:bg-sidebar-accent/85 hover:text-foreground hover:translate-x-0.5 max-[1050px]:size-12 max-[1050px]:justify-center max-[1050px]:px-0',view===id&&'active animate-soft-pop border-primary/20 bg-gradient-to-r from-brand-blush/55 via-card/95 to-card/65 text-primary shadow-[0_10px_30px_-18px_rgba(70,85,72,.48)] ring-1 ring-primary/10 before:absolute before:inset-y-3 before:left-0 before:w-1 before:rounded-full before:bg-primary before:content-[\'\']')} aria-label={t(({practice:'navStart',catalog:'navCatalogExplore',favorites:'navMyFavorites',history:'navRecent',review:'navReviewItems',settings:'navSettings'} as const)[id])} aria-current={view === id ? 'page' : undefined} onClick={() => nav(id)}>
               <Icon size={20} strokeWidth={1.9} />
               <span className="max-[1050px]:hidden">{t(({practice:'navPractice',catalog:'navCatalog',favorites:'navFavorites',history:'navHistory',review:'navReview',settings:'navSettings'} as const)[id])}</span>
               {id === 'favorites' && stats.favorites > 0 ? <span className="navCount ml-auto rounded-full bg-secondary px-2 py-0.5 text-[10px] text-secondary-foreground max-[1050px]:hidden">{stats.favorites}</span> : null}
@@ -250,16 +256,17 @@ function AppScreen({languageSetting,onChangeLanguage}: {
           <div className="sidebarVersion px-1 text-[10px] text-muted-foreground">Voxnelo · Early Access {APP_VERSION}</div>
         </div>
       </aside>
-      <div className="mainArea @container/workspace relative min-w-0 flex-1 overflow-clip bg-background bg-[image:var(--workspace-gradient)] sm:flex sm:h-dvh sm:flex-col">
+      <div className="mainArea @container/workspace relative isolate min-w-0 flex-1 overflow-clip bg-background bg-[image:var(--workspace-gradient)] sm:flex sm:h-dvh sm:flex-col">
         <DesktopTitlebar />
-        <div aria-hidden="true" data-motion="ambient-drift" className="pointer-events-none absolute -top-12 right-[2%] size-56 rounded-full bg-primary/18 blur-3xl motion-safe:animate-ambient-drift sm:size-88"/>
-        <div aria-hidden="true" data-motion="ambient-breathe" className="pointer-events-none absolute bottom-15 left-[4%] size-64 rounded-full bg-brand-blush/55 blur-3xl motion-safe:animate-ambient-breathe sm:size-100"/>
-        <div aria-hidden="true" data-motion="ambient-breathe-secondary" className="pointer-events-none absolute top-[40%] right-[16%] size-48 rounded-full bg-brand-mist/35 blur-3xl motion-safe:animate-ambient-breathe motion-safe:[animation-delay:-3.5s] sm:size-74"/>
+        <div aria-hidden="true" data-motion="ambient-drift" className="pointer-events-none absolute -top-16 right-[-7%] size-72 rounded-full bg-ambient-glow/75 blur-[65px] animate-ambient-drift sm:size-125"/>
+        <div aria-hidden="true" data-motion="ambient-breathe" className="pointer-events-none absolute -bottom-35 left-[1%] size-80 rounded-full bg-brand-cream/85 blur-[75px] animate-ambient-breathe sm:size-135"/>
+        <div aria-hidden="true" data-motion="ambient-breathe-secondary" className="pointer-events-none absolute top-[32%] right-[17%] size-56 rounded-full bg-brand-mist/75 blur-[70px] animate-ambient-breathe [animation-delay:-3.5s] sm:size-110"/>
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-[6%] top-[12%] h-px bg-linear-to-r from-transparent via-white/70 to-transparent"/>
         {recorder.status === 'recording' ? (
-          <Button variant="destructive" className="recordingQuickStop fixed right-4 bottom-24 z-60 shadow-xl motion-safe:animate-soft-pop sm:right-6 sm:bottom-6" onClick={handleRecorder}
+          <Button variant="destructive" className="recordingQuickStop fixed right-4 bottom-24 z-60 shadow-xl animate-soft-pop sm:right-6 sm:bottom-6" onClick={handleRecorder}
             aria-label={t("stopFloating")}><Square size={15} fill="currentColor" aria-hidden="true" /> {t("stopRecording")}</Button>
         ) : null}
-        <main ref={pageMotionRef} className="content voxnelo-scroll relative z-10 mx-auto w-full max-w-380 px-3 pt-3 pb-28 sm:min-h-0 sm:flex-1 sm:overflow-y-auto sm:overscroll-contain sm:px-7 sm:py-4 lg:px-10 lg:py-8 2xl:px-14 2xl:py-12">
+        <main ref={pageMotionRef} className="content voxnelo-scroll relative z-10 mx-auto w-full max-w-380 px-3 pt-3 pb-28 sm:min-h-0 sm:flex-1 sm:overflow-y-auto sm:overscroll-contain sm:px-6 sm:py-6 lg:px-9 lg:py-8 2xl:px-12 2xl:py-10 [@media(max-height:700px)]:py-2">
           {view === 'practice' ? (
             <PracticeView
               current={current}
@@ -293,6 +300,8 @@ function AppScreen({languageSetting,onChangeLanguage}: {
               speed={speed}
               showIpa={showIpa}
               appearance={appearance}
+              motionEnabled={motionEnabled}
+              onChangeMotion={changeMotion}
               languageSetting={languageSetting}
               onChangeLanguage={onChangeLanguage}
               onChangeAppearance={changeAppearance}
@@ -318,7 +327,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
       {/* The compact viewport has its own navigation affordance; no miniature sidebar. */}
       <nav className="mobileNav fixed inset-x-0 bottom-0 z-50 grid grid-cols-6 gap-0.5 border-t border-border/80 bg-card/95 px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-soft backdrop-blur-xl sm:hidden" aria-label={t('navLabel')}>
         {menu.map(({id,icon:Icon}) => (
-          <Button key={id} variant="ghost" className={cn('mobileNavItem h-14 min-w-0 flex-col gap-1 rounded-xl px-1 py-1 text-[10px] transition-[background-color,color,transform] duration-200 motion-safe:active:scale-[.94]',view===id&&'bg-secondary text-primary')} aria-label={t(({practice:'navStart',catalog:'navCatalogExplore',favorites:'navMyFavorites',history:'navRecent',review:'navReviewItems',settings:'navSettings'} as const)[id])+' · '+t('navLabel')} aria-current={view===id?'page':undefined} onClick={() => nav(id)}>
+          <Button key={id} variant="ghost" className={cn('mobileNavItem h-14 min-w-0 flex-col gap-1 rounded-xl px-1 py-1 text-[10px] transition-[background-color,color,transform] duration-200 active:scale-[.94]',view===id&&'bg-secondary text-primary')} aria-label={t(({practice:'navStart',catalog:'navCatalogExplore',favorites:'navMyFavorites',history:'navRecent',review:'navReviewItems',settings:'navSettings'} as const)[id])+' · '+t('navLabel')} aria-current={view===id?'page':undefined} onClick={() => nav(id)}>
             <Icon size={19} strokeWidth={1.9} aria-hidden="true"/>
             <span className="max-w-full truncate">{t(({practice:'navPractice',catalog:'navCatalog',favorites:'navFavorites',history:'navHistory',review:'navReview',settings:'navSettings'} as const)[id])}</span>
           </Button>

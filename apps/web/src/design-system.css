@@ -2,7 +2,7 @@
 
 /* Tailwind v4 + shadcn-compatible semantic design tokens.
  * This is the ONLY CSS allowed for the new UI: reset, tokens, scrollbars,
- * reduced-motion preference and Electron drag region. Components own style via
+ * explicit in-app motion controls and Electron drag region. Components own style via
  * Tailwind utilities; don't add page-specific selectors or hexadecimal colors.
  */
 @theme inline {
@@ -36,6 +36,9 @@
   --color-ipa-ink: var(--ipa-ink);
   --color-mic-halo: var(--mic-halo);
   --color-mic-foreground: var(--mic-foreground);
+  --color-rhythm-start: var(--rhythm-start);
+  --color-rhythm-end: var(--rhythm-end);
+  --color-ambient-glow: var(--ambient-glow);
   --radius-sm: calc(var(--radius) * .6);
   --radius-md: calc(var(--radius) * .75);
   --radius-lg: var(--radius);
@@ -52,22 +55,25 @@
   --animate-ambient-drift: ambient-drift 10s ease-in-out infinite alternate;
   --animate-ambient-breathe: ambient-breathe 7.5s ease-in-out infinite alternate;
   --animate-ribbon-flow: ribbon-flow 3.6s ease-in-out infinite alternate;
+  --animate-glass-shimmer: glass-shimmer 7s ease-in-out infinite alternate;
+  --animate-live-pulse: live-pulse 1.9s ease-in-out infinite;
+  --animate-success-glint: success-glint 650ms cubic-bezier(.17,.84,.44,1) both;
 }
 :root {
   color-scheme: light;
   --radius: 1.35rem;
   --background: #f7f8f5;
-  --foreground: #273f3a;
+  --foreground: #243B46;
   --card: #ffffff;
-  --card-foreground: #273f3a;
+  --card-foreground: #243B46;
   --popover: #264a44;
   --popover-foreground: #ffffff;
   --primary: #477f83;
   --primary-foreground: #ffffff;
   --secondary: #e8f2ea;
   --secondary-foreground: #31665b;
-  --muted: #edf2ed;
-  --muted-foreground: #5e6c62;
+  --muted: #F0F4F1;
+  --muted-foreground: #5A717B;
   --accent: #e8f1eb;
   --accent-foreground: #296b5b;
   --destructive: #b95662;
@@ -76,63 +82,71 @@
   --sidebar: #e8f0ea;
   --sidebar-foreground: #324e45;
   --sidebar-accent: #d6e7d9;
-  --brand-blush: #f6e8e3;
-  --brand-mist: #d7eae3;
+  --brand-blush: #E29578;
+  --brand-mist: #A6C5BA;
   --brand-cream: #fffdf8;
   --shadow-color: #45655e66;
   /* Nordic V3: solid surfaces, zero glass blur, restrained educational UI. */
   --glass-surface: #ffffff;
-  --glass-edge: #e0eae2;
+  --glass-edge: #dfe8e1;
   --glass-blur: 0px;
   --glass-shadow: 0 12px 32px rgba(46,76,66,.055), inset 0 1px 1px rgba(255,255,255,.85);
-  --sentence-ink: #1a202c;
-  --translation-ink: #4a5568;
-  --ipa-ink: #526576;
-  --mic-gradient: linear-gradient(135deg,#477f83,#477f83);
+  --sentence-ink: #243B46;
+  --translation-ink: #5A717B;
+  --ipa-ink: #8FA2A9;
+  --mic-gradient: linear-gradient(135deg,#477F83 0%,#A6C5BA 100%);
   --mic-halo: #50a68d;
   --mic-foreground: #ffffff;
   --canvas-glow: rgba(204,226,218,.38);
-  --workspace-gradient: linear-gradient(120deg,#f7f8f5 0%,#fbfcf9 72%,#edf3ee 100%);
+  --workspace-gradient: linear-gradient(135deg,#F7F8F5 0%,#FAFBF8 55%,#F0F4F1 100%);
+  --rhythm-start: #A6C5BA;
+  --rhythm-end: #A6C5BA;
+  --ambient-glow: #CFE2D6;
+  --surface-highlight: rgba(255,255,255,.72);
   font-family: Inter, 'Noto Sans CJK SC', 'Noto Sans SC', 'Source Han Sans SC', 'WenQuanYi Micro Hei', 'Microsoft YaHei', 'PingFang SC', ui-sans-serif, system-ui, sans-serif;
 }
 :root[data-theme="sunset"] {
-  --background: #f7f1ec;
-  --foreground: #384a45;
-  --card: #fffaf6;
-  --card-foreground: #384a45;
+  --background: #F8DEC5;
+  --foreground: #1A202C;
+  --card: #fff9f2;
+  --card-foreground: #1A202C;
   --popover: #534c49;
   --popover-foreground: #fffaf7;
-  --primary: #448b79;
+  --primary: #DD6B20;
   --primary-foreground: #ffffff;
-  --secondary: #f6e5dd;
-  --secondary-foreground: #87675e;
+  --secondary: #F9E8D9;
+  --secondary-foreground: #844A24;
   --muted: #f6eee8;
-  --muted-foreground: #71645b;
-  --accent: #e8f1e9;
-  --accent-foreground: #3b7666;
+  --muted-foreground: #718096;
+  --accent: #FBE6D3;
+  --accent-foreground: #87441B;
   --destructive: #ad5562;
-  --border: #eaded5;
-  --ring: #8da899;
-  --sidebar: #f5ebe5;
-  --sidebar-foreground: #685650;
-  --sidebar-accent: #f6ddd4;
-  --brand-blush: #f6dcd1;
-  --brand-mist: #deeee9;
-  --brand-cream: #fffbf5;
-  --shadow-color: #84696055;
-  /* Sunset V3: one frosted lesson surface over a painted, unblurred canvas. */
-  --glass-surface: rgba(255,255,255,.62);
-  --glass-edge: rgba(255,255,255,.82);
+  --border: #E8D2C6;
+  --ring: #DD6B20;
+  --sidebar: #F3DACB;
+  --sidebar-foreground: #55473F;
+  --sidebar-accent: #F9EADD;
+  --brand-blush: #F8DEC5;
+  --brand-mist: #BCE9DF;
+  --brand-cream: #FFFAF5;
+  --shadow-color: rgba(180,140,120,.36);
+  /* Warm Sunset Glassmorphic: one true frosted hero, painted ambient canvas. */
+  --glass-surface: rgba(255,255,255,.4);
+  --glass-edge: rgba(255,255,255,.6);
   --glass-blur: 20px;
-  --glass-shadow: 0 18px 46px rgba(166,109,81,.11), inset 0 1px 1px rgba(255,255,255,.9);
+  --glass-shadow: 0 24px 60px rgba(180,140,120,.2), inset 0 1px 1px rgba(255,255,255,.8);
   --sentence-ink: #1a202c;
   --translation-ink: #4a5568;
-  --ipa-ink: #526576;
-  --mic-gradient: linear-gradient(135deg,#dd6b20,#ed8936);
+  --ipa-ink: #718096;
+  --mic-gradient: linear-gradient(135deg,#DD6B20 0%,#ED8936 100%);
   --mic-halo: #50ae99;
-  --mic-foreground: #1a202c;
-  --canvas-glow: rgba(244,192,164,.35);
-  --workspace-gradient: linear-gradient(125deg,#f7f1ec 0%,#fff8f1 52%,#f0eee8 100%);
+  --mic-foreground: #ffffff;
+  --canvas-glow: rgba(237,137,54,.48);
+  --workspace-gradient: linear-gradient(135deg,#F8DEC5 0%,#E8D3C7 50%,#D8C3B9 100%);
+  --rhythm-start: #DD6B20;
+  --rhythm-end: #38B2AC;
+  --ambient-glow: #F4B99A;
+  --surface-highlight: rgba(255,255,255,.6);
 }
 @layer base {
   * { box-sizing: border-box; border-color: var(--border); }
@@ -179,6 +193,19 @@
   from { transform: translate3d(0,-5px,0) scaleY(.94); opacity: .38; }
   to { transform: translate3d(0,5px,0) scaleY(1.07); opacity: .86; }
 }
+@keyframes glass-shimmer {
+  from { transform: translate3d(-16px,-10px,0) scale(.92); opacity: .36; }
+  to { transform: translate3d(18px,12px,0) scale(1.08); opacity: .74; }
+}
+@keyframes live-pulse {
+  0%,100% { transform: scale(.94); opacity: .35; }
+  50% { transform: scale(1.16); opacity: .85; }
+}
+@keyframes success-glint {
+  0% { transform: scale(.7); opacity: 0; }
+  55% { transform: scale(1.18); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
 /* A continuously visible, compositor-friendly page atmosphere, not a sound wave.
  * Keep motion on non-interactive glow layers so text and controls remain steady. */
 @keyframes ambient-breathe {
@@ -194,7 +221,11 @@
   .voxnelo-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
   .voxnelo-scroll::-webkit-scrollbar-track { background: transparent; }
 }
-/* An application should not invent never-ending motion for reduced-motion users. */
-@media (prefers-reduced-motion: reduce) {
-  *,*::before,*::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+/* Visual-preview mode is enabled by default as requested. An explicit in-app
+ * "Motion off" choice always stops movement, regardless of OS preference. */
+:root[data-motion="off"] *, :root[data-motion="off"] *::before, :root[data-motion="off"] *::after {
+  animation-duration: .01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: .01ms !important;
+  scroll-behavior: auto !important;
 }

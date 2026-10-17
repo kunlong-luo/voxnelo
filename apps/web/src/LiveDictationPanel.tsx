@@ -19,15 +19,16 @@ export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
   const listening=dictation.status==='listening';
   const checking=dictation.status==='checking';
   const busy=listening||checking;
-  return <section className="liveDictation mx-auto w-full max-w-140 min-w-0 rounded-[28px] border border-primary/12 bg-card/45 transition-[background-color,border-color,box-shadow] duration-500 ease-out motion-safe:hover:border-primary/25 motion-safe:hover:bg-card/60 px-3 py-3 [@media(max-height:680px)]:py-2 text-left shadow-[0_18px_35px_-30px_rgba(57,76,67,.4)] @min-[560px]/lesson:border-transparent @min-[560px]/lesson:bg-transparent @min-[560px]/lesson:shadow-none @min-[560px]/lesson:px-4 @min-[560px]/lesson:py-2" aria-label={t('dictationTitle')}>
+  const inactive=!dictation.supported&&!busy;
+  return <section className="liveDictation mx-auto w-full max-w-140 min-w-0 rounded-[28px] border border-glass-edge bg-card/55 transition-[background-color,border-color,box-shadow] duration-500 ease-out hover:border-primary/25 hover:bg-card/60 px-3 py-3 [@media(max-height:680px)]:py-2 text-left shadow-[0_18px_45px_-32px_rgba(120,73,47,.28)] backdrop-blur-sm @min-[560px]/lesson:border-transparent @min-[560px]/lesson:bg-transparent @min-[560px]/lesson:shadow-none @min-[560px]/lesson:px-4 @min-[560px]/lesson:py-2" aria-label={t('dictationTitle')}>
     <div className="flex min-w-0 items-center gap-3 @min-[560px]/lesson:flex-col @min-[560px]/lesson:gap-3">
-      <div className="relative isolate grid shrink-0 place-items-center motion-safe:transition-transform motion-safe:duration-500 motion-safe:ease-out motion-safe:hover:-translate-y-0.5">
+      <div className="relative isolate grid shrink-0 place-items-center transition-transform duration-500 ease-out hover:-translate-y-0.5">
         {/* A calm ambient light, NOT a fake live audio waveform. */}
-        <span aria-hidden="true" data-motion="mic-breathe" className="pointer-events-none absolute -inset-5 rounded-full bg-primary/35 blur-xl motion-safe:animate-ambient-breathe motion-safe:[animation-delay:-2s]"/>
-        <span aria-hidden="true" data-motion="mic-halo" className="pointer-events-none absolute -inset-3 rounded-full border-[3px] border-primary/40 shadow-[0_0_24px_4px_var(--canvas-glow)] motion-safe:animate-record-halo motion-safe:[animation-duration:3s]"/>
-        {listening&&<><span aria-hidden="true" className="pointer-events-none absolute -inset-1.5 rounded-full border-2 border-mic-halo/65 motion-safe:animate-record-halo"/><span aria-hidden="true" className="pointer-events-none absolute -inset-4 rounded-full border border-mic-halo/35 motion-safe:animate-record-halo motion-safe:[animation-delay:-1s]"/></>}
+        <span aria-hidden="true" data-motion="mic-breathe" className="pointer-events-none absolute -inset-7 rounded-full bg-primary/35 blur-2xl animate-ambient-breathe [animation-delay:-2s]"/>
+        <span aria-hidden="true" data-motion="mic-halo" className="pointer-events-none absolute -inset-3 rounded-full border-[2px] border-primary/55 shadow-[0_0_32px_5px_var(--canvas-glow)] animate-record-halo [animation-duration:3s]"/>
+        {listening&&<><span aria-hidden="true" className="pointer-events-none absolute -inset-2 rounded-full border-2 border-primary/75 animate-live-pulse"/><span aria-hidden="true" className="pointer-events-none absolute -inset-5 rounded-full border border-mic-halo/60 animate-live-pulse [animation-delay:-1s]"/></>}
         <Button
-          className={cn('dictationAction relative size-17 shrink-0 rounded-full border-[3px] border-card bg-[image:var(--mic-gradient)] p-0 text-mic-foreground shadow-[0_12px_28px_-13px_rgba(74,76,59,.5)] ring-1 ring-primary/15 transition-[transform,box-shadow] duration-200 motion-safe:hover:-translate-y-1 motion-safe:hover:scale-[1.05] motion-safe:active:translate-y-0 motion-safe:active:scale-[.97] motion-reduce:transform-none [@media(max-height:680px)]:size-16 @min-[560px]/lesson:size-22',!dictation.supported&&!busy&&'opacity-70')}
+          className={cn('dictationAction relative size-17 shrink-0 rounded-full border-[3px] border-white/85 bg-[image:var(--mic-gradient)] p-0 text-mic-foreground shadow-[0_18px_32px_-14px_rgba(120,73,47,.55),inset_0_2px_2px_rgba(255,255,255,.4)] ring-1 ring-primary/25 transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:scale-[1.05] active:translate-y-0 active:scale-[.97]  [@media(max-height:680px)]:size-16 @min-[560px]/lesson:size-22',inactive&&'opacity-80 saturate-75')}
           onClick={busy?dictation.stop:onStart}
           disabled={!busy&&(blocked||!dictation.supported)}
           aria-label={t(busy?'dictationStop':'dictationStart')}
@@ -39,17 +40,17 @@ export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
         <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 @min-[560px]/lesson:justify-center">
           <strong className="text-[13px] font-bold tracking-tight text-foreground @min-[560px]/lesson:text-sm">{t('dictationTitle')}</strong>
           <span className="inline-flex min-w-0 items-center gap-1.5 text-[11px] font-medium leading-4 text-translation-ink" role="status">
-            {listening?<><span aria-hidden="true" className="size-2 shrink-0 rounded-full bg-mic-halo motion-safe:animate-status-breathe"/>{t('dictationListening')}</>
+            {listening?<><span aria-hidden="true" className="size-2 shrink-0 rounded-full bg-mic-halo animate-status-breathe"/>{t('dictationListening')}</>
               :checking?t('dictationChecking')
               :<><AudioLines size={13} className="shrink-0 text-primary" aria-hidden="true"/>{t(dictation.mode==='browser'?'dictationCloudEnabled':'dictationPrivacy')}</>}
           </span>
         </div>
         {listening&&dictation.inputLevel!==null&&<div className="flex h-6 items-center justify-center gap-1" role="img" aria-label="Live microphone input level">
-          {[0.55,0.8,1,0.7,0.45].map((weight,index)=><span key={index} aria-hidden="true" className="h-5 w-1.5 origin-center rounded-full bg-primary/75 motion-safe:transition-transform motion-safe:duration-100 motion-reduce:transition-none" style={{transform:`scaleY(${Math.max(0.18,Math.min(1,(dictation.inputLevel??0)*weight*2.4))})`}}/>)}
+          {[0.55,0.8,1,0.7,0.45].map((weight,index)=><span key={index} aria-hidden="true" className="h-5 w-1.5 origin-center rounded-full bg-primary/75 transition-transform duration-100 motion-reduce:transition-none" style={{transform:`scaleY(${Math.max(0.18,Math.min(1,(dictation.inputLevel??0)*weight*2.4))})`}}/>)}
         </div>}
         <div className="dictationTranscript max-h-20 min-h-9 w-full overflow-y-auto rounded-xl bg-muted/55 @min-[560px]/lesson:max-w-110 @min-[560px]/lesson:text-center px-3 py-2 [@media(max-height:680px)]:min-h-8 [@media(max-height:680px)]:py-1.5 text-[13px] leading-5 text-sentence-ink @min-[560px]/lesson:text-sm" data-testid="live-transcript" data-state={listening?'listening':checking?'checking':'idle'}>
           <span aria-live="polite" className={cn('font-medium',!dictation.finalText&&'text-muted-foreground')}>{dictation.finalText||(!dictation.interimText?t('dictationPlaceholder'):'')}</span>
-          {dictation.interimText&&<span className="ml-1 text-translation-ink motion-safe:animate-view-enter" aria-label={t('dictationInterim')}>{dictation.interimText}</span>}
+          {dictation.interimText&&<span className="ml-1 text-translation-ink animate-view-enter" aria-label={t('dictationInterim')}>{dictation.interimText}</span>}
         </div>
       </div>
     </div>

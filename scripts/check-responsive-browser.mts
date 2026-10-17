@@ -30,7 +30,6 @@ const profile=await mkdtemp(path.join(tmpdir(),'voxnelo-cdp-'));
 type CdpReply={result?:{value?:unknown};exceptionDetails?:{text:string};data?:string;[key:string]:unknown};
 type LayoutMetrics={progressHeight:number;progressBottom:number;feedTop:number;scrollWidth:number;clientWidth:number;mainWidth:number;containerName:string;columns:number|null;sidebar:boolean;dock:boolean;micWidth:number;micInBounds:boolean;micTop:number;micBottom:number;micInFirstViewport:boolean;heroWidth:number;heroRadius:number;sentenceFontSize:number};
 type ThemeMaterial={theme:string;glass:string;primaryBackground:string;glassBackground:string};
-type ReducedMotion={enabled:boolean;name:string;duration:string};
 type Bounds={top:number;bottom:number;right:number;dockTop:number};
 let chrome: ReturnType<typeof spawn>|undefined;
 let ws: WebSocket|undefined;
@@ -119,12 +118,16 @@ try{
   const ribbonAfter=await evalJs<number>('Number(document.querySelector("[data-motion=ribbon-flow]").getAnimations()[0]?.currentTime??0)');
   assert.ok(ribbonAfter>ribbonBefore.time+120,'ribbon animation has no runtime progress: '+ribbonAfter+' / '+ribbonBefore.time);
   report.push({page:'visible-decorative-ribbon',...ribbonBefore,progressMs:ribbonAfter-ribbonBefore.time});
+  // In this visual-preview release, motion defaults ON even if the OS requests
+  // reduction. The user's in-app toggle must always work instead.
   await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
+  const activeOnReduce=await evalJs('getComputedStyle(document.querySelector("[data-motion=ambient-breathe]")).animationDuration');
+  assert.ok(parseFloat(activeOnReduce)>=5,'Motion preview must remain visible before the user opts out: '+activeOnReduce);
+  await evalJs('document.documentElement.dataset.motion="off"');
   const quietBreath=await evalJs('getComputedStyle(document.querySelector("[data-motion=ambient-breathe]")).animationDuration');
-  assert.ok(parseFloat(quietBreath)<=.001,'ambient glow ignores reduced motion: '+quietBreath);
-  const reducedMotion=await evalJs<ReducedMotion>('(()=>{const el=document.querySelector(".practiceLayout");const s=getComputedStyle(el);return {enabled:matchMedia("(prefers-reduced-motion: reduce)").matches,name:s.animationName,duration:s.animationDuration}})()');
-  assert.ok(reducedMotion.enabled&&(!reducedMotion.name.includes('view-enter')||parseFloat(reducedMotion.duration)<=.001),'reduced-motion fails: '+JSON.stringify(reducedMotion));
-  report.push({page:'reduced-motion',...reducedMotion});
+  assert.ok(parseFloat(quietBreath)<=.001,'In-app motion OFF did not stop ambient animation: '+quietBreath);
+  report.push({page:'manual-motion-off',duration:quietBreath});
+  await evalJs('document.documentElement.dataset.motion="on"');
   await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});
   // Capture real Chinese typography rather than relying on runner's locale.
   await activate(5,'.settingsPage');
@@ -194,12 +197,12 @@ try{
   await evalJs('document.querySelector(".recordAction").click()');
   await until('!!document.querySelector(".recordingQuickStop")');
   const liveAnimation=await evalJs('getComputedStyle(document.querySelector("[data-motion=record-halo]")).animationName');
-  assert.ok(liveAnimation.includes('record-halo'),'recording halo did not animate: '+liveAnimation);
-  await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
+  assert.ok(liveAnimation.includes('live-pulse'),'recording halo did not animate: '+liveAnimation);
+  await evalJs('document.documentElement.dataset.motion="off"');
   const quietHalo=await evalJs('getComputedStyle(document.querySelector("[data-motion=record-halo]")).animationDuration');
-  assert.ok(parseFloat(quietHalo)<=.001,'recording ring ignores reduced-motion: '+quietHalo);
-  await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});
-  report.push({page:'recording-motion',normal:liveAnimation,reducedDuration:quietHalo});
+  assert.ok(parseFloat(quietHalo)<=.001,'Manual motion OFF did not stop the recording halo: '+quietHalo);
+  await evalJs('document.documentElement.dataset.motion="on"');
+  report.push({page:'recording-motion',normal:liveAnimation,manualOffDuration:quietHalo});
   const s=await evalJs<Bounds>('(()=>{const a=document.querySelector(".recordingQuickStop").getBoundingClientRect(),b=document.querySelector(".mobileNav").getBoundingClientRect();return{top:a.top,bottom:a.bottom,right:a.right,dockTop:b.top}})()');
   assert.ok(s.top>=0&&s.right<=321&&s.bottom<=s.dockTop,'recording stop hidden behind mobile nav '+JSON.stringify(s));
   await evalJs('document.querySelector(".recordingQuickStop").click()');
