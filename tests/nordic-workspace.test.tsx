@@ -42,7 +42,7 @@ describe('Nordic three-column learning workspace', () => {
     );
     expect(screen.getByText('相关表达')).toBeTruthy();
     expect(screen.getByText('相关场景')).toBeTruthy();
-    expect(screen.getByText('1 / 40 句')).toBeTruthy();
+    expect(screen.getByText('1 / 280 句')).toBeTruthy();
     expect(container.querySelector('.liveDictation')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: '练习短句：Hi!' }));
     expect(onChooseRelated).toHaveBeenCalledWith(expect.objectContaining({ english: 'Hi!' }));

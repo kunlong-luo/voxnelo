@@ -116,7 +116,7 @@ try{
   report.push({page:'reduced-motion',...reducedMotion});
   await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});
   // Capture real Chinese typography rather than relying on runner's locale.
-  await activate(4,'.settingsPage');
+  await activate(5,'.settingsPage');
   await evalJs('document.querySelectorAll(".languageChoices button")[1].click()');
   await until('document.documentElement.lang.toLowerCase().startsWith("zh")');
   await activate(0,'.practiceLayout');
@@ -134,8 +134,8 @@ try{
     await send('Emulation.setDeviceMetricsOverride',{width:w,height:h,deviceScaleFactor:1,mobile:false});
     await sleep(150);
     await shot(w,h,'practice');
-    await activate(4,'.settingsPage');await shot(w,h,'settings');
-    await activate(1,'.libraryPage');await shot(w,h,'library');
+    await activate(5,'.settingsPage');await shot(w,h,'settings');
+    await activate(2,'.libraryPage');await shot(w,h,'library');
     await activate(0,'.practiceLayout');
   }
   // Validate both actual CSS themes in Chromium, not just class strings.
@@ -147,7 +147,7 @@ try{
   assert.ok(sunset.primaryBackground!=='rgba(0, 0, 0, 0)','primary live dictation control missing: '+JSON.stringify(sunset));
   assert.ok(await evalJs('!!document.querySelector(".liveDictation")'),'live dictation should replace decorative waveform');
   report.push({page:'theme-sunset-material',...sunset});
-  await activate(4,'.settingsPage');
+  await activate(5,'.settingsPage');
   await evalJs('document.querySelector(".appearanceChoices button[aria-label*=\\"北欧\\"]").click()');
   await until('document.documentElement.dataset.theme==="nordic"');
   await activate(0,'.practiceLayout');
@@ -156,7 +156,7 @@ try{
   assert.ok(nordic.glass==='none'||nordic.glass.includes('blur(0px)'),'Nordic should have no blur: '+JSON.stringify(nordic));
   assert.ok(nordic.primaryBackground!=='rgba(0, 0, 0, 0)','Nordic live dictation control missing');
   report.push({page:'theme-nordic-material',...nordic});
-  await activate(4,'.settingsPage');
+  await activate(5,'.settingsPage');
   await evalJs('document.querySelector(".appearanceChoices button[aria-label*=\\"日落\\"]").click()');
   await until('document.documentElement.dataset.theme==="sunset"');
   await activate(0,'.practiceLayout');

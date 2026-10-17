@@ -9,7 +9,7 @@ import { Card } from './components/ui/card';
 import { Badge } from './components/ui/badge';
 import { cn } from './lib/utils';
 
-export type View = 'practice'|'history'|'favorites'|'review'|'settings';
+export type View = 'practice'|'catalog'|'history'|'favorites'|'review'|'settings';
 interface LibraryViewProps {
   view: LibraryMode; states: LearningState[];
   events: HistoryEvent[]; search: string; notice: string;

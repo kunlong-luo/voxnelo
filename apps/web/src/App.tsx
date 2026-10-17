@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
-import { BarChart3, Clock3, MessageCircle, Settings2, ShieldCheck, Square, Star, type LucideIcon } from 'lucide-react';
+import { BarChart3, BookOpenText, Clock3, MessageCircle, Settings2, ShieldCheck, Square, Star, type LucideIcon } from 'lucide-react';
 import {
   APP_VERSION,
   FIRST_SENTENCE,
@@ -17,6 +17,7 @@ import { useLiveDictation } from './useLiveDictation';
 import { useLearningData } from './useLearningData';
 import { PracticeView } from './PracticeView';
 import { LibraryView, type View } from './LibraryView';
+import { CatalogView } from './CatalogView';
 import { SettingsView } from './SettingsView';
 import { DesktopTitlebar } from './DesktopTitlebar';
 import { Button } from './components/ui/button';
@@ -26,6 +27,7 @@ import { I18nProvider, readLanguageSetting, resolveLocale, saveLanguageSetting, 
 
 const menu: { id: View; label: string; accessibleLabel: string; icon: LucideIcon }[] = [
   { id: 'practice', label: '练习', accessibleLabel: '开始练习', icon: MessageCircle },
+  { id: 'catalog', label: '素材', accessibleLabel: '英语素材库', icon: BookOpenText },
   { id: 'favorites', label: '收藏', accessibleLabel: '我的收藏', icon: Star },
   { id: 'history', label: '历史', accessibleLabel: '最近学习', icon: Clock3 },
   { id: 'review', label: '复习', accessibleLabel: '需要复习', icon: BarChart3 },
@@ -232,9 +234,9 @@ function AppScreen({languageSetting,onChangeLanguage}: {
         <div className="sidebarHint px-4 text-[10px] font-bold tracking-[.18em] text-muted-foreground uppercase max-[1050px]:hidden">{t('sidebarSpace')}</div>
         <nav className="mt-4 flex w-full flex-col gap-2" aria-label={t('navLabel')}>
           {menu.map(({ id, icon: Icon }) => (
-            <Button key={id} variant="ghost" className={cn('navItem group relative h-12 w-full justify-start rounded-[17px] border border-transparent px-4 text-sm font-semibold text-sidebar-foreground/80 transition-[background-color,color,transform,box-shadow] duration-400 hover:border-primary/10 hover:bg-sidebar-accent/85 hover:text-foreground motion-safe:hover:translate-x-0.5 max-[1050px]:size-12 max-[1050px]:justify-center max-[1050px]:px-0',view===id&&'active motion-safe:animate-soft-pop border-primary/20 bg-gradient-to-r from-brand-blush/55 via-card/95 to-card/65 text-primary shadow-[0_10px_30px_-18px_rgba(70,85,72,.48)] ring-1 ring-primary/10 before:absolute before:inset-y-3 before:left-0 before:w-1 before:rounded-full before:bg-primary before:content-[\'\']')} aria-label={t(({practice:'navStart',favorites:'navMyFavorites',history:'navRecent',review:'navReviewItems',settings:'navSettings'} as const)[id])} aria-current={view === id ? 'page' : undefined} onClick={() => nav(id)}>
+            <Button key={id} variant="ghost" className={cn('navItem group relative h-12 w-full justify-start rounded-[17px] border border-transparent px-4 text-sm font-semibold text-sidebar-foreground/80 transition-[background-color,color,transform,box-shadow] duration-400 hover:border-primary/10 hover:bg-sidebar-accent/85 hover:text-foreground motion-safe:hover:translate-x-0.5 max-[1050px]:size-12 max-[1050px]:justify-center max-[1050px]:px-0',view===id&&'active motion-safe:animate-soft-pop border-primary/20 bg-gradient-to-r from-brand-blush/55 via-card/95 to-card/65 text-primary shadow-[0_10px_30px_-18px_rgba(70,85,72,.48)] ring-1 ring-primary/10 before:absolute before:inset-y-3 before:left-0 before:w-1 before:rounded-full before:bg-primary before:content-[\'\']')} aria-label={t(({practice:'navStart',catalog:'navCatalogExplore',favorites:'navMyFavorites',history:'navRecent',review:'navReviewItems',settings:'navSettings'} as const)[id])} aria-current={view === id ? 'page' : undefined} onClick={() => nav(id)}>
               <Icon size={20} strokeWidth={1.9} />
-              <span className="max-[1050px]:hidden">{t(({practice:'navPractice',favorites:'navFavorites',history:'navHistory',review:'navReview',settings:'navSettings'} as const)[id])}</span>
+              <span className="max-[1050px]:hidden">{t(({practice:'navPractice',catalog:'navCatalog',favorites:'navFavorites',history:'navHistory',review:'navReview',settings:'navSettings'} as const)[id])}</span>
               {id === 'favorites' && stats.favorites > 0 ? <span className="navCount ml-auto rounded-full bg-secondary px-2 py-0.5 text-[10px] text-secondary-foreground max-[1050px]:hidden">{stats.favorites}</span> : null}
             </Button>
           ))}
@@ -284,6 +286,8 @@ function AppScreen({languageSetting,onChangeLanguage}: {
               onChooseRelated={display}
               onDismissNotice={() => setNotice('')}
             />
+          ) : view === 'catalog' ? (
+            <CatalogView onChoose={chooseFromLibrary} onBackToPractice={() => nav('practice')} />
           ) : view === 'settings' ? (
             <SettingsView
               speed={speed}
@@ -312,11 +316,11 @@ function AppScreen({languageSetting,onChangeLanguage}: {
       </div>
       </div>
       {/* The compact viewport has its own navigation affordance; no miniature sidebar. */}
-      <nav className="mobileNav fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 gap-1 border-t border-border/80 bg-card/95 px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-soft backdrop-blur-xl sm:hidden" aria-label={t('navLabel')}>
+      <nav className="mobileNav fixed inset-x-0 bottom-0 z-50 grid grid-cols-6 gap-0.5 border-t border-border/80 bg-card/95 px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-soft backdrop-blur-xl sm:hidden" aria-label={t('navLabel')}>
         {menu.map(({id,icon:Icon}) => (
-          <Button key={id} variant="ghost" className={cn('mobileNavItem h-14 min-w-0 flex-col gap-1 rounded-xl px-1 py-1 text-[10px] transition-[background-color,color,transform] duration-200 motion-safe:active:scale-[.94]',view===id&&'bg-secondary text-primary')} aria-label={t(({practice:'navStart',favorites:'navMyFavorites',history:'navRecent',review:'navReviewItems',settings:'navSettings'} as const)[id])+' · '+t('navLabel')} aria-current={view===id?'page':undefined} onClick={() => nav(id)}>
+          <Button key={id} variant="ghost" className={cn('mobileNavItem h-14 min-w-0 flex-col gap-1 rounded-xl px-1 py-1 text-[10px] transition-[background-color,color,transform] duration-200 motion-safe:active:scale-[.94]',view===id&&'bg-secondary text-primary')} aria-label={t(({practice:'navStart',catalog:'navCatalogExplore',favorites:'navMyFavorites',history:'navRecent',review:'navReviewItems',settings:'navSettings'} as const)[id])+' · '+t('navLabel')} aria-current={view===id?'page':undefined} onClick={() => nav(id)}>
             <Icon size={19} strokeWidth={1.9} aria-hidden="true"/>
-            <span className="max-w-full truncate">{t(({practice:'navPractice',favorites:'navFavorites',history:'navHistory',review:'navReview',settings:'navSettings'} as const)[id])}</span>
+            <span className="max-w-full truncate">{t(({practice:'navPractice',catalog:'navCatalog',favorites:'navFavorites',history:'navHistory',review:'navReview',settings:'navSettings'} as const)[id])}</span>
           </Button>
         ))}
       </nav>

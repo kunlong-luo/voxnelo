@@ -1,11 +1,16 @@
+import { EXPANDED_SENTENCES, type SentenceScene } from './expanded';
+
 export type SentenceTopic = 'greetings' | 'personal' | 'needs' | 'learning' | 'daily';
 
 export interface Sentence {
   id: string;
   english: string;
   chinese: string;
-  ipa: string;
+  /** Verified guide on seed sentences; expansion drafts have no fabricated IPA. */
+  ipa?: string;
   topic: SentenceTopic;
+  scene?: SentenceScene;
+  reviewStatus?: 'needs-review';
   level: 'Pre-A1' | 'A1';
 }
 
@@ -18,7 +23,7 @@ export const TOPIC_LABELS: Record<SentenceTopic, string> = {
 };
 
 // 发音标记为美式 IPA 教学参考；上线前仍需人工语言学复核。
-export const SENTENCES: Sentence[] = [
+export const STARTER_SENTENCES: Sentence[] = [
   { id: 's001', topic: 'greetings', english: 'Hello!', chinese: '你好！', ipa: '/həˈloʊ/', level: 'Pre-A1' },
   { id: 's002', topic: 'greetings', english: 'Hi!', chinese: '嗨！', ipa: '/haɪ/', level: 'Pre-A1' },
   {
@@ -298,6 +303,9 @@ export const SENTENCES: Sentence[] = [
     level: 'A1',
   },
 ];
+
+/** Preserve original IDs and existing IndexedDB progress while adding new packs. */
+export const SENTENCES: Sentence[] = [...STARTER_SENTENCES, ...EXPANDED_SENTENCES];
 
 const head = SENTENCES[0];
 if (!head) throw new Error('Course content is empty');
