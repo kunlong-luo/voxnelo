@@ -5,7 +5,7 @@
  * Default README-only desktop builds have NO engine and skip this gate.
  */
 import { spawnSync } from 'node:child_process';
-import { existsSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -24,6 +24,9 @@ export function planRealAsrRelease(
   if(!existsSync(manifest)){
     return {kind:'skip',description:'No native ASR model shipped; real-model release check not applicable'};
   }
+  const releaseManifest=JSON.parse(readFileSync(manifest,'utf8')) as {releaseReady?:boolean};
+  if(releaseManifest.releaseReady===false)
+    throw Error('Internal ASR candidate is not approved for public release; complete native binary/license review and real-device QA');
   const wav=env.VOXNELO_ASR_QA_WAV;
   const expected=env.VOXNELO_ASR_QA_EXPECT;
   if(!wav||!path.isAbsolute(wav)||!existsSync(wav)||!statSync(wav).isFile()){
