@@ -23,20 +23,24 @@ const addon=requireFromRepo.resolve('sherpa-onnx-node',{
   paths:[path.join(temp,'voxnelo-native','node_modules')],
 });
 const libraries=path.join(native,'lib');
-if(!existsSync(model)||!existsSync(addon)||!existsSync(libraries)||!existsSync(wav))
-  throw Error('Missing model, node adapter, shared libraries or non-user reference WAV');
+if(!existsSync(model)||!existsSync(addon)||!existsSync(wav))
+  throw Error('Missing pinned model, native Node adapter or non-user reference WAV');
 
 const env={...process.env,
   VOXNELO_ASR_MODEL_DIR:model,
   VOXNELO_ASR_ADDON_PATH:addon,
 };
-env.LD_LIBRARY_PATH=libraries+':'+(env.LD_LIBRARY_PATH??'');
-env.DYLD_LIBRARY_PATH=libraries+':'+(env.DYLD_LIBRARY_PATH??'');
+// Some published Windows/macOS variants ship shared libraries beside the
+// addon instead of a separate lib directory; let the actual loader decide.
+if(existsSync(libraries)){
+  env.LD_LIBRARY_PATH=libraries+':'+(env.LD_LIBRARY_PATH??'');
+  env.DYLD_LIBRARY_PATH=libraries+':'+(env.DYLD_LIBRARY_PATH??'');
+}
 const systemPath=env.PATH??env.Path??'';
 for(const key of Object.keys(env)){
   if(key.toLowerCase()==='path')delete env[key];
 }
-env.Path=libraries+path.delimiter+systemPath;
+env.Path=(existsSync(libraries)?libraries+path.delimiter:'')+systemPath;
 console.log('Native candidate:',JSON.stringify({
   platform:process.platform,arch:process.arch,modelPinned:true,
   addon:path.relative(temp,addon),libs:path.relative(temp,libraries),
