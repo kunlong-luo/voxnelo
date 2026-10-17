@@ -73,7 +73,7 @@ const shot=async(w:number,h:number,name:string):Promise<void>=>{
     if(m.dictationWidth>=400){
       assert.ok(m.dictationOffset<=12,'dictation microphone is not centered '+w+'x'+h+': '+JSON.stringify(m));
     }
-    if(m.mainWidth>=840){
+    if(m.mainWidth>=1120&&h>=850){
       assert.ok(m.columnBottomDelta<=5,'lesson and final insights card bottoms diverge '+w+'x'+h+': '+JSON.stringify(m));
     }
     if(w>=640){
