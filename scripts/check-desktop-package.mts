@@ -94,7 +94,8 @@ if(platform==='linux'){
   const dependencies=spawnSync('dpkg-deb',['--field',debPath,'Depends'],{encoding:'utf8'});
   assert.equal(dependencies.status,0,'dpkg-deb could not inspect dependencies: '+dependencies.stderr);
   assert.match(dependencies.stdout,/(?:^|[,\s])fonts-noto-cjk(?:[,\s(]|$)/,'Debian installer must provide Chinese CJK font support');
-  // `default` in the builder config is a keyword, never a literal apt dependency.
+  // electron-builder 26.15.3 does not expand the newer `default` keyword here.
+  // Keep this assertion: a literal Depends: default makes the DEB uninstallable.
   assert.doesNotMatch(dependencies.stdout,/(?:^|[,\s])default(?:[,\s(]|$)/,'Builder did not expand default Debian dependencies');
   assert.match(dependencies.stdout,/(?:^|[,\s])libnss3(?:[,\s(]|$)/,'Electron default Linux runtime dependencies were dropped');
   linuxChecks.push('deb archive, package identity and CJK font dependency','AppImage ELF header','both installers nonempty');
