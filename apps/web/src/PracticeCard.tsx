@@ -32,8 +32,10 @@ export function PracticeCard({current,currentState,speed,showIpa,recorder,dictat
   const favorite=Boolean(currentState?.favorite);
   const review=Boolean(currentState?.review);
   return (
-      <Card className="practiceCard referenceLesson relative isolate flex min-h-[min(700px,calc(100dvh-120px))] min-w-0 flex-1 flex-col overflow-visible rounded-[32px] border border-glass-edge bg-glass-surface shadow-glass backdrop-blur-[var(--glass-blur)]">
-        <div aria-hidden="true" data-motion="lesson-breathe" className="pointer-events-none absolute inset-x-[12%] top-[16%] h-55 rounded-[50%] bg-brand-blush/55 blur-2xl motion-safe:animate-ambient-breathe motion-safe:[animation-delay:-1.7s]"/>
+      <Card className="practiceCard referenceLesson relative isolate flex min-h-[min(700px,calc(100dvh-120px))] min-w-0 flex-1 flex-col overflow-hidden rounded-[34px] border border-glass-edge bg-glass-surface shadow-glass backdrop-blur-[var(--glass-blur)] ring-1 ring-white/25">
+        <div aria-hidden="true" data-motion="lesson-breathe" className="pointer-events-none absolute inset-x-[16%] top-[12%] h-60 rounded-[50%] bg-brand-cream/85 blur-3xl animate-ambient-breathe [animation-delay:-1.7s]"/>
+        <div aria-hidden="true" data-motion="glass-shimmer" className="pointer-events-none absolute -top-28 -right-24 size-82 rounded-full bg-white/45 blur-[65px] animate-glass-shimmer"/>
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-8 top-0 h-px bg-linear-to-r from-transparent via-white/90 to-transparent"/>
         <header className="cardHeader lessonHeader relative flex min-h-19 [@media(max-height:680px)]:min-h-16 flex-wrap items-center justify-between gap-4 px-5 pt-6 pb-0 [@media(max-height:680px)]:pt-3 sm:px-8 sm:pt-8 lg:px-10">
           <div className="lessonProgress flex min-w-22 flex-col gap-2" aria-label={t('coursePosition',{index,total:SENTENCES.length})}>
             <span className="lessonCount text-sm font-extrabold tracking-tight tabular-nums text-foreground">{String(index).padStart(2,'0')} <span className="font-medium text-muted-foreground">/ {SENTENCES.length}</span></span>
@@ -44,28 +46,28 @@ export function PracticeCard({current,currentState,speed,showIpa,recorder,dictat
             <div className="sentenceFlags inline-flex items-center gap-1 rounded-2xl border border-border/60 bg-muted/60 p-1" role="group" aria-label={t('navFavorites')+' / '+t('navReview')}>
               <Tooltip text={t(favorite?'favoriteRemove':'favoriteAdd')} placement="bottom">
                 <Button variant="ghost" size="icon-sm" className={cn('lessonFavorite flagButton text-muted-foreground hover:text-primary',favorite&&'bg-secondary text-primary')} onClick={()=>onToggleFlag('favorite')} aria-label={t(favorite?'favoriteRemove':'favoriteAdd')} aria-pressed={favorite}>
-                  <Heart key={favorite?'favorite-on':'favorite-off'} size={19} fill={favorite?'currentColor':'none'} className="motion-safe:animate-soft-pop"/>
+                  <Heart key={favorite?'favorite-on':'favorite-off'} size={19} fill={favorite?'currentColor':'none'} className="animate-soft-pop"/>
                 </Button>
               </Tooltip>
               <Tooltip text={t(review?'reviewRemove':'reviewAdd')} placement="bottom">
                 <Button variant="ghost" size="icon-sm" className={cn('reviewIconButton flagButton text-muted-foreground hover:text-primary',review&&'bg-secondary text-primary')} onClick={()=>onToggleFlag('review')} aria-label={t(review?'reviewRemove':'reviewAdd')} aria-pressed={review}>
-                  <Bookmark key={review?'review-on':'review-off'} size={19} fill={review?'currentColor':'none'} className="motion-safe:animate-soft-pop"/>
+                  <Bookmark key={review?'review-on':'review-off'} size={19} fill={review?'currentColor':'none'} className="animate-soft-pop"/>
                 </Button>
               </Tooltip>
             </div>
           </div>
         </header>
-        <div className="lessonFocus @container/lesson flex min-h-44 min-w-0 flex-1 sm:min-h-64 flex-col items-center justify-center gap-4 px-4 py-4 text-center sm:gap-5 sm:px-5 sm:py-5 [@media(max-height:680px)]:min-h-48 [@media(max-height:680px)]:gap-1.5 [@media(max-height:680px)]:py-1 @min-[560px]/workspace:px-9 @min-[700px]/workspace:min-h-[clamp(12rem,calc(100dvh-475px),20rem)]">
+        <div className="lessonFocus @container/lesson relative flex min-h-44 min-w-0 flex-1 sm:min-h-64 flex-col items-center justify-center gap-4 px-4 py-4 text-center sm:gap-5 sm:px-5 sm:py-5 [@media(max-height:680px)]:min-h-48 [@media(max-height:680px)]:gap-1.5 [@media(max-height:680px)]:py-1 @min-[560px]/workspace:px-9 @min-[700px]/workspace:min-h-[clamp(12rem,calc(100dvh-475px),20rem)]">
           <div className="sentenceContent flex w-full flex-col items-center justify-center gap-3 sm:gap-5 [@media(max-height:680px)]:gap-1.5">
             <span className="lessonLevel text-[11px] font-bold tracking-[.2em] text-muted-foreground uppercase">{t('speakingPractice')} · {current.level}</span>
             <div ref={sentenceMotionRef} className="sentenceHeading flex max-w-full justify-center">
-              <h1 key={current.id} className="sentenceText max-w-full text-[clamp(2rem,6.25cqi,3.375rem)] leading-[1.25] font-extrabold tracking-[-.035em] wrap-break-word text-sentence-ink motion-safe:animate-sentence-enter">{current.english}</h1>
+              <h1 key={current.id} className="sentenceText max-w-full text-[clamp(2rem,6.25cqi,3.375rem)] leading-[1.25] font-extrabold tracking-[-.045em] wrap-break-word text-sentence-ink drop-shadow-[0_1px_0_rgba(255,255,255,.45)] animate-sentence-enter">{current.english}</h1>
             </div>
-            <div ref={translationMotionRef} className="flex min-w-0 max-w-full justify-center"><p key={current.id} className="translation text-[17px] leading-7 font-medium text-translation-ink @min-[600px]/lesson:text-xl motion-safe:animate-sentence-enter motion-safe:[animation-delay:60ms]">{current.chinese}</p></div>
+            <div ref={translationMotionRef} className="flex min-w-0 max-w-full justify-center"><p key={current.id} className="translation text-[17px] leading-7 font-medium text-translation-ink @min-[600px]/lesson:text-xl animate-sentence-enter [animation-delay:60ms]">{current.chinese}</p></div>
             {showIpa && current.ipa && <p className="ipa max-w-full text-sm leading-6 wrap-break-word text-ipa-ink">{current.ipa}</p>}
             {current.ipa ? <Button variant="ghost" size="sm" className="subtleLink rounded-full text-xs text-primary" onClick={onToggleIpa} aria-expanded={showIpa}><CircleHelp size={14}/>{t(showIpa?'ipaHide':'ipaShow')}</Button> : <span className="text-xs text-muted-foreground">{t('ipaPending')}</span>}
           </div>
-          <div className="pointer-events-none hidden w-full max-w-145 opacity-85 @min-[720px]/workspace:block [@media(max-height:719px)]:hidden" aria-hidden="true"><WaveformArt/></div>
+          <div className="pointer-events-none hidden w-full max-w-145 opacity-95 @min-[700px]/workspace:block [@media(max-height:699px)]:hidden" aria-hidden="true"><WaveformArt/></div>
           <LiveDictationPanel dictation={dictation} blocked={recorder.status==='requesting'||recorder.status==='recording'} onStart={onStartDictation}/>
         </div>
         <PracticeControlPanel recorder={recorder} recordingBusy={recordingBusy} speed={speed} onSpeak={onSpeak} onToggleSpeed={onToggleSpeed} onRecord={onRecord} />
