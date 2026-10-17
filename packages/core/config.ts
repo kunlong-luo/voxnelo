@@ -8,7 +8,7 @@
  * - apps/web/index.html 的 CSP connect-src
  * 改端口时请同步以上三处，并确认 DEV_ORIGIN 一致。
  */
-export const APP_VERSION = '0.1.0';
+export const APP_VERSION = '0.1.1';
 
 export const APP_SCHEME = 'voxnelo';
 export const APP_ORIGIN = 'voxnelo://app';
