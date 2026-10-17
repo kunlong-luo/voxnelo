@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
-import { act, cleanup, fireEvent, render, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { SUPPORT_LINKS } from '@voxnelo/learning';
 import { useLiveDictation } from '../apps/web/src/useLiveDictation';
 import { LiveDictationPanel } from '../apps/web/src/LiveDictationPanel';
 
@@ -57,6 +58,23 @@ function setupDesktop(noiseSuppression?:boolean) {
   vi.stubGlobal('AudioWorkletNode',vi.fn(function(){return {port,connect:vi.fn()}}));
   return {bridge,track,handlers,getUserMedia,audioContext,port};
 }
+
+describe('Offline dictation product guidance',()=>{
+  it('shows a working help link instead of developer commands when ASR is unavailable',async()=>{
+    vi.stubGlobal('voxneloDesktop',{
+      platform:'linux',
+      asr:{capabilities:vi.fn(async()=>({available:false,reason:'not-configured'}))},
+    });
+    render(<PanelHarness/>);
+    await waitFor(()=>expect(live.desktopReason).toBe('not-configured'));
+    const link=screen.getByRole('link',{name:'查看听写帮助与反馈'});
+    expect(link.getAttribute('href')).toBe(SUPPORT_LINKS.guide);
+    expect(link.getAttribute('rel')).toContain('noopener');
+    expect(document.body.textContent).not.toContain('pnpm');
+    expect(document.body.textContent).not.toContain('npm');
+    expect(screen.getByRole('button',{name:'开始实时听写'}).hasAttribute('disabled')).toBe(true);
+  });
+});
 
 describe('Electron real microphone to local ASR lifecycle',()=>{
   it('starts explicit 16kHz PCM capture, verifies device DSP and flushes final text',async()=>{

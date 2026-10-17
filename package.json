@@ -1,8 +1,8 @@
 {
   "name": "voxnelo",
   "private": true,
-  "version": "0.1.1",
-  "description": "Voxnelo — 桌面优先、本地优先的免费英语口语练习应用（V0.1 Early Access）",
+  "version": "0.1.2",
+  "description": "Voxnelo - Local-first English speaking practice (Early Access)",
   "author": "Voxnelo",
   "type": "module",
   "main": "dist-electron/main.cjs",

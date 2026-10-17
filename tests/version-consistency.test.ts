@@ -20,7 +20,7 @@ describe('Voxnelo release identity',()=>{
       expect(readVersion(`packages/${name}/package.json`)).toBe(version);
     }
   });
-  it('has a newer package version than the previous Linux DEB',()=>{
-    expect(readVersion('package.json')).toBe('0.1.1');
+  it('uses a patch version newer than the previous Linux DEB',()=>{
+    expect(readVersion('package.json')).toBe('0.1.2');
   });
 });
