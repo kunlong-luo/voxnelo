@@ -40,7 +40,7 @@ describe('Trusted offline ASR bundle discovery',()=>{
     for(const file of ['encoder.onnx','decoder.onnx','joiner.onnx','tokens.txt'])writeFileSync(path.join(model,file),'test fixture');
     writeFileSync(entry,'module.exports = {}');
     writeFileSync(path.join(native,'node_modules','sherpa-onnx-node','fake.node'),'test fixture');
-    const sha256:Object=Object.fromEntries([
+    const sha256:Record<string,string>=Object.fromEntries([
       ...['encoder.onnx','decoder.onnx','joiner.onnx','tokens.txt'].map(n=>['model/'+n,fixtureSha]),
       ['native/index.cjs',fixtureSha],
       ['native/node_modules/sherpa-onnx-node/fake.node',fixtureSha],
