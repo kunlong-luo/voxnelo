@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { APP_VERSION } from '../packages/core/config';
+import { APP_VERSION } from '@voxnelo/core';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const readVersion=(filename:string):string=>{
