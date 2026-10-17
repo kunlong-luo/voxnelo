@@ -135,7 +135,7 @@ export async function verifyPersonalAsrCandidate(directory:string):Promise<boole
         const stat=await lstat(filename);
         if(stat.isSymbolicLink())throw Error('Unexpected ASR symlink');
         if(stat.isDirectory()){
-          if(next!=='model'&&next!=='native'&&!next.startsWith('native/node_modules/'))
+          if(next!=='model'&&next!=='native'&&next!=='native/node_modules'&&!next.startsWith('native/node_modules/'))
             throw Error('Unexpected ASR directory');
           await walk(next);
         }else if(stat.isFile()){
@@ -152,7 +152,7 @@ export async function verifyPersonalAsrCandidate(directory:string):Promise<boole
       discovered.some(name=>!Object.hasOwn(hashes,name)))return false;
     // The only entrypoint the installer can create is this predictable loader.
     const entryPath=path.join(directory,'native','index.cjs');
-    if(readFileSync(entryPath,'utf8')!==PERSONAL_ENTRY)return false;
+    if((await lstat(entryPath)).size>256||readFileSync(entryPath,'utf8')!==PERSONAL_ENTRY)return false;
     for(const relative of discovered){
       const hash=createHash('sha256');
       const filename=path.join(directory,...relative.split('/'));
