@@ -65,7 +65,7 @@ export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
       href={SUPPORT_LINKS.guide}
       target="_blank"
       rel="noopener noreferrer"
-      className="mt-2 inline-flex min-h-8 items-center rounded-xl px-3 py-1 text-[11px] font-semibold text-primary underline-offset-4 transition-colors hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      className="mt-2 inline-flex min-h-8 items-center rounded-xl px-3 py-1 [@media(max-height:780px)]:hidden text-[11px] font-semibold text-primary underline-offset-4 transition-colors hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
     >{t('dictationHelp')}</a>}
     {listening&&window.voxneloDesktop&&dictation.noiseReduction!=='unknown'&&<p className="mt-2 flex items-center gap-1.5 text-[11px] leading-4 text-translation-ink">
       <ShieldCheck size={13} aria-hidden="true"/>{t(dictation.noiseReduction==='enabled'?'dictationNoiseEnabled':'dictationNoiseUnverified')}
