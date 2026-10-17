@@ -1,41 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useI18n } from './i18n';
 
-/**
- * Browser speech recognition is NOT an Electron desktop ASR engine. Always
- * request on-device recognition first; cloud is an explicit browser-only opt-in.
- * No synthesized transcript, fake confidence, or background microphone access.
- */
+import {
+  BROWSER_SPEECH_LANGUAGE, browserRecognizerClass, createBrowserRecognizer,
+  stopBrowserRecognizer, type BrowserRecognizer,
+} from './dictation/browserRecognizer';
+
 type DictationStatus = 'idle' | 'checking' | 'listening';
 type DictationMode = 'local' | 'browser';
 type LocalPack = 'unknown' | 'available' | 'downloadable' | 'unavailable';
-type SpeechResult = { isFinal: boolean; 0?: { transcript: string } };
-type SpeechEvent = { resultIndex: number; results: ArrayLike<SpeechResult> };
-type SpeechFailure = { error: string };
-interface Recognizer {
-  lang: string;
-  continuous: boolean;
-  interimResults: boolean;
-  processLocally?: boolean;
-  onresult: ((event: SpeechEvent) => void) | null;
-  onerror: ((event: SpeechFailure) => void) | null;
-  onend: (() => void) | null;
-  onstart: (() => void) | null;
-  start(): void;
-  stop(): void;
-  abort(): void;
-}
-interface RecognizerClass {
-  new(): Recognizer;
-  available?: (options: { langs: string[]; processLocally: boolean }) => Promise<string>;
-  install?: (options: { langs: string[]; processLocally: boolean }) => Promise<boolean>;
-}
-function recognizerClass(): RecognizerClass | undefined {
-  if (typeof window === 'undefined') return undefined;
-  const w = window as Window & { SpeechRecognition?: RecognizerClass; webkitSpeechRecognition?: RecognizerClass };
-  return w.SpeechRecognition ?? w.webkitSpeechRecognition;
-}
-const language = 'en-US';
+
 export function useLiveDictation(sentenceId: string) {
   const {t} = useI18n();
   const [status,setStatus] = useState<DictationStatus>('idle');
@@ -46,7 +20,7 @@ export function useLiveDictation(sentenceId: string) {
   // Actual PCM amplitude, available only on the local desktop audio path.
   const [inputLevel,setInputLevel] = useState<number | null>(null);
   const [error,setError] = useState('');
-  const current = useRef<Recognizer | null>(null);
+  const current = useRef<BrowserRecognizer | null>(null);
   const desktopStop = useRef<(() => Promise<{finalText:string}>) | null>(null);
   const [desktopAvailable,setDesktopAvailable] = useState(false);
   const [desktopReason,setDesktopReason] = useState<'ready'|'not-configured'|'missing-model'|'missing-addon'>('not-configured');
@@ -59,7 +33,7 @@ export function useLiveDictation(sentenceId: string) {
   const browserModeAvailable = !window.voxneloDesktop;
   // Electron has no Chrome on-device speech-service binder. A Chromium
   // constructor/method presence does NOT mean recognition can run in Electron.
-  const supported = window.voxneloDesktop ? desktopAvailable : Boolean(recognizerClass());
+  const supported = window.voxneloDesktop ? desktopAvailable : Boolean(browserRecognizerClass());
   useEffect(()=>{
     const bridge=window.voxneloDesktop?.asr;
     if(!bridge)return;
@@ -85,13 +59,7 @@ export function useLiveDictation(sentenceId: string) {
     }
     const recognizer=current.current;
     current.current=null;
-    if(recognizer) {
-      recognizer.onresult=null;
-      recognizer.onerror=null;
-      recognizer.onstart=null;
-      recognizer.onend=null;
-      try {recognizer.stop()} catch { /* recognition may already be stopped */ }
-    }
+    stopBrowserRecognizer(recognizer);
     setInterimText('');
     setInputLevel(null);
     setStatus('idle');
@@ -117,7 +85,7 @@ export function useLiveDictation(sentenceId: string) {
   },[browserModeAvailable,stop]);
   const start = useCallback(async() => {
     if(status!=='idle')return;
-    const Ctor=recognizerClass();
+    const Ctor=browserRecognizerClass();
     setError('');
     const bridge=window.voxneloDesktop?.asr;
     if(window.voxneloDesktop){
@@ -228,7 +196,7 @@ export function useLiveDictation(sentenceId: string) {
     if(mode==='local') {
       if(!Ctor.available){setStatus('idle');setError(t('dictationLocalRequired'));return;}
       try {
-        const available=await Ctor.available({langs:[language],processLocally:true});
+        const available=await Ctor.available({langs:[BROWSER_SPEECH_LANGUAGE],processLocally:true});
         if(disposed.current||id!==requestId.current)return;
         if(available!=='available') {
           setLocalPack(available==='downloadable'||available==='downloading'?'downloadable':'unavailable');
@@ -243,60 +211,33 @@ export function useLiveDictation(sentenceId: string) {
       }
     }
     if(disposed.current||id!==requestId.current)return;
-    const recognition=new Ctor();
-    if(mode==='local') {
-      if(!('processLocally' in recognition)) {
-        setStatus('idle');setError(t('dictationLocalRequired'));return;
-      }
-      recognition.processLocally=true;
-    } else {
-      recognition.processLocally=false;
+    const recognition=createBrowserRecognizer(Ctor,mode,{
+      isCurrent:()=>id===requestId.current&&!disposed.current,
+      onStart:()=>setStatus('listening'),
+      onTranscript:(final,interim)=>{setFinalText(final);setInterimText(interim);},
+      onFailure:key=>{
+        if(key)setError(t(key));
+        setStatus('idle');setInterimText('');current.current=null;
+      },
+      onEnd:()=>{setStatus('idle');setInterimText('');current.current=null;},
+    });
+    if(!recognition){
+      setStatus('idle');setError(t('dictationLocalRequired'));
+      return;
     }
-    recognition.lang=language;
-    recognition.continuous=true;
-    recognition.interimResults=true;
-    const collected=new Map<number,string>();
     current.current=recognition;
-    recognition.onstart=()=>{if(id===requestId.current&&!disposed.current)setStatus('listening');};
-    recognition.onresult=(event)=>{
-      if(id!==requestId.current||disposed.current)return;
-      const partial:string[]=[];
-      for(let i=0;i<event.results.length;i++){
-        const result=event.results[i];
-        const value=result?.[0]?.transcript?.trim();
-        if(!value)continue;
-        if(result?.isFinal)collected.set(i,value);
-        else partial.push(value);
-      }
-      setFinalText([...collected.values()].join(' ').trim());
-      setInterimText(partial.join(' ').trim());
-    };
-    recognition.onerror=(event)=>{
-      if(id!==requestId.current||disposed.current)return;
-      const key=event.error==='not-allowed'||event.error==='service-not-allowed'?'dictationPermission'
-        :event.error==='audio-capture'?'dictationMicrophone'
-        :event.error==='network'?'dictationServiceUnavailable'
-        :event.error==='language-not-supported'?'dictationLocalRequired'
-        :event.error==='no-speech'?null:'dictationFailed';
-      if(key)setError(t(key));
-      setStatus('idle');setInterimText('');current.current=null;
-    };
-    recognition.onend=()=>{
-      if(id!==requestId.current||disposed.current)return;
-      setStatus('idle');setInterimText('');current.current=null;
-    };
     try {recognition.start()}catch{
       if(id!==requestId.current)return;
       current.current=null;setStatus('idle');setError(t('dictationFailed'));
     }
   },[status,mode,browserModeAvailable,desktopAvailable,stop,t]);
   const installLocal = useCallback(async()=>{
-    const Ctor=recognizerClass();
+    const Ctor=browserRecognizerClass();
     if(window.voxneloDesktop || !Ctor?.install)return setError(t('dictationLocalRequired'));
     const id=++requestId.current;
     setStatus('checking');setError('');
     try {
-      const installed=await Ctor.install({langs:[language],processLocally:true});
+      const installed=await Ctor.install({langs:[BROWSER_SPEECH_LANGUAGE],processLocally:true});
       if(disposed.current||id!==requestId.current)return;
       setLocalPack(installed?'available':'unavailable');
       setError(installed?'':t('dictationPackFailed'));
