@@ -26,7 +26,7 @@ const libraries=path.join(native,'lib');
 if(!existsSync(model)||!existsSync(addon)||!existsSync(wav))
   throw Error('Missing pinned model, native Node adapter or non-user reference WAV');
 
-const env={...process.env,
+const env:NodeJS.ProcessEnv={...process.env,
   VOXNELO_ASR_MODEL_DIR:model,
   VOXNELO_ASR_ADDON_PATH:addon,
 };
