@@ -220,6 +220,11 @@
   .voxnelo-scroll::-webkit-scrollbar { width: 7px; height: 7px; }
   .voxnelo-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
   .voxnelo-scroll::-webkit-scrollbar-track { background: transparent; }
+  /* Workspace scrolling remains functional by touchpad/wheel/keyboard but
+   * Chromium must not flash its native scrollbar over glass on focus/click.
+   * Inner lesson, library and catalog lists retain their own styled scrollbar. */
+  .voxnelo-workspace-scroll { scrollbar-width: none; }
+  .voxnelo-workspace-scroll::-webkit-scrollbar { width: 0; height: 0; display: none; }
 }
 /* Visual-preview mode is enabled by default as requested. An explicit in-app
  * "Motion off" choice always stops movement, regardless of OS preference. */
