@@ -4,6 +4,7 @@ import type { AppearanceTheme } from './appearance';
 import { useI18n, type LanguageSetting } from './i18n';
 import { Button, buttonVariants } from './components/ui/button';
 import { Card } from './components/ui/card';
+import { SettingToggle } from './components/settings/SettingToggle';
 import { cn } from './lib/utils';
 interface SettingsViewProps {
   speed:'normal'|'slow';showIpa:boolean;appearance:AppearanceTheme;
@@ -56,10 +57,7 @@ export function SettingsView({
         </div>
         <p className="appearanceHelp text-[10px] leading-5 text-muted-foreground">{t('appearanceNote')}</p>
         <p className="text-[11px] leading-5 text-primary">{t('motionVisibleHint')}</p>
-        <button type="button" className="settingToggle flex w-full items-center justify-between gap-4 rounded-2xl border border-border/70 bg-muted/50 p-4 text-left transition hover:bg-secondary/50" aria-pressed={motionEnabled} onClick={()=>onChangeMotion?.(!motionEnabled)}>
-          <span className="flex flex-col gap-1"><strong className="text-xs">{t('motionToggle')}</strong><small className="text-[10px] leading-5 text-muted-foreground">{t('motionToggleHint')}</small></span>
-          <span className={cn('switchTrack relative inline-flex h-6 w-11 shrink-0 rounded-full border border-border/50 p-0.5',motionEnabled?'bg-primary':'bg-muted-foreground/30')}><span className={cn('size-5 rounded-full bg-white shadow-sm transition-transform',motionEnabled&&'translate-x-5')}/></span>
-        </button>
+        <SettingToggle checked={motionEnabled} onToggle={()=>onChangeMotion?.(!motionEnabled)} label={t('motionToggle')} description={t('motionToggleHint')} />
       </Card>
       <Card className={cn(section,'languageSettings')}>
         <div className="settingsPanelHeading flex items-center gap-3 text-primary"><Languages size={20}/><h2 className="text-sm font-extrabold text-foreground">{t('languageTitle')}</h2></div>
@@ -75,18 +73,12 @@ export function SettingsView({
       <Card className={section}>
         <div className="settingsPanelHeading flex items-center gap-3 text-primary"><AudioLines size={20}/><h2 className="text-sm font-extrabold text-foreground">{t('voiceTitle')}</h2></div>
         <p className="text-xs leading-6 text-muted-foreground">{t('voiceDesc')}</p>
-        <button type="button" className="settingToggle flex w-full items-center justify-between gap-4 rounded-2xl border border-border/70 bg-muted/50 p-4 text-left transition hover:bg-secondary/50" aria-pressed={speed==='slow'} onClick={onToggleSpeed}>
-          <span className="flex flex-col gap-1"><strong className="text-xs">{t('slowMode')}</strong><small className="text-[10px] leading-5 text-muted-foreground">{t('slowModeHint')}</small></span>
-          <span className={cn('switchTrack relative inline-flex h-6 w-11 shrink-0 rounded-full border border-border/50 p-0.5 transition-colors',speed==='slow'?'bg-primary':'bg-muted-foreground/30')}><span className={cn('size-5 rounded-full bg-white shadow-sm transition-transform',speed==='slow'&&'translate-x-5')}/></span>
-        </button>
+        <SettingToggle checked={speed==='slow'} onToggle={onToggleSpeed} label={t('slowMode')} description={t('slowModeHint')} />
       </Card>
       <Card className={section}>
         <div className="settingsPanelHeading flex items-center gap-3 text-primary"><Languages size={20}/><h2 className="text-sm font-extrabold text-foreground">{t('contentTitle')}</h2></div>
         <p className="text-xs leading-6 text-muted-foreground">{t('contentDesc')}</p>
-        <button type="button" className="settingToggle flex w-full items-center justify-between gap-4 rounded-2xl border border-border/70 bg-muted/50 p-4 text-left transition hover:bg-secondary/50" aria-pressed={showIpa} onClick={onToggleIpa}>
-          <span className="flex flex-col gap-1"><strong className="text-xs">{t('showIpa')}</strong><small className="text-[10px] leading-5 text-muted-foreground">{t('showIpaHint')}</small></span>
-          <span className={cn('switchTrack relative inline-flex h-6 w-11 shrink-0 rounded-full border border-border/50 p-0.5 transition-colors',showIpa?'bg-primary':'bg-muted-foreground/30')}><span className={cn('size-5 rounded-full bg-white shadow-sm transition-transform',showIpa&&'translate-x-5')}/></span>
-        </button>
+        <SettingToggle checked={showIpa} onToggle={onToggleIpa} label={t('showIpa')} description={t('showIpaHint')} />
       </Card>
       <Card className={cn(section,'aboutSettings @min-[740px]/workspace:col-span-2')}>
         <div className="settingsPanelHeading flex items-center gap-3 text-primary"><Info size={20}/><h2 className="text-sm font-extrabold text-foreground">{t('aboutTitle')}</h2></div>
