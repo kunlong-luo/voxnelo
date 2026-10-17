@@ -107,6 +107,10 @@ try{
   await new Promise<void>((resolve,reject)=>{socket.addEventListener('open',()=>resolve(),{once:true});socket.addEventListener('error',()=>reject(Error('Chrome WebSocket failed')),{once:true});});
   socket.addEventListener('message',event=>{const p=JSON.parse(String(event.data)) as {id?:number;error?:unknown;result?:CdpReply};if(p.id===undefined)return;const q=pending.get(p.id);if(!q)return;clearTimeout(q.timeout);pending.delete(p.id);if(p.error)q.reject(Error(JSON.stringify(p.error)));else q.resolve(p.result||{});});
   await send('Page.enable');await send('Runtime.enable');
+  // Headless Chrome --window-size includes browser chrome and can yield a
+  // smaller innerHeight. Start the visual animation check at a real 1440x900
+  // CSS viewport, just as its documented test contract requires.
+  await send('Emulation.setDeviceMetricsOverride',{width:1440,height:900,deviceScaleFactor:1,mobile:false});
   await until('!!document.querySelector(".practiceLayout")');
   await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});
   const normalMotion=await evalJs('getComputedStyle(document.querySelector(".practiceLayout")).animationName');
