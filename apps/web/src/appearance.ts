@@ -31,3 +31,18 @@ export function saveAppearance(theme: AppearanceTheme): void {
     // Visual preview works for this session even if storage is unavailable.
   }
 }
+
+/** Users can disable motion directly in Voxnelo; visual previews default on.
+ * This does not modify operating-system accessibility settings. */
+export const MOTION_STORAGE_KEY='voxnelo.appearance.motion';
+export function readMotionEnabled():boolean {
+  try {return typeof window==='undefined'||window.localStorage.getItem(MOTION_STORAGE_KEY)!=='off';}
+  catch {return true;}
+}
+export function applyMotion(enabled:boolean):void {
+  if(typeof document!=='undefined') document.documentElement.dataset.motion=enabled?'on':'off';
+}
+export function saveMotionEnabled(enabled:boolean):void {
+  applyMotion(enabled);
+  try {window.localStorage.setItem(MOTION_STORAGE_KEY,enabled?'on':'off');}catch {/* preview only */}
+}
