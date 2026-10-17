@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { allowsAudioPermissionCheck, allowsAudioPermissionRequest, isAudioOnlyRequest, isTrustedUrl, resolveLocalFile } from '../apps/desktop/security';
+import { SUPPORT_LINKS } from '@voxnelo/core';
+import { allowsAudioPermissionCheck, allowsAudioPermissionRequest, isAudioOnlyRequest, isAllowedSupportUrl, isTrustedUrl, resolveLocalFile } from '../apps/desktop/security';
 
 describe('Voxnelo V0.1 主进程安全守卫', () => {
   describe('isTrustedUrl', () => {
@@ -29,6 +30,17 @@ describe('Voxnelo V0.1 主进程安全守卫', () => {
     it('非法 URL 一律拒绝', () => {
       expect(isTrustedUrl('', { isDev: false })).toBe(false);
       expect(isTrustedUrl('not a url', { isDev: true })).toBe(false);
+    });
+  });
+
+  describe('external support links', () => {
+    it('allows only published project, guide, feedback and license destinations', () => {
+      for (const url of Object.values(SUPPORT_LINKS)) expect(isAllowedSupportUrl(url)).toBe(true);
+      expect(isAllowedSupportUrl('https://github.com/kunlong-luo/voxnelo/issues/new?template=other.yml')).toBe(false);
+      expect(isAllowedSupportUrl('https://github.com/kunlong-luo/voxnelo.evil.example')).toBe(false);
+      expect(isAllowedSupportUrl('javascript:alert(1)')).toBe(false);
+      expect(isAllowedSupportUrl('file:///etc/passwd')).toBe(false);
+      expect(isAllowedSupportUrl({ toString: () => SUPPORT_LINKS.repository })).toBe(false);
     });
   });
 
