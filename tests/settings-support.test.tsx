@@ -24,7 +24,7 @@ describe('About and support in Settings', () => {
     expect(screen.getByRole('heading', {name: '关于 Voxnelo'})).toBeTruthy();
     expect(screen.getByText('版本 '+APP_VERSION+' · Early Access 早期体验版')).toBeTruthy();
     expect(screen.getByRole('heading', {name: '帮助与反馈'})).toBeTruthy();
-    const links = [
+    const links: Array<[string,string]> = [
       ['查看开源项目', SUPPORT_LINKS.repository],
       ['开源许可证', SUPPORT_LINKS.license],
       ['使用帮助', SUPPORT_LINKS.guide],
