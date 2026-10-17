@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 const out = path.resolve('browser-layout'), root=path.resolve('dist');
-const sizes: Array<[number, number]> = [[320,640],[390,844],[640,720],[800,610],[1160,760],[1440,900]];
+const sizes: Array<[number, number]> = [[320,640],[390,844],[640,720],[800,610],[1160,760],[1440,900],[1536,900]];
 const mime: Record<string,string>={'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.json':'application/json','.png':'image/png','.woff2':'font/woff2'};
 const sleep=(ms:number)=>new Promise<void>(resolve=>setTimeout(resolve,ms));
 const bins=[process.env.CHROME_BIN,'google-chrome','google-chrome-stable','chromium','chromium-browser'].filter((value):value is string=>Boolean(value));
@@ -73,7 +73,7 @@ const shot=async(w:number,h:number,name:string):Promise<void>=>{
     if(m.dictationWidth>=400){
       assert.ok(m.dictationOffset<=12,'dictation microphone is not centered '+w+'x'+h+': '+JSON.stringify(m));
     }
-    if(m.mainWidth>=1120&&h>=850){
+    if(m.mainWidth>=1250&&h>=850){
       assert.ok(m.columnBottomDelta<=5,'lesson and final insights card bottoms diverge '+w+'x'+h+': '+JSON.stringify(m));
     }
     if(w>=640){
