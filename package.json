@@ -130,7 +130,13 @@
         "from": "build/offline-asr",
         "to": "offline-asr"
       }
-    ]
+    ],
+    "deb": {
+      "depends": [
+        "default",
+        "fonts-noto-cjk"
+      ]
+    }
   },
   "desktopName": "app.voxnelo.desktop.desktop"
 }

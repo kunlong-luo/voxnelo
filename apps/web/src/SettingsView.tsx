@@ -34,12 +34,14 @@ export function SettingsView({
         <p className="text-xs leading-6 text-muted-foreground">{t('appearanceDesc')}</p>
         <div className="appearanceChoices grid grid-cols-[repeat(auto-fit,minmax(min(100%,9rem),1fr))] gap-3" role="group" aria-label={t('appearanceGroup')}>
           {themes.map(id=>{const name=t(id==='nordic'?'nordicName':'sunsetName');return <button type="button" className={cn('appearanceChoice group flex min-w-0 flex-col gap-2 rounded-2xl border p-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-md motion-reduce:transform-none',appearance===id?'border-primary/50 bg-secondary/65 ring-2 ring-primary/10':'border-border bg-card/70 hover:border-primary/30')} key={id} onClick={()=>onChangeAppearance(id)} aria-label={t('appearanceChoose',{name})} aria-pressed={appearance===id}>
-            <span className={cn('appearancePreview h-18 w-full rounded-xl border border-white/75 transition-transform duration-300 motion-safe:group-hover:scale-[1.025]',id==='nordic'?'bg-gradient-to-tr from-brand-mist via-brand-cream to-accent':'bg-gradient-to-tr from-brand-blush via-brand-cream to-brand-mist')} aria-hidden="true"/>
+            <span className={cn('appearancePreview relative h-18 w-full overflow-hidden rounded-xl border border-white/75 transition-transform duration-300 motion-safe:group-hover:scale-[1.025]',id==='nordic'?'bg-gradient-to-tr from-brand-mist via-brand-cream to-accent':'bg-gradient-to-tr from-brand-blush via-brand-cream to-brand-mist')} aria-hidden="true"><span className="absolute inset-y-2 left-1/3 aspect-square rounded-full bg-white/50 blur-lg motion-safe:animate-ambient-drift"/></span>
             <strong className="flex items-center justify-between gap-2 text-xs text-foreground">{name}{appearance===id&&<Check size={15} className="text-primary motion-safe:animate-soft-pop"/>}</strong>
             <small className="text-[10px] leading-4 text-muted-foreground">{t(id==='nordic'?'nordicSummary':'sunsetSummary')}</small>
           </button>})}
         </div>
         <p className="appearanceHelp text-[10px] leading-5 text-muted-foreground">{t('appearanceNote')}</p>
+        <p className="text-[11px] leading-5 text-primary motion-reduce:hidden">{t('motionVisibleHint')}</p>
+        <p className="hidden text-[11px] leading-5 text-primary motion-reduce:block" role="status">{t('motionReducedHint')}</p>
       </Card>
       <Card className={cn(section,'languageSettings')}>
         <div className="settingsPanelHeading flex items-center gap-3 text-primary"><Languages size={20}/><h2 className="text-sm font-extrabold text-foreground">{t('languageTitle')}</h2></div>

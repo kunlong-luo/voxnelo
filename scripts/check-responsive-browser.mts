@@ -108,6 +108,9 @@ try{
   const ambientAfter=await evalJs<number>('Number(document.querySelector("[data-motion=ambient-breathe]").getAnimations()[0]?.currentTime??0)');
   assert.ok(ambientAfter>ambientBefore.time+150,'ambient glow has no actual animation progress: '+ambientAfter+' / '+ambientBefore.time);
   report.push({page:'ambient-breathing-motion',...ambientBefore,progressMs:ambientAfter-ambientBefore.time});
+  const microphoneMotion=await evalJs<{name:string;running:number}>('(()=>{const e=document.querySelector("[data-motion=mic-halo]");return {name:getComputedStyle(e).animationName,running:e.getAnimations().filter(a=>a.playState==="running").length}})()');
+  assert.ok(microphoneMotion.name.includes('record-halo')&&microphoneMotion.running>0,'visible idle microphone halo is missing: '+JSON.stringify(microphoneMotion));
+  report.push({page:'idle-mic-motion',...microphoneMotion});
   await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
   const quietBreath=await evalJs('getComputedStyle(document.querySelector("[data-motion=ambient-breathe]")).animationDuration');
   assert.ok(parseFloat(quietBreath)<=.001,'ambient glow ignores reduced motion: '+quietBreath);
@@ -138,6 +141,20 @@ try{
     await activate(2,'.libraryPage');await shot(w,h,'library');
     await activate(0,'.practiceLayout');
   }
+  // Local desktop scrolling: the window and sidebar remain fixed while only
+  // the workspace and each phrase/history list may scroll.
+  await activate(1,'.catalogPage');
+  const localScroll=await evalJs<{frame:string;workspace:string;catalog:string;visible:number}>('(()=>({frame:getComputedStyle(document.querySelector(".appFrame")).overflowY,workspace:getComputedStyle(document.querySelector(".content")).overflowY,catalog:getComputedStyle(document.querySelector("[data-testid=catalog-grid]")).overflowY,visible:document.querySelectorAll(".catalogItem").length}))()');
+  assert.equal(localScroll.frame,'hidden','Desktop page should not own the scrollbar');
+  assert.equal(localScroll.workspace,'auto','Workspace should own its overflow');
+  assert.equal(localScroll.catalog,'auto','Catalog should scroll locally');
+  assert.equal(localScroll.visible,6,'Catalog pagination must show six phrases');
+  report.push({page:'local-catalog-scroll',...localScroll});
+  await shot(1440,900,'catalog');
+  await activate(3,'.libraryPage');
+  const libraryScroll=await evalJs('getComputedStyle(document.querySelector(".libraryList")).overflowY');
+  assert.equal(libraryScroll,'auto','History should scroll locally');
+  await activate(0,'.practiceLayout');
   // Validate both actual CSS themes in Chromium, not just class strings.
   await send('Emulation.setDeviceMetricsOverride',{width:1160,height:760,deviceScaleFactor:1,mobile:false});
   const themeMaterial=async()=>evalJs<ThemeMaterial>('(()=>{const lesson=getComputedStyle(document.querySelector(".practiceCard"));const primary=getComputedStyle(document.querySelector(".dictationAction"));return {theme:document.documentElement.dataset.theme,glass:lesson.backdropFilter,primaryBackground:primary.backgroundColor,glassBackground:lesson.backgroundColor}})()');

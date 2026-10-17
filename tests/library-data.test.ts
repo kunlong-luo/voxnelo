@@ -33,17 +33,17 @@ describe('Library history selector and pagination',()=>{
     const one=libraryPage(entries,1);
     const three=libraryPage(entries,3);
     expect(one.items).toHaveLength(LIBRARY_PAGE_SIZE);
-    expect(three.pages).toBe(3);
-    expect(three.items).toHaveLength(3);
-    expect(three.start).toBe(17);
-    expect(three.end).toBe(19);
-    expect(new Set([...one.items,...libraryPage(entries,2).items,...three.items].map(e=>e.id)).size).toBe(19);
+    expect(three.pages).toBe(4);
+    expect(three.items).toHaveLength(5);
+    expect(three.start).toBe(11);
+    expect(three.end).toBe(15);
+    expect(new Set([...one.items,...libraryPage(entries,2).items,...three.items,...libraryPage(entries,4).items].map(e=>e.id)).size).toBe(19);
   });
 
   it('clamps pagination when filtering shrinks the number of matches',()=>{
     const items=Array.from({length:17},(_,i)=>i);
-    expect(libraryPage(items,200)).toMatchObject({page:3,pages:3,start:17,end:17});
-    expect(libraryPage(items,-2)).toMatchObject({page:1,pages:3,start:1,end:8});
+    expect(libraryPage(items,200)).toMatchObject({page:4,pages:4,start:16,end:17});
+    expect(libraryPage(items,-2)).toMatchObject({page:1,pages:4,start:1,end:5});
     expect(libraryPage([],10)).toMatchObject({page:1,pages:1,start:0,end:0,total:0});
   });
 

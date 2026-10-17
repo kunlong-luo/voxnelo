@@ -33,7 +33,7 @@ export function PracticeCard({current,currentState,speed,showIpa,recorder,dictat
   const review=Boolean(currentState?.review);
   return (
       <Card className="practiceCard referenceLesson relative isolate flex min-h-[min(700px,calc(100dvh-120px))] min-w-0 flex-1 flex-col overflow-visible rounded-[32px] border border-glass-edge bg-glass-surface shadow-glass backdrop-blur-[var(--glass-blur)]">
-        <div aria-hidden="true" data-motion="lesson-breathe" className="pointer-events-none absolute inset-x-[12%] top-[16%] h-55 rounded-[50%] bg-brand-blush/24 blur-3xl motion-safe:animate-ambient-breathe motion-safe:[animation-delay:-1.7s]"/>
+        <div aria-hidden="true" data-motion="lesson-breathe" className="pointer-events-none absolute inset-x-[12%] top-[16%] h-55 rounded-[50%] bg-brand-blush/55 blur-2xl motion-safe:animate-ambient-breathe motion-safe:[animation-delay:-1.7s]"/>
         <header className="cardHeader lessonHeader relative flex min-h-19 [@media(max-height:680px)]:min-h-16 flex-wrap items-center justify-between gap-4 px-5 pt-6 pb-0 [@media(max-height:680px)]:pt-3 sm:px-8 sm:pt-8 lg:px-10">
           <div className="lessonProgress flex min-w-22 flex-col gap-2" aria-label={t('coursePosition',{index,total:SENTENCES.length})}>
             <span className="lessonCount text-sm font-extrabold tracking-tight tabular-nums text-foreground">{String(index).padStart(2,'0')} <span className="font-medium text-muted-foreground">/ {SENTENCES.length}</span></span>

@@ -238,15 +238,19 @@ describe('LibraryView', () => {
     expect(screen.getByText('近期活动')).toBeTruthy();
     expect(screen.getByText('学过的句子')).toBeTruthy();
     expect(screen.getAllByText('录音练习').length).toBeGreaterThan(0);
-    expect(container.querySelectorAll('.libraryItem')).toHaveLength(8);
+    expect(container.querySelectorAll('.libraryItem')).toHaveLength(5);
     expect(screen.getByRole('navigation',{name:'句子列表分页'})).toBeTruthy();
     fireEvent.click(screen.getByRole('button',{name:'下一页'}));
-    expect(container.querySelectorAll('.libraryItem')).toHaveLength(8);
+    expect(container.querySelectorAll('.libraryItem')).toHaveLength(5);
     fireEvent.click(screen.getByRole('button',{name:'下一页'}));
-    expect(container.querySelectorAll('.libraryItem')).toHaveLength(3);
+    expect(container.querySelectorAll('.libraryItem')).toHaveLength(5);
+    fireEvent.click(screen.getByRole('button',{name:'下一页'}));
+    expect(container.querySelectorAll('.libraryItem')).toHaveLength(4);
     fireEvent.click(screen.getByRole('button',{name:'录音练习'}));
-    expect(container.querySelectorAll('.libraryItem')).toHaveLength(7);
-    expect(screen.queryByRole('navigation',{name:'句子列表分页'})).toBeNull();
+    expect(container.querySelectorAll('.libraryItem')).toHaveLength(5);
+    expect(screen.getByRole('navigation',{name:'句子列表分页'})).toBeTruthy();
+    fireEvent.click(screen.getByRole('button',{name:'下一页'}));
+    expect(container.querySelectorAll('.libraryItem')).toHaveLength(2);
   });
 
   it('收藏列表可点回练习', () => {

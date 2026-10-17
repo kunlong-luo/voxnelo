@@ -97,7 +97,7 @@ export function LibraryView({view,states,events,search,notice,onSearch,onChoose,
             className={cn('min-h-9 rounded-xl px-3 text-xs font-semibold',historyFilter===filter&&'bg-secondary text-primary shadow-sm')}
             onClick={()=>selectFilter(filter)} aria-pressed={historyFilter===filter}>{t(label)}</Button>)}
         </div>}
-        <div ref={animationParent} className="libraryList flex min-w-0 flex-col gap-2.5 p-3.5 sm:p-5" data-testid="library-list">
+        <div ref={animationParent} className="libraryList voxnelo-scroll flex min-w-0 flex-col gap-2.5 p-3.5 sm:max-h-[min(48dvh,500px)] sm:overflow-y-auto sm:overscroll-contain sm:p-5" data-testid="library-list">
           {paginated.items.length?paginated.items.map((entry,index)=>{
             const currentDate=entry.at===undefined?'':dateLabel(entry.at);
             const previous=paginated.items[index-1];

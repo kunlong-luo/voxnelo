@@ -91,7 +91,10 @@ if(platform==='linux'){
   const metadata=spawnSync('dpkg-deb',['--field',debPath,'Package'],{encoding:'utf8'});
   assert.equal(metadata.status,0,'dpkg-deb could not inspect installer: '+metadata.stderr);
   assert.match(metadata.stdout.trim(),/^voxnelo$/i,'Wrong Debian package identity');
-  linuxChecks.push('deb archive and package identity','AppImage ELF header','both installers nonempty');
+  const dependencies=spawnSync('dpkg-deb',['--field',debPath,'Depends'],{encoding:'utf8'});
+  assert.equal(dependencies.status,0,'dpkg-deb could not inspect dependencies: '+dependencies.stderr);
+  assert.match(dependencies.stdout,/(?:^|[,\s])fonts-noto-cjk(?:[,\s(]|$)/,'Debian installer must provide Chinese CJK font support');
+  linuxChecks.push('deb archive, package identity and CJK font dependency','AppImage ELF header','both installers nonempty');
 }
 // Full installer checks are a strict release-candidate gate. PR CI intentionally
 // uses unpacked Windows/macOS bundles for faster feedback, while Linux PR CI

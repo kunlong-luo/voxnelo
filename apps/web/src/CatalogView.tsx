@@ -7,7 +7,7 @@ import { Card } from './components/ui/card';
 
 type SceneKey = keyof typeof SCENE_LABELS;
 type SceneFilter = SceneKey | 'all';
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 6;
 
 /** Browsable scene packs complement the existing one-tap practice flow. */
 export function CatalogView({onChoose,onBackToPractice}:{
@@ -36,7 +36,7 @@ export function CatalogView({onChoose,onBackToPractice}:{
   const changeQuery=(next:string)=>{setQuery(next);setPage(1);};
   const start=filtered.length?(currentPage-1)*PAGE_SIZE+1:0;
   const end=Math.min(currentPage*PAGE_SIZE,filtered.length);
-  return <section className="catalogPage mx-auto flex w-full max-w-310 flex-col gap-5 pb-5 motion-safe:animate-view-enter">
+  return <section className="catalogPage mx-auto flex w-full max-w-310 flex-col gap-4 pb-5 motion-safe:animate-view-enter">
     <header className="relative isolate overflow-hidden rounded-[28px] border border-glass-edge bg-glass-surface px-5 py-6 shadow-glass backdrop-blur-[var(--glass-blur)] sm:px-8 sm:py-7">
       <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-16 size-60 rounded-full bg-brand-blush/45 blur-3xl"/>
       <div className="relative flex flex-wrap items-start justify-between gap-4">
@@ -64,7 +64,7 @@ export function CatalogView({onChoose,onBackToPractice}:{
       </div>
       <p className="mt-3 text-xs leading-5 text-muted-foreground">{t('catalogDraftNotice')}</p>
     </Card>
-    <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3" data-testid="catalog-grid">
+    <div className="voxnelo-scroll grid min-w-0 gap-3 sm:max-h-[min(43dvh,470px)] sm:overflow-y-auto sm:overscroll-contain sm:pr-2 sm:grid-cols-2 xl:grid-cols-3" data-testid="catalog-grid" aria-label={t('catalogTitle')}>
       {visible.map(sentence=><Button key={sentence.id} variant="ghost" onClick={()=>onChoose(sentence)}
         className="catalogItem group h-auto min-h-32 min-w-0 flex-col items-start justify-start gap-2 rounded-2xl border border-border/60 bg-card/85 p-4 text-left shadow-sm transition-[background-color,border-color,transform] hover:-translate-y-0.5 hover:border-primary/35 hover:bg-accent/55">
         <span className="flex w-full items-center justify-between gap-3 text-[11px] font-medium text-muted-foreground">

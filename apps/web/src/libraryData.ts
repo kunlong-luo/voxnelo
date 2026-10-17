@@ -7,7 +7,7 @@ export interface LibraryEntry {
   at?:number;
   type?:HistoryEvent['type'];
 }
-export const LIBRARY_PAGE_SIZE=8;
+export const LIBRARY_PAGE_SIZE=5;
 
 export function libraryEntries(
   view:LibraryMode,
