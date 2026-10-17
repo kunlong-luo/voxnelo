@@ -57,8 +57,8 @@ export function PracticeCard({current,currentState,speed,showIpa,recorder,dictat
             </div>
           </div>
         </header>
-        <div className="lessonFocus @container/lesson relative flex min-h-44 min-w-0 flex-1 sm:min-h-64 flex-col items-center justify-center gap-4 px-4 py-4 text-center sm:gap-5 sm:px-5 sm:py-5 [@media(max-height:680px)]:min-h-48 [@media(max-height:680px)]:gap-1.5 [@media(max-height:680px)]:py-1 @min-[560px]/workspace:px-9 @min-[700px]/workspace:min-h-[clamp(12rem,calc(100dvh-475px),20rem)]">
-          <div className="sentenceContent flex w-full flex-col items-center justify-center gap-3 sm:gap-5 [@media(max-height:680px)]:gap-1.5">
+        <div className="lessonFocus @container/lesson relative flex min-h-44 min-w-0 flex-1 sm:min-h-64 flex-col items-center justify-center gap-4 px-4 py-4 text-center sm:gap-5 sm:px-5 sm:py-5 [@media(max-height:800px)]:gap-1 [@media(max-height:800px)]:py-2 [@media(max-height:680px)]:min-h-48 [@media(max-height:680px)]:gap-1.5 [@media(max-height:680px)]:py-1 @min-[560px]/workspace:px-9 @min-[700px]/workspace:min-h-[clamp(12rem,calc(100dvh-525px),18rem)]">
+          <div className="sentenceContent flex w-full flex-col items-center justify-center gap-3 sm:gap-5 [@media(max-height:800px)]:gap-2 [@media(max-height:680px)]:gap-1.5">
             <span className="lessonLevel text-[11px] font-bold tracking-[.2em] text-muted-foreground uppercase">{t('speakingPractice')} · {current.level}</span>
             <div ref={sentenceMotionRef} className="sentenceHeading flex max-w-full justify-center">
               <h1 key={current.id} className="sentenceText max-w-full text-[clamp(2rem,6.25cqi,3.375rem)] leading-[1.25] font-extrabold tracking-[-.045em] wrap-break-word text-sentence-ink drop-shadow-[0_1px_0_rgba(255,255,255,.45)] animate-sentence-enter">{current.english}</h1>

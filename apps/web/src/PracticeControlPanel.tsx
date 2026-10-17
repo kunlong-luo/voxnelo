@@ -9,14 +9,14 @@ import { cn } from './lib/utils';
 type ControlPanelProps = Pick<PracticeViewProps, 'recorder'|'recordingBusy'|'speed'|'onSpeak'|'onToggleSpeed'|'onRecord'>;
 
 const utilityButton = 'size-10 rounded-2xl border border-white/75 bg-card/80 text-foreground/80 shadow-[0_10px_25px_-17px_rgba(80,58,44,.35)] backdrop-blur-sm transition-[background-color,color,box-shadow] hover:bg-accent hover:text-primary hover:shadow-md hover:-translate-y-1 active:translate-y-0 @min-[440px]/workspace:size-11 @min-[700px]/workspace:size-12';
-const minorCaption = 'mt-2 max-w-full text-center text-[10px] font-semibold leading-4 text-muted-foreground @min-[560px]/workspace:text-[11px]';
+const minorCaption = 'mt-2 [@media(max-height:800px)]:mt-1 max-w-full text-center text-[10px] font-semibold leading-4 text-muted-foreground @min-[560px]/workspace:text-[11px]';
 function ActionSlot({children,label,detail,className}:{
   children:React.ReactNode;label:string;detail?:string;className?:string;
 }) {
   return <div className={cn('actionSlot flex min-w-0 flex-col items-center justify-start text-center',className)}>
     {children}
     <span className={minorCaption}>{label}</span>
-    {detail && <span className="mt-1 max-w-full text-center text-[10px] leading-4 text-muted-foreground/80">{detail}</span>}
+    {detail && <span className="mt-1 max-w-full text-center text-[10px] leading-4 text-muted-foreground/80 [@media(max-height:800px)]:sr-only">{detail}</span>}
   </div>;
 }
 
@@ -27,7 +27,7 @@ export function PracticeControlPanel({recorder,recordingBusy,speed,onSpeak,onTog
   const requesting=recorder.status==='requesting';
   const ready=recorder.status==='ready' && Boolean(recorder.recordingUrl);
   return (
-        <section className="lessonActions border-t border-white/55 bg-card/25 px-3 pt-5 pb-3 [@media(max-height:680px)]:pt-3 [@media(max-height:680px)]:pb-2 sm:px-6" aria-label={t('practiceActions')}>
+        <section className="lessonActions border-t border-white/55 bg-card/25 px-3 pt-5 pb-3 [@media(max-height:800px)]:pt-2 [@media(max-height:800px)]:pb-1 [@media(max-height:680px)]:pt-3 [@media(max-height:680px)]:pb-2 sm:px-6" aria-label={t('practiceActions')}>
           <div className="actionRail grid grid-cols-[repeat(2,minmax(0,1fr))_minmax(60px,1.25fr)_minmax(0,1fr)] items-start gap-0.5 @min-[560px]/workspace:gap-2" data-testid="practice-control-rail">
             <ActionSlot label={t('playDemo')}>
               <Tooltip text={t('playExample')}>
