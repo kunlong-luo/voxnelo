@@ -96,6 +96,10 @@ if(platform==='linux'){
   const installedVersion=spawnSync('dpkg-deb',['--field',debPath,'Version'],{encoding:'utf8'});
   assert.equal(installedVersion.status,0,'dpkg-deb could not inspect Debian version: '+installedVersion.stderr);
   assert.equal(installedVersion.stdout.trim(),expectedVersion,'DEB package Version must match Voxnelo release version');
+  const maintainer=spawnSync('dpkg-deb',['--field',debPath,'Maintainer'],{encoding:'utf8'});
+  assert.equal(maintainer.status,0,'dpkg-deb could not inspect Debian maintainer: '+maintainer.stderr);
+  assert.equal(maintainer.stdout.trim(),'Leo Luo <40263163+kunlong-luo@users.noreply.github.com>',
+    'DEB developer attribution must use Leo Luo rather than a generic team label');
   // Electron-builder/FPM may silently replace Chinese package metadata with
   // question marks under a non-UTF-8 environment. Test the actual .deb metadata
   // shown by Linux package managers (not merely package.json).
