@@ -60,6 +60,10 @@ export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
       </p>
       <p role="status" className="mt-1 text-[11px] leading-4 text-translation-ink @min-[440px]/lesson:hidden">{t('dictationUnavailableShort')}</p>
     </>}
+    {!dictation.supported&&window.voxneloDesktop?.platform==='linux'&&<p className="mt-2 text-[11px] leading-5 text-translation-ink [@media(max-height:1000px)]:hidden" role="status">
+      {t('dictationPersonalSetup')}
+      <code className="mt-1 block select-text rounded-lg bg-muted/70 px-2 py-1.5 font-mono text-[11px] text-foreground">pnpm asr:personal:install</code>
+    </p>}
     {listening&&window.voxneloDesktop&&dictation.noiseReduction!=='unknown'&&<p className="mt-2 flex items-center gap-1.5 text-[11px] leading-4 text-translation-ink">
       <ShieldCheck size={13} aria-hidden="true"/>{t(dictation.noiseReduction==='enabled'?'dictationNoiseEnabled':'dictationNoiseUnverified')}
     </p>}

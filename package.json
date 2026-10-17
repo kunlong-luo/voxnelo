@@ -17,6 +17,7 @@
     "build:electron": "node --experimental-strip-types scripts/check-asr-staging.mts && node --experimental-strip-types scripts/build-electron.mts",
     "asr:check-staging": "node --experimental-strip-types scripts/check-asr-staging.mts",
     "asr:model:prepare": "node --experimental-strip-types scripts/prepare-asr-model.mts",
+    "asr:personal:install": "node --experimental-strip-types scripts/install-personal-asr.mts",
     "asr:native:stage": "node --experimental-strip-types scripts/stage-asr-native.mts",
     "asr:verify-real": "node --experimental-strip-types scripts/check-asr-real-release.mts",
     "worklet:build": "node --experimental-strip-types scripts/build-audio-worklet.mts",

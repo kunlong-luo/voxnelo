@@ -32,7 +32,7 @@ export function PracticeCard({current,currentState,speed,showIpa,recorder,dictat
   const favorite=Boolean(currentState?.favorite);
   const review=Boolean(currentState?.review);
   return (
-      <Card className="practiceCard referenceLesson relative isolate flex min-h-[min(700px,calc(100dvh-120px))] min-w-0 flex-1 flex-col overflow-visible rounded-[34px] border border-glass-edge bg-glass-surface shadow-glass backdrop-blur-[var(--glass-blur)] ring-1 ring-white/25">
+      <Card className="practiceCard referenceLesson relative isolate flex min-h-[min(700px,calc(100dvh-120px))] [@media(max-height:800px)]:min-h-[min(560px,calc(100dvh-180px))] min-w-0 flex-1 flex-col overflow-visible rounded-[34px] border border-glass-edge bg-glass-surface shadow-glass backdrop-blur-[var(--glass-blur)] ring-1 ring-white/25">
         <div aria-hidden="true" data-motion="lesson-breathe" className="pointer-events-none absolute inset-x-[16%] top-[12%] h-60 rounded-[50%] bg-brand-cream/85 blur-3xl animate-ambient-breathe [animation-delay:-1.7s]"/>
         <div aria-hidden="true" data-motion="glass-shimmer" className="pointer-events-none absolute -top-28 -right-24 size-82 rounded-full bg-white/45 blur-[65px] animate-glass-shimmer"/>
         <div aria-hidden="true" className="pointer-events-none absolute inset-x-8 top-0 h-px bg-linear-to-r from-transparent via-white/90 to-transparent"/>
