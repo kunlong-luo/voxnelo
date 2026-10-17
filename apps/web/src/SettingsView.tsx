@@ -57,7 +57,7 @@ export function SettingsView({
         </div>
         <p className="appearanceHelp text-[10px] leading-5 text-muted-foreground">{t('appearanceNote')}</p>
         <p className="text-[11px] leading-5 text-primary">{t('motionVisibleHint')}</p>
-        <SettingToggle checked={motionEnabled} onToggle={()=>onChangeMotion?.(!motionEnabled)} title={t('motionToggle')} description={t('motionToggleHint')} />
+        <SettingToggle checked={motionEnabled} onToggle={()=>onChangeMotion?.(!motionEnabled)} label={t('motionToggle')} description={t('motionToggleHint')} />
       </Card>
       <Card className={cn(section,'languageSettings')}>
         <div className="settingsPanelHeading flex items-center gap-3 text-primary"><Languages size={20}/><h2 className="text-sm font-extrabold text-foreground">{t('languageTitle')}</h2></div>
@@ -73,12 +73,12 @@ export function SettingsView({
       <Card className={section}>
         <div className="settingsPanelHeading flex items-center gap-3 text-primary"><AudioLines size={20}/><h2 className="text-sm font-extrabold text-foreground">{t('voiceTitle')}</h2></div>
         <p className="text-xs leading-6 text-muted-foreground">{t('voiceDesc')}</p>
-        <SettingToggle checked={speed==='slow'} onToggle={onToggleSpeed} title={t('slowMode')} description={t('slowModeHint')} />
+        <SettingToggle checked={speed==='slow'} onToggle={onToggleSpeed} label={t('slowMode')} description={t('slowModeHint')} />
       </Card>
       <Card className={section}>
         <div className="settingsPanelHeading flex items-center gap-3 text-primary"><Languages size={20}/><h2 className="text-sm font-extrabold text-foreground">{t('contentTitle')}</h2></div>
         <p className="text-xs leading-6 text-muted-foreground">{t('contentDesc')}</p>
-        <SettingToggle checked={showIpa} onToggle={onToggleIpa} title={t('showIpa')} description={t('showIpaHint')} />
+        <SettingToggle checked={showIpa} onToggle={onToggleIpa} label={t('showIpa')} description={t('showIpaHint')} />
       </Card>
       <Card className={cn(section,'aboutSettings @min-[740px]/workspace:col-span-2')}>
         <div className="settingsPanelHeading flex items-center gap-3 text-primary"><Info size={20}/><h2 className="text-sm font-extrabold text-foreground">{t('aboutTitle')}</h2></div>
