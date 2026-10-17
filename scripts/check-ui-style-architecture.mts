@@ -12,7 +12,7 @@ const css=readFileSync(path.join(root,'apps/web/src/design-system.css'),'utf8');
 if(!css.includes('@import "tailwindcss"')||!css.includes('@theme inline')) throw new Error('Tailwind v4 token definition missing');
 if(!css.includes(':root[data-motion="off"]'))throw new Error('Manual motion opt-out missing');
 for(const token of ['#F8DEC5','#E8D3C7','#D8C3B9','#DD6B20','#ED8936','#F7F8F5','#E8F0EA','#A6C5BA','--animate-ribbon-flow']) {
- if(!css.includes(token))throw new Error('Design theme token missing: '+token);
+ if(!css.toLowerCase().includes(token.toLowerCase()))throw new Error('Design theme token missing: '+token);
 }
 for(const file of ['button.tsx','card.tsx','badge.tsx','progress.tsx']){
  if(!existsSync(path.join(root,'apps/web/src/components/ui',file)))throw new Error('Missing UI component: '+file);
