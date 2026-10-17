@@ -1,4 +1,5 @@
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, symlinkSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { EventEmitter } from 'node:events';
 import type { Worker } from 'node:worker_threads';
 import type { WebContents } from 'electron';
@@ -7,7 +8,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { OfflineAsr } from '../apps/desktop/offlineAsr';
-import { isPersonalAsrCandidate, resolveAsrAssets } from '../apps/desktop/asrAssets';
+import { isPersonalAsrCandidate, resolveAsrAssets, resolveVerifiedAsrAssets, verifyPersonalAsrCandidate, verifyPersonalAsrInventory } from '../apps/desktop/asrAssets';
 
 const roots:string[]=[];
 afterEach(()=>roots.splice(0).forEach(dir=>rmSync(dir,{recursive:true,force:true})));
@@ -61,6 +62,53 @@ describe('Trusted offline ASR bundle discovery',()=>{
     writeFileSync(path.join(folder,'manifest.json'),JSON.stringify({...manifest,nativeVersion:'0.0.0'}));
     expect(isPersonalAsrCandidate(folder)).toBe(false);
     expect(resolveAsrAssets(options).addonPath).toContain('packaged');
+  });
+
+  it('stream-verifies every personal model and native file, rejects edits and unexpected files',async()=>{
+    const base=root();
+    const pilot=path.join(base,'offline-asr');
+    const files:Record<string,string>={
+      'model/encoder.onnx':'sample-encoder','model/decoder.onnx':'sample-decoder',
+      'model/joiner.onnx':'sample-joiner','model/tokens.txt':'sample-tokens',
+      'native/index.cjs':"module.exports = require('./node_modules/sherpa-onnx-node');\\n",
+      'native/node_modules/sherpa-onnx-node/index.js':'module.exports = {}',
+      'native/node_modules/sherpa-onnx-node/native.node':'fixture native addon',
+    };
+    const hashes:Record<string,string>={};
+    for(const [name,data] of Object.entries(files)){
+      const full=path.join(pilot,...name.split('/'));
+      mkdirSync(path.dirname(full),{recursive:true});
+      writeFileSync(full,data);
+      hashes[name]=createHash('sha256').update(data).digest('hex');
+    }
+    writeFileSync(path.join(pilot,'manifest.json'),JSON.stringify({
+      releaseReady:false,reviewState:'engineering-only; native redistribution not approved',
+      modelRevision:'bfbb11950302dad9955f8ede01f0e768595e4fba',
+      nativePackage:'sherpa-onnx-node',nativeVersion:'1.13.8',
+      platform:process.platform,arch:process.arch,sha256:hashes,
+    }));
+    writeFileSync(path.join(pilot,'personal-install.json'),JSON.stringify({
+      optIn:true,platform:process.platform,arch:process.arch,
+    }));
+    expect(isPersonalAsrCandidate(pilot)).toBe(true);
+    expect(await verifyPersonalAsrInventory(pilot)).toBe(true);
+    // Inventory digests are self-declared: the application separately pins
+    // known ONNX hashes, so a fabricated manifest cannot authorize an addon.
+    expect(await verifyPersonalAsrCandidate(pilot)).toBe(false);
+    const resolved=await resolveVerifiedAsrAssets({
+      isPackaged:true,resourcesPath:path.join(base,'packaged'),personalDataDir:base,
+    });
+    expect(resolved.addonPath).toBe(path.join(base,'packaged','offline-asr','native','index.cjs'));
+
+    writeFileSync(path.join(pilot,'model','tokens.txt'),'unexpected change');
+    expect(await verifyPersonalAsrInventory(pilot)).toBe(false);
+    writeFileSync(path.join(pilot,'model','tokens.txt'),files['model/tokens.txt']!);
+    expect(await verifyPersonalAsrInventory(pilot)).toBe(true);
+    writeFileSync(path.join(pilot,'native','extra.cjs'),'not in manifest');
+    expect(await verifyPersonalAsrInventory(pilot)).toBe(false);
+    rmSync(path.join(pilot,'native','extra.cjs'));
+    symlinkSync('tokens.txt',path.join(pilot,'model','unexpected-link'));
+    expect(await verifyPersonalAsrInventory(pilot)).toBe(false);
   });
 
   it('preserves developer-only absolute paths without allowing IPC path selection',()=>{
