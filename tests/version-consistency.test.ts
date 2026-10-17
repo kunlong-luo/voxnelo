@@ -20,6 +20,14 @@ describe('Voxnelo release identity',()=>{
       expect(readVersion(`packages/${name}/package.json`)).toBe(version);
     }
   });
+  it('attributes the application to Leo Luo',()=>{
+    const packageInfo=JSON.parse(readFileSync(path.join(root,'package.json'),'utf8')) as {
+      author?:string;build?:{linux?:{maintainer?:string}};
+    };
+    expect(packageInfo.author).toBe('Leo Luo');
+    expect(packageInfo.build?.linux?.maintainer).toBe('Leo Luo <40263163+kunlong-luo@users.noreply.github.com>');
+  });
+
   it('uses a patch version newer than the previous Linux DEB',()=>{
     expect(readVersion('package.json')).toBe('0.1.3');
   });
