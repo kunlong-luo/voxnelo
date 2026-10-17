@@ -17,6 +17,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ENGLISH_MODEL, prepareEnglishModel } from './prepare-asr-model.mts';
 import { stageInternalAsrCandidate } from './stage-asr-pilot.mts';
+import { verifyPersonalAsrCandidate } from '../apps/desktop/asrAssets.ts';
 
 function personalRoot(env:NodeJS.ProcessEnv):string{
   if(process.platform!=='linux')throw Error('Personal ASR pilot installer is currently Linux only');
@@ -36,7 +37,19 @@ export async function installPersonalAsr(
   const base=options.appDataDir??personalRoot(process.env);
   if(!path.isAbsolute(base))throw Error('App-data directory must be absolute');
   const destination=path.join(base,'offline-asr');
-  if(existsSync(destination))throw Error('Existing local ASR data found; refusing to overwrite: '+destination);
+  if(existsSync(destination)){
+    // Running the command twice after an earlier successful install should
+    // neither download a duplicate model nor fail with a frightening stack.
+    // Still verify *actual bytes* before claiming the existing pack is ready.
+    if(await verifyPersonalAsrCandidate(destination)){
+      console.log('Offline English model is already installed and verified. No download or reinstall is needed.');
+      console.log('Local engine: '+destination);
+      console.log('If dictation is unavailable, install the latest Voxnelo desktop update and restart the application.');
+      return destination;
+    }
+    throw Error('Local ASR files already exist but did not pass integrity checks at '+destination+
+      '. No files were overwritten. Please use the project help/feedback channel for repair guidance.');
+  }
   await mkdir(base,{recursive:true});
   const temporary=path.join(tmpdir(),'voxnelo-personal-asr-'+randomUUID());
   const staged=path.join(base,'.offline-asr-incomplete-'+randomUUID());
