@@ -24,6 +24,11 @@ export function isPersonalAsrCandidate(directory: string): boolean {
     const manifestPath=path.join(directory,'manifest.json');
     const info=lstatSync(manifestPath);
     if(!info.isFile()||info.isSymbolicLink()||info.size<100||info.size>100000)return false;
+    const consentPath=path.join(directory,'personal-install.json');
+    const consentInfo=lstatSync(consentPath);
+    if(!consentInfo.isFile()||consentInfo.isSymbolicLink()||consentInfo.size>2048)return false;
+    const consent=JSON.parse(readFileSync(consentPath,'utf8')) as Record<string,unknown>;
+    if(consent.optIn!==true||consent.platform!==process.platform||consent.arch!==process.arch)return false;
     const m=JSON.parse(readFileSync(manifestPath,'utf8')) as Record<string,unknown>;
     if(m.releaseReady!==false ||
       typeof m.reviewState!=='string'||!m.reviewState.startsWith('engineering-only;') ||
