@@ -8,6 +8,7 @@ on:
     paths:
       - '.github/workflows/asr-candidate.yml'
       - 'scripts/benchmark-offline-asr.mts'
+      - 'scripts/check-platform-asr-candidate.mts'
       - 'apps/desktop/asrConfig.ts'
       - 'apps/desktop/offlineAsrWorker.ts'
       - 'scripts/prepare-asr-model.mts'
@@ -51,6 +52,13 @@ jobs:
           espeak-ng -v en-us -s 120 --stdout "please speak English slowly" |
             sox -t wav - -r 16000 -c 1 -b 16 -e signed-integer "$RUNNER_TEMP/voxnelo-asr-reference.wav"
           soxi "$RUNNER_TEMP/voxnelo-asr-reference.wav"
+      - name: Share reproducible, non-user audio reference with other OS jobs
+        uses: actions/upload-artifact@v4
+        with:
+          name: voxnelo-asr-generated-reference-wav
+          path: ${{ runner.temp }}/voxnelo-asr-reference.wav
+          retention-days: 1
+          if-no-files-found: error
       - name: Verify genuine native model transcript, speed and error rate
         env:
           QA_SENTENCE: please speak English slowly
@@ -70,5 +78,50 @@ jobs:
         with:
           name: linux-real-asr-evidence
           path: ${{ runner.temp }}/voxnelo-asr-inference.json
+          retention-days: 14
+          if-no-files-found: ignore
+
+  platform-native-inference:
+    name: ${{ matrix.os }} real offline English inference
+    needs: linux-real-inference
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    steps:
+      - name: Checkout pinned project code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Setup pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          version: 12.11.2
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install pinned source dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build genuine desktop worker
+        run: pnpm build:electron
+      - name: Download shared non-user reference audio
+        uses: actions/download-artifact@v4
+        with:
+          name: voxnelo-asr-generated-reference-wav
+          path: ${{ runner.temp }}
+      - name: Fetch SHA-256 pinned model
+        run: pnpm asr:model:prepare --out "${{ runner.temp }}/voxnelo-english-model"
+      - name: Install exact upstream platform addon in temporary space
+        run: npm install --no-save --prefix "${{ runner.temp }}/voxnelo-native" sherpa-onnx-node@1.13.8
+      - name: Check real recognition output, WER and runtime speed
+        run: node --experimental-strip-types scripts/check-platform-asr-candidate.mts
+      - name: Preserve non-personal per-platform evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-real-asr-evidence
+          path: ${{ runner.temp }}/voxnelo-asr-*-evidence.json
           retention-days: 14
           if-no-files-found: ignore
