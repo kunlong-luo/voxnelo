@@ -2,7 +2,7 @@
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { APPEARANCE_KEY, applyAppearance, parseAppearance, readAppearance, saveAppearance } from '../apps/web/src/appearance';
+import { APPEARANCE_KEY, MOTION_STORAGE_KEY, applyAppearance, parseAppearance, readAppearance, readMotionEnabled, saveAppearance, saveMotionEnabled } from '../apps/web/src/appearance';
 import { App } from '../apps/web/src/App';
 import { LANGUAGE_STORAGE_KEY } from '../apps/web/src/i18n';
 
@@ -10,6 +10,7 @@ afterEach(() => {
   cleanup();
   localStorage.clear();
   document.documentElement.removeAttribute('data-theme');
+  document.documentElement.removeAttribute('data-motion');
 });
 
 describe('Local-only appearance preference', () => {
@@ -30,6 +31,27 @@ describe('Local-only appearance preference', () => {
     expect(readAppearance()).toBe('sunset');
     saveAppearance('nordic');
     expect(readAppearance()).toBe('nordic');
+  });
+
+  it('defaults motion preview ON and allows an explicit app-level OFF control', () => {
+    expect(readMotionEnabled()).toBe(true);
+    const page=render(<App />);
+    expect(document.documentElement.dataset.motion).toBe('on');
+    fireEvent.click(screen.getByRole('button',{name:'设置'}));
+    const control=screen.getByRole('button',{name:/动态效果预览/});
+    expect(control.getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(control);
+    expect(document.documentElement.dataset.motion).toBe('off');
+    expect(localStorage.getItem(MOTION_STORAGE_KEY)).toBe('off');
+    page.unmount();
+    render(<App />);
+    expect(document.documentElement.dataset.motion).toBe('off');
+    fireEvent.click(screen.getByRole('button',{name:'设置'}));
+    fireEvent.click(screen.getByRole('button',{name:/动态效果预览/}));
+    expect(document.documentElement.dataset.motion).toBe('on');
+    expect(localStorage.getItem(MOTION_STORAGE_KEY)).toBe('on');
+    saveMotionEnabled(false);
+    expect(readMotionEnabled()).toBe(false);
   });
 
   it('switches theme through settings and leaves practice navigation intact', async () => {
