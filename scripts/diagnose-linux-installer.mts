@@ -6,11 +6,14 @@
 import {spawnSync} from 'node:child_process';
 import {readFile,readdir} from 'node:fs/promises';
 import path from 'node:path';
+import { linuxInstallerNames } from './release-installer-selection.mts';
 
 if(process.platform!=='linux')throw Error('This diagnostic only runs on Linux');
-const files=(await readdir('release')).filter(name=>/^voxnelo_.+_amd64\.deb$/.test(name)).sort();
-if(files.length===0)throw Error('No release/voxnelo_*_amd64.deb found. Finish pnpm pack:linux first.');
-const deb=path.resolve('release',files.at(-1)!);
+const releaseVersion=JSON.parse(await readFile('package.json','utf8')) as {version:string};
+const filename=linuxInstallerNames(releaseVersion.version,process.arch).deb;
+const files=await readdir('release');
+if(!files.includes(filename))throw Error('No current-version DEB found: release/'+filename+'. Finish pnpm pack:linux first.');
+const deb=path.resolve('release',filename);
 console.log('Inspecting:',deb);
 try{
   const osRelease=await readFile('/etc/os-release','utf8');
