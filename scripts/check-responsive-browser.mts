@@ -111,6 +111,14 @@ try{
   const microphoneMotion=await evalJs<{name:string;running:number}>('(()=>{const e=document.querySelector("[data-motion=mic-halo]");return {name:getComputedStyle(e).animationName,running:e.getAnimations().filter(a=>a.playState==="running").length}})()');
   assert.ok(microphoneMotion.name.includes('record-halo')&&microphoneMotion.running>0,'visible idle microphone halo is missing: '+JSON.stringify(microphoneMotion));
   report.push({page:'idle-mic-motion',...microphoneMotion});
+  // The ribbon used to be hidden below 1000px and was a static SVG. Verify
+  // actual compositor progression at a realistic desktop viewport (1440x900).
+  const ribbonBefore=await evalJs<{visible:boolean;name:string;active:number;time:number}>('(()=>{const e=document.querySelector("[data-motion=ribbon-flow]"),svg=e?.closest("svg"),a=e?.getAnimations()??[];return{visible:!!svg&&getComputedStyle(svg).display!=="none"&&svg.getBoundingClientRect().height>0,name:e?getComputedStyle(e).animationName:"missing",active:a.filter(x=>x.playState==="running").length,time:Number(a[0]?.currentTime??0)}})()');
+  assert.ok(ribbonBefore.visible&&ribbonBefore.name.includes('ribbon-flow')&&ribbonBefore.active>0,'desktop ribbon is invisible or not animating: '+JSON.stringify(ribbonBefore));
+  await sleep(310);
+  const ribbonAfter=await evalJs<number>('Number(document.querySelector("[data-motion=ribbon-flow]").getAnimations()[0]?.currentTime??0)');
+  assert.ok(ribbonAfter>ribbonBefore.time+120,'ribbon animation has no runtime progress: '+ribbonAfter+' / '+ribbonBefore.time);
+  report.push({page:'visible-decorative-ribbon',...ribbonBefore,progressMs:ribbonAfter-ribbonBefore.time});
   await send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]});
   const quietBreath=await evalJs('getComputedStyle(document.querySelector("[data-motion=ambient-breathe]")).animationDuration');
   assert.ok(parseFloat(quietBreath)<=.001,'ambient glow ignores reduced motion: '+quietBreath);
