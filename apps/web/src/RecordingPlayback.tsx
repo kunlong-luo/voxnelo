@@ -19,27 +19,30 @@ export function RecordingPlayback({src}:{src:string|null}) {
   const [duration,setDuration]=useState(0),[error,setError]=useState('');
   // Invalidate pending play() promises before changing sentences or unmounting.
   const playbackGeneration=useRef(0);
+  const pendingPlay=useRef<number|null>(null);
   useEffect(()=>{
     const audio=ref.current;
     return ()=>{
       playbackGeneration.current+=1;
       if(!audio)return;
       // Removing an <audio> DOM node alone need not stop playback immediately.
-      if(!audio.paused)audio.pause();
-      audio.removeAttribute('src');
-      if(audio.readyState>0)audio.load();
+      if(!audio.paused||pendingPlay.current!==null)audio.pause();
+      pendingPlay.current=null;
     };
   },[src]);
   const toggle=async()=>{
     const audio=ref.current;
     if(!audio||!src)return;
     const generation=++playbackGeneration.current;
-    if(!audio.paused){audio.pause();setPlaying(false);return;}
+    if(!audio.paused){audio.pause();pendingPlay.current=null;setPlaying(false);return;}
+    pendingPlay.current=generation;
     try{
       await audio.play();
+      if(pendingPlay.current===generation)pendingPlay.current=null;
       if(generation!==playbackGeneration.current)return;
       setError('');setPlaying(true);
     }catch{
+      if(pendingPlay.current===generation)pendingPlay.current=null;
       if(generation!==playbackGeneration.current)return;
       setPlaying(false);setError(t('playbackError'));
     }
