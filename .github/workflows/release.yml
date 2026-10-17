@@ -57,6 +57,8 @@ jobs:
         env:
           VOXNELO_REQUIRE_INSTALLERS: '1'
         run: node --experimental-strip-types scripts/check-desktop-package.mts
+      - name: Generate candidate installer checksum manifest
+        run: node --experimental-strip-types scripts/write-candidate-manifest.mts
       - name: Install Linux candidate via apt on runner
         if: runner.os == 'Linux'
         shell: bash
