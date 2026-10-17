@@ -176,6 +176,11 @@ try{
   assert.equal(localScroll.catalog,'auto','Catalog should scroll locally');
   assert.equal(localScroll.visible,6,'Catalog pagination must show six phrases');
   report.push({page:'local-catalog-scroll',...localScroll});
+  const sidebarScroll=await evalJs<{scrollbar:string,vertical:string,horizontal:string}>('(()=>{const s=getComputedStyle(document.querySelector(".sidebar"));return {scrollbar:s.scrollbarWidth,vertical:s.overflowY,horizontal:s.overflowX}})()');
+  assert.equal(sidebarScroll.scrollbar,'none','Sidebar native scrollbar may flash when changing navigation views');
+  assert.equal(sidebarScroll.vertical,'auto','Sidebar must remain scrollable on short windows');
+  assert.equal(sidebarScroll.horizontal,'hidden','Sidebar navigation hover must not create horizontal scrollbars');
+  report.push({page:'sidebar-scroll',...sidebarScroll});
   await shot(1440,900,'catalog');
   await activate(3,'.libraryPage');
   const libraryScroll=await evalJs('getComputedStyle(document.querySelector(".libraryList")).overflowY');
