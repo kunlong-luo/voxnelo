@@ -224,8 +224,8 @@ function AppScreen({languageSetting,onChangeLanguage}: {
   };
 
   return (
-    <div className={cn("appFrame min-h-dvh bg-background text-foreground",window.voxneloDesktop?.windowControls&&"desktopFrame")}>
-      <div className="shell flex min-h-dvh items-stretch">
+    <div className={cn("appFrame min-h-dvh bg-background text-foreground sm:h-dvh sm:overflow-hidden",window.voxneloDesktop?.windowControls&&"desktopFrame")}>
+      <div className="shell flex min-h-dvh items-stretch sm:h-dvh sm:overflow-hidden">
       <aside className="sidebar sticky top-0 hidden h-dvh w-[clamp(204px,19vw,252px)] shrink-0 flex-col overflow-y-auto border-r border-border/45 bg-gradient-to-b from-sidebar via-sidebar to-brand-cream/55 px-3 pt-4 pb-5 text-sidebar-foreground shadow-[inset_-1px_0_0_rgba(255,255,255,.45)] sm:flex max-[1050px]:w-19 max-[1050px]:items-center max-[1050px]:px-2">
         <div className="brand mb-7 flex w-full items-center gap-3 rounded-[20px] border border-white/20 bg-card/20 px-2 py-2 max-[1050px]:justify-center max-[1050px]:border-0 max-[1050px]:bg-transparent max-[1050px]:px-0" aria-label="Voxnelo">
           <div className="brandMark flex size-11 shrink-0 items-center justify-center rounded-2xl bg-card/35 shadow-[0_10px_28px_-14px_rgba(60,80,70,.5)]"><img src="brand/voxnelo-mark.svg" alt="" width="44" height="44" className="size-11 rounded-2xl shadow-sm"/></div>
@@ -250,7 +250,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
           <div className="sidebarVersion px-1 text-[10px] text-muted-foreground">Voxnelo · Early Access {APP_VERSION}</div>
         </div>
       </aside>
-      <div className="mainArea @container/workspace relative min-w-0 flex-1 overflow-clip bg-background bg-[image:var(--workspace-gradient)]">
+      <div className="mainArea @container/workspace relative min-w-0 flex-1 overflow-clip bg-background bg-[image:var(--workspace-gradient)] sm:flex sm:h-dvh sm:flex-col">
         <DesktopTitlebar />
         <div aria-hidden="true" data-motion="ambient-drift" className="pointer-events-none absolute -top-12 right-[2%] size-56 rounded-full bg-primary/18 blur-3xl motion-safe:animate-ambient-drift sm:size-88"/>
         <div aria-hidden="true" data-motion="ambient-breathe" className="pointer-events-none absolute bottom-15 left-[4%] size-64 rounded-full bg-brand-blush/55 blur-3xl motion-safe:animate-ambient-breathe sm:size-100"/>
@@ -259,7 +259,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
           <Button variant="destructive" className="recordingQuickStop fixed right-4 bottom-24 z-60 shadow-xl motion-safe:animate-soft-pop sm:right-6 sm:bottom-6" onClick={handleRecorder}
             aria-label={t("stopFloating")}><Square size={15} fill="currentColor" aria-hidden="true" /> {t("stopRecording")}</Button>
         ) : null}
-        <main ref={pageMotionRef} className="content relative z-10 mx-auto w-full max-w-380 px-3 pt-3 pb-28 sm:px-7 sm:py-4 lg:px-10 lg:py-8 2xl:px-14 2xl:py-12">
+        <main ref={pageMotionRef} className="content voxnelo-scroll relative z-10 mx-auto w-full max-w-380 px-3 pt-3 pb-28 sm:min-h-0 sm:flex-1 sm:overflow-y-auto sm:overscroll-contain sm:px-7 sm:py-4 lg:px-10 lg:py-8 2xl:px-14 2xl:py-12">
           {view === 'practice' ? (
             <PracticeView
               current={current}
