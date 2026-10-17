@@ -57,6 +57,28 @@ jobs:
         env:
           VOXNELO_REQUIRE_INSTALLERS: '1'
         run: node --experimental-strip-types scripts/check-desktop-package.mts
+      - name: Install Linux candidate via apt on runner
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          deb="$(find release -maxdepth 1 -name 'voxnelo_*_amd64.deb' -type f -print -quit)"
+          test -n "$deb"
+          sudo apt-get update -qq
+          sudo apt-get install -y "./$deb"
+          test "$(dpkg-query -W -f='${Status}' voxnelo)" = 'install ok installed'
+          test "$(dpkg-query -W -f='${Status}' fonts-noto-cjk)" = 'install ok installed'
+          dpkg -L voxnelo | grep -Eq '^/usr/share/applications/[^/]+\.desktop
+        uses: actions/upload-artifact@v4
+        with:
+          name: voxnelo-${{ matrix.target }}-unsigned
+          path: release/
+          retention-days: 14
+          if-no-files-found: error
+# Artifacts are unsigned candidates only, not public releases.
+# Real-device audio, distribution signature/notarization and F001–F012 review remain required.
+
+          echo "Debian candidate installs cleanly with CJK fonts and desktop integration"
       - name: Upload build candidate
         uses: actions/upload-artifact@v4
         with:
