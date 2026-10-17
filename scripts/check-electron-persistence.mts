@@ -164,10 +164,10 @@ try{
   assert.equal(restored.events.filter(e=>e.type==='practice').length,0,'Relaunch unexpectedly counted a practice');
   assert.ok(restored.events.some(e=>e.type==='view'&&e.sentenceId===latestView.sentenceId),'Last lesson history was lost');
 
-  await evaluate('document.querySelector(".sidebar button[aria-label=\\"我的收藏\\"]").click()');
+  await evaluate(`document.querySelector('.sidebar button[aria-label="我的收藏"]').click()`);
   await until('!!document.querySelector(".libraryPage .libraryList")');
   await until('document.querySelector(".libraryPage .libraryList")?.textContent.includes('+JSON.stringify(initialTitle)+')');
-  await evaluate('document.querySelector(".sidebar button[aria-label=\\"需要复习\\"]").click()');
+  await evaluate(`document.querySelector('.sidebar button[aria-label="需要复习"]').click()`);
   await until('document.querySelector(".libraryPage .libraryList")?.textContent.includes('+JSON.stringify(initialTitle)+')');
   report.result='passed';
   report.verified=['two distinct Electron processes with the same temporary profile','real local voxnelo: origin','favorite and review flags','next-sentence history restored','favorite and review library UI after restart','view activity did not count as recorded practice'];
