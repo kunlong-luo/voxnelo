@@ -144,7 +144,11 @@ export async function speakEnglish(text: string, speed: SpeechSpeed = 'normal'):
     if (request !== generation) return { ok: false, cancelled: true };
     return { ok: true };
   } catch {
+    // A sentence switch can abort a pending Audio.play() promise. That is a
+    // deliberate cancellation, not a broken output device.
+    const cancelled = request !== generation;
     clearNativeAudio();
+    if (cancelled) return { ok: false, cancelled: true };
     return { ok: false, message: '已生成英语语音，但无法播放。请检查 Pop!_OS 的默认输出设备与音量。' };
   }
 }
