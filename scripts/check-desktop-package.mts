@@ -93,12 +93,48 @@ if(platform==='linux'){
   assert.match(metadata.stdout.trim(),/^voxnelo$/i,'Wrong Debian package identity');
   linuxChecks.push('deb archive and package identity','AppImage ELF header','both installers nonempty');
 }
+// Full installer checks are a strict release-candidate gate. PR CI intentionally
+// uses unpacked Windows/macOS bundles for faster feedback, while Linux PR CI
+// already exercises both installer formats.
+const candidateChecks:string[]=[];
+if(process.env.VOXNELO_REQUIRE_INSTALLERS==='1'){
+  if(platform==='linux'){
+    candidateChecks.push('Linux deb and AppImage previously verified');
+  }else{
+    const files=await readdir(release);
+    const suffix=platform==='win32'?'.exe':'.dmg';
+    const installers=files.filter(name=>name.toLowerCase().includes('voxnelo')&&name.toLowerCase().endsWith(suffix));
+    assert.ok(installers.length>0,'Release candidate installer missing: '+suffix);
+    for(const installer of installers){
+      const filename=path.join(release,installer);
+      const info=await stat(filename);
+      assert.ok(info.isFile()&&info.size>1024*1024,'Installer unexpectedly small: '+installer);
+      const handle=await open(filename,'r');
+      try{
+        if(platform==='win32'){
+          const magic=Buffer.alloc(2);
+          const result=await handle.read(magic,0,2,0);
+          assert.equal(result.bytesRead,2,'Incomplete Windows installer: '+installer);
+          assert.equal(magic.toString('ascii'),'MZ','Windows candidate is not an executable PE/NSIS installer');
+          candidateChecks.push('Windows NSIS installer MZ header');
+        }else{
+          // Apple UDIF disk images have a koly footer in the final 512 bytes.
+          const footer=Buffer.alloc(4);
+          const result=await handle.read(footer,0,4,info.size-512);
+          assert.equal(result.bytesRead,4,'Incomplete macOS DMG: '+installer);
+          assert.equal(footer.toString('ascii'),'koly','macOS candidate is not a valid UDIF DMG');
+          candidateChecks.push('macOS DMG UDIF footer');
+        }
+      }finally{await handle.close();}
+    }
+  }
+}
 const report={
   platform,
   output:base,
   appRoot:path.relative(path.resolve('.'),appRoot),
   icon:path.relative(path.resolve('.'),icon),
-  tested:['native executable','asar','bundled branded icon','brand PNG magic',...(platform==='darwin'?['CFBundleIdentifier','NSMicrophoneUsageDescription']:[]),...linuxChecks,...asrChecks],
+  tested:['native executable','asar','bundled branded icon','brand PNG magic',...(platform==='darwin'?['CFBundleIdentifier','NSMicrophoneUsageDescription']:[]),...linuxChecks,...candidateChecks,...asrChecks],
   launched:false,
 };
 console.log('Cross-platform package integrity passed:',JSON.stringify(report));
