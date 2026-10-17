@@ -108,8 +108,11 @@ function safeAsrPath(relative:string):boolean {
     !relative.split('/').some(segment=>segment===''||segment==='.'||segment==='..');
 }
 
-/** Inspect only the known personal pilot directory; never arbitrary IPC paths. */
-export async function verifyPersonalAsrCandidate(directory:string):Promise<boolean> {
+/**
+ * Verify the complete file inventory against staged SHA-256 checksums.
+ * A self-declared manifest alone cannot prove authenticity.
+ */
+export async function verifyPersonalAsrInventory(directory:string):Promise<boolean> {
   if(!path.isAbsolute(directory)||!isPersonalAsrCandidate(directory))return false;
   try {
     const inventory=JSON.parse(readFileSync(path.join(directory,'manifest.json'),'utf8')) as {
@@ -119,9 +122,6 @@ export async function verifyPersonalAsrCandidate(directory:string):Promise<boole
     const names=Object.keys(hashes);
     if(names.length<6||names.length>PERSONAL_ASR_MAX_FILES ||
       names.some(name=>!safeAsrPath(name) || !name.startsWith('model/') && !name.startsWith('native/')))return false;
-    for(const [name,expected] of Object.entries(PINNED_MODEL_HASHES)){
-      if(hashes[name]?.toLowerCase()!==expected)return false;
-    }
     const root=await lstat(directory);
     if(!root.isDirectory()||root.isSymbolicLink())return false;
     const discovered:string[]=[];
@@ -160,6 +160,21 @@ export async function verifyPersonalAsrCandidate(directory:string):Promise<boole
       if(hash.digest('hex')!==hashes[relative]?.toLowerCase())return false;
     }
     return true;
+  }catch{return false;}
+}
+
+/** Inspect only the known personal pilot directory; never arbitrary IPC paths. */
+export async function verifyPersonalAsrCandidate(directory:string):Promise<boolean> {
+  if(!isPersonalAsrCandidate(directory))return false;
+  try {
+    const {sha256}=JSON.parse(readFileSync(path.join(directory,'manifest.json'),'utf8')) as {
+      sha256:Record<string,string>;
+    };
+    // Unlike the native npm dependency manifest, these hashes are committed to
+    // the application itself and cannot be changed by editing a user file.
+    if(Object.entries(PINNED_MODEL_HASHES).some(([name,expected])=>
+      sha256[name]?.toLowerCase()!==expected))return false;
+    return await verifyPersonalAsrInventory(directory);
   }catch{return false;}
 }
 
