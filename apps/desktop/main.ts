@@ -1,8 +1,8 @@
-import { app, BrowserWindow, ipcMain, net, protocol, session, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron';
+import { app, BrowserWindow, ipcMain, net, shell, protocol, session, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { APP_ORIGIN, APP_SCHEME, THEME_BACKGROUND, WINDOW_SIZE } from '@voxnelo/core';
-import { allowsAudioPermissionCheck, allowsAudioPermissionRequest, APP_HOST, isTrustedUrl, resolveLocalFile } from './security';
+import { allowsAudioPermissionCheck, allowsAudioPermissionRequest, APP_HOST, isAllowedSupportUrl, isTrustedUrl, resolveLocalFile } from './security';
 import { LinuxEnglishSpeech } from './linuxSpeech';
 import { LINUX_DESKTOP_FILENAME, resolveLinuxIconPath } from './linuxAppIdentity';
 import { OfflineAsr } from './offlineAsr';
@@ -151,7 +151,16 @@ async function createWindow(): Promise<void> {
   };
   window.on('maximize', sendMaximize);
   window.on('unmaximize', sendMaximize);
-  window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  // External links are explicit, fixed project destinations. Never let the
+  // renderer choose an arbitrary URL or navigate the trusted app window away.
+  window.webContents.setWindowOpenHandler(({ url }) => {
+    if (isTrustedUrl(window.webContents.getURL(), { isDev }) && isAllowedSupportUrl(url)) {
+      void shell.openExternal(url).catch((error: unknown) => {
+        console.error('Could not open Voxnelo support link:', error);
+      });
+    }
+    return { action: 'deny' };
+  });
   window.webContents.on('will-navigate', (event, targetUrl) => {
     if (!isTrustedUrl(targetUrl, { isDev })) event.preventDefault();
   });

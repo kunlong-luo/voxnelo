@@ -1,7 +1,8 @@
-import { ArrowLeft, AudioLines, Check, Languages, Palette, ShieldCheck, Settings2 } from 'lucide-react';
+import { ArrowLeft, AudioLines, BookOpenText, Bug, Check, CircleHelp, ExternalLink, GitBranch, Info, Languages, Lightbulb, Palette, ShieldCheck, Settings2 } from 'lucide-react';
+import { APP_VERSION, SUPPORT_LINKS } from '@voxnelo/learning';
 import type { AppearanceTheme } from './appearance';
 import { useI18n, type LanguageSetting } from './i18n';
-import { Button } from './components/ui/button';
+import { Button, buttonVariants } from './components/ui/button';
 import { Card } from './components/ui/card';
 import { cn } from './lib/utils';
 interface SettingsViewProps {
@@ -13,6 +14,11 @@ interface SettingsViewProps {
 }
 const themes:AppearanceTheme[]=['nordic','sunset'];
 const languageIds:LanguageSetting[]=['system','zh-CN','en-US'];
+const helpActions = [
+  { href: SUPPORT_LINKS.guide, label: 'supportGuide', detail: 'supportGuideHint', icon: BookOpenText },
+  { href: SUPPORT_LINKS.bugReport, label: 'supportBug', detail: 'supportBugHint', icon: Bug },
+  { href: SUPPORT_LINKS.featureRequest, label: 'supportFeature', detail: 'supportFeatureHint', icon: Lightbulb },
+] as const;
 export function SettingsView({
   speed,showIpa,appearance,languageSetting='system',onChangeAppearance,
   onChangeLanguage,onToggleSpeed,onToggleIpa,onBackToPractice,
@@ -69,6 +75,38 @@ export function SettingsView({
           <span className="flex flex-col gap-1"><strong className="text-xs">{t('showIpa')}</strong><small className="text-[10px] leading-5 text-muted-foreground">{t('showIpaHint')}</small></span>
           <span className={cn('switchTrack relative inline-flex h-6 w-11 shrink-0 rounded-full border border-border/50 p-0.5 transition-colors',showIpa?'bg-primary':'bg-muted-foreground/30')}><span className={cn('size-5 rounded-full bg-white shadow-sm transition-transform',showIpa&&'translate-x-5')}/></span>
         </button>
+      </Card>
+      <Card className={cn(section,'aboutSettings @min-[740px]/workspace:col-span-2')}>
+        <div className="settingsPanelHeading flex items-center gap-3 text-primary"><Info size={20}/><h2 className="text-sm font-extrabold text-foreground">{t('aboutTitle')}</h2></div>
+        <div className="flex flex-wrap items-center gap-4">
+          <img src="brand/voxnelo-mark.svg" alt="" width="56" height="56" className="size-14 rounded-2xl shadow-soft"/>
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <strong className="text-lg font-extrabold text-foreground">Voxnelo</strong>
+            <span className="text-xs text-muted-foreground">{t('aboutVersion',{version:window.voxneloDesktop?.version??APP_VERSION})} · {t('aboutRelease')}</span>
+            <span className="text-[11px] text-muted-foreground">{t('aboutLicense')}</span>
+          </div>
+        </div>
+        <p className="text-xs leading-6 text-muted-foreground">{t('aboutSummary')}</p>
+        <div className="flex flex-wrap gap-2">
+          <a href={SUPPORT_LINKS.repository} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({variant:'outline',size:'sm'}),'min-w-0 whitespace-normal text-center')}>
+            <GitBranch size={16} aria-hidden="true"/>{t('aboutSource')}<ExternalLink size={13} aria-hidden="true"/>
+          </a>
+          <a href={SUPPORT_LINKS.license} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({variant:'outline',size:'sm'}),'min-w-0 whitespace-normal text-center')}>
+            <GitBranch size={16} aria-hidden="true"/>{t('aboutLicenseLink')}<ExternalLink size={13} aria-hidden="true"/>
+          </a>
+        </div>
+      </Card>
+      <Card className={cn(section,'helpSettings @min-[740px]/workspace:col-span-2')}>
+        <div className="settingsPanelHeading flex items-center gap-3 text-primary"><CircleHelp size={20}/><h2 className="text-sm font-extrabold text-foreground">{t('supportTitle')}</h2></div>
+        <p className="text-xs leading-6 text-muted-foreground">{t('supportSummary')}</p>
+        <div className="grid min-w-0 grid-cols-1 gap-3 @min-[600px]/workspace:grid-cols-3">
+          {helpActions.map(({href,label,detail,icon:Icon})=><a key={href} href={href} target="_blank" rel="noopener noreferrer"
+            className="group flex min-w-0 flex-col gap-2 rounded-2xl border border-border/70 bg-card/80 p-4 text-left outline-none transition-colors hover:border-primary/40 hover:bg-secondary/40 focus-visible:ring-3 focus-visible:ring-ring/30">
+            <span className="flex items-center gap-2 text-primary"><Icon size={18} aria-hidden="true"/><strong className="text-xs text-foreground">{t(label)}</strong><ExternalLink size={13} aria-hidden="true" className="ml-auto opacity-60"/></span>
+            <span className="text-[11px] leading-5 text-muted-foreground">{t(detail)}</span>
+          </a>)}
+        </div>
+        <p className="text-[11px] leading-5 text-muted-foreground">{t('supportPublicNotice')}</p>
       </Card>
       <Card className={cn(section,'privacySettings @min-[740px]/workspace:col-span-2')}>
         <div className="settingsPanelHeading flex items-center gap-3 text-primary"><ShieldCheck size={20}/><h2 className="text-sm font-extrabold text-foreground">{t('localPrivacyTitle')}</h2></div>
