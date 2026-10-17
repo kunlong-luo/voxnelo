@@ -1,6 +1,7 @@
 import { AudioLines, Download, Globe2, Mic2, ShieldCheck, Square } from 'lucide-react';
 import type { useLiveDictation } from './useLiveDictation';
 import { useI18n } from './i18n';
+import { SUPPORT_LINKS } from '@voxnelo/learning';
 import { Button } from './components/ui/button';
 import { cn } from './lib/utils';
 
@@ -60,10 +61,12 @@ export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
       </p>
       <p role="status" className="mt-1 text-[11px] leading-4 text-translation-ink @min-[440px]/lesson:hidden">{t('dictationUnavailableShort')}</p>
     </>}
-    {!dictation.supported&&window.voxneloDesktop?.platform==='linux'&&<p className="mt-2 text-[11px] leading-5 text-translation-ink [@media(max-height:1000px)]:hidden" role="status">
-      {t('dictationPersonalSetup')}
-      <code className="mt-1 block select-text rounded-lg bg-muted/70 px-2 py-1.5 font-mono text-[11px] text-foreground">pnpm asr:personal:install</code>
-    </p>}
+    {!dictation.supported&&window.voxneloDesktop&&<a
+      href={SUPPORT_LINKS.guide}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mt-2 inline-flex min-h-8 items-center rounded-xl px-3 py-1 text-[11px] font-semibold text-primary underline-offset-4 transition-colors hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+    >{t('dictationHelp')}</a>}
     {listening&&window.voxneloDesktop&&dictation.noiseReduction!=='unknown'&&<p className="mt-2 flex items-center gap-1.5 text-[11px] leading-4 text-translation-ink">
       <ShieldCheck size={13} aria-hidden="true"/>{t(dictation.noiseReduction==='enabled'?'dictationNoiseEnabled':'dictationNoiseUnverified')}
     </p>}
