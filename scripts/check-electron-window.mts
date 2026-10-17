@@ -220,7 +220,13 @@ try{
   assert.ok(recording.blob&&recording.micStopped,'Native recording did not finish cleanly: '+JSON.stringify(recording));
   await clickInNativeWindow('.replaySlot button');
   await until('document.querySelector(".replaySlot button")?.getAttribute("aria-label")==="暂停回听"',8000);
-  await clickInNativeWindow('.nextButton');
+  const previousSentence=await evaluate<string>('document.querySelector("h1.sentenceText")?.textContent??""');
+  const nextAvailable=await evaluate<boolean>('!document.querySelector(".nextButton")?.disabled');
+  assert.ok(nextAvailable,'Next sentence unavailable after recorder stopped');
+  // Navigation does not need media user activation; use the exact app button
+  // rather than coordinate-based input after Electron maximize/restore.
+  await evaluate('document.querySelector(".nextButton").click()');
+  await until('document.querySelector("h1.sentenceText")?.textContent!=='+JSON.stringify(previousSentence));
   await until('!document.querySelector(".replaySlot audio")');
   const cleared=await evaluate<boolean>('document.querySelector(".recordAction")?.getAttribute("aria-pressed")==="false"');
   assert.ok(cleared,'Old recording controls persisted into the next sentence');
