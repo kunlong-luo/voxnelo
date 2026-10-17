@@ -28,7 +28,7 @@ if(!address||typeof address==='string')throw Error('HTTP server address unavaila
 const url='http://127.0.0.1:'+address.port+'/index.html';
 const profile=await mkdtemp(path.join(tmpdir(),'voxnelo-cdp-'));
 type CdpReply={result?:{value?:unknown};exceptionDetails?:{text:string};data?:string;[key:string]:unknown};
-type LayoutMetrics={progressHeight:number;progressBottom:number;feedTop:number;scrollWidth:number;clientWidth:number;mainWidth:number;containerName:string;columns:number|null;sidebar:boolean;dock:boolean;micWidth:number;micInBounds:boolean;micTop:number;micBottom:number;micInFirstViewport:boolean;heroWidth:number;heroRadius:number;sentenceFontSize:number};
+type LayoutMetrics={progressHeight:number;progressBottom:number;feedTop:number;scrollWidth:number;clientWidth:number;mainWidth:number;containerName:string;columns:number|null;sidebar:boolean;dock:boolean;micWidth:number;micInBounds:boolean;micTop:number;micBottom:number;micInFirstViewport:boolean;heroWidth:number;heroRadius:number;sentenceFontSize:number;dictationOffset:number;dictationWidth:number;columnBottomDelta:number;workspaceScrollbarWidth:string;workspaceOverflowY:string};
 type ThemeMaterial={theme:string;glass:string;primaryBackground:string;glassBackground:string};
 type Bounds={top:number;bottom:number;right:number;dockTop:number};
 let chrome: ReturnType<typeof spawn>|undefined;
@@ -55,7 +55,7 @@ const activate=async(index:number,klass:string):Promise<void>=>{
   await until('!!document.querySelector("'+klass+'")');
 };
 const metrics=async()=>{
-  return await evalJs<LayoutMetrics>('(()=>{const d=document.documentElement,m=document.querySelector(".mainArea"),g=document.querySelector(".practiceLayout"),b=document.querySelector(".recordAction"),hero=document.querySelector(".dictationAction"),sentence=document.querySelector(".sentenceText"),r=b?.getBoundingClientRect(),p=document.querySelector(".progressCard")?.getBoundingClientRect(),feed=document.querySelector(".feedCard")?.getBoundingClientRect();return {progressHeight:Math.round(p?.height||0),progressBottom:Math.round(p?.bottom||0),feedTop:Math.round(feed?.top||0),scrollWidth:d.scrollWidth,clientWidth:d.clientWidth,mainWidth:Math.round(m.getBoundingClientRect().width),containerName:getComputedStyle(m).containerName,columns:g?getComputedStyle(g).gridTemplateColumns.split(" ").length:null,sidebar:getComputedStyle(document.querySelector(".sidebar")).display!=="none",dock:getComputedStyle(document.querySelector(".mobileNav")).display!=="none",heroWidth:Math.round(hero?.offsetWidth||0),heroRadius:parseFloat(hero?getComputedStyle(hero).borderTopLeftRadius:"0")||0,sentenceFontSize:parseFloat(sentence?getComputedStyle(sentence).fontSize:"0")||0,micWidth:Math.round(r?.width||0),micInBounds:!r||(r.left>=-1&&r.right<=innerWidth+1),micTop:Math.round(r?.top||0),micBottom:Math.round(r?.bottom||0),micInFirstViewport:!r||(r.top>=0&&r.bottom<=(innerWidth<640?document.querySelector(".mobileNav").getBoundingClientRect().top:innerHeight))}})()');
+  return await evalJs<LayoutMetrics>('(()=>{const d=document.documentElement,m=document.querySelector(".mainArea"),g=document.querySelector(".practiceLayout"),b=document.querySelector(".recordAction"),hero=document.querySelector(".dictationAction"),sentence=document.querySelector(".sentenceText"),r=b?.getBoundingClientRect(),p=document.querySelector(".progressCard")?.getBoundingClientRect(),feed=document.querySelector(".feedCard")?.getBoundingClientRect();return {progressHeight:Math.round(p?.height||0),progressBottom:Math.round(p?.bottom||0),feedTop:Math.round(feed?.top||0),scrollWidth:d.scrollWidth,clientWidth:d.clientWidth,mainWidth:Math.round(m.getBoundingClientRect().width),containerName:getComputedStyle(m).containerName,columns:g?getComputedStyle(g).gridTemplateColumns.split(" ").length:null,sidebar:getComputedStyle(document.querySelector(".sidebar")).display!=="none",dock:getComputedStyle(document.querySelector(".mobileNav")).display!=="none",heroWidth:Math.round(hero?.offsetWidth||0),heroRadius:parseFloat(hero?getComputedStyle(hero).borderTopLeftRadius:"0")||0,sentenceFontSize:parseFloat(sentence?getComputedStyle(sentence).fontSize:"0")||0,micWidth:Math.round(r?.width||0),micInBounds:!r||(r.left>=-1&&r.right<=innerWidth+1),micTop:Math.round(r?.top||0),micBottom:Math.round(r?.bottom||0),dictationOffset:Math.round(Math.abs((hero?.getBoundingClientRect().left??0)+(hero?.getBoundingClientRect().width??0)/2-((document.querySelector('.liveDictation')?.getBoundingClientRect().left??0)+(document.querySelector('.liveDictation')?.getBoundingClientRect().width??0)/2))),dictationWidth:Math.round(document.querySelector('.liveDictation')?.getBoundingClientRect().width??0),columnBottomDelta:Math.round(Math.abs((document.querySelector('.practiceCard')?.getBoundingClientRect().bottom??0)-(document.querySelector('.sceneCard')?.getBoundingClientRect().bottom??0))),workspaceScrollbarWidth:getComputedStyle(document.querySelector('.content')).scrollbarWidth,workspaceOverflowY:getComputedStyle(document.querySelector('.content')).overflowY,micInFirstViewport:!r||(r.top>=0&&r.bottom<=(innerWidth<640?document.querySelector(".mobileNav").getBoundingClientRect().top:innerHeight))}})()');
 };
 const shot=async(w:number,h:number,name:string):Promise<void>=>{
   await sleep(850); // Capture settled UI after the full 580ms phrase/500ms page transitions.
@@ -70,6 +70,16 @@ const shot=async(w:number,h:number,name:string):Promise<void>=>{
     assert.ok(m.micWidth>=40&&m.micInBounds&&m.micInFirstViewport,'recording controls not visible on first screen at '+w+': '+JSON.stringify(m));
     assert.ok(m.heroWidth>=64&&m.heroRadius>=m.heroWidth*.45,'U3 live microphone must be a large circular hero control: '+JSON.stringify(m));
     assert.ok(m.sentenceFontSize>=32,'U3 lesson sentence must remain visually prominent: '+JSON.stringify(m));
+    if(m.dictationWidth>=400){
+      assert.ok(m.dictationOffset<=12,'dictation microphone is not centered '+w+'x'+h+': '+JSON.stringify(m));
+    }
+    if(m.mainWidth>=840){
+      assert.ok(m.columnBottomDelta<=5,'lesson and final insights card bottoms diverge '+w+'x'+h+': '+JSON.stringify(m));
+    }
+    if(w>=640){
+      assert.equal(m.workspaceScrollbarWidth,'none','native workspace scrollbar must remain hidden on desktop');
+      assert.equal(m.workspaceOverflowY,'auto','workspace must remain keyboard/wheel scrollable');
+    }
     if(m.mainWidth>=840){
       assert.ok(m.progressHeight>0&&m.progressHeight<320,'insight card stretched beyond its content at '+w+': '+JSON.stringify(m));
       assert.ok(m.feedTop>=m.progressBottom&&m.feedTop-m.progressBottom<32,'recommended phrases pushed away from progress panel at '+w+': '+JSON.stringify(m));
@@ -144,6 +154,8 @@ try{
   const phraseMotion=await evalJs('document.querySelector(".sentenceText").getAnimations().map(a=>({state:a.playState,duration:a.effect?.getTiming().duration}))');
   assert.ok(Array.isArray(phraseMotion)&&phraseMotion.length>0,'next sentence does not animate');
   report.push({page:'next-sentence-motion',previousEnglish,animations:phraseMotion});
+  const scrollbarAfterClick=await evalJs('getComputedStyle(document.querySelector(".content")).scrollbarWidth');
+  assert.equal(scrollbarAfterClick,'none','native scrollbar reappeared after a sentence-button click');
   for(const [w,h] of sizes){
     await send('Emulation.setDeviceMetricsOverride',{width:w,height:h,deviceScaleFactor:1,mobile:false});
     await sleep(150);
