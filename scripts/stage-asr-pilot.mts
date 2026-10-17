@@ -13,6 +13,7 @@ import { createHash } from 'node:crypto';
 import { createReadStream } from 'node:fs';
 import { copyFile, lstat, mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { ENGLISH_MODEL, ENGLISH_MODEL_FILES } from './prepare-asr-model.mts';
 
 const MAX_FILES=300;
@@ -115,7 +116,7 @@ export async function stageInternalAsrCandidate(modelDir:string,npmNodeModules:s
   return {stagedFiles:Object.keys(hashes).length,bytes,modelId:manifest.modelId,releaseReady:false};
 }
 
-if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(new URL(import.meta.url).pathname)){
+if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
   const root=process.env.RUNNER_TEMP;
   if(!root||!path.isAbsolute(root))throw Error('Only isolated RUNNER_TEMP CI paths are supported');
   const report=await stageInternalAsrCandidate(
