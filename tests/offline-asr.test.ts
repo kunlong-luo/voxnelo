@@ -70,7 +70,7 @@ describe('Trusted offline ASR bundle discovery',()=>{
     const files:Record<string,string>={
       'model/encoder.onnx':'sample-encoder','model/decoder.onnx':'sample-decoder',
       'model/joiner.onnx':'sample-joiner','model/tokens.txt':'sample-tokens',
-      'native/index.cjs':"module.exports = require('./node_modules/sherpa-onnx-node');\\n",
+      'native/index.cjs':"module.exports = require('./node_modules/sherpa-onnx-node');\n",
       'native/node_modules/sherpa-onnx-node/index.js':'module.exports = {}',
       'native/node_modules/sherpa-onnx-node/native.node':'fixture native addon',
     };
