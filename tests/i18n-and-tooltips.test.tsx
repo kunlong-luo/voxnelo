@@ -5,6 +5,8 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { App } from '../apps/web/src/App';
 import { translate, resolveLocale, parseLanguageSetting, LANGUAGE_STORAGE_KEY } from '../apps/web/src/i18n';
 import { Tooltip } from '../apps/web/src/Tooltip';
+import { zh } from '../apps/web/src/locales/zh-CN';
+import { en } from '../apps/web/src/locales/en-US';
 
 const languageDescriptor = Object.getOwnPropertyDescriptor(navigator, 'language');
 const languagesDescriptor = Object.getOwnPropertyDescriptor(navigator, 'languages');
@@ -21,6 +23,22 @@ afterEach(() => {
   if (languagesDescriptor) Object.defineProperty(navigator, 'languages', languagesDescriptor);
   else Reflect.deleteProperty(navigator, 'languages');
   vi.restoreAllMocks();
+});
+
+describe('Type-safe localization resources',()=>{
+  it('keeps all localized keys and placeholders in sync and nonempty',()=>{
+    const zhKeys=Object.keys(zh);
+    const enKeys=Object.keys(en);
+    expect(zhKeys).toHaveLength(240);
+    expect(enKeys.sort()).toEqual([...zhKeys].sort());
+    const placeholders=(value:string)=>[...value.matchAll(/\\{(\\w+)\\}/g)].map(v=>v[1]).sort();
+    for(const key of zhKeys){
+      const translationKey=key as keyof typeof zh;
+      expect(zh[translationKey].trim().length).toBeGreaterThan(0);
+      expect(en[translationKey].trim().length).toBeGreaterThan(0);
+      expect(placeholders(zh[translationKey])).toEqual(placeholders(en[translationKey]));
+    }
+  });
 });
 
 describe('Chinese-first bilingual UI (V0.1 PRD F001)', () => {
