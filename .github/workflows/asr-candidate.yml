@@ -13,6 +13,7 @@ on:
       - 'apps/desktop/offlineAsrWorker.ts'
       - 'scripts/prepare-asr-model.mts'
       - 'scripts/stage-asr-pilot.mts'
+      - 'scripts/check-electron-packaged-asr.mts'
       - 'scripts/check-asr-staging.mts'
       - 'scripts/check-asr-real-release.mts'
 
@@ -43,7 +44,7 @@ jobs:
       - name: Install audio fixture generators
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y espeak-ng sox
+          sudo apt-get install -y espeak-ng sox xvfb openbox
       - name: Fetch SHA-256 pinned English streaming model
         run: pnpm asr:model:prepare --out "$RUNNER_TEMP/voxnelo-english-model"
       - name: Install pinned upstream native addon (CI sandbox only)
@@ -106,6 +107,16 @@ jobs:
         run: pnpm exec electron-builder --linux deb AppImage --publish never
       - name: Verify packaged native ASR and model hashes exactly match staging
         run: node --experimental-strip-types scripts/check-desktop-package.mts
+      - name: Exercise packaged Electron ASR IPC with actual model and non-user PCM
+        run: xvfb-run -a -s "-screen 0 1600x1000x24" node --experimental-strip-types scripts/check-electron-packaged-asr.mts
+      - name: Upload text-only bundled Electron ASR test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-packaged-electron-asr-evidence
+          path: desktop-evidence/packaged-asr/report.json
+          retention-days: 14
+          if-no-files-found: ignore
       # No binary artifact upload: this is a redistribution-unreviewed
       # internal build. Formal release requires written licensing approval,
       # Electron ABI/in-app microphone QA and platform signing.
