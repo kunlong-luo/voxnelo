@@ -1,5 +1,5 @@
 import { ArrowLeft, AudioLines, BookOpenText, Bug, Check, CircleHelp, ExternalLink, GitBranch, Info, Languages, Lightbulb, Palette, ShieldCheck, Settings2 } from 'lucide-react';
-import { APP_VERSION, SUPPORT_LINKS } from '@voxnelo/core';
+import { APP_VERSION, SUPPORT_LINKS } from '@voxnelo/learning';
 import type { AppearanceTheme } from './appearance';
 import { useI18n, type LanguageSetting } from './i18n';
 import { Button, buttonVariants } from './components/ui/button';
