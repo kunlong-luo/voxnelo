@@ -88,7 +88,7 @@ describe('Nordic three-column learning workspace', () => {
     expect(container.querySelector('.liveDictation > div')?.className).toContain('@min-[560px]/lesson:flex-col');
     expect(liveMic?.className).toContain('bg-[image:var(--mic-gradient)]');
     expect(replayMic).toBeTruthy();
-    expect(replayMic?.className).not.toContain('bg-[image:var(--mic-gradient)]');
+    expect(replayMic?.className).toContain('bg-[image:var(--mic-gradient)]');
     expect(container.querySelector('.sentenceText')?.className).toContain('6.25cqi');
     fireEvent.click(screen.getByRole('button', { name: '上一句' }));
     fireEvent.click(screen.getByRole('button', { name: '换一句' }));
