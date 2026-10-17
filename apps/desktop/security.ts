@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { APP_ORIGIN, APP_SCHEME, DEV_ORIGIN } from '@voxnelo/core';
+import { APP_ORIGIN, APP_SCHEME, DEV_ORIGIN, SUPPORT_LINKS } from '@voxnelo/core';
 
 const APP_PROTOCOL = `${APP_SCHEME}:`;
 export const APP_HOST = new URL(APP_ORIGIN).hostname;
@@ -25,6 +25,11 @@ export function isTrustedUrl(rawUrl: string, options: TrustOptions = { isDev: fa
   } catch {
     return false;
   }
+}
+
+/** Only these exact public help/project URLs may leave Electron for the system browser. */
+export function isAllowedSupportUrl(url: unknown): url is string {
+  return typeof url === 'string' && Object.values(SUPPORT_LINKS).some((known) => known === url);
 }
 
 /** 媒体权限是否“仅音频”：非数组、空数组或含视频一律拒绝。 */
