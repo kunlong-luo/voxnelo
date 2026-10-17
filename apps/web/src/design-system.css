@@ -38,6 +38,7 @@
   --color-mic-foreground: var(--mic-foreground);
   --color-rhythm-start: var(--rhythm-start);
   --color-rhythm-end: var(--rhythm-end);
+  --color-ambient-glow: var(--ambient-glow);
   --radius-sm: calc(var(--radius) * .6);
   --radius-md: calc(var(--radius) * .75);
   --radius-lg: var(--radius);
@@ -100,6 +101,7 @@
   --workspace-gradient: linear-gradient(135deg,#F7F8F5 0%,#FAFBF8 55%,#F0F4F1 100%);
   --rhythm-start: #A6C5BA;
   --rhythm-end: #A6C5BA;
+  --ambient-glow: #CFE2D6;
   --surface-highlight: rgba(255,255,255,.72);
   font-family: Inter, 'Noto Sans CJK SC', 'Noto Sans SC', 'Source Han Sans SC', 'WenQuanYi Micro Hei', 'Microsoft YaHei', 'PingFang SC', ui-sans-serif, system-ui, sans-serif;
 }
@@ -143,6 +145,7 @@
   --workspace-gradient: linear-gradient(135deg,#F8DEC5 0%,#E8D3C7 50%,#D8C3B9 100%);
   --rhythm-start: #DD6B20;
   --rhythm-end: #38B2AC;
+  --ambient-glow: #F4B99A;
   --surface-highlight: rgba(255,255,255,.6);
 }
 @layer base {
