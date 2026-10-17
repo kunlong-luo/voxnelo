@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { OfflineAsr } from '../apps/desktop/offlineAsr';
-import { resolveAsrAssets } from '../apps/desktop/asrAssets';
+import { isPersonalAsrCandidate, resolveAsrAssets } from '../apps/desktop/asrAssets';
 
 const roots:string[]=[];
 afterEach(()=>roots.splice(0).forEach(dir=>rmSync(dir,{recursive:true,force:true})));
@@ -27,6 +27,40 @@ describe('Trusted offline ASR bundle discovery',()=>{
     });
     expect(resolved.modelDir).toBe(path.join('tmp','Voxnelo','resources','offline-asr','model'));
     expect(resolved.addonPath).toBe(path.join('tmp','Voxnelo','resources','offline-asr','native','index.cjs'));
+  });
+
+  it('loads only an explicitly consented, platform-pinned personal native ASR pilot in the installed app',()=>{
+    const base=root();
+    const folder=path.join(base,'offline-asr');
+    const model=path.join(folder,'model'),native=path.join(folder,'native');
+    mkdirSync(model,{recursive:true});
+    mkdirSync(path.join(native,'node_modules','sherpa-onnx-node'),{recursive:true});
+    const entry=path.join(native,'index.cjs');
+    const fixtureSha='a'.repeat(64);
+    for(const file of ['encoder.onnx','decoder.onnx','joiner.onnx','tokens.txt'])writeFileSync(path.join(model,file),'test fixture');
+    writeFileSync(entry,'module.exports = {}');
+    writeFileSync(path.join(native,'node_modules','sherpa-onnx-node','fake.node'),'test fixture');
+    const sha256:Object=Object.fromEntries([
+      ...['encoder.onnx','decoder.onnx','joiner.onnx','tokens.txt'].map(n=>['model/'+n,fixtureSha]),
+      ['native/index.cjs',fixtureSha],
+      ['native/node_modules/sherpa-onnx-node/fake.node',fixtureSha],
+    ]);
+    const manifest={
+      releaseReady:false,reviewState:'engineering-only; native redistribution and signing not approved',
+      modelRevision:'bfbb11950302dad9955f8ede01f0e768595e4fba',
+      nativePackage:'sherpa-onnx-node',nativeVersion:'1.13.8',
+      platform:process.platform,arch:process.arch,sha256,
+    };
+    writeFileSync(path.join(folder,'manifest.json'),JSON.stringify(manifest));
+    const options={isPackaged:true,resourcesPath:path.join(base,'packaged','resources'),personalDataDir:base};
+    expect(isPersonalAsrCandidate(folder)).toBe(false);
+    expect(resolveAsrAssets(options).addonPath).toContain('packaged');
+    writeFileSync(path.join(folder,'personal-install.json'),JSON.stringify({optIn:true,platform:process.platform,arch:process.arch}));
+    expect(isPersonalAsrCandidate(folder)).toBe(true);
+    expect(resolveAsrAssets(options)).toEqual({modelDir:model,addonPath:entry});
+    writeFileSync(path.join(folder,'manifest.json'),JSON.stringify({...manifest,nativeVersion:'0.0.0'}));
+    expect(isPersonalAsrCandidate(folder)).toBe(false);
+    expect(resolveAsrAssets(options).addonPath).toContain('packaged');
   });
 
   it('preserves developer-only absolute paths without allowing IPC path selection',()=>{
