@@ -266,7 +266,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
           <Button variant="destructive" className="recordingQuickStop fixed right-4 bottom-24 z-60 shadow-xl animate-soft-pop sm:right-6 sm:bottom-6" onClick={handleRecorder}
             aria-label={t("stopFloating")}><Square size={15} fill="currentColor" aria-hidden="true" /> {t("stopRecording")}</Button>
         ) : null}
-        <main ref={pageMotionRef} className="content voxnelo-scroll relative z-10 mx-auto w-full max-w-380 px-3 pt-3 pb-28 sm:min-h-0 sm:flex-1 sm:overflow-y-auto sm:overscroll-contain sm:px-6 sm:py-6 lg:px-9 lg:py-8 2xl:px-12 2xl:py-10">
+        <main ref={pageMotionRef} className="content voxnelo-scroll relative z-10 mx-auto w-full max-w-380 px-3 pt-3 pb-28 sm:min-h-0 sm:flex-1 sm:overflow-y-auto sm:overscroll-contain sm:px-6 sm:py-6 lg:px-9 lg:py-8 2xl:px-12 2xl:py-10 [@media(max-height:700px)]:py-2">
           {view === 'practice' ? (
             <PracticeView
               current={current}
