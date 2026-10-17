@@ -53,7 +53,6 @@ export function NavigationSidebar({view,onNavigate,favorites}:NavigationProps & 
 export function MobileNavigation({view,onNavigate}:NavigationProps) {
   const {t}=useI18n();
   return (
-      {/* The compact viewport has its own navigation affordance; no miniature sidebar. */}
       <nav className="mobileNav fixed inset-x-0 bottom-0 z-50 grid grid-cols-6 gap-0.5 border-t border-border/80 bg-card/95 px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-soft backdrop-blur-xl sm:hidden" aria-label={t('navLabel')}>
         {menu.map(({id,icon:Icon,labelKey,accessibleLabelKey}) => (
           <Button key={id} variant="ghost" className={cn('mobileNavItem h-14 min-w-0 flex-col gap-1 rounded-xl px-1 py-1 text-[10px] transition-[background-color,color,transform] duration-200 active:scale-[.94]',view===id&&'bg-secondary text-primary')} aria-label={t(accessibleLabelKey)+' · '+t('navLabel')} aria-current={view===id?'page':undefined} onClick={() => onNavigate(id)}>
