@@ -12,6 +12,9 @@ on:
       - 'apps/desktop/asrConfig.ts'
       - 'apps/desktop/offlineAsrWorker.ts'
       - 'scripts/prepare-asr-model.mts'
+      - 'scripts/stage-asr-pilot.mts'
+      - 'scripts/check-asr-staging.mts'
+      - 'scripts/check-asr-real-release.mts'
 
 permissions:
   contents: read
@@ -80,6 +83,32 @@ jobs:
           path: ${{ runner.temp }}/voxnelo-asr-inference.json
           retention-days: 14
           if-no-files-found: ignore
+
+      - name: Stage a non-distributable Linux ASR resource candidate
+        run: node --experimental-strip-types scripts/stage-asr-pilot.mts
+      - name: Verify ASR staging hashes, model and native binary
+        run: pnpm asr:check-staging
+      - name: Re-run real WAV recognition against relocated staged resources
+        shell: bash
+        run: |
+          set -euo pipefail
+          export VOXNELO_ASR_MODEL_DIR="$GITHUB_WORKSPACE/build/offline-asr/model"
+          export VOXNELO_ASR_ADDON_PATH="$GITHUB_WORKSPACE/build/offline-asr/native/index.cjs"
+          export LD_LIBRARY_PATH="$GITHUB_WORKSPACE/build/offline-asr/native/node_modules/sherpa-onnx-node/lib:${LD_LIBRARY_PATH:-}"
+          node --experimental-strip-types scripts/benchmark-offline-asr.mts \
+            --wav "$RUNNER_TEMP/voxnelo-asr-reference.wav" \
+            --expect "please speak English slowly"
+      - name: Build renderer for real-engine packaged candidate
+        run: pnpm build:renderer
+      - name: Build unsigned Linux installers carrying the real ASR engine
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: pnpm exec electron-builder --linux deb AppImage --publish never
+      - name: Verify packaged native ASR and model hashes exactly match staging
+        run: node --experimental-strip-types scripts/check-desktop-package.mts
+      # No binary artifact upload: this is a redistribution-unreviewed
+      # internal build. Formal release requires written licensing approval,
+      # Electron ABI/in-app microphone QA and platform signing.
 
   platform-native-inference:
     name: ${{ matrix.os }} real offline English inference
