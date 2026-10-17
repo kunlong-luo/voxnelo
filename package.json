@@ -110,7 +110,9 @@
           "Terminal": false,
           "Type": "Application"
         }
-      }
+      },
+      "synopsis": "Voxnelo - English speaking practice",
+      "description": "Free, local-first English speaking practice with short phrases, reference pronunciation, voice recording, and learning history."
     },
     "win": {
       "target": "nsis"
