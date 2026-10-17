@@ -258,7 +258,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
       </aside>
       <div className="mainArea @container/workspace relative isolate min-w-0 flex-1 overflow-clip bg-background bg-[image:var(--workspace-gradient)] sm:flex sm:h-dvh sm:flex-col">
         <DesktopTitlebar />
-        <div aria-hidden="true" data-motion="ambient-drift" className="pointer-events-none absolute -top-16 right-[-7%] size-72 rounded-full bg-brand-blush/75 blur-[65px] animate-ambient-drift sm:size-125"/>
+        <div aria-hidden="true" data-motion="ambient-drift" className="pointer-events-none absolute -top-16 right-[-7%] size-72 rounded-full bg-ambient-glow/75 blur-[65px] animate-ambient-drift sm:size-125"/>
         <div aria-hidden="true" data-motion="ambient-breathe" className="pointer-events-none absolute -bottom-35 left-[1%] size-80 rounded-full bg-brand-cream/85 blur-[75px] animate-ambient-breathe sm:size-135"/>
         <div aria-hidden="true" data-motion="ambient-breathe-secondary" className="pointer-events-none absolute top-[32%] right-[17%] size-56 rounded-full bg-brand-mist/75 blur-[70px] animate-ambient-breathe [animation-delay:-3.5s] sm:size-110"/>
         <div aria-hidden="true" className="pointer-events-none absolute inset-x-[6%] top-[12%] h-px bg-linear-to-r from-transparent via-white/70 to-transparent"/>
