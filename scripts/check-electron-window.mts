@@ -60,6 +60,19 @@ const until=async(expression:string,timeoutMs=10000):Promise<void>=>{
 };
 const xdo=(...args:string[])=>execFileSync('xdotool',args,{encoding:'utf8',timeout:6000}).trim();
 const viewport=async()=>evaluate<DesktopMetrics>('(()=>{const d=document.documentElement;const mic=document.querySelector(".recordAction")?.getBoundingClientRect(),rail=document.querySelector(".actionRail")?.getBoundingClientRect(),title=document.querySelector(".appTitlebar")?.getBoundingClientRect(),sidebar=document.querySelector(".sidebar")?.getBoundingClientRect();const nav=document.querySelector(".mobileNav");return {width:innerWidth,height:innerHeight,scrollWidth:d.scrollWidth,clientWidth:d.clientWidth,chromeHeight:title?.height||0,chromePresent:!!title,chromeTop:Math.round(title?.top??-1),chromeLeft:Math.round(title?.left??-1),sidebarTop:Math.round(sidebar?.top??-1),sidebarBottom:Math.round(sidebar?.bottom??-1),sidebarRight:Math.round(sidebar?.right??-1),mainContainer:getComputedStyle(document.querySelector(".mainArea")).containerName,desktopPreload:!!window.voxneloDesktop?.windowControls,desktopPlatform:window.voxneloDesktop?.platform,scheme:location.protocol,practice:!!document.querySelector(".practiceLayout"),micBottom:Math.round(mic?.bottom||0),micTop:Math.round(mic?.top||0),railBottom:Math.round(rail?.bottom||0),mobileNav:getComputedStyle(nav).display!=="none",devicePixelRatio:devicePixelRatio}})()');
+const clickInNativeWindow=async(selector:string):Promise<void>=>{
+  // Dispatch an actual Chromium pointer gesture so media playback is not
+  // incorrectly blocked by user-activation restrictions.
+  const point=await evaluate<{x:number;y:number}>(`(()=>{
+    const node=document.querySelector(${JSON.stringify(selector)});
+    if(!node)throw Error('Missing native control');
+    const bounds=node.getBoundingClientRect();
+    return {x:bounds.x+bounds.width/2,y:bounds.y+bounds.height/2};
+  })()`);
+  assert.ok(point.x>=0&&point.y>=0,'Control has no visible bounds: '+selector);
+  await send('Input.dispatchMouseEvent',{type:'mousePressed',...point,button:'left',clickCount:1});
+  await send('Input.dispatchMouseEvent',{type:'mouseReleased',...point,button:'left',clickCount:1});
+};
 const snapshot=async(label:string,expectedWidth:number,expectedHeight:number):Promise<void>=>{
   await delay(550);
   const state=await viewport();
@@ -189,6 +202,29 @@ try{
 
   const reduced=await evaluate<{supported:boolean;style:string}>('(()=>{const media=matchMedia("(prefers-reduced-motion: reduce)");return {supported:typeof media.matches==="boolean",style:getComputedStyle(document.querySelector(".practiceLayout")).animationName}})()');
   report.push({label:'motion-availability',...reduced});
+
+  // V0.1 F003-F005: actual Chromium MediaRecorder and local Blob playback
+  // through the production UI, using an audio device provided only by CI.
+  // This is not a physical microphone or an ASR validation.
+  await clickInNativeWindow('.recordAction');
+  await until('document.querySelector(".recordAction")?.getAttribute("aria-pressed")==="true"');
+  await delay(850);
+  await clickInNativeWindow('.recordAction');
+  await until('!!document.querySelector(".recordingReady")&&!!document.querySelector(".replaySlot audio")');
+  const recording=await evaluate<{blob:boolean;sizeHint:string;micStopped:boolean}>(`(()=>{
+    const audio=document.querySelector(".replaySlot audio");
+    return {blob:audio?.getAttribute('src')?.startsWith('blob:')??false,
+      sizeHint:document.querySelector(".recordingReady")?.textContent??'',
+      micStopped:document.querySelector(".recordAction")?.getAttribute("aria-pressed")==="false"};
+  })()`);
+  assert.ok(recording.blob&&recording.micStopped,'Native recording did not finish cleanly: '+JSON.stringify(recording));
+  await clickInNativeWindow('.replaySlot button');
+  await until('document.querySelector(".replaySlot button")?.getAttribute("aria-label")==="暂停回听"',8000);
+  await clickInNativeWindow('.nextButton');
+  await until('!document.querySelector(".replaySlot audio")');
+  const cleared=await evaluate<boolean>('document.querySelector(".recordAction")?.getAttribute("aria-pressed")==="false"');
+  assert.ok(cleared,'Old recording controls persisted into the next sentence');
+  report.push({label:'native-record-stop-replay-switch',...recording,clearedOldAudio:true});
   } else {
     // DPI integration tests use the app's actual native window with a scaled
     // display. Avoid resizing with X11 physical pixels: these do not represent
