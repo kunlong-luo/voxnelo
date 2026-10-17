@@ -57,6 +57,19 @@ jobs:
         env:
           VOXNELO_REQUIRE_INSTALLERS: '1'
         run: node --experimental-strip-types scripts/check-desktop-package.mts
+      - name: Install Linux candidate via apt on runner
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          deb="$(find release -maxdepth 1 -name 'voxnelo_*_amd64.deb' -type f -print -quit)"
+          test -n "$deb"
+          sudo apt-get update -qq
+          sudo apt-get install -y "./$deb"
+          test "$(dpkg-query -W -f='${Status}' voxnelo)" = 'install ok installed'
+          test "$(dpkg-query -W -f='${Status}' fonts-noto-cjk)" = 'install ok installed'
+          dpkg -L voxnelo | grep -Eq '^/usr/share/applications/[^/]+\.desktop$'
+          echo "Debian candidate installs cleanly with CJK fonts and desktop integration"
       - name: Upload build candidate
         uses: actions/upload-artifact@v4
         with:

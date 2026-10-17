@@ -126,6 +126,19 @@ jobs:
         run: pnpm exec electron-builder --linux deb AppImage --publish never
       - name: Assert bundle, installers and Voxnelo identity
         run: node --experimental-strip-types scripts/check-desktop-package.mts
+      - name: Install actual Linux DEB via apt, verify package and fonts
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          deb="$(find release -maxdepth 1 -name 'voxnelo_*_amd64.deb' -type f -print -quit)"
+          test -n "$deb"
+          sudo apt-get update -qq
+          sudo apt-get install -y "./$deb"
+          test "$(dpkg-query -W -f='${Status}' voxnelo)" = 'install ok installed'
+          test "$(dpkg-query -W -f='${Status}' fonts-noto-cjk)" = 'install ok installed'
+          dpkg -L voxnelo | grep -Eq '^/usr/share/applications/[^/]+\.desktop$'
+          echo "apt install verified: Voxnelo, CJK fonts, desktop launcher"
       - name: Upload Linux installers for CI review
         if: runner.os == 'Linux'
         uses: actions/upload-artifact@v4
