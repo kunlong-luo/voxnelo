@@ -6,7 +6,7 @@ import { allowsAudioPermissionCheck, allowsAudioPermissionRequest, APP_HOST, isA
 import { LinuxEnglishSpeech } from './linuxSpeech';
 import { LINUX_DESKTOP_FILENAME, resolveLinuxIconPath } from './linuxAppIdentity';
 import { OfflineAsr } from './offlineAsr';
-import { resolveAsrAssets } from './asrAssets';
+import { resolveVerifiedAsrAssets } from './asrAssets';
 
 // Electron 推荐的标准安全自定义协议：允许 IndexedDB 使用持久且一致的 origin。
 // 注册必须发生在 app ready 之前；不允许 bypassCSP。
@@ -27,14 +27,20 @@ const linuxSpeech = new LinuxEnglishSpeech();
 // Production may use vetted resources bundled explicitly by the release builder.
 // No network download or renderer-provided paths. Personal ASR is an explicit,
 // pinned user-side install; public installer assets remain separately gated.
-const asrAssets = resolveAsrAssets({
-  isPackaged: app.isPackaged,
-  resourcesPath: process.resourcesPath,
-  developerModelDir: process.env.VOXNELO_ASR_MODEL_DIR,
-  developerAddonPath: process.env.VOXNELO_ASR_ADDON_PATH,
-  personalDataDir: path.join(app.getPath('appData'), 'voxnelo'),
-});
-const offlineAsr = new OfflineAsr(asrAssets.modelDir, asrAssets.addonPath);
+// The renderer must never see a personal native addon until its full byte
+// inventory has been validated. Stream the ONNX/native files once on startup,
+// not on the UI thread and not again for each microphone session.
+let offlineAsr = new OfflineAsr(null,null);
+async function initializeOfflineAsr():Promise<void>{
+  const assets=await resolveVerifiedAsrAssets({
+    isPackaged: app.isPackaged,
+    resourcesPath: process.resourcesPath,
+    developerModelDir: process.env.VOXNELO_ASR_MODEL_DIR,
+    developerAddonPath: process.env.VOXNELO_ASR_ADDON_PATH,
+    personalDataDir: path.join(app.getPath('appData'), 'voxnelo'),
+  });
+  offlineAsr=new OfflineAsr(assets.modelDir,assets.addonPath);
+}
 
 /**
  * Window IPC is intentionally narrower than a general-purpose ipcRenderer bridge.
@@ -171,6 +177,7 @@ async function createWindow(): Promise<void> {
 }
 
 app.whenReady().then(async () => {
+  await initializeOfflineAsr();
   registerWindowControls();
   registerLinuxSpeech();
   registerOfflineAsr();
