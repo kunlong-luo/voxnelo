@@ -8,6 +8,8 @@ import { cn } from './lib/utils';
 interface SettingsViewProps {
   speed:'normal'|'slow';showIpa:boolean;appearance:AppearanceTheme;
   languageSetting?:LanguageSetting;
+  motionEnabled?:boolean;
+  onChangeMotion?:(enabled:boolean)=>void;
   onChangeAppearance:(theme:AppearanceTheme)=>void;
   onChangeLanguage?:(locale:LanguageSetting)=>void;
   onToggleSpeed:()=>void;onToggleIpa:()=>void;onBackToPractice:()=>void;
@@ -20,12 +22,12 @@ const helpActions = [
   { href: SUPPORT_LINKS.featureRequest, label: 'supportFeature', detail: 'supportFeatureHint', icon: Lightbulb },
 ] as const;
 export function SettingsView({
-  speed,showIpa,appearance,languageSetting='system',onChangeAppearance,
+  speed,showIpa,appearance,motionEnabled=true,onChangeMotion,languageSetting='system',onChangeAppearance,
   onChangeLanguage,onToggleSpeed,onToggleIpa,onBackToPractice,
 }:SettingsViewProps) {
   const {t,locale}=useI18n();
-  const section='flex flex-col gap-4 rounded-3xl border border-border/70 bg-card/90 p-5 shadow-soft motion-safe:animate-panel-enter sm:p-6';
-  return <div className="settingsPage mx-auto flex w-full max-w-305 flex-col gap-6 px-0 py-2 motion-safe:animate-view-enter">
+  const section='flex flex-col gap-4 rounded-3xl border border-white/60 bg-card/80 p-5 shadow-[0_20px_50px_-35px_rgba(89,62,47,.25)] backdrop-blur-md animate-panel-enter sm:p-6';
+  return <div className="settingsPage mx-auto flex w-full max-w-305 flex-col gap-6 px-0 py-2 animate-view-enter">
     <div className="libraryTitle flex flex-wrap items-start justify-between gap-4">
       <div className="space-y-2">
         <div className="eyebrow flex items-center gap-2 text-[10px] font-bold tracking-[.21em] text-primary uppercase"><Settings2 size={16}/>{t('settingsEyebrow')}</div>
@@ -39,22 +41,32 @@ export function SettingsView({
         <div className="settingsPanelHeading flex items-center gap-3 text-primary"><Palette size={20}/><h2 className="text-sm font-extrabold text-foreground">{t('appearanceTitle')}</h2></div>
         <p className="text-xs leading-6 text-muted-foreground">{t('appearanceDesc')}</p>
         <div className="appearanceChoices grid grid-cols-[repeat(auto-fit,minmax(min(100%,9rem),1fr))] gap-3" role="group" aria-label={t('appearanceGroup')}>
-          {themes.map(id=>{const name=t(id==='nordic'?'nordicName':'sunsetName');return <button type="button" className={cn('appearanceChoice group flex min-w-0 flex-col gap-2 rounded-2xl border p-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-md motion-reduce:transform-none',appearance===id?'border-primary/50 bg-secondary/65 ring-2 ring-primary/10':'border-border bg-card/70 hover:border-primary/30')} key={id} onClick={()=>onChangeAppearance(id)} aria-label={t('appearanceChoose',{name})} aria-pressed={appearance===id}>
-            <span className={cn('appearancePreview relative h-18 w-full overflow-hidden rounded-xl border border-white/75 transition-transform duration-300 motion-safe:group-hover:scale-[1.025]',id==='nordic'?'bg-gradient-to-tr from-brand-mist via-brand-cream to-accent':'bg-gradient-to-tr from-brand-blush via-brand-cream to-brand-mist')} aria-hidden="true"><span className="absolute inset-y-2 left-1/3 aspect-square rounded-full bg-white/50 blur-lg motion-safe:animate-ambient-drift"/></span>
-            <strong className="flex items-center justify-between gap-2 text-xs text-foreground">{name}{appearance===id&&<Check size={15} className="text-primary motion-safe:animate-soft-pop"/>}</strong>
+          {themes.map(id=>{const name=t(id==='nordic'?'nordicName':'sunsetName');return <button type="button" className={cn('appearanceChoice group flex min-w-0 flex-col gap-2 rounded-2xl border p-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-md ',appearance===id?'border-primary/50 bg-secondary/65 ring-2 ring-primary/10':'border-border bg-card/70 hover:border-primary/30')} key={id} onClick={()=>onChangeAppearance(id)} aria-label={t('appearanceChoose',{name})} aria-pressed={appearance===id}>
+            <span className={cn('appearancePreview relative flex h-24 w-full items-center overflow-hidden rounded-xl border border-white/75 px-3 transition-transform duration-500 group-hover:scale-[1.025]',id==='nordic'?'bg-[linear-gradient(135deg,#F7F8F5,#E8F0EA)]':'bg-[linear-gradient(135deg,#F8DEC5,#E8D3C7_50%,#D8C3B9)]')} aria-hidden="true">
+              <span className={cn('absolute inset-y-0 left-0 w-2/3 rounded-full blur-2xl animate-ambient-breathe',id==='nordic'?'bg-[#A6C5BA]/45':'bg-[#FADCB6]/85')}/>
+              <span className={cn('relative flex h-16 w-3/4 flex-col justify-center gap-1.5 rounded-lg border p-2 shadow-sm',id==='nordic'?'border-[#DFEAE2] bg-white':'border-white/80 bg-white/45 backdrop-blur-lg')}>
+                <span className={cn('h-2 w-2/3 rounded-full',id==='nordic'?'bg-[#243B46]/80':'bg-[#1A202C]/80')}/>
+                <span className="h-1 w-4/5 rounded-full bg-slate-400/30"/>
+                <span className={cn('mt-1 h-3 w-8 rounded-full',id==='nordic'?'bg-[linear-gradient(135deg,#477F83,#A6C5BA)]':'bg-[linear-gradient(135deg,#DD6B20,#ED8936)]')}/>
+              </span>
+            </span>
+            <strong className="flex items-center justify-between gap-2 text-xs text-foreground">{name}{appearance===id&&<Check size={15} className="text-primary animate-soft-pop"/>}</strong>
             <small className="text-[10px] leading-4 text-muted-foreground">{t(id==='nordic'?'nordicSummary':'sunsetSummary')}</small>
           </button>})}
         </div>
         <p className="appearanceHelp text-[10px] leading-5 text-muted-foreground">{t('appearanceNote')}</p>
-        <p className="text-[11px] leading-5 text-primary motion-reduce:hidden">{t('motionVisibleHint')}</p>
-        <p className="hidden text-[11px] leading-5 text-primary motion-reduce:block" role="status">{t('motionReducedHint')}</p>
+        <p className="text-[11px] leading-5 text-primary">{t('motionVisibleHint')}</p>
+        <button type="button" className="settingToggle flex w-full items-center justify-between gap-4 rounded-2xl border border-border/70 bg-muted/50 p-4 text-left transition hover:bg-secondary/50" aria-pressed={motionEnabled} onClick={()=>onChangeMotion?.(!motionEnabled)}>
+          <span className="flex flex-col gap-1"><strong className="text-xs">{t('motionToggle')}</strong><small className="text-[10px] leading-5 text-muted-foreground">{t('motionToggleHint')}</small></span>
+          <span className={cn('switchTrack relative inline-flex h-6 w-11 shrink-0 rounded-full border border-border/50 p-0.5',motionEnabled?'bg-primary':'bg-muted-foreground/30')}><span className={cn('size-5 rounded-full bg-white shadow-sm transition-transform',motionEnabled&&'translate-x-5')}/></span>
+        </button>
       </Card>
       <Card className={cn(section,'languageSettings')}>
         <div className="settingsPanelHeading flex items-center gap-3 text-primary"><Languages size={20}/><h2 className="text-sm font-extrabold text-foreground">{t('languageTitle')}</h2></div>
         <p className="text-xs leading-6 text-muted-foreground">{t('languageDesc')}</p>
         <div className="languageChoices grid grid-cols-[repeat(auto-fit,minmax(min(100%,9rem),1fr))] gap-2" role="group" aria-label={t('languageGroup')}>
-          {languageIds.map(id=><button type="button" key={id} className={cn('languageChoice flex min-h-18 flex-col justify-center gap-2 rounded-2xl border px-3 py-3 text-left transition-all hover:-translate-y-0.5 motion-reduce:transform-none',languageSetting===id?'border-primary/50 bg-secondary/80 ring-2 ring-primary/10':'border-border bg-card/80 hover:border-primary/30 hover:bg-muted')} aria-pressed={languageSetting===id} onClick={()=>onChangeLanguage?.(id)}>
-            <span className="languageChoiceTop flex items-center justify-between gap-1"><strong className="text-xs text-foreground">{t(id==='system'?'languageSystem':id==='zh-CN'?'languageChinese':'languageEnglish')}</strong>{languageSetting===id&&<Check size={15} className="text-primary motion-safe:animate-soft-pop"/>}</span>
+          {languageIds.map(id=><button type="button" key={id} className={cn('languageChoice flex min-h-18 flex-col justify-center gap-2 rounded-2xl border px-3 py-3 text-left transition-all hover:-translate-y-0.5 ',languageSetting===id?'border-primary/50 bg-secondary/80 ring-2 ring-primary/10':'border-border bg-card/80 hover:border-primary/30 hover:bg-muted')} aria-pressed={languageSetting===id} onClick={()=>onChangeLanguage?.(id)}>
+            <span className="languageChoiceTop flex items-center justify-between gap-1"><strong className="text-xs text-foreground">{t(id==='system'?'languageSystem':id==='zh-CN'?'languageChinese':'languageEnglish')}</strong>{languageSetting===id&&<Check size={15} className="text-primary animate-soft-pop"/>}</span>
             <small className="text-[10px] leading-4 text-muted-foreground">{id==='system'?t('languageSystemDetail',{name:t(locale==='zh-CN'?'languageChinese':'languageEnglish')}):t('languageManualDetail')}</small>
           </button>)}
         </div>
