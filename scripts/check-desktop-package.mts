@@ -10,6 +10,9 @@ import { existsSync } from 'node:fs';
 import { open, readFile, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 
+const appMetadata=JSON.parse(await readFile(path.resolve('package.json'),'utf8')) as {version:string};
+const expectedVersion=appMetadata.version;
+assert.match(expectedVersion,/^\d+\.\d+\.\d+$/,'Invalid Voxnelo release version');
 const platform=process.platform;
 if(platform!=='darwin'&&platform!=='win32'&&platform!=='linux')throw Error('Packaging checks require Linux, macOS or Windows');
 const release=path.resolve('release');
@@ -71,6 +74,8 @@ if(platform==='linux'){
   const appImage=files.find(name=>name.endsWith('.AppImage'));
   assert.ok(deb,'Missing Voxnelo .deb installer in release/');
   assert.ok(appImage,'Missing Voxnelo .AppImage installer in release/');
+  assert.ok(deb.includes('_'+expectedVersion+'_'),'DEB filename does not identify the new version: '+deb);
+  assert.ok(appImage.includes('-'+expectedVersion+'.'),'AppImage filename does not identify the new version: '+appImage);
   const readPrefix=async(filename:string,length:number)=>{
     const handle=await open(filename,'r');
     try{
@@ -91,6 +96,9 @@ if(platform==='linux'){
   const metadata=spawnSync('dpkg-deb',['--field',debPath,'Package'],{encoding:'utf8'});
   assert.equal(metadata.status,0,'dpkg-deb could not inspect installer: '+metadata.stderr);
   assert.match(metadata.stdout.trim(),/^voxnelo$/i,'Wrong Debian package identity');
+  const installedVersion=spawnSync('dpkg-deb',['--field',debPath,'Version'],{encoding:'utf8'});
+  assert.equal(installedVersion.status,0,'dpkg-deb could not inspect Debian version: '+installedVersion.stderr);
+  assert.equal(installedVersion.stdout.trim(),expectedVersion,'DEB package Version must match Voxnelo release version');
   // Electron-builder/FPM may silently replace Chinese package metadata with
   // question marks under a non-UTF-8 environment. Test the actual .deb metadata
   // shown by Linux package managers (not merely package.json).
