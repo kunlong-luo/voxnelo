@@ -14,6 +14,7 @@ on:
       - 'scripts/prepare-asr-model.mts'
       - 'scripts/stage-asr-pilot.mts'
       - 'scripts/check-electron-packaged-asr.mts'
+      - 'scripts/check-platform-asr-candidate.mts'
       - 'scripts/check-asr-staging.mts'
       - 'scripts/check-asr-real-release.mts'
 
@@ -129,7 +130,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest]
+        include:
+          - os: windows-latest
+            builder_args: --win nsis
+          - os: macos-latest
+            builder_args: --mac dmg
     steps:
       - name: Checkout pinned project code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -157,6 +162,24 @@ jobs:
         run: npm install --no-save --prefix "${{ runner.temp }}/voxnelo-native" sherpa-onnx-node@1.13.8
       - name: Check real recognition output, WER and runtime speed
         run: node --experimental-strip-types scripts/check-platform-asr-candidate.mts
+      - name: Stage complete native runtime and pinned model for internal package
+        run: node --experimental-strip-types scripts/stage-asr-pilot.mts
+      - name: Verify relocated model and native binary hashes
+        run: pnpm asr:check-staging
+      - name: Require genuine inference from relocated native entry
+        run: node --experimental-strip-types scripts/check-platform-asr-candidate.mts --staged
+      - name: Build renderer for internally packaged ASR
+        run: pnpm build:renderer
+      - name: Build unsigned platform installer containing local ASR
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: pnpm exec electron-builder ${{ matrix.builder_args }} --publish never
+      - name: Verify candidate installer and all copied native/model SHA-256
+        env:
+          VOXNELO_REQUIRE_INSTALLERS: '1'
+        run: node --experimental-strip-types scripts/check-desktop-package.mts
+      # Never upload candidate executable assets until their redistribution
+      # rights, platform policy and human QA are formally signed off.
       - name: Preserve non-personal per-platform evidence
         if: always()
         uses: actions/upload-artifact@v4
