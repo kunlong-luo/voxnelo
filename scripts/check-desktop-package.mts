@@ -9,6 +9,7 @@ import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { open, readFile, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
+import { selectLinuxInstallers } from './release-installer-selection.mts';
 
 const appMetadata=JSON.parse(await readFile(path.resolve('package.json'),'utf8')) as {version:string};
 const expectedVersion=appMetadata.version;
@@ -69,13 +70,9 @@ if(existsSync(asrStagingManifest)){
 }
 const linuxChecks:string[]=[];
 if(platform==='linux'){
-  const files=(await readdir(release)).filter(name=>name.toLowerCase().includes('voxnelo'));
-  const deb=files.find(name=>name.endsWith('.deb'));
-  const appImage=files.find(name=>name.endsWith('.AppImage'));
-  assert.ok(deb,'Missing Voxnelo .deb installer in release/');
-  assert.ok(appImage,'Missing Voxnelo .AppImage installer in release/');
-  assert.ok(deb.includes('_'+expectedVersion+'_'),'DEB filename does not identify the new version: '+deb);
-  assert.ok(appImage.includes('-'+expectedVersion+'.'),'AppImage filename does not identify the new version: '+appImage);
+  // Prior local builds remain in release/. Select only the exact version
+  // requested by package.json, regardless of readdir() ordering.
+  const {deb,appImage}=selectLinuxInstallers(await readdir(release),expectedVersion,process.arch);
   const readPrefix=async(filename:string,length:number)=>{
     const handle=await open(filename,'r');
     try{
