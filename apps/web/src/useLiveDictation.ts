@@ -5,6 +5,7 @@ import {
   BROWSER_SPEECH_LANGUAGE, browserRecognizerClass, createBrowserRecognizer,
   stopBrowserRecognizer, type BrowserRecognizer,
 } from './dictation/browserRecognizer';
+import { startDesktopDictationSession } from './dictation/desktopSession';
 
 type DictationStatus = 'idle' | 'checking' | 'listening';
 type DictationMode = 'local' | 'browser';
@@ -94,100 +95,29 @@ export function useLiveDictation(sentenceId: string) {
       if(mode!=='local'||!bridge||!desktopAvailable){setError(t('dictationLocalRequired'));return;}
       const id=++requestId.current;
       setStatus('checking');
-      let media:MediaStream|null=null;
-      let context:AudioContext|null=null;
-      let unsubscribe:(()=>void)|null=null;
-      let unsubscribeError:(()=>void)|null=null;
-      let sessionId:string|null=null;
-      let closed=false;
-      let audioTrack:MediaStreamTrack|null=null;
-      let onDeviceEnded:(()=>void)|null=null;
-      let lastLevelUpdate=0;
-      const close=():Promise<{finalText:string}>=>{
-        if(closed)return Promise.resolve({finalText:''});
-        closed=true;
-        unsubscribe?.();unsubscribeError?.();
-        if(audioTrack&&onDeviceEnded)audioTrack.removeEventListener('ended',onDeviceEnded);
-        const final=sessionId?bridge.stop(sessionId):Promise.resolve({finalText:''});
-        media?.getTracks().forEach(track=>track.stop());
-        if(context)void context.close();
-        return final;
-      };
-      try{
-        media=await navigator.mediaDevices.getUserMedia({
-          audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1},
-          video:false,
-        });
-        if(disposed.current||id!==requestId.current){void close();return;}
-        audioTrack=media.getAudioTracks()[0]??null;
-        const settings=audioTrack?.getSettings();
-        setNoiseReduction(settings?.noiseSuppression===true?'enabled':'unverified');
-        onDeviceEnded=()=>{
-          if(closed||id!==requestId.current||disposed.current)return;
-          setError(t('dictationMicrophone'));
-          stop();
-        };
-        audioTrack?.addEventListener('ended',onDeviceEnded);
-        const opened=await bridge.start();
-        if(disposed.current||id!==requestId.current){
-          if(opened.ok)bridge.stop(opened.sessionId);
-          close();return;
-        }
-        if(!opened.ok)throw new Error('offline ASR not ready');
-        sessionId=opened.sessionId;
-        desktopStop.current=close;
-        unsubscribe=bridge.onResult(result=>{
-          if(id!==requestId.current||result.sessionId!==sessionId||disposed.current)return;
-          setFinalText(result.finalText);
-          setInterimText(result.interimText);
-        });
-        unsubscribeError=bridge.onError(failed=>{
-          if(id!==requestId.current||failed!==sessionId||disposed.current)return;
-          setError(t('dictationFailed'));
-          stop();
-        });
-        // The worklet resamples the actual output sample rate to 16 kHz.
-        // Forcing AudioContext({sampleRate:16000}) fails on some sound devices.
-        context=new AudioContext({latencyHint:'interactive'});
-        await context.audioWorklet.addModule(new URL('audio/pcm-worklet.js',window.location.href).href);
-        if(disposed.current||id!==requestId.current){close();return;}
-        const source=context.createMediaStreamSource(media);
-        const node=new AudioWorkletNode(context,'voxnelo-pcm-16k');
-        const silent=context.createGain();
-        silent.gain.value=0;
-        source.connect(node);
-        node.connect(silent);
-        silent.connect(context.destination);
-        node.port.onmessage=event=>{
-          if(id!==requestId.current||closed||typeof sessionId!=='string')return;
-          if(event.data instanceof Float32Array){
-            const samples=event.data;
-            bridge.push(sessionId,samples);
-            const now=performance.now();
-            if(now-lastLevelUpdate>=100){
-              lastLevelUpdate=now;
-              let sum=0;
-              for(let i=0;i<samples.length;i++)sum+=(samples[i]??0)*(samples[i]??0);
-              const rms=Math.sqrt(sum/Math.max(1,samples.length));
-              setInputLevel(Math.min(1,rms*6));
-            }
-          }
-        };
-        await context.resume();
-        if(disposed.current||id!==requestId.current){close();return;}
-        setStatus('listening');
-        return;
-      }catch(cause){
-        close();
-        if(desktopStop.current===close)desktopStop.current=null;
-        if(disposed.current||id!==requestId.current)return;
+      const isCurrent=()=>!disposed.current&&id===requestId.current;
+      const started=await startDesktopDictationSession(bridge,{
+        isCurrent,
+        onStopReady:close=>{desktopStop.current=close;},
+        onNoiseReduction:enabled=>setNoiseReduction(enabled?'enabled':'unverified'),
+        onTranscript:(final,interim)=>{setFinalText(final);setInterimText(interim);},
+        onLevel:setInputLevel,
+        onError:()=>{setError(t('dictationFailed'));stop();},
+        onDeviceEnded:()=>{setError(t('dictationMicrophone'));stop();},
+      });
+      if(!isCurrent())return;
+      if(!started.ok){
+        desktopStop.current=null;
         setStatus('idle');
         setInputLevel(null);
-        const name=cause instanceof Error?cause.name:'';
-        setError(name==='NotAllowedError'?t('dictationPermission')
-          :name==='NotFoundError'||name==='NotReadableError'?t('dictationMicrophone'):t('dictationFailed'));
+        if(started.reason!=='cancelled'){
+          setError(t(started.reason==='permission'?'dictationPermission'
+            :started.reason==='microphone'?'dictationMicrophone':'dictationFailed'));
+        }
         return;
       }
+      setStatus('listening');
+      return;
     }
     if(!Ctor){setError(t(window.voxneloDesktop?'dictationLocalRequired':'dictationUnsupported'));return;}
     if(mode==='browser'&&!browserModeAvailable){setError(t('dictationLocalRequired'));return;}
