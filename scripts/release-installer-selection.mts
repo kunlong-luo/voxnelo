@@ -1,4 +1,13 @@
 /**
+ * KDE Discover's local-file PackageKit backend uses QFileInfo::baseName(),
+ * which truncates the name at the FIRST dot. A versioned Debian archive like
+ * voxnelo_0.1.5_amd64.deb is therefore shown as "voxnelo_0". Keep that archive
+ * for tooling, and ship this byte-identical human-facing alias for local UI.
+ * The actual dpkg Package and Version fields remain unchanged.
+ */
+export const DISCOVER_LOCAL_DEB_NAME='Voxnelo.deb';
+
+/**
  * A release directory may contain old installers from previous local builds.
  * Never select an arbitrary find() hit: doing so makes a successful upgrade
  * appear to fail whenever 0.1.0 coexists with 0.1.1.
