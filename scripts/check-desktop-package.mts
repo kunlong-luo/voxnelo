@@ -6,10 +6,10 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync } from 'node:fs';
+import { createReadStream, existsSync } from 'node:fs';
 import { open, readFile, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
-import { selectLinuxInstallers } from './release-installer-selection.mts';
+import { DISCOVER_LOCAL_DEB_NAME, selectLinuxInstallers } from './release-installer-selection.mts';
 
 const appMetadata=JSON.parse(await readFile(path.resolve('package.json'),'utf8')) as {version:string};
 const expectedVersion=appMetadata.version;
@@ -89,6 +89,20 @@ if(platform==='linux'){
     assert.ok(info.isFile()&&info.size>1024*1024,'Installer missing or unexpectedly small: '+filename);
   }
   assert.equal((await readPrefix(debPath,8)).toString('ascii'),'!<arch>\n','Invalid Debian archive');
+  // Discover's local .deb preview uses QFileInfo::baseName(): a versioned
+  // voxnelo_0.1.5_amd64.deb becomes "voxnelo_0" on that screen. The alias
+  // displays as Voxnelo without modifying Debian's canonical package name.
+  assert.equal(DISCOVER_LOCAL_DEB_NAME.split('.')[0],'Voxnelo','Bad Discover local-file display name');
+  const discoverDebPath=path.join(release,DISCOVER_LOCAL_DEB_NAME);
+  assert.equal((await stat(discoverDebPath)).size,(await stat(debPath)).size,
+    'User-friendly Discover DEB must match the canonical installer size');
+  const hashFile=async(filename:string):Promise<string>=>{
+    const hash=createHash('sha256');
+    for await (const bytes of createReadStream(filename))hash.update(bytes as Buffer);
+    return hash.digest('hex');
+  };
+  assert.equal(await hashFile(discoverDebPath),await hashFile(debPath),
+    'User-friendly Discover DEB must be byte-for-byte identical to the versioned installer');
   assert.equal((await readPrefix(appImagePath,4)).toString('hex'),'7f454c46','AppImage is not an ELF executable');
   const metadata=spawnSync('dpkg-deb',['--field',debPath,'Package'],{encoding:'utf8'});
   assert.equal(metadata.status,0,'dpkg-deb could not inspect installer: '+metadata.stderr);
@@ -127,7 +141,7 @@ if(platform==='linux'){
   // Keep this assertion: a literal Depends: default makes the DEB uninstallable.
   assert.doesNotMatch(dependencies.stdout,/(?:^|[,\s])default(?:[,\s(]|$)/,'Builder did not expand default Debian dependencies');
   assert.match(dependencies.stdout,/(?:^|[,\s])libnss3(?:[,\s(]|$)/,'Electron default Linux runtime dependencies were dropped');
-  linuxChecks.push('deb archive, package identity and CJK font dependency','AppImage ELF header','both installers nonempty');
+  linuxChecks.push('deb archive, package identity and CJK font dependency','AppImage ELF header','both installers nonempty','Discover-friendly identical DEB alias');
 }
 // Full installer checks are a strict release-candidate gate. PR CI intentionally
 // uses unpacked Windows/macOS bundles for faster feedback, while Linux PR CI
