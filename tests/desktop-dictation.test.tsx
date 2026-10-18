@@ -38,8 +38,8 @@ function setupDesktop(noiseSuppression?:boolean) {
     start:vi.fn(async()=>({ok:true,sessionId:'session-1'})),
     push:vi.fn(),
     stop:vi.fn(async()=>({finalText:'hello final'})),
-    onResult:vi.fn(()=>()=>undefined),
-    onError:vi.fn(()=>()=>undefined),
+    onResult:vi.fn((_listener:(result:{sessionId:string;finalText:string;interimText:string})=>void)=>()=>undefined),
+    onError:vi.fn((_listener:(sessionId:string)=>void)=>()=>undefined),
   };
   vi.stubGlobal('voxneloDesktop',{platform:'linux',asr:bridge});
   const source={connect:vi.fn()};
@@ -155,7 +155,7 @@ describe('Desktop session cancellation and resource cleanup',()=>{
   it('stops an ASR worker that resolves after the user cancelled startup',async()=>{
     const {bridge,track}=setupDesktop();
     let finishOpen:((result:{ok:boolean;sessionId:string})=>void)|undefined;
-    bridge.start.mockImplementationOnce(()=>new Promise(resolve=>{finishOpen=resolve;}));
+    bridge.start.mockImplementationOnce(()=>new Promise<{ok:boolean;sessionId:string}>(resolve=>{finishOpen=resolve;}));
     render(<Harness/>);
     await waitFor(()=>expect(live.supported).toBe(true));
     act(()=>{void live.start()});
@@ -190,7 +190,7 @@ describe('Desktop session cancellation and resource cleanup',()=>{
     const {bridge,port}=setupDesktop(true);
     let queuedResult:((data:{sessionId:string;finalText:string;interimText:string})=>void)|undefined;
     const unsubscribe=vi.fn();
-    bridge.onResult.mockImplementationOnce((listener:typeof queuedResult)=>{
+    bridge.onResult.mockImplementationOnce((listener:(data:{sessionId:string;finalText:string;interimText:string})=>void)=>{
       queuedResult=listener;
       return unsubscribe;
     });
@@ -214,7 +214,7 @@ describe('Desktop session cancellation and resource cleanup',()=>{
   it('cleans up the worker and microphone after a native recognition error',async()=>{
     const {bridge,track}=setupDesktop(true);
     let errorHandler:((sessionId:string)=>void)|undefined;
-    bridge.onError.mockImplementationOnce((listener:typeof errorHandler)=>{
+    bridge.onError.mockImplementationOnce((listener:(sessionId:string)=>void)=>{
       errorHandler=listener;
       return vi.fn();
     });
