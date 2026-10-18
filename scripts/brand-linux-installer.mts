@@ -14,7 +14,7 @@ import { existsSync } from 'node:fs';
 import { copyFile, mkdtemp, mkdir, readFile, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { selectLinuxInstallers } from './release-installer-selection.mts';
+import { DISCOVER_LOCAL_DEB_NAME, selectLinuxInstallers } from './release-installer-selection.mts';
 
 const META_NAME='app.voxnelo.desktop.metainfo.xml';
 const DESCRIPTION_PATH=path.join('usr','share','metainfo',META_NAME);
@@ -32,7 +32,7 @@ function brandedIconSubpath(icon:Buffer):string{
   return path.join('usr','share','icons','hicolor',`${width}x${height}`,'apps','voxnelo.png');
 }
 
-export async function brandLinuxInstaller():Promise<{deb:string;iconPath:string}>{
+export async function brandLinuxInstaller():Promise<{deb:string;iconPath:string;discoverDeb:string}>{
   assert.equal(process.platform,'linux','Debian AppStream packaging is Linux-only');
   const metadata=JSON.parse(await readFile('package.json','utf8')) as {version:string;author?:string};
   assert.equal(metadata.author,'Leo Luo','Unexpected app developer');
@@ -78,8 +78,14 @@ export async function brandLinuxInstaller():Promise<{deb:string;iconPath:string}
     const built=await stat(rebuilt);
     assert.ok(built.size>1024*1024,'Rebuilt branded installer is unexpectedly small');
     await rename(rebuilt,pathname);
+    // Discover's *local-file* backend displays QFileInfo::baseName(), so a
+    // standard versioned name displays "voxnelo_0". This friendly alias is
+    // not a new package: it contains byte-for-byte the same rebuilt DEB.
+    // Always refresh it after packaging; never use a stale prior build.
+    await copyFile(pathname,path.join(release,DISCOVER_LOCAL_DEB_NAME));
     console.log(`AppStream branding installed into ${deb}: Leo Luo, ${DESCRIPTION_PATH}, ${iconPath}`);
-    return {deb,iconPath};
+    console.log(`Open release/${DISCOVER_LOCAL_DEB_NAME} for the correct local Discover title; local-file author metadata remains Discover-controlled.`);
+    return {deb,iconPath,discoverDeb:DISCOVER_LOCAL_DEB_NAME};
   }finally{
     await rm(temp,{recursive:true,force:true});
   }
