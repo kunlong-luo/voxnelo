@@ -29,7 +29,7 @@ for(const name of entries){
 }
 if(platform==='linux'){
   const discover=files.find(item=>item.name===DISCOVER_LOCAL_DEB_NAME);
-  const versioned=files.find(item=>/^voxnelo_\\d+\\.\\d+\\.\\d+_.*\\.deb$/.test(item.name));
+  const versioned=files.find(item=>/^voxnelo_\d+\.\d+\.\d+_.*\.deb$/.test(item.name));
   if(!discover||!versioned||discover.sha256!==versioned.sha256)
     throw Error('Discover DEB alias must hash-identically match the canonical versioned installer');
 }
