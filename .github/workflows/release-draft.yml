@@ -1,0 +1,186 @@
+name: Prepare GitHub release draft
+
+# Explicitly invoked by a maintainer: never creates a public release on push
+# or tag events. The resulting draft must pass independent product QA before
+# anyone manually clicks "Publish release" in GitHub.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Exact package.json version (for example 0.1.5)'
+        required: true
+        type: string
+      confirmation:
+        description: 'Enter PREPARE_DRAFT_ONLY; this does not approve publishing'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-draft-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    name: Validate source and intent
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Require main, exact version and draft-only confirmation
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ inputs.version }}
+          DRAFT_CONFIRMATION: ${{ inputs.confirmation }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/main" || { echo "::error::Select main, not a tag or branch"; exit 1; }
+          test "$DRAFT_CONFIRMATION" = "PREPARE_DRAFT_ONLY" || { echo "::error::Draft-only confirmation is required"; exit 1; }
+          [[ "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::Invalid release version"; exit 1; }
+          test "$RELEASE_VERSION" = "$(node -p 'require("./package.json").version')" || { echo "::error::Input version differs from package.json"; exit 1; }
+          test -f "docs/release-notes/v$RELEASE_VERSION.md" || { echo "::error::Version-specific release notes are missing"; exit 1; }
+          echo "Preparing an unsigned, unpublished draft for v$RELEASE_VERSION on main."
+
+  build:
+    name: Build unsigned draft candidate (${{ matrix.os }})
+    needs: preflight
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux
+            args: --linux deb AppImage
+          - os: windows-latest
+            target: windows
+            args: --win nsis
+          - os: macos-latest
+            target: mac
+            args: --mac dmg
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          version: 12.11.2
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck and test
+        run: pnpm typecheck && pnpm test
+      - name: Build Electron and renderer
+        run: pnpm build
+      - name: Forbid unaudited ASR payload in default public build
+        run: pnpm asr:verify-real
+      - name: Build unsigned OS installers
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: pnpm exec electron-builder ${{ matrix.args }} --publish never
+      - name: Include Linux AppStream metadata and Discover-friendly DEB
+        if: runner.os == 'Linux'
+        run: node --experimental-strip-types scripts/brand-linux-installer.mts
+      - name: Verify actual installers
+        env:
+          VOXNELO_REQUIRE_INSTALLERS: '1'
+        run: node --experimental-strip-types scripts/check-desktop-package.mts
+      - name: Compute candidate SHA-256 manifest
+        run: node --experimental-strip-types scripts/write-candidate-manifest.mts
+      - name: Install candidate DEB with apt
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(node -p 'require("./package.json").version')"
+          sudo apt-get update -qq
+          sudo apt-get install -y "./release/voxnelo_${version}_amd64.deb"
+          test "$(dpkg-query -W -f='${Version}' voxnelo)" = "$version"
+          dpkg -L voxnelo | grep -Fx '/usr/share/metainfo/app.voxnelo.desktop.metainfo.xml'
+      - name: Upload candidate for draft assembly
+        uses: actions/upload-artifact@v4
+        with:
+          name: voxnelo-${{ matrix.target }}-draft
+          path: |
+            release/*.deb
+            release/*.AppImage
+            release/*.exe
+            release/*.dmg
+            release/SHA256SUMS-*.txt
+            release/candidate-manifest-*.json
+          retention-days: 7
+          if-no-files-found: error
+
+  draft:
+    name: Create PRIVATE draft release (never publish)
+    needs: [preflight, build]
+    runs-on: ubuntu-latest
+    if: github.repository == 'kunlong-luo/voxnelo'
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: voxnelo-*-draft
+          path: draft-assets
+          merge-multiple: true
+      - name: Verify three platform checksum inventories and release status
+        shell: bash
+        run: |
+          set -euo pipefail
+          for platform in linux win32 darwin; do
+            test -f "draft-assets/SHA256SUMS-$platform.txt"
+            test -f "draft-assets/candidate-manifest-$platform.json"
+            (cd draft-assets && sha256sum -c "SHA256SUMS-$platform.txt")
+          done
+          test -f draft-assets/Voxnelo.deb
+          test -f "draft-assets/voxnelo_${RELEASE_VERSION}_amd64.deb"
+          test -f "draft-assets/Voxnelo-${RELEASE_VERSION}.AppImage"
+          test "$(find draft-assets -maxdepth 1 -name '*.exe' -type f | wc -l)" -ge 1
+          test "$(find draft-assets -maxdepth 1 -name '*.dmg' -type f | wc -l)" -ge 1
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+                    const read = (name) => JSON.parse(readFileSync('draft-assets/candidate-manifest-'+name+'.json', 'utf8'));
+          for (const platform of ['linux','win32','darwin']) {
+            const manifest = read(platform);
+            if (!manifest.candidateOnly || !manifest.unsigned || manifest.publicReleaseApproved !== false)
+              throw Error('Invalid candidate-only status: '+platform);
+          }
+          const linux = read('linux');
+          const debs = linux.files.filter(file => file.name.endsWith('.deb'));
+          if (debs.length !== 2 || debs[0].sha256 !== debs[1].sha256)
+            throw Error('Canonical and Discover-facing DEB digests differ');
+          const notes = readFileSync('docs/release-notes/v'+process.env.RELEASE_VERSION+'.md', 'utf8');
+          if (!notes.includes(process.env.RELEASE_VERSION) || !notes.includes('尚未'))
+            throw Error('Draft notes must identify the version and unresolved QA');
+          NODE
+      - name: Refuse to overwrite an existing release or version tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="v$RELEASE_VERSION"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "::error::GitHub Release already exists for $tag; refusing to overwrite."
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null; then
+            echo "::error::Version tag already exists; refusing to overwrite."
+            exit 1
+          fi
+      - name: Create unpublished draft with real installers
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create "v$RELEASE_VERSION" draft-assets/* \
+            --target "$GITHUB_SHA" \
+            --title "Voxnelo $RELEASE_VERSION (Early Access candidate)" \
+            --notes-file "docs/release-notes/v$RELEASE_VERSION.md" \
+            --draft --prerelease
+          echo "A private draft release is ready for manual product, platform, privacy and licensing review."
