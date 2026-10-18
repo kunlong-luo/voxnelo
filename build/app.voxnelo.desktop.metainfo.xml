@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>app.voxnelo.desktop</id>
+  <name>Voxnelo</name>
+  <summary>Free, local-first English speaking practice</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <developer id="io.github.kunlong-luo">
+    <name>Leo Luo</name>
+  </developer>
+  <description>
+    <p>Practice short English sentences with reference pronunciation, microphone recording and private learning history. Voxnelo is designed for focused daily speaking practice.</p>
+    <p>Offline speech recognition is an optional local pilot and is not included in standard public installers.</p>
+  </description>
+  <icon type="stock">voxnelo</icon>
+  <launchable type="desktop-id">app.voxnelo.desktop.desktop</launchable>
+  <url type="homepage">https://kunlong-luo.github.io/voxnelo/</url>
+  <url type="bugtracker">https://github.com/kunlong-luo/voxnelo/issues</url>
+  <categories>
+    <category>Education</category>
+  </categories>
+  <releases>
+    <release version="0.1.5" date="2026-10-18"/>
+  </releases>
+</component>
