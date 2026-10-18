@@ -14,7 +14,7 @@ describe('Current Voxnelo README and release claims',()=>{
     for(const capability of ['40 条','系统','录音','回听','收藏','历史','IndexedDB','主题','Leo Luo'])
       expect(readme).toContain(capability);
     expect(readme).toContain('不附带第三方离线 ASR 模型');
-    expect(readme).toContain('尚未创建正式的 GitHub Release');
+    expect(readme).toContain('未创建正式的 GitHub Release');
     expect(readme).not.toMatch(/V1\.0\s*(?:规划|即将)|即将推出|敬请期待|AI 对话已实现/);
   });
 
