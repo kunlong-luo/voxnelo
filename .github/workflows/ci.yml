@@ -146,43 +146,9 @@ jobs:
           dpkg --compare-versions "$actual_version" gt '0.1.4'
           echo "Linux package Version $actual_version upgrades the 0.1.4 release identity"
           test "$(dpkg-query -W -f='${Status}' fonts-noto-cjk)" = 'install ok installed'
-          dpkg -L voxnelo | grep -Eq '^/usr/share/applications/[^/]+\.desktop
-          echo "apt install verified: Voxnelo, CJK fonts, desktop launcher"
-      - name: Verify SHA-256 candidate manifest on Linux
-        if: runner.os == 'Linux'
-        run: node --experimental-strip-types scripts/write-candidate-manifest.mts
-      - name: Upload Linux installers for CI review
-        if: runner.os == 'Linux'
-        uses: actions/upload-artifact@v4
-        with:
-          name: voxnelo-linux-pr-installers
-          path: |
-            release/*.deb
-            release/*.AppImage
-            release/SHA256SUMS-*.txt
-            release/candidate-manifest-*.json
-          retention-days: 7
-          if-no-files-found: error
-
+          dpkg -L voxnelo | grep -Eq '^/usr/share/applications/[^/]+\.desktop$'
           dpkg -L voxnelo | grep -Fx '/usr/share/metainfo/app.voxnelo.desktop.metainfo.xml'
-          dpkg -L voxnelo | grep -Eq '^/usr/share/icons/hicolor/[0-9]+x[0-9]+/apps/voxnelo\\.png
-          echo "apt install verified: Voxnelo, CJK fonts, desktop launcher"
-      - name: Verify SHA-256 candidate manifest on Linux
-        if: runner.os == 'Linux'
-        run: node --experimental-strip-types scripts/write-candidate-manifest.mts
-      - name: Upload Linux installers for CI review
-        if: runner.os == 'Linux'
-        uses: actions/upload-artifact@v4
-        with:
-          name: voxnelo-linux-pr-installers
-          path: |
-            release/*.deb
-            release/*.AppImage
-            release/SHA256SUMS-*.txt
-            release/candidate-manifest-*.json
-          retention-days: 7
-          if-no-files-found: error
-
+          dpkg -L voxnelo | grep -Eq '^/usr/share/icons/hicolor/[0-9]+x[0-9]+/apps/voxnelo\.png$'
           echo "apt install verified: Voxnelo, CJK fonts, desktop launcher"
       - name: Verify SHA-256 candidate manifest on Linux
         if: runner.os == 'Linux'
