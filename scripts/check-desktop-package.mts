@@ -108,6 +108,18 @@ if(platform==='linux'){
   assert.match(description.stdout,/Voxnelo - English speaking practice/,'Debian package synopsis missing or corrupted');
   assert.match(description.stdout,/Free, local-first English speaking practice/,'Debian package description missing or corrupted');
   assert.doesNotMatch(description.stdout,/\?{2,}|\uFFFD/,'Debian package description contains replacement characters');
+  // The software center may not display the app author/brand from Maintainer
+  // alone. Verify that the *actual Debian data archive* owns AppStream metadata
+  // and a theme-resolvable brand icon in system-wide locations.
+  const listing=spawnSync('dpkg-deb',['--contents',debPath],{encoding:'utf8'});
+  assert.equal(listing.status,0,'Cannot inspect Debian payload: '+listing.stderr);
+  assert.match(listing.stdout,/usr\/share\/metainfo\/app\\.voxnelo\\.desktop\\.metainfo\\.xml/,
+    'Debian AppStream developer metadata is not installed in /usr/share/metainfo');
+  assert.match(listing.stdout,/usr\/share\/icons\/hicolor\/[0-9]+x[0-9]+\/apps\/voxnelo\\.png/,
+    'Debian application icon is missing from /usr/share/icons/hicolor');
+  const appstream=await readFile(path.resolve('build','app.voxnelo.desktop.metainfo.xml'),'utf8');
+  assert.match(appstream,/<name>Leo Luo<\\/name>/,'AppStream must credit Leo Luo');
+  assert.ok(appstream.includes('<release version="'+expectedVersion+'"'),'AppStream version must match installed app');
   const dependencies=spawnSync('dpkg-deb',['--field',debPath,'Depends'],{encoding:'utf8'});
   assert.equal(dependencies.status,0,'dpkg-deb could not inspect dependencies: '+dependencies.stderr);
   assert.match(dependencies.stdout,/(?:^|[,\s])fonts-noto-cjk(?:[,\s(]|$)/,'Debian installer must provide Chinese CJK font support');
