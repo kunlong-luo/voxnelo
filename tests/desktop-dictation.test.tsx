@@ -137,3 +137,94 @@ describe('Electron real microphone to local ASR lifecycle',()=>{
     expect(bridge.stop).toHaveBeenCalledWith('session-1');
   });
 });
+
+describe('Desktop session cancellation and resource cleanup',()=>{
+  it('handles denied microphone access without starting the native engine',async()=>{
+    const {bridge,getUserMedia}=setupDesktop();
+    const denied=new Error('permission denied');
+    denied.name='NotAllowedError';
+    getUserMedia.mockRejectedValueOnce(denied);
+    render(<Harness/>);
+    await waitFor(()=>expect(live.supported).toBe(true));
+    await act(async()=>{await live.start()});
+    expect(live.status).toBe('idle');
+    expect(live.error).toContain('授权');
+    expect(bridge.start).not.toHaveBeenCalled();
+  });
+
+  it('stops an ASR worker that resolves after the user cancelled startup',async()=>{
+    const {bridge,track}=setupDesktop();
+    let finishOpen:((result:{ok:boolean;sessionId:string})=>void)|undefined;
+    bridge.start.mockImplementationOnce(()=>new Promise(resolve=>{finishOpen=resolve;}));
+    render(<Harness/>);
+    await waitFor(()=>expect(live.supported).toBe(true));
+    act(()=>{void live.start()});
+    await waitFor(()=>expect(bridge.start).toHaveBeenCalledOnce());
+    act(()=>live.stop());
+    await act(async()=>{
+      finishOpen?.({ok:true,sessionId:'late-session'});
+      await Promise.resolve();
+    });
+    expect(bridge.stop).toHaveBeenCalledWith('late-session');
+    expect(track.stop).toHaveBeenCalledOnce();
+    expect(bridge.onResult).not.toHaveBeenCalled();
+    expect(live.status).toBe('idle');
+    expect(live.finalText).toBe('');
+  });
+
+  it('releases microphone and native session when AudioWorklet setup fails',async()=>{
+    const {bridge,track,port,audioContext}=setupDesktop();
+    audioContext.audioWorklet.addModule.mockRejectedValueOnce(new Error('worklet unavailable'));
+    render(<Harness/>);
+    await waitFor(()=>expect(live.supported).toBe(true));
+    await act(async()=>{await live.start()});
+    expect(track.stop).toHaveBeenCalledOnce();
+    expect(bridge.stop).toHaveBeenCalledWith('session-1');
+    expect(audioContext.close).toHaveBeenCalledOnce();
+    expect(port.onmessage).toBeNull();
+    expect(live.status).toBe('idle');
+    expect(live.error).toContain('未能启动');
+  });
+
+  it('drops queued transcript events and PCM after user stops listening',async()=>{
+    const {bridge,port}=setupDesktop(true);
+    let queuedResult:((data:{sessionId:string;finalText:string;interimText:string})=>void)|undefined;
+    const unsubscribe=vi.fn();
+    bridge.onResult.mockImplementationOnce((listener:typeof queuedResult)=>{
+      queuedResult=listener;
+      return unsubscribe;
+    });
+    render(<Harness/>);
+    await waitFor(()=>expect(live.supported).toBe(true));
+    await act(async()=>{await live.start()});
+    const queuedPCM=port.onmessage;
+    await act(async()=>{live.stop();await Promise.resolve()});
+    const pushed=bridge.push.mock.calls.length;
+    act(()=>{
+      queuedResult?.({sessionId:'session-1',finalText:'late result',interimText:'late'});
+      queuedPCM?.({data:new Float32Array(1600)});
+    });
+    expect(unsubscribe).toHaveBeenCalledOnce();
+    expect(port.onmessage).toBeNull();
+    expect(bridge.push).toHaveBeenCalledTimes(pushed);
+    expect(live.finalText).toBe('hello final');
+    expect(live.interimText).toBe('');
+  });
+
+  it('cleans up the worker and microphone after a native recognition error',async()=>{
+    const {bridge,track}=setupDesktop(true);
+    let errorHandler:((sessionId:string)=>void)|undefined;
+    bridge.onError.mockImplementationOnce((listener:typeof errorHandler)=>{
+      errorHandler=listener;
+      return vi.fn();
+    });
+    render(<Harness/>);
+    await waitFor(()=>expect(live.supported).toBe(true));
+    await act(async()=>{await live.start()});
+    act(()=>errorHandler?.('session-1'));
+    expect(live.status).toBe('idle');
+    expect(live.error).toContain('未能启动');
+    expect(track.stop).toHaveBeenCalledOnce();
+    expect(bridge.stop).toHaveBeenCalledWith('session-1');
+  });
+});
