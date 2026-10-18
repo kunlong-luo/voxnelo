@@ -141,8 +141,8 @@ jobs:
           expected_version="$(node -p 'require("./package.json").version')"
           actual_version="$(dpkg-query -W -f='${Version}' voxnelo)"
           test "$actual_version" = "$expected_version"
-          dpkg --compare-versions "$actual_version" gt '0.1.2'
-          echo "Linux package Version $actual_version upgrades the 0.1.2 release identity"
+          dpkg --compare-versions "$actual_version" gt '0.1.3'
+          echo "Linux package Version $actual_version upgrades the 0.1.3 release identity"
           test "$(dpkg-query -W -f='${Status}' fonts-noto-cjk)" = 'install ok installed'
           dpkg -L voxnelo | grep -Eq '^/usr/share/applications/[^/]+\.desktop$'
           echo "apt install verified: Voxnelo, CJK fonts, desktop launcher"
