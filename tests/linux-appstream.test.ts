@@ -6,7 +6,8 @@ const root=path.resolve('.');
 const buildInfo=JSON.parse(readFileSync(path.join(root,'package.json'),'utf8')) as {
   version:string;
   author:string;
-  build:{appId:string;desktopName:string;linux:{maintainer:string}};
+  desktopName:string;
+  build:{appId:string;linux:{maintainer:string}};
 };
 const appstream=readFileSync(path.join(root,'build','app.voxnelo.desktop.metainfo.xml'),'utf8');
 
