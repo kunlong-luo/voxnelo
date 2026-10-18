@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { linuxInstallerNames, selectLinuxInstallers } from '../scripts/release-installer-selection.mts';
+import { DISCOVER_LOCAL_DEB_NAME, linuxInstallerNames, selectLinuxInstallers } from '../scripts/release-installer-selection.mts';
 
 describe('Voxnelo Linux release artifact selection',()=>{
   const stale=['voxnelo_0.1.0_amd64.deb','Voxnelo-0.1.0.AppImage'];
@@ -16,6 +16,15 @@ describe('Voxnelo Linux release artifact selection',()=>{
     expect(()=>selectLinuxInstallers(stale,'0.1.1','x64')).toThrow(/current Voxnelo deb installer/);
     expect(()=>selectLinuxInstallers([stale[0]!,current[1]!],'0.1.1','x64')).toThrow(/0\.1\.1_amd64/);
     expect(()=>selectLinuxInstallers([current[0]!,stale[1]!],'0.1.1','x64')).toThrow(/0\.1\.1\.AppImage/);
+  });
+  it('keeps the versioned Debian name while supporting KDE Discover local-file UI',()=>{
+    const canonical=linuxInstallerNames('0.1.5','x64').deb;
+    expect(canonical).toBe('voxnelo_0.1.5_amd64.deb');
+    // Discover LocalFilePKResource::name() uses QFileInfo::baseName()
+    // (the segment before the *first* dot, not before the last dot).
+    expect(canonical.split('.')[0]).toBe('voxnelo_0');
+    expect(DISCOVER_LOCAL_DEB_NAME).toBe('Voxnelo.deb');
+    expect(DISCOVER_LOCAL_DEB_NAME.split('.')[0]).toBe('Voxnelo');
   });
   it('supports Linux arm64 naming and rejects unsupported architectures',()=>{
     expect(linuxInstallerNames('0.1.1','arm64')).toEqual({
