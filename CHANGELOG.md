@@ -69,6 +69,18 @@
 - 无用依赖 `zod`、`zustand`（全仓零引用）；`App.tsx` 3 个无用图标导入；
   删除从未被调用的 `exportLearningData`（备份/恢复待 V0.3 完整设计后再做）。
 
+## [0.1.5] - 2026-10-18
+
+### Improved
+
+- 向 Linux DEB 的系统目录增加 AppStream 应用元数据（开发者 Leo Luo）和 Voxnelo 品牌图标，改善 KDE Discover 软件中心的开发者信息与通用图标。
+- 将品牌文件的实际安装纳入 pnpm pack:linux、CI、Release Candidate 以及 dpkg-deb/apt 校验。
+- 安装包递增为 **0.1.5**，可从 0.1.4 直接升级，保留本地课程记录和个人离线识别模型。
+
+### Limits
+
+- Discover 可能缓存旧应用信息；软件中心最终显示仍需在 Pop!_OS 实机复核。本次不更改离线 ASR 模型、原生模块或语音识别算法。
+
 ## [0.1.4] - 2026-10-18
 
 ### Improved

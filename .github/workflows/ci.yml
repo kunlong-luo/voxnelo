@@ -125,7 +125,9 @@ jobs:
         run: pnpm exec electron-builder --dir --publish never
       - name: Package Linux installers (deb and AppImage)
         if: runner.os == 'Linux'
-        run: pnpm exec electron-builder --linux deb AppImage --publish never
+        run: |
+          pnpm exec electron-builder --linux deb AppImage --publish never
+          node --experimental-strip-types scripts/brand-linux-installer.mts
       - name: Assert bundle, installers and Voxnelo identity
         run: node --experimental-strip-types scripts/check-desktop-package.mts
       - name: Install actual Linux DEB via apt, verify package and fonts
@@ -141,10 +143,12 @@ jobs:
           expected_version="$(node -p 'require("./package.json").version')"
           actual_version="$(dpkg-query -W -f='${Version}' voxnelo)"
           test "$actual_version" = "$expected_version"
-          dpkg --compare-versions "$actual_version" gt '0.1.3'
-          echo "Linux package Version $actual_version upgrades the 0.1.3 release identity"
+          dpkg --compare-versions "$actual_version" gt '0.1.4'
+          echo "Linux package Version $actual_version upgrades the 0.1.4 release identity"
           test "$(dpkg-query -W -f='${Status}' fonts-noto-cjk)" = 'install ok installed'
           dpkg -L voxnelo | grep -Eq '^/usr/share/applications/[^/]+\.desktop$'
+          dpkg -L voxnelo | grep -Fx '/usr/share/metainfo/app.voxnelo.desktop.metainfo.xml'
+          dpkg -L voxnelo | grep -Eq '^/usr/share/icons/hicolor/[0-9]+x[0-9]+/apps/voxnelo\.png$'
           echo "apt install verified: Voxnelo, CJK fonts, desktop launcher"
       - name: Verify SHA-256 candidate manifest on Linux
         if: runner.os == 'Linux'
