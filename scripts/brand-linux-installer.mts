@@ -11,8 +11,9 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
-import { appendFile, copyFile, mkdtemp, mkdir, readFile, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
+import { copyFile, mkdtemp, mkdir, readFile, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { selectLinuxInstallers } from './release-installer-selection.mts';
 
 const META_NAME='app.voxnelo.desktop.metainfo.xml';
@@ -84,6 +85,6 @@ export async function brandLinuxInstaller():Promise<{deb:string;iconPath:string}
   }
 }
 
-if(process.argv[1]&&path.resolve(process.argv[1])===new URL(import.meta.url).pathname){
+if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
   await brandLinuxInstaller();
 }
