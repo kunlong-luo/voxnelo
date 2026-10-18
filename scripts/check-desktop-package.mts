@@ -113,12 +113,12 @@ if(platform==='linux'){
   // and a theme-resolvable brand icon in system-wide locations.
   const listing=spawnSync('dpkg-deb',['--contents',debPath],{encoding:'utf8'});
   assert.equal(listing.status,0,'Cannot inspect Debian payload: '+listing.stderr);
-  assert.match(listing.stdout,/usr\/share\/metainfo\/app\\.voxnelo\\.desktop\\.metainfo\\.xml/,
+  assert.ok(listing.stdout.includes('usr/share/metainfo/app.voxnelo.desktop.metainfo.xml'),
     'Debian AppStream developer metadata is not installed in /usr/share/metainfo');
-  assert.match(listing.stdout,/usr\/share\/icons\/hicolor\/[0-9]+x[0-9]+\/apps\/voxnelo\\.png/,
+  assert.ok(new RegExp('usr/share/icons/hicolor/[0-9]+x[0-9]+/apps/voxnelo[.]png').test(listing.stdout),
     'Debian application icon is missing from /usr/share/icons/hicolor');
   const appstream=await readFile(path.resolve('build','app.voxnelo.desktop.metainfo.xml'),'utf8');
-  assert.match(appstream,/<name>Leo Luo<\\/name>/,'AppStream must credit Leo Luo');
+  assert.ok(appstream.includes('<name>Leo Luo</name>'),'AppStream must credit Leo Luo');
   assert.ok(appstream.includes('<release version="'+expectedVersion+'"'),'AppStream version must match installed app');
   const dependencies=spawnSync('dpkg-deb',['--field',debPath,'Depends'],{encoding:'utf8'});
   assert.equal(dependencies.status,0,'dpkg-deb could not inspect dependencies: '+dependencies.stderr);
