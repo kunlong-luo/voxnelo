@@ -1,0 +1,128 @@
+import type { VoxneloOfflineAsr } from '../desktopBridge';
+
+/**
+ * One Electron-only microphone/AudioWorklet/ASR session.
+ *
+ * This adapter deliberately owns no React state and does not access browser
+ * SpeechRecognition. The caller supplies a generation guard so permission
+ * prompts, native worker startup and worklet loading can be cancelled safely.
+ */
+export type DesktopDictationStop=()=>Promise<{finalText:string}>;
+export type DesktopStartError='permission'|'microphone'|'failed';
+export type DesktopStartResult={ok:true}|{ok:false;reason:'cancelled'|DesktopStartError};
+
+export interface DesktopDictationCallbacks {
+  isCurrent:()=>boolean;
+  onStopReady:(stop:DesktopDictationStop)=>void;
+  onNoiseReduction:(enabled:boolean)=>void;
+  onTranscript:(finalText:string,interimText:string)=>void;
+  onLevel:(level:number)=>void;
+  onError:()=>void;
+  onDeviceEnded:()=>void;
+}
+
+export async function startDesktopDictationSession(
+  bridge:VoxneloOfflineAsr,
+  callbacks:DesktopDictationCallbacks,
+):Promise<DesktopStartResult> {
+  let media:MediaStream|null=null;
+  let context:AudioContext|null=null;
+  let source:MediaStreamAudioSourceNode|null=null;
+  let node:AudioWorkletNode|null=null;
+  let silent:GainNode|null=null;
+  let unsubscribeResult:(()=>void)|null=null;
+  let unsubscribeError:(()=>void)|null=null;
+  let sessionId:string|null=null;
+  let audioTrack:MediaStreamTrack|null=null;
+  let closed=false;
+  let lastLevelUpdate=0;
+
+  // Idempotence matters: cancellation, device loss and worker failure may race.
+  let closePromise:Promise<{finalText:string}>|null=null;
+  const close:DesktopDictationStop=()=>{
+    if(closePromise)return closePromise;
+    closed=true;
+    unsubscribeResult?.();
+    unsubscribeError?.();
+    if(audioTrack)audioTrack.removeEventListener('ended',onDeviceEnded);
+    if(node)node.port.onmessage=null;
+    // Disconnecting prevents a queued PCM frame from reaching a disposed IPC session.
+    for(const item of [source,node,silent]){
+      try{item?.disconnect();}catch{/* already disconnected */}
+    }
+    media?.getTracks().forEach(track=>track.stop());
+    if(context)void context.close().catch(()=>{/* browser is already shutting down */});
+    const id=sessionId;
+    try{
+      closePromise=id?Promise.resolve(bridge.stop(id)):Promise.resolve({finalText:''});
+    }catch{
+      closePromise=Promise.resolve({finalText:''});
+    }
+    return closePromise;
+  };
+  const isCurrent=()=>!closed&&callbacks.isCurrent();
+  const onDeviceEnded=()=>{
+    if(isCurrent())callbacks.onDeviceEnded();
+  };
+
+  try{
+    media=await navigator.mediaDevices.getUserMedia({
+      audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1},
+      video:false,
+    });
+    if(!isCurrent()){void close();return {ok:false,reason:'cancelled'};}
+    audioTrack=media.getAudioTracks()[0]??null;
+    callbacks.onNoiseReduction(audioTrack?.getSettings().noiseSuppression===true);
+    audioTrack?.addEventListener('ended',onDeviceEnded);
+
+    const opened=await bridge.start();
+    if(opened.ok)sessionId=opened.sessionId;
+    // Stop even an ASR worker that finished starting after the user navigated away.
+    if(!isCurrent()){void close();return {ok:false,reason:'cancelled'};}
+    if(!opened.ok)throw Error('Offline ASR worker is not ready');
+    callbacks.onStopReady(close);
+    unsubscribeResult=bridge.onResult(result=>{
+      if(!isCurrent()||result.sessionId!==sessionId)return;
+      callbacks.onTranscript(result.finalText,result.interimText);
+    });
+    unsubscribeError=bridge.onError(id=>{
+      if(isCurrent()&&id===sessionId)callbacks.onError();
+    });
+
+    // Worklet does the resampling from the actual device rate to 16 kHz.
+    // Forcing a 16kHz AudioContext fails on some Linux audio devices.
+    context=new AudioContext({latencyHint:'interactive'});
+    await context.audioWorklet.addModule(new URL('audio/pcm-worklet.js',window.location.href).href);
+    if(!isCurrent()){void close();return {ok:false,reason:'cancelled'};}
+    source=context.createMediaStreamSource(media);
+    node=new AudioWorkletNode(context,'voxnelo-pcm-16k');
+    silent=context.createGain();
+    silent.gain.value=0;
+    source.connect(node);
+    node.connect(silent);
+    silent.connect(context.destination);
+    node.port.onmessage=event=>{
+      if(!isCurrent()||!sessionId||!(event.data instanceof Float32Array))return;
+      const samples=event.data;
+      bridge.push(sessionId,samples);
+      const now=performance.now();
+      if(now-lastLevelUpdate<100)return;
+      lastLevelUpdate=now;
+      let sum=0;
+      for(let i=0;i<samples.length;i++)sum+=(samples[i]??0)*(samples[i]??0);
+      callbacks.onLevel(Math.min(1,Math.sqrt(sum/Math.max(1,samples.length))*6));
+    };
+    await context.resume();
+    if(!isCurrent()){void close();return {ok:false,reason:'cancelled'};}
+    return {ok:true};
+  }catch(error){
+    void close();
+    if(!callbacks.isCurrent())return {ok:false,reason:'cancelled'};
+    const kind=error instanceof Error?error.name:'';
+    const reason:DesktopStartError=kind==='NotAllowedError'||kind==='SecurityError'
+      ?'permission'
+      :kind==='NotFoundError'||kind==='NotReadableError'||kind==='OverconstrainedError'
+        ?'microphone':'failed';
+    return {ok:false,reason};
+  }
+}
