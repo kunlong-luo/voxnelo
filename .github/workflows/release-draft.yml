@@ -147,8 +147,7 @@ jobs:
           test "$(find draft-assets -maxdepth 1 -name '*.dmg' -type f | wc -l)" -ge 1
           node --input-type=module <<'NODE'
           import { readFileSync } from 'node:fs';
-          import { createHash } from 'node:crypto';
-          const read = (name) => JSON.parse(readFileSync('draft-assets/candidate-manifest-'+name+'.json', 'utf8'));
+                    const read = (name) => JSON.parse(readFileSync('draft-assets/candidate-manifest-'+name+'.json', 'utf8'));
           for (const platform of ['linux','win32','darwin']) {
             const manifest = read(platform);
             if (!manifest.candidateOnly || !manifest.unsigned || manifest.publicReleaseApproved !== false)
@@ -159,7 +158,7 @@ jobs:
           if (debs.length !== 2 || debs[0].sha256 !== debs[1].sha256)
             throw Error('Canonical and Discover-facing DEB digests differ');
           const notes = readFileSync('docs/release-notes/v'+process.env.RELEASE_VERSION+'.md', 'utf8');
-          if (!notes.includes('0.1.5') || !notes.includes('尚未'))
+          if (!notes.includes(process.env.RELEASE_VERSION) || !notes.includes('尚未'))
             throw Error('Draft notes must identify the version and unresolved QA');
           NODE
       - name: Refuse to overwrite an existing release or version tag
