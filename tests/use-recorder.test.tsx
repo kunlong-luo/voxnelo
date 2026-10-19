@@ -41,6 +41,24 @@ function fakeStream(): MediaStream {
   return { getTracks: () => [] } as unknown as MediaStream;
 }
 
+function eventfulTrack() {
+  const callbacks = new Set<() => void>();
+  const stop = vi.fn();
+  const addEventListener = vi.fn((name: string, callback: () => void) => {
+    if (name === 'ended') callbacks.add(callback);
+  });
+  const removeEventListener = vi.fn((name: string, callback: () => void) => {
+    if (name === 'ended') callbacks.delete(callback);
+  });
+  return {
+    track: { stop, addEventListener, removeEventListener } as unknown as MediaStreamTrack,
+    stop, addEventListener, removeEventListener,
+    emitEnded: () => { for (const callback of [...callbacks]) callback(); },
+    takeEndedCallback: () => [...callbacks][0],
+    listenerCount: () => callbacks.size,
+  };
+}
+
 let latest: ReturnType<typeof useRecorder>;
 
 function Harness(): null {
@@ -304,6 +322,110 @@ describe('useRecorder', () => {
     expect(latest.recordingUrl).toBe('blob:mock');
     view.unmount();
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:mock');
+  });
+
+  it('外置麦克风在录制中断开：立即复位、停止媒体流、清除晚到音频且不误记为录音成功', async () => {
+    MockMediaRecorder.deferStop = true;
+    const mic = eventfulTrack();
+    mockDevices(() => Promise.resolve({ getTracks: () => [mic.track] } as unknown as MediaStream));
+    render(<Harness />);
+    await act(async () => { await latest.start(); });
+    const active = MockMediaRecorder.instances[0]!;
+    expect(mic.listenerCount()).toBe(1);
+    const staleEnded = mic.takeEndedCallback();
+    expect(staleEnded).toBeTypeOf('function');
+
+    act(() => {
+      active.ondataavailable?.({ data: new Blob(['partial']) });
+      mic.emitEnded();
+    });
+    expect(active.state).toBe('inactive');
+    expect(mic.stop).toHaveBeenCalled();
+    expect(mic.listenerCount()).toBe(0);
+    expect(latest.status).toBe('idle');
+    expect(latest.error).toBe('暂未检测到可用麦克风，可以先畅听示范或收藏喜欢的句子。');
+    expect(latest.recordingUrl).toBeNull();
+    act(() => {
+      active.ondataavailable?.({ data: new Blob(['late']) });
+      active.onstop?.();
+      staleEnded?.(); // OS may have already queued the old event.
+    });
+    expect(URL.createObjectURL).not.toHaveBeenCalled();
+    expect(latest.status).toBe('idle');
+    expect(mic.removeEventListener).toHaveBeenCalledWith('ended', staleEnded);
+  });
+
+  it('上一句延迟 ended 不能关闭新一句的录音或污染回听', async () => {
+    MockMediaRecorder.deferStop = true;
+    const oldMic = eventfulTrack(), newMic = eventfulTrack();
+    let grants = 0;
+    mockDevices(() => Promise.resolve({
+      getTracks: () => [++grants === 1 ? oldMic.track : newMic.track],
+    } as unknown as MediaStream));
+    render(<Harness />);
+    await act(async () => { await latest.start(); });
+    const old = MockMediaRecorder.instances[0]!;
+    const delayedEnded = oldMic.takeEndedCallback();
+    act(() => { latest.stop(); latest.clearAudio(); });
+    expect(oldMic.listenerCount()).toBe(0);
+    await act(async () => { await latest.start(); });
+    const now = MockMediaRecorder.instances[1]!;
+    expect(now.state).toBe('recording');
+    act(() => {
+      delayedEnded?.();
+      old.ondataavailable?.({ data: new Blob(['stale']) });
+      old.onstop?.();
+    });
+    expect(newMic.stop).not.toHaveBeenCalled();
+    expect(latest.status).toBe('recording');
+    expect(latest.error).toBeNull();
+    act(() => {
+      now.ondataavailable?.({ data: new Blob(['new voice']) });
+      latest.stop();
+      now.onstop?.();
+    });
+    expect(latest.status).toBe('ready');
+    expect(latest.recordingUrl).toBe('blob:mock');
+    expect(URL.createObjectURL).toHaveBeenCalledTimes(1);
+  });
+
+  it('正常按停止（即使音轨实现发出 ended）也不会误报设备断开', async () => {
+    const mic = eventfulTrack();
+    mic.stop.mockImplementation(() => mic.emitEnded());
+    mockDevices(() => Promise.resolve({ getTracks: () => [mic.track] } as unknown as MediaStream));
+    render(<Harness />);
+    await act(async () => { await latest.start(); });
+    const active = MockMediaRecorder.instances[0]!;
+    act(() => {
+      active.ondataavailable?.({ data: new Blob(['voice']) });
+      latest.stop();
+    });
+    expect(mic.listenerCount()).toBe(0);
+    expect(latest.status).toBe('ready');
+    expect(latest.error).toBeNull();
+    expect(latest.recordingUrl).toBe('blob:mock');
+  });
+
+  it('录音引擎启动失败后清除音轨监听，并允许用户正常重试', async () => {
+    const firstMic = eventfulTrack(), secondMic = eventfulTrack();
+    let count = 0;
+    mockDevices(() => Promise.resolve({
+      getTracks: () => [++count === 1 ? firstMic.track : secondMic.track],
+    } as unknown as MediaStream));
+    vi.spyOn(MockMediaRecorder.prototype, 'start').mockImplementationOnce(() => {
+      throw new Error('device startup failed');
+    });
+    render(<Harness />);
+    await act(async () => { await latest.start(); });
+    expect(latest.status).toBe('idle');
+    expect(latest.error).toBe('录音失败，请检查设备后重试。');
+    expect(firstMic.stop).toHaveBeenCalled();
+    expect(firstMic.listenerCount()).toBe(0);
+    await act(async () => { await latest.start(); });
+    expect(latest.status).toBe('recording');
+    expect(secondMic.listenerCount()).toBe(1);
+    act(() => latest.clearAudio());
+    expect(secondMic.listenerCount()).toBe(0);
   });
 
   it('没有录到声音时报错', async () => {
