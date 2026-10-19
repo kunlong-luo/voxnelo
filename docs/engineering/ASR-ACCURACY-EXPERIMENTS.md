@@ -90,6 +90,14 @@ The metric is **weighted** WER = (all substitutions + deletions + insertions) / 
 
 **Important interpretation:** The batch tool reports offline WAV inference performance. It does **not** measure first live subtitle time, final text after release, real-time microphone DSP, device disconnect or 10-minute stability; those need the separate real-device checklist. The `--report-only` path used for diagnostics is deliberately separate from the existing strict real-model CI quality gate. Batch reports cannot authorize Release publication or override the redistribution licensing review.
 
+## Stop-boundary PCM correctness (2026-10-19)
+
+A separate source-level review identified a potential source of short-word errors: the renderer had sent only complete 100 ms / 1600-sample AudioWorklet buffers, then disconnected the worklet immediately on Stop. This could discard up to 99.9 ms of the user's **last syllable**. The stop path now requests the worklet's partial audio tail, forwards it to the same native ASR session, waits for a FIFO `flushed` acknowledgement, and only then sends the native `finish` command. The user's real microphone track is stopped immediately; the extra worklet wait is capped at 350 ms in case a device is lost or the worklet is unresponsive.
+
+Regression tests check: exact 320-sample remainder, no invented padding/silence, no duplicate bytes, queued PCM before native finish, timeout cleanup, and repeated stop. This fixes a *possible truncation mechanism*, **not a measured WER increase**.
+
+For real-device follow-up, include several short sentences ending in weak consonants or reduced words (for example, `I want it`, `Please stop`). Compare complete final transcripts and approximate stop-to-final delay with prior builds; do not upload raw voice audio. If results regress, record OS/voice device category and transcript text, and roll back this audio behavior before release.
+
 ## Still required before closing #45
 
 - Real-device PCM→partial/final transcription checks, sustained sessions, permission/track loss, headset vs built-in microphone and measured noise outcomes.
