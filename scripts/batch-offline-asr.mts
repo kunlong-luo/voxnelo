@@ -74,8 +74,8 @@ export function formatBatchMarkdown(report: BatchReport): string {
   const bySample = report.attempts.map(a =>
     `| ${a.id} | ${a.scenario} | ${a.decoder} | ${a.referenceWords} | ${a.substitutions}/${a.deletions}/${a.insertions} | ${a.wordErrorRate} | ${a.realTimeFactor} |`);
   const incomplete = report.failures.length
-    ? '\\n**Incomplete:** failed attempts must be investigated; do not compare these partial totals as final results.\\n' +
-      report.failures.map(f => `- ${f.id} / ${f.decoder}: ${f.reason}`).join('\\n') + '\\n'
+    ? '\n**Incomplete:** failed attempts must be investigated; do not compare these partial totals as final results.\n' +
+      report.failures.map(f => `- ${f.id} / ${f.decoder}: ${f.reason}`).join('\n') + '\n'
     : '';
   return [
     '# Voxnelo — local ASR evaluation (private diagnostic)',
@@ -98,12 +98,43 @@ export function formatBatchMarkdown(report: BatchReport): string {
     ...bySample,
     '',
     incomplete,
-  ].join('\\n');
+  ].join('\n');
+}
+
+/** Preflight keeps malformed recordings from being counted as ASR results. */
+export function validatePcm16Wav(buffer: Buffer): number {
+  if (buffer.length < 44 || buffer.toString('ascii', 0, 4) !== 'RIFF' ||
+    buffer.toString('ascii', 8, 12) !== 'WAVE') throw Error('Invalid RIFF WAV');
+  let offset = 12;
+  let encoding = 0, channels = 0, rate = 0, bits = 0, sampleBytes = 0;
+  while (offset + 8 <= buffer.length) {
+    const kind = buffer.toString('ascii', offset, offset + 4);
+    const size = buffer.readUInt32LE(offset + 4);
+    const start = offset + 8;
+    if (start + size > buffer.length) throw Error('Truncated WAV chunk');
+    if (kind === 'fmt ' && size >= 16) {
+      encoding = buffer.readUInt16LE(start);
+      channels = buffer.readUInt16LE(start + 2);
+      rate = buffer.readUInt32LE(start + 4);
+      bits = buffer.readUInt16LE(start + 14);
+    }
+    if (kind === 'data') sampleBytes = size;
+    offset = start + size + size % 2;
+  }
+  if (encoding !== 1 || channels !== 1 || rate !== 16000 || bits !== 16 ||
+    sampleBytes === 0 || sampleBytes % 2 !== 0 || sampleBytes > 16000 * 180 * 2)
+    throw Error('Expected 16 kHz mono PCM16 WAV, maximum 180 seconds');
+  return sampleBytes / 2;
 }
 
 const decoders = ['greedy_search', 'modified_beam_search'] as const;
 function runOne(item: BatchSample, decoder: typeof decoders[number], manifestDir: string): MeasuredAsrAttempt {
   const wavPath = path.resolve(manifestDir, item.wav);
+  // A single recording is bounded to ~6 MB; inspect before spawning a native
+  // process and never print its filename, full path, voice or transcript.
+  const waveform = readFileSync(wavPath);
+  if (waveform.length > 7_000_000) throw Error('invalid-wav-or-inference');
+  validatePcm16Wav(waveform);
   const result = spawnSync(process.execPath, [
     '--experimental-strip-types',
     path.resolve('scripts/benchmark-offline-asr.mts'),
@@ -167,7 +198,7 @@ export function runBatch(): void {
     }
   }
   const report = buildBatchReport(attempts, failures, manifest.samples.length * decoders.length);
-  writeFileSync(path.join(output, 'report.json'), JSON.stringify(report, null, 2) + '\\n', { mode: 0o600, flag: 'wx' });
+  writeFileSync(path.join(output, 'report.json'), JSON.stringify(report, null, 2) + '\n', { mode: 0o600, flag: 'wx' });
   writeFileSync(path.join(output, 'report.md'), formatBatchMarkdown(report), { mode: 0o600, flag: 'wx' });
   console.log('Local ASR evaluation:', report.status, report.succeeded, '/', report.attempted, '(reports saved only in your private folder)');
   if (report.status === 'incomplete') process.exitCode = 1;
