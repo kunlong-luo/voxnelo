@@ -1,6 +1,7 @@
 import { parentPort, workerData } from 'node:worker_threads';
 import { createRequire } from 'node:module';
 import { createOnlineRecognizerConfig, type AsrDecodingMethod } from './asrConfig';
+import { drainReadyFrames, FINAL_DECODE_STEPS, PCM_DECODE_STEPS } from './asrDecodeDrain';
 
 type Stream = { acceptWaveform(input:{samples:Float32Array;sampleRate:number}):void; inputFinished():void };
 type Recognizer = {
@@ -19,9 +20,13 @@ const completed:string[]=[];
 let currentText='';
 let stopping=false;
 const report=()=>parent.postMessage({type:'result',finalText:completed.join(' '),interimText:currentText});
-const decode=()=>{
-  // C++ inference stays off Electron's main / UI threads.
-  for(let n=0;n<64&&recognizer.isReady(stream);n++) recognizer.decode(stream);
+const decode=(finishing=false)=>{
+  // C++ inference stays off Electron's main / UI threads. A packet uses a
+  // small fairness budget, but a finished input MUST drain every ready frame.
+  // The old 64-step finish could silently truncate the last spoken words
+  // if more than 64 decoder frames remained after inputFinished().
+  const drain=drainReadyFrames(recognizer,stream,finishing?FINAL_DECODE_STEPS:PCM_DECODE_STEPS);
+  if(finishing&&!drain.fullyDrained)throw Error('Offline ASR finish budget exceeded: refusing incomplete transcript');
   const next=recognizer.getResult(stream).text?.trim()??'';
   if(next!==currentText){currentText=next;report();}
   if(recognizer.isEndpoint(stream)){
@@ -52,7 +57,7 @@ try{
       } else if(message.type==='finish'){
         stopping=true;
         stream.inputFinished();
-        decode();
+        decode(true);
         if(currentText)completed.push(currentText);
         parent.postMessage({type:'result',finalText:completed.join(' '),interimText:''});
         parent.postMessage({type:'finished'});
