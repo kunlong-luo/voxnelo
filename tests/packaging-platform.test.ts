@@ -33,7 +33,9 @@ describe('desktop installer platform preflight', () => {
       expect(packageInfo.scripts['pack:'+target]).toContain('check-packaging-platform.mts '+target);
       expect(packageInfo.scripts['pack:'+target]).toContain('--publish never');
     }
-    expect(packageInfo.scripts['pack:mac'].indexOf('check-packaging-platform.mts'))
-      .toBeLessThan(packageInfo.scripts['pack:mac'].indexOf('pnpm build'));
+    const macScript = packageInfo.scripts['pack:mac'];
+    if (!macScript) throw new Error('Missing macOS pack script');
+    expect(macScript.indexOf('check-packaging-platform.mts'))
+      .toBeLessThan(macScript.indexOf('pnpm build'));
   });
 });
