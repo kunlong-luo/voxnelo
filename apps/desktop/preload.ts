@@ -34,9 +34,14 @@ contextBridge.exposeInMainWorld('voxneloDesktop', {
       ipcRenderer.on('voxnelo:asr:result',listener);
       return ()=>ipcRenderer.removeListener('voxnelo:asr:result',listener);
     },
-    onError: (callback:(id:string)=>void) => {
+    onError: (callback:(id:string,reason:'overloaded'|'failed')=>void) => {
       const listener=(_event:IpcRendererEvent,data:unknown)=>{
-        if(data&&typeof data==='object'&&'sessionId' in data&&typeof data.sessionId==='string')callback(data.sessionId);
+        if(data&&typeof data==='object'&&'sessionId' in data&&typeof data.sessionId==='string'){
+          // Only expose a small allowlist of renderer-safe failure reasons,
+          // never paths, native exceptions, microphone samples or transcripts.
+          const reason=('reason' in data&&data.reason==='overloaded')?'overloaded':'failed';
+          callback(data.sessionId,reason);
+        }
       };
       ipcRenderer.on('voxnelo:asr:error',listener);
       return ()=>ipcRenderer.removeListener('voxnelo:asr:error',listener);
