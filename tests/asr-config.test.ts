@@ -24,6 +24,17 @@ describe('Sherpa ONNX Node public streaming recognizer contract', () => {
     });
   });
 
+  it('keeps greedy as the production default but supports a documented A/B beam configuration',()=>{
+    const model=path.resolve('reviewed-model');
+    const greedy=createOnlineRecognizerConfig(model);
+    const beam=createOnlineRecognizerConfig(model,'modified_beam_search');
+    expect(greedy.decodingMethod).toBe('greedy_search');
+    expect('maxActivePaths' in greedy).toBe(false);
+    expect(beam).toMatchObject({decodingMethod:'modified_beam_search',maxActivePaths:4});
+    expect(beam.modelConfig).toEqual(greedy.modelConfig);
+    expect(beam.featConfig).toEqual(greedy.featConfig);
+  });
+
   it('does not depend on a hard-coded native binary or user-selected path', () => {
     const config = createOnlineRecognizerConfig(path.resolve('reviewed-model'));
     expect(config.modelConfig.transducer.encoder).toContain('reviewed-model');

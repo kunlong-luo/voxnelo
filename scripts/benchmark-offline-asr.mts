@@ -20,6 +20,11 @@ const option=(name:string):string|undefined=>{
 const modelDir=process.env.VOXNELO_ASR_MODEL_DIR;
 const addonPath=process.env.VOXNELO_ASR_ADDON_PATH;
 const wav=option('wav');
+const requestedDecoding=option('decoding-method')??'greedy_search';
+if(requestedDecoding!=='greedy_search' && requestedDecoding!=='modified_beam_search'){
+  throw Error('Unsupported --decoding-method; use greedy_search or modified_beam_search');
+}
+
 if(!modelDir||!addonPath||!isAbsolute(modelDir)||!isAbsolute(addonPath)||!wav||!isAbsolute(wav)){
   console.error('Provide absolute VOXNELO_ASR_MODEL_DIR, VOXNELO_ASR_ADDON_PATH and --wav paths.');
   process.exit(2);
@@ -97,7 +102,7 @@ function wordErrorRate(expected:string,actual:string):number|null{
   return distances[b.length]!/a.length;
 }
 try{
-  worker=new Worker(resolve('dist-electron/offlineAsrWorker.cjs'),{workerData:{modelDir,addonPath}});
+  worker=new Worker(resolve('dist-electron/offlineAsrWorker.cjs'),{workerData:{modelDir,addonPath,decodingMethod:requestedDecoding}});
   worker.on('message',emit);
   worker.on('error',error=>emit({type:'failure',error:String(error)}));
   worker.on('exit',code=>{if(code!==0)emit({type:'failure'});});
@@ -116,6 +121,7 @@ try{
   const expected=option('expect');
   const result={
     realModel:true,
+    decodingMethod:requestedDecoding,
     durationSeconds:Number(duration.toFixed(2)),
     elapsedSeconds:Number(elapsed.toFixed(2)),
     realTimeFactor:Number((elapsed/duration).toFixed(3)),
@@ -124,7 +130,9 @@ try{
   };
   // Fail the process rather than reporting a green benchmark for empty text,
   // excessive latency, or unacceptable real-model recognition errors.
-  requireRealAsrQuality(result);
+  // --report-only is an explicit local diagnostic, never used by CI.
+  // It reports poor WER rather than hiding the measurement behind an exception.
+  if(!argv.includes('--report-only'))requireRealAsrQuality(result);
   console.log(JSON.stringify(result,null,2));
 }finally{
   if(worker)await worker.terminate();

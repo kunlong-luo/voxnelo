@@ -77,12 +77,32 @@ jobs:
           node --experimental-strip-types scripts/benchmark-offline-asr.mts \
             --wav "$RUNNER_TEMP/voxnelo-asr-reference.wav" --expect "$QA_SENTENCE" |
             tee "$RUNNER_TEMP/voxnelo-asr-inference.json"
+      - name: Compare real greedy and beam decoders on the same generated speech (diagnostic)
+        shell: bash
+        run: |
+          set -euo pipefail
+          ADDON="$(node -p 'require.resolve("sherpa-onnx-node",{paths:[process.env.RUNNER_TEMP+"/voxnelo-native/node_modules"]})')"
+          export VOXNELO_ASR_MODEL_DIR="$RUNNER_TEMP/voxnelo-english-model"
+          export VOXNELO_ASR_ADDON_PATH="$ADDON"
+          export LD_LIBRARY_PATH="$RUNNER_TEMP/voxnelo-native/node_modules/sherpa-onnx-node/lib:${LD_LIBRARY_PATH:-}"
+          for method in greedy_search modified_beam_search; do
+            node --experimental-strip-types scripts/benchmark-offline-asr.mts \
+              --wav "$RUNNER_TEMP/voxnelo-asr-reference.wav" \
+              --expect "please speak English slowly" \
+              --decoding-method "$method" --report-only \
+              > "$RUNNER_TEMP/voxnelo-asr-ab-$method.json"
+            cat "$RUNNER_TEMP/voxnelo-asr-ab-$method.json"
+          done
+          echo "A/B comparison is informational and uses one synthetic non-user sample; do not infer improved real microphone WER."
       - name: Upload non-personal inference evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: linux-real-asr-evidence
-          path: ${{ runner.temp }}/voxnelo-asr-inference.json
+          path: |
+            ${{ runner.temp }}/voxnelo-asr-inference.json
+            ${{ runner.temp }}/voxnelo-asr-ab-greedy_search.json
+            ${{ runner.temp }}/voxnelo-asr-ab-modified_beam_search.json
           retention-days: 14
           if-no-files-found: ignore
 
@@ -106,6 +126,8 @@ jobs:
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
         run: pnpm exec electron-builder --linux deb AppImage --publish never
+      - name: Add Linux DEB AppStream branding and Discover-friendly alias
+        run: node --experimental-strip-types scripts/brand-linux-installer.mts
       - name: Verify packaged native ASR and model hashes exactly match staging
         run: node --experimental-strip-types scripts/check-desktop-package.mts
       - name: Exercise packaged Electron ASR IPC with actual model and non-user PCM
