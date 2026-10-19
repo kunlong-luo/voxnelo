@@ -37,6 +37,8 @@ pnpm pack:mac         # macOS DMG (run on macOS)
 pnpm diagnose:linux   # Local Linux installer diagnostics (no installation)
 ```
 
+**Build-host constraints:** `pnpm pack:mac` requires macOS to produce a `.dmg` (Apple's `sips` / `hdiutil` are not available on Linux). Voxnelo now checks this **before** compiling or downloading Electron. A Windows `pnpm pack:windows` NSIS installer can be cross-built on Linux, but the resulting `.exe` and a `signing with signtool.exe` build log do **not** prove Authenticode signing or Windows usability. Run the Windows candidate on real Windows before distribution. Both commands use `--publish never`; they do not upload assets to GitHub Releases.
+
 Package outputs are saved under `release/`. On Linux, packaging produces both the canonical `voxnelo_0.1.5_amd64.deb` and a byte-identical `Voxnelo.deb` for KDE Discover local-file previews, plus an AppImage. These are **testing candidates**, not signed or approved public installers.
 
 ## Linux desktop icon (development only)
