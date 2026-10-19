@@ -201,14 +201,15 @@ try{
       'U3 font zoom broke the controls/workspace scroll: '+JSON.stringify(m));
     // For long multi-line sentences the footer may require local scrolling.
     // It must remain *reachable*, not be cut off by the application shell.
-    await evalJs('document.querySelector(".referenceFooter").scrollIntoView({block:"end"})');
+    await evalJs('(()=>{const s=document.querySelector(".content");s.scrollTo({top:s.scrollHeight,behavior:"instant"})})()');
     await sleep(120);
-    const footerReached=await evalJs<boolean>('(()=>{const r=document.querySelector(".referenceFooter").getBoundingClientRect();return r.top>=-1&&r.bottom<=innerHeight+1})()');
-    assert.ok(footerReached,'U3 long text footer cannot be reached by workspace scroll: '+JSON.stringify(m));
-    await evalJs('document.querySelector(".dictationAction").scrollIntoView({block:"center"})');
+    const footerScroll=await evalJs<{reached:boolean;top:number;bottom:number;scrollTop:number;scrollHeight:number;clientHeight:number}>('(()=>{const s=document.querySelector(".content"),r=document.querySelector(".referenceFooter").getBoundingClientRect();return {reached:r.top>=-1&&r.bottom<=innerHeight+1,top:r.top,bottom:r.bottom,scrollTop:s.scrollTop,scrollHeight:s.scrollHeight,clientHeight:s.clientHeight}})()');
+    assert.ok(footerScroll.reached,'U3 long text footer cannot be reached by workspace scroll: '+JSON.stringify({m,footerScroll}));
+    await evalJs('document.querySelector(".dictationAction").scrollIntoView({block:"center",behavior:"instant"})');
     await sleep(120);
     const micReached=await evalJs<boolean>('(()=>{const r=document.querySelector(".dictationAction").getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight})()');
     assert.ok(micReached,'U3 live dictation must remain reachable: '+JSON.stringify(m));
+    const footerReached=footerScroll.reached;
     await evalJs('document.querySelector(".content").scrollTop=0');
     await sleep(150);
     const png=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
