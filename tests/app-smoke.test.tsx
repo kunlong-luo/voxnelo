@@ -220,6 +220,82 @@ describe('App smoke', () => {
     }
   });
 
+  it('F004/F005: microphone track loss re-enables navigation and cannot charge a phantom practice', async () => {
+    const oldMedia = Object.getOwnPropertyDescriptor(navigator, 'mediaDevices');
+    const listeners = new Set<() => void>();
+    const stopTrack = vi.fn();
+    const track = {
+      stop: stopTrack,
+      addEventListener(name: string, callback: () => void) {
+        if (name === 'ended') listeners.add(callback);
+      },
+      removeEventListener(name: string, callback: () => void) {
+        if (name === 'ended') listeners.delete(callback);
+      },
+    };
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: { getUserMedia: vi.fn(async () => ({ getTracks: () => [track] })) },
+    });
+    class InterruptedRecorder {
+      static instances: InterruptedRecorder[] = [];
+      static isTypeSupported() { return true; }
+      state: RecordingState = 'inactive';
+      mimeType = 'audio/webm';
+      onstop: (() => void) | null = null;
+      ondataavailable: ((event: { data: Blob }) => void) | null = null;
+      onerror: (() => void) | null = null;
+      constructor() { InterruptedRecorder.instances.push(this); }
+      start() { this.state = 'recording'; }
+      stop() { this.state = 'inactive'; /* stop is delivered later by the OS */ }
+    }
+    vi.stubGlobal('MediaRecorder', InterruptedRecorder);
+    const oldCreate = Object.getOwnPropertyDescriptor(URL, 'createObjectURL');
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true, value: vi.fn(() => 'blob:should-never-exist'),
+    });
+    try {
+      const view = render(<App />);
+      await screen.findByText(FIRST_SENTENCE.english);
+      fireEvent.click(screen.getByRole('button', { name: '开口跟读' }));
+      await screen.findByRole('button', { name: '结束录音' });
+      const oldRecorder = InterruptedRecorder.instances[0];
+      if (!oldRecorder) throw new Error('Expected MediaRecorder');
+      expect(listeners.size).toBe(1);
+
+      const { act } = await import('@testing-library/react');
+      await act(async () => {
+        oldRecorder.ondataavailable?.({ data: new Blob(['partial']) });
+        for (const handler of [...listeners]) handler(); // external device unplug
+      });
+      expect(stopTrack).toHaveBeenCalled();
+      expect(listeners.size).toBe(0);
+      expect(screen.getByText('暂未检测到可用麦克风，可以先畅听示范或收藏喜欢的句子。')).toBeTruthy();
+      expect(screen.queryByRole('button', { name: '结束录音' })).toBeNull();
+
+      fireEvent.click(screen.getByRole('button', { name: '换一句' }));
+      await waitFor(() => {
+        expect(view.container.querySelector('h1.sentenceText')?.textContent).not.toBe(FIRST_SENTENCE.english);
+      });
+      await act(async () => {
+        oldRecorder.ondataavailable?.({ data: new Blob(['late stale audio']) });
+        oldRecorder.onstop?.();
+      });
+      expect(URL.createObjectURL).not.toHaveBeenCalled();
+      await waitFor(async () => {
+        const states = await database.states.toArray();
+        expect(states.every(item => item.practicedCount === 0)).toBe(true);
+      });
+      view.unmount();
+    } finally {
+      vi.unstubAllGlobals();
+      if (oldCreate) Object.defineProperty(URL, 'createObjectURL', oldCreate);
+      else Reflect.deleteProperty(URL, 'createObjectURL');
+      if (oldMedia) Object.defineProperty(navigator, 'mediaDevices', oldMedia);
+      else Reflect.deleteProperty(navigator, 'mediaDevices');
+    }
+  });
+
   it('正在录音时不能切到历史/收藏，示范音也应停用', async () => {
     const oldMedia = Object.getOwnPropertyDescriptor(navigator, 'mediaDevices');
     const stopTrack = vi.fn();
