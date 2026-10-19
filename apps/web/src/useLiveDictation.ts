@@ -47,13 +47,13 @@ export function useLiveDictation(sentenceId: string) {
     }).catch(()=>{if(alive){setDesktopAvailable(false);setDesktopReason('not-configured');}});
     return ()=>{alive=false;};
   },[]);
-  const stop = useCallback(() => {
+  const endSession = useCallback((acceptFinalText:boolean) => {
     const generation=++requestId.current;
     const closeDesktop=desktopStop.current;
     desktopStop.current=null;
     if(closeDesktop){
       void closeDesktop().then(result=>{
-        if(!disposed.current&&requestId.current===generation&&result.finalText){
+        if(acceptFinalText&&!disposed.current&&requestId.current===generation&&result.finalText){
           setFinalText(result.finalText);
         }
       }).catch(()=>{ /* offline engine may already be gone */ });
@@ -65,6 +65,7 @@ export function useLiveDictation(sentenceId: string) {
     setInputLevel(null);
     setStatus('idle');
   },[]);
+  const stop = useCallback(() => endSession(true),[endSession]);
   const clear = useCallback(() => {
     stop();
     ++requestId.current; // Reject any late final result from the old sentence.
@@ -102,8 +103,8 @@ export function useLiveDictation(sentenceId: string) {
         onNoiseReduction:enabled=>setNoiseReduction(enabled?'enabled':'unverified'),
         onTranscript:(final,interim)=>{setFinalText(final);setInterimText(interim);},
         onLevel:setInputLevel,
-        onError:()=>{setError(t('dictationFailed'));stop();},
-        onDeviceEnded:()=>{setError(t('dictationMicrophone'));stop();},
+        onError:reason=>{setFinalText('');setError(t(reason==='overloaded'?'dictationOverloaded':'dictationFailed'));endSession(false);},
+        onDeviceEnded:()=>{setFinalText('');setError(t('dictationMicrophone'));endSession(false);},
       });
       if(!isCurrent())return;
       if(!started.ok){
@@ -160,7 +161,7 @@ export function useLiveDictation(sentenceId: string) {
       if(id!==requestId.current)return;
       current.current=null;setStatus('idle');setError(t('dictationFailed'));
     }
-  },[status,mode,browserModeAvailable,desktopAvailable,stop,t]);
+  },[status,mode,browserModeAvailable,desktopAvailable,endSession,t]);
   const installLocal = useCallback(async()=>{
     const Ctor=browserRecognizerClass();
     if(window.voxneloDesktop || !Ctor?.install)return setError(t('dictationLocalRequired'));

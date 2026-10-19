@@ -24,6 +24,7 @@ afterEach(()=>{
 
 function setupDesktop(noiseSuppression?:boolean) {
   const handlers=new Map<string,()=>void>();
+  const asrErrorHandlers=new Set<(sessionId:string,reason:'overloaded'|'failed')=>void>();
   const track={
     stop:vi.fn(),
     getSettings:()=>({noiseSuppression}),
@@ -39,7 +40,10 @@ function setupDesktop(noiseSuppression?:boolean) {
     push:vi.fn(),
     stop:vi.fn(async()=>({finalText:'hello final'})),
     onResult:vi.fn((_listener:(result:{sessionId:string;finalText:string;interimText:string})=>void)=>()=>undefined),
-    onError:vi.fn((_listener:(sessionId:string)=>void)=>()=>undefined),
+    onError:vi.fn((listener:(sessionId:string,reason:'overloaded'|'failed')=>void)=>{
+      asrErrorHandlers.add(listener);
+      return ()=>{asrErrorHandlers.delete(listener);};
+    }),
   };
   vi.stubGlobal('voxneloDesktop',{platform:'linux',asr:bridge});
   const source={connect:vi.fn()};
@@ -56,7 +60,9 @@ function setupDesktop(noiseSuppression?:boolean) {
   vi.stubGlobal('AudioContext',vi.fn(function(){return audioContext}));
   const port:{onmessage:((event:{data:Float32Array|{type:string}})=>void)|null;postMessage?:(message:{type:string})=>void}={onmessage:null};
   vi.stubGlobal('AudioWorkletNode',vi.fn(function(){return {port,connect:vi.fn()}}));
-  return {bridge,track,handlers,getUserMedia,audioContext,port};
+  return {bridge,track,handlers,getUserMedia,audioContext,port,
+    emitAsrError:(reason:'overloaded'|'failed')=>{for(const listener of [...asrErrorHandlers])listener('session-1',reason);},
+  };
 }
 
 describe('Offline dictation product guidance',()=>{
@@ -99,6 +105,35 @@ describe('Electron real microphone to local ASR lifecycle',()=>{
     expect(live.finalText).toBe('hello final');
     expect(live.status).toBe('idle');
   });
+  it('provides actionable overload feedback without inventing a transcript or leaking audio',async()=>{
+    const {bridge,track,emitAsrError}=setupDesktop(true);
+    // The native close path can return the last *partial* text on failure.
+    // It must not be promoted into a completed dictation result.
+    bridge.stop.mockResolvedValueOnce({finalText:'incomplete partial recognition'});
+    render(<Harness/>);
+    await waitFor(()=>expect(live.supported).toBe(true));
+    await act(async()=>{await live.start()});
+    expect(live.status).toBe('listening');
+    act(()=>emitAsrError('overloaded'));
+    expect(live.status).toBe('idle');
+    expect(live.error).toContain('设备暂时跟不上实时听写');
+    expect(live.finalText).toBe('');
+    expect(track.stop).toHaveBeenCalled();
+    await waitFor(()=>expect(bridge.stop).toHaveBeenCalledWith('session-1'));
+    await act(async()=>{await Promise.resolve();});
+    expect(live.finalText).toBe('');
+  });
+
+  it('keeps generic worker errors distinct from device-overload messages',async()=>{
+    const {emitAsrError}=setupDesktop(true);
+    render(<Harness/>);
+    await waitFor(()=>expect(live.supported).toBe(true));
+    await act(async()=>{await live.start()});
+    act(()=>emitAsrError('failed'));
+    expect(live.status).toBe('idle');
+    expect(live.error).toBe('实时听写未能启动，请重试。');
+  });
+
   it('preserves a final partial PCM packet BEFORE completing native ASR stop',async()=>{
     const {bridge,port,track}=setupDesktop(true);
     const ordering:string[]=[];
@@ -264,15 +299,15 @@ describe('Desktop session cancellation and resource cleanup',()=>{
 
   it('cleans up the worker and microphone after a native recognition error',async()=>{
     const {bridge,track}=setupDesktop(true);
-    let errorHandler:((sessionId:string)=>void)|undefined;
-    bridge.onError.mockImplementationOnce((listener:(sessionId:string)=>void)=>{
+    let errorHandler:((sessionId:string,reason:'overloaded'|'failed')=>void)|undefined;
+    bridge.onError.mockImplementationOnce((listener:(sessionId:string,reason:'overloaded'|'failed')=>void)=>{
       errorHandler=listener;
       return vi.fn();
     });
     render(<Harness/>);
     await waitFor(()=>expect(live.supported).toBe(true));
     await act(async()=>{await live.start()});
-    act(()=>errorHandler?.('session-1'));
+    act(()=>errorHandler?.('session-1','failed'));
     expect(live.status).toBe('idle');
     expect(live.error).toContain('未能启动');
     expect(track.stop).toHaveBeenCalledOnce();

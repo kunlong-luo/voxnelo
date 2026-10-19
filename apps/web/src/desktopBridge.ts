@@ -11,13 +11,14 @@ export type DesktopSpeechResult =
   | { ok: false; reason: 'not-installed' | 'failed' | 'cancelled' | 'invalid' };
 
 export interface OfflineAsrResult {sessionId:string;finalText:string;interimText:string}
+export type OfflineAsrFailureReason = 'overloaded' | 'failed';
 export interface VoxneloOfflineAsr {
   capabilities():Promise<{available:boolean;reason:'ready'|'not-configured'|'missing-addon'|'missing-model'}>;
   start():Promise<{ok:true;sessionId:string}|{ok:false;reason:'not-configured'|'busy'|'failed'}>;
   push(sessionId:string,samples:Float32Array):void;
   stop(sessionId:string):Promise<{finalText:string}>;
   onResult(listener:(result:OfflineAsrResult)=>void):()=>void;
-  onError(listener:(sessionId:string)=>void):()=>void;
+  onError(listener:(sessionId:string,reason:OfflineAsrFailureReason)=>void):()=>void;
 }
 
 export interface VoxneloDesktopAPI {

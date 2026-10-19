@@ -98,6 +98,17 @@ Regression tests check: exact 320-sample remainder, no invented padding/silence,
 
 For real-device follow-up, include several short sentences ending in weak consonants or reduced words (for example, `I want it`, `Please stop`). Compare complete final transcripts and approximate stop-to-final delay with prior builds; do not upload raw voice audio. If results regress, record OS/voice device category and transcript text, and roll back this audio behavior before release.
 
+## Native ASR end-of-input decode completeness (2026-10-19)
+
+Code review identified a separate **potential truncation mechanism**, downstream of the AudioWorklet tail flush: `offlineAsrWorker.ts` decoded at most **64 ready frames** on every invocation, including after calling `stream.inputFinished()`. If the streaming decoder had more than 64 ready frames at Stop (for example, a slow processor catching up with queued speech), `finished` could be emitted even though frames remained, with missing final words.
+
+- For ordinary 100-ms microphone packets, the 64-step fairness budget is **unchanged**. At end-of-input only, the worker now drains until the recognizer reports no more ready frames, with an upper safety bound of **4096 steps**. This work stays off the Electron main/UI threads.
+- If the final decoder remains ready after the upper bound, the worker emits a **failure** instead of a falsely complete `finished` transcript. The existing 8-second native shutdown fallback still prevents indefinite waiting. This is not a new model, online provider, decoder selection, noise filter or recognition-quality threshold.
+- Unit tests simulate 190 ready frames (>64), a decoder that never drains, an empty stream and exact budget boundaries. These are correctness checks for finalization, **not a measured improvement to speech WER or latency**.
+- If the live engine falls behind its 20-chunk pending-PCM budget, the Electron UI now surfaces a distinct Chinese/English **device overload** message with a retry suggestion, instead of presenting a generic engine failure. Native failure causes and voice content are not exposed to the browser UI. A failed native session (including microphone loss) must **never upgrade an earlier partial recognition to completed text**, even if the stop request returns that last fragment; this differs from a successful user-requested Stop.
+
+**Required physical follow-up:** Using already installed personal offline ASR, compare short and long sentences in quiet conditions with Stop triggered immediately after the last word; record final text, missing last words, approximate Stop-to-final delay and any overload error. Use the same conditions when comparing previous and current builds. For an overloaded device, check whether closing CPU-heavy applications helps; do not assume more decoder iterations improve recognition on slow hardware. Use [the private batch assessment above](#batch-comparison-with-measured-evidence-new) for matched WAV metrics. No personal recording needs to be uploaded.
+
 ## Still required before closing #45
 
 - Real-device PCM→partial/final transcription checks, sustained sessions, permission/track loss, headset vs built-in microphone and measured noise outcomes.
