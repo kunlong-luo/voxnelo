@@ -134,6 +134,94 @@ describe('App smoke', () => {
       expect(view.container.querySelector('h1.sentenceText')?.textContent).not.toBe(FIRST_SENTENCE.english);
     });
   });
+  it('F004/F005: a late recorder callback cannot attribute the previous sentence to the next', async () => {
+    const oldMedia = Object.getOwnPropertyDescriptor(navigator, 'mediaDevices');
+    const oldCreate = Object.getOwnPropertyDescriptor(URL, 'createObjectURL');
+    const oldRevoke = Object.getOwnPropertyDescriptor(URL, 'revokeObjectURL');
+    const trackStop = vi.fn();
+    let serial = 0;
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: { getUserMedia: vi.fn(async () => ({
+        getTracks: () => [{ stop: trackStop }],
+      })) },
+    });
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true, value: vi.fn(() => 'blob:practice-' + ++serial),
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true, value: vi.fn(),
+    });
+    class DeferredRecorder {
+      static instances: DeferredRecorder[] = [];
+      static isTypeSupported() { return true; }
+      state: RecordingState = 'inactive';
+      mimeType = 'audio/webm';
+      onstop: (() => void) | null = null;
+      ondataavailable: ((event: { data: Blob }) => void) | null = null;
+      constructor() { DeferredRecorder.instances.push(this); }
+      start() { this.state = 'recording'; }
+      stop() { this.state = 'inactive'; /* browser queues ondataavailable and onstop */ }
+    }
+    vi.stubGlobal('MediaRecorder', DeferredRecorder);
+    try {
+      const view = render(<App />);
+      await screen.findByText(FIRST_SENTENCE.english);
+      fireEvent.click(screen.getByRole('button', { name: '开口跟读' }));
+      await screen.findByRole('button', { name: '结束录音' });
+      const first = DeferredRecorder.instances[0];
+      if (!first) throw new Error('Expected the first MediaRecorder');
+      fireEvent.click(screen.getByRole('button', { name: '结束录音' }));
+      // The late browser events are the only thing that completes the attempt.
+      expect(view.container.querySelector('h1.sentenceText')?.textContent).toBe(FIRST_SENTENCE.english);
+      await waitFor(() => expect(first.state).toBe('inactive'));
+      fireEvent.click(screen.getByRole('button', { name: '换一句' }));
+      // Still waiting for the stop callback: switching must be blocked.
+      expect(view.container.querySelector('h1.sentenceText')?.textContent).toBe(FIRST_SENTENCE.english);
+      fireEvent.click(screen.getByRole('button', { name: '结束录音' }));
+      // Duplicate clicks must not create another recording or count a practice.
+      expect(DeferredRecorder.instances).toHaveLength(1);
+      fireEvent.click(screen.getByRole('button', { name: '我的收藏' }));
+      expect(view.container.querySelector('h1.sentenceText')?.textContent).toBe(FIRST_SENTENCE.english);
+      const { act } = await import('@testing-library/react');
+      await act(async () => {
+        first.ondataavailable?.({ data: new Blob(['current voice']) });
+        first.onstop?.();
+      });
+      await waitFor(async () => {
+        expect((await database.states.get(FIRST_SENTENCE.id))?.practicedCount).toBe(1);
+      });
+      fireEvent.click(screen.getByRole('button', { name: '换一句' }));
+      await waitFor(() => {
+        expect(view.container.querySelector('h1.sentenceText')?.textContent).not.toBe(FIRST_SENTENCE.english);
+      });
+      // A stale duplicate event from the previous sentence must be ignored.
+      await act(async () => {
+        first.ondataavailable?.({ data: new Blob(['stale voice']) });
+        first.onstop?.();
+      });
+      const newSentenceId = (await database.events.orderBy('at').last())?.sentenceId;
+      await waitFor(async () => {
+        const allStates = await database.states.toArray();
+        expect(allStates.find(x => x.sentenceId === FIRST_SENTENCE.id)?.practicedCount).toBe(1);
+        expect(allStates.filter(x => x.sentenceId !== FIRST_SENTENCE.id).every(x => x.practicedCount === 0)).toBe(true);
+      });
+      expect(newSentenceId).toBeTruthy();
+      expect(URL.createObjectURL).toHaveBeenCalledTimes(1);
+      expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:practice-1');
+      expect(trackStop).toHaveBeenCalled();
+      view.unmount();
+    } finally {
+      vi.unstubAllGlobals();
+      for (const [key,desc] of [['createObjectURL',oldCreate],['revokeObjectURL',oldRevoke]] as const) {
+        if (desc) Object.defineProperty(URL,key,desc);
+        else Reflect.deleteProperty(URL,key);
+      }
+      if (oldMedia) Object.defineProperty(navigator, 'mediaDevices', oldMedia);
+      else Reflect.deleteProperty(navigator, 'mediaDevices');
+    }
+  });
+
   it('正在录音时不能切到历史/收藏，示范音也应停用', async () => {
     const oldMedia = Object.getOwnPropertyDescriptor(navigator, 'mediaDevices');
     const stopTrack = vi.fn();
