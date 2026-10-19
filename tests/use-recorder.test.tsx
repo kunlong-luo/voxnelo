@@ -359,9 +359,10 @@ describe('useRecorder', () => {
     MockMediaRecorder.deferStop = true;
     const oldMic = eventfulTrack(), newMic = eventfulTrack();
     let grants = 0;
-    mockDevices(() => Promise.resolve({
-      getTracks: () => [++grants === 1 ? oldMic.track : newMic.track],
-    } as unknown as MediaStream));
+    mockDevices(() => {
+      const currentTrack = ++grants === 1 ? oldMic.track : newMic.track;
+      return Promise.resolve({ getTracks: () => [currentTrack] } as unknown as MediaStream);
+    });
     render(<Harness />);
     await act(async () => { await latest.start(); });
     const old = MockMediaRecorder.instances[0]!;
