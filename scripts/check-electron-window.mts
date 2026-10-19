@@ -34,6 +34,7 @@ type CdpReply={result?:{value?:unknown};exceptionDetails?:{text:string};data?:st
 type TypographyMetrics={
   viewport:number[];dpr:number;fontSize:number;lineCount:number;
   horizontalContent:boolean;textOrder:boolean;actionOrder:boolean;navInside:boolean;
+  phraseBottom:number;translationTop:number;translationBottom:number;ipaTop:number;entranceAnimations:number;
   maxDocumentOverflow:number;localScroll:boolean;contentOverflow:boolean;
   heroTop:number;heroBottom:number;footerBottom:number;focusHeight:number;minTouchWidth:number;
 };
@@ -190,7 +191,7 @@ try{
   }))()`);
   const typographyPercent=scale===1?125:150;
   await evaluate(injectU3TypographyProbe(typographyPercent));
-  await delay(150);
+  await delay(750); // Measure settled text, not its 580ms entrance transition.
   const longText=await evaluate<TypographyMetrics>(U3_TYPOGRAPHY_METRICS);
   assert.ok(longText.fontSize>=20&&longText.lineCount>=2,
     'Native Electron long English must wrap under high-DPI/text scaling: '+JSON.stringify(longText));
