@@ -14,8 +14,18 @@ export function injectU3TypographyProbe(fontSizePercent: 125 | 150): string {
   return `(()=>{
     const phrase=document.querySelector('.sentenceText');
     const translation=document.querySelector('.translation');
-    const ipa=document.querySelector('.ipa');
-    if(!phrase||!translation||!ipa)throw Error('Missing lesson text or visible IPA');
+    let ipa=document.querySelector('.ipa');
+    if(!phrase||!translation)throw Error('Missing lesson text');
+    // Draft expansion lessons legitimately have no reviewed IPA. Add a
+    // test-only paragraph with identical Tailwind classes, then remove it.
+    if(!ipa){
+      const content=document.querySelector('.sentenceContent');
+      if(!content)throw Error('Missing lesson content');
+      ipa=document.createElement('p');
+      ipa.className='ipa max-w-full min-w-0 text-sm leading-6 wrap-anywhere text-ipa-ink';
+      ipa.setAttribute('data-u3-typography-probe','true');
+      content.insertBefore(ipa,content.lastElementChild);
+    }
     document.documentElement.style.fontSize=${JSON.stringify(fontSizePercent+'%')};
     phrase.textContent=${JSON.stringify(U3_STRESS_ENGLISH)};
     translation.textContent=${JSON.stringify(U3_STRESS_CHINESE)};
