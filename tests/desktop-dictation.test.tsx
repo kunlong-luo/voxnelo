@@ -294,15 +294,15 @@ describe('Desktop session cancellation and resource cleanup',()=>{
 
   it('cleans up the worker and microphone after a native recognition error',async()=>{
     const {bridge,track}=setupDesktop(true);
-    let errorHandler:((sessionId:string)=>void)|undefined;
-    bridge.onError.mockImplementationOnce((listener:(sessionId:string)=>void)=>{
+    let errorHandler:((sessionId:string,reason:'overloaded'|'failed')=>void)|undefined;
+    bridge.onError.mockImplementationOnce((listener:(sessionId:string,reason:'overloaded'|'failed')=>void)=>{
       errorHandler=listener;
       return vi.fn();
     });
     render(<Harness/>);
     await waitFor(()=>expect(live.supported).toBe(true));
     await act(async()=>{await live.start()});
-    act(()=>errorHandler?.('session-1'));
+    act(()=>errorHandler?.('session-1','failed'));
     expect(live.status).toBe('idle');
     expect(live.error).toContain('未能启动');
     expect(track.stop).toHaveBeenCalledOnce();
