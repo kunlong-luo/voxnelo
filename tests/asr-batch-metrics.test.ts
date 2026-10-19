@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { scoreTranscript, summarizeAsrAttempts, tokenizeAsr, type MeasuredAsrAttempt } from '../scripts/asr-batch-metrics.mts';
-import { buildBatchReport, formatBatchMarkdown, parseBatchManifest } from '../scripts/batch-offline-asr.mts';
+import { buildBatchReport, formatBatchMarkdown, parseBatchManifest, validatePcm16Wav } from '../scripts/batch-offline-asr.mts';
 import { requireRealAsrQuality } from '../apps/desktop/asrAcceptance';
 
 describe('private local ASR word error scoring', () => {
@@ -76,6 +76,32 @@ describe('local batch input validation and privacy',()=>{
     substitutions:1,deletions:0,insertions:0,wordErrorRate:0.25,
     durationSeconds:3,elapsedSeconds:1.5,realTimeFactor:0.5,
   };
+  it('rejects damaged or incorrectly encoded WAV before invoking a native model',()=>{
+    const wav=Buffer.alloc(48);
+    wav.write('RIFF',0,'ascii');
+    wav.writeUInt32LE(40,4);
+    wav.write('WAVEfmt ',8,'ascii');
+    wav.writeUInt32LE(16,16);
+    wav.writeUInt16LE(1,20); // PCM
+    wav.writeUInt16LE(1,22); // mono
+    wav.writeUInt32LE(16000,24);
+    wav.writeUInt32LE(32000,28);
+    wav.writeUInt16LE(2,32);
+    wav.writeUInt16LE(16,34);
+    wav.write('data',36,'ascii');
+    wav.writeUInt32LE(4,40);
+    expect(validatePcm16Wav(wav)).toBe(2);
+    expect(()=>validatePcm16Wav(Buffer.from('bad WAV'))).toThrow(/WAV/);
+    const stereo=Buffer.from(wav);
+    stereo.writeUInt16LE(2,22);
+    expect(()=>validatePcm16Wav(stereo)).toThrow(/mono PCM16/);
+    const not16k=Buffer.from(wav);
+    not16k.writeUInt32LE(48000,24);
+    expect(()=>validatePcm16Wav(not16k)).toThrow(/16 kHz/);
+    const broken=Buffer.from(wav);
+    broken.writeUInt32LE(100000,40);
+    expect(()=>validatePcm16Wav(broken)).toThrow(/Truncated/);
+  });
   it('makes partially failed evaluations explicit rather than declaring incomplete WER a pass',()=>{
     const failures=[{id:'q01',scenario:'quiet' as const,decoder:'modified_beam_search' as const,
       reason:'invalid-wav-or-inference' as const}];
@@ -84,6 +110,7 @@ describe('local batch input validation and privacy',()=>{
     expect(report.failed).toBe(1);
     expect(formatBatchMarkdown(report)).toContain('**Incomplete:**');
     expect(formatBatchMarkdown(report)).toContain('Weighted WER');
+    expect(formatBatchMarkdown(report)).toContain('\n## Weighted results');
     expect(()=>buildBatchReport([example],[],2)).toThrow(/Missing/);
   });
   it('excludes raw samples/transcripts/paths from locally written reports',()=>{
