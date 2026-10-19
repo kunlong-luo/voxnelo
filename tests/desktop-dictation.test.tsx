@@ -107,6 +107,9 @@ describe('Electron real microphone to local ASR lifecycle',()=>{
   });
   it('provides actionable overload feedback without inventing a transcript or leaking audio',async()=>{
     const {bridge,track,emitAsrError}=setupDesktop(true);
+    // The native close path can return the last *partial* text on failure.
+    // It must not be promoted into a completed dictation result.
+    bridge.stop.mockResolvedValueOnce({finalText:'incomplete partial recognition'});
     render(<Harness/>);
     await waitFor(()=>expect(live.supported).toBe(true));
     await act(async()=>{await live.start()});
@@ -117,6 +120,8 @@ describe('Electron real microphone to local ASR lifecycle',()=>{
     expect(live.finalText).toBe('');
     expect(track.stop).toHaveBeenCalled();
     await waitFor(()=>expect(bridge.stop).toHaveBeenCalledWith('session-1'));
+    await act(async()=>{await Promise.resolve();});
+    expect(live.finalText).toBe('');
   });
 
   it('keeps generic worker errors distinct from device-overload messages',async()=>{
