@@ -67,6 +67,7 @@ export const zh = {
   "dictationMicrophone": "当前无法访问麦克风，请检查设备连接和系统权限。",
   "dictationServiceUnavailable": "识别服务不可用。桌面端请使用离线语音识别引擎，不会自动改为在线上传。",
   "dictationFailed": "实时听写未能启动，请重试。",
+  "dictationOverloaded": "当前设备暂时跟不上实时听写，已停止识别。可以关闭其他占用资源的程序后重试；录音回听仍可使用。",
   "dictationNoiseNote": "设备降噪效果取决于系统与识别引擎，不能完全隔绝外部人声。",
   "dictationNoiseEnabled": "设备已开启降噪",
   "dictationNoiseUnverified": "已请求降噪，设备效果未确认",
