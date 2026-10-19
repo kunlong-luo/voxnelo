@@ -185,8 +185,13 @@ try{
     await activate(2,'.libraryPage');await shot(w,h,'library');
     await activate(0,'.practiceLayout');
   }
-  // Synthetic text-only typography stress: not a new lesson, IPA review or
-  // physical OS font scaling. Restore the real React lesson after each case.
+  // Keep one stable mounted lesson throughout: navigating and immediately
+  // mutating the new React tree creates a race with the initial state commit.
+  // Record current course text once; always restore it before other checks.
+  await sleep(850);
+  const realLesson=await evalJs<{english:string;chinese:string;ipa:string|null}>('(()=>({english:document.querySelector(".sentenceText").textContent,chinese:document.querySelector(".translation").textContent,ipa:document.querySelector(".ipa")?.textContent??null}))()');
+  // Synthetic text-only typography stress: not a lesson, IPA review or actual
+  // operating-system font scaling.
   for(const [width,height,fontPercent] of [[1440,900,125],[1440,900,150],[1160,760,150]] as const){
     await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:false});
     await evalJs(injectU3TypographyProbe(fontPercent));
@@ -217,11 +222,19 @@ try{
     if(typeof png.data!=='string')throw Error('Missing U3 typography screenshot');
     await writeFile(path.join(out,width+'x'+height+'-long-text-font-'+fontPercent+'.png'),Buffer.from(png.data,'base64'));
     report.push({page:'u3-long-text-font-simulation',size:[width,height],fontPercent,footerReached,micReached,...m});
-    await evalJs('document.documentElement.style.fontSize=""');
-    // Remount restores genuine course strings without production test hooks.
-    await activate(5,'.settingsPage');
-    await activate(0,'.practiceLayout');
   }
+  await evalJs(`(()=>{
+    document.documentElement.style.fontSize='';
+    document.querySelector('.sentenceText').textContent=${JSON.stringify(realLesson.english)};
+    document.querySelector('.translation').textContent=${JSON.stringify(realLesson.chinese)};
+    const fixture=document.querySelector('[data-u3-typography-probe="true"]');
+    if(fixture)fixture.remove();
+    else if(${JSON.stringify(realLesson.ipa)}!==null){
+      document.querySelector('.ipa').textContent=${JSON.stringify(realLesson.ipa)};
+    }
+    document.querySelector('.content').scrollTop=0;
+    return true;
+  })()`);
   // Local desktop scrolling: the window and sidebar remain fixed while only
   // the workspace and each phrase/history list may scroll.
   await activate(1,'.catalogPage');
