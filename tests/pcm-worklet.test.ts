@@ -39,6 +39,33 @@ describe('Microphone AudioWorklet resampling', () => {
     expect(sent.every(chunk => chunk.length === 1600 && chunk.every(sample => Math.abs(sample - 0.25) < 1e-5))).toBe(true);
   });
 
+  it('preserves active speech on channel 1 of a stereo device',async()=>{
+    const sent:Float32Array[]=[];
+    const registered=new Map<string,ProcessorConstructor>();
+    vi.stubGlobal('sampleRate',48000);
+    vi.stubGlobal('AudioWorkletProcessor',class {
+      readonly port={postMessage:(samples:Float32Array)=>sent.push(new Float32Array(samples))};
+    });
+    vi.stubGlobal('registerProcessor',(name:string,ctor:ProcessorConstructor)=>registered.set(name,ctor));
+    await import('../apps/web/src/audio/pcm-worklet');
+    const Constructor=registered.get('voxnelo-pcm-16k');
+    if(!Constructor)throw Error('Worklet failed to register');
+    const processor=new Constructor();
+    for(let offset=0;offset<24000;offset+=128){
+      const channel0=new Float32Array(128); // silent microphone channel
+      const channel1=new Float32Array(Math.min(128,24000-offset));
+      for(let i=0;i<channel1.length;i++)
+        channel1[i]=0.8*Math.sin(2*Math.PI*1000*(offset+i)/48000);
+      expect(processor.process([[channel0.subarray(0,channel1.length),channel1]])).toBe(true);
+    }
+    expect(sent).toHaveLength(5);
+    const samples=sent.at(-1);
+    if(!samples)throw Error('No output PCM');
+    const rms=Math.sqrt(samples.reduce((sum,x)=>sum+x*x,0)/samples.length);
+    expect(rms).toBeGreaterThan(0.2);
+    expect(rms).toBeLessThan(0.4);
+  });
+
   it('does not invent speech samples when the microphone has no input', async () => {
     const sent: Float32Array[] = [];
     const registered = new Map<string, ProcessorConstructor>();
