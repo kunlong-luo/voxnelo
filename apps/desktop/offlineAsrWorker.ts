@@ -1,6 +1,6 @@
 import { parentPort, workerData } from 'node:worker_threads';
 import { createRequire } from 'node:module';
-import { createOnlineRecognizerConfig } from './asrConfig';
+import { createOnlineRecognizerConfig, type AsrDecodingMethod } from './asrConfig';
 
 type Stream = { acceptWaveform(input:{samples:Float32Array;sampleRate:number}):void; inputFinished():void };
 type Recognizer = {
@@ -8,11 +8,11 @@ type Recognizer = {
   getResult(stream:Stream):{text?:string};isEndpoint(stream:Stream):boolean;reset(stream:Stream):void;
 };
 type Module = { OnlineRecognizer:new(config:Record<string,unknown>)=>Recognizer };
-type Init = {addonPath:string;modelDir:string};
+type Init = {addonPath:string;modelDir:string;decodingMethod?:AsrDecodingMethod};
 type Message = {type:'pcm';samples:Float32Array}|{type:'finish'};
 const parent=parentPort;
 if(!parent)throw new Error('Offline ASR must run in an isolated worker');
-const {addonPath,modelDir}=workerData as Init;
+const {addonPath,modelDir,decodingMethod}=workerData as Init;
 let recognizer:Recognizer;
 let stream:Stream;
 const completed:string[]=[];
@@ -37,7 +37,8 @@ try{
   const requireFromHere=createRequire(addonPath);
   const addon=requireFromHere(addonPath) as Partial<Module>;
   if (typeof addon.OnlineRecognizer !== 'function') throw Error('Missing OnlineRecognizer adapter');
-  recognizer=new addon.OnlineRecognizer(createOnlineRecognizerConfig(modelDir));
+  recognizer=new addon.OnlineRecognizer(createOnlineRecognizerConfig(modelDir,
+    decodingMethod==='modified_beam_search'?'modified_beam_search':'greedy_search'));
   stream=recognizer.createStream();
   parent.postMessage({type:'ready'});
   parent.on('message',(message:Message)=>{
