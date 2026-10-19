@@ -201,9 +201,12 @@ try{
     'Native Electron long lesson overlaps controls: '+JSON.stringify(longText));
   assert.ok(longText.minTouchWidth>=32,
     'Native Electron interactive audio controls shrink below practical size: '+JSON.stringify(longText));
-  await evaluate('(()=>{const s=document.querySelector(".content");s.scrollTo({top:s.scrollHeight,behavior:"instant"})})()');
+  // Scroll to the footer itself, not to scrollHeight: at some DPI ratios
+  // a padded workspace can scroll *past* the footer and hide it above the
+  // viewport. Targeting its lower edge verifies actual reachability.
+  await evaluate('(()=>{const s=document.querySelector(".content"),f=document.querySelector(".referenceFooter").getBoundingClientRect(),viewport=s.getBoundingClientRect();s.scrollTo({top:s.scrollTop+f.bottom-viewport.bottom+12,behavior:"instant"})})()');
   await delay(150);
-  const footerScroll=await evaluate<{reached:boolean;bottom:number;scrollTop:number;scrollHeight:number;clientHeight:number}>('(()=>{const s=document.querySelector(".content"),x=document.querySelector(".referenceFooter").getBoundingClientRect();return {reached:x.top>=-1&&x.bottom<=innerHeight+1,bottom:x.bottom,scrollTop:s.scrollTop,scrollHeight:s.scrollHeight,clientHeight:s.clientHeight}})()');
+  const footerScroll=await evaluate<{reached:boolean;top:number;bottom:number;scrollTop:number;scrollHeight:number;clientHeight:number}>('(()=>{const s=document.querySelector(".content"),x=document.querySelector(".referenceFooter").getBoundingClientRect();return {reached:x.top>=-1&&x.bottom<=innerHeight+1,top:x.top,bottom:x.bottom,scrollTop:s.scrollTop,scrollHeight:s.scrollHeight,clientHeight:s.clientHeight}})()');
   assert.ok(footerScroll.reached,'Native Electron long-lesson footer not reachable: '+JSON.stringify({longText,footerScroll}));
   await evaluate('document.querySelector(".dictationAction").scrollIntoView({block:"center",behavior:"instant"})');
   await delay(150);
