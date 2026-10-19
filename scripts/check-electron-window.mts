@@ -184,10 +184,10 @@ try{
   // The Electron test runs at actual forced device scales 1 / 1.25 / 1.5.
   // Additional root font scaling is a text-zoom simulation, NOT proof of
   // physical Windows/macOS accessibility-font behavior.
-  const beforeTypography=await evaluate<{english:string;chinese:string;ipa:string}>(`(()=>({
+  const beforeTypography=await evaluate<{english:string;chinese:string;ipa:string|null}>(`(()=>({
     english:document.querySelector('.sentenceText').textContent,
     chinese:document.querySelector('.translation').textContent,
-    ipa:document.querySelector('.ipa').textContent,
+    ipa:document.querySelector('.ipa')?.textContent??null,
   }))()`);
   const typographyPercent=scale===1?125:150;
   await evaluate(injectU3TypographyProbe(typographyPercent));
@@ -220,7 +220,11 @@ try{
     document.documentElement.style.fontSize='';
     document.querySelector('.sentenceText').textContent=${JSON.stringify(beforeTypography.english)};
     document.querySelector('.translation').textContent=${JSON.stringify(beforeTypography.chinese)};
-    document.querySelector('.ipa').textContent=${JSON.stringify(beforeTypography.ipa)};
+    const testOnly=document.querySelector('[data-u3-typography-probe="true"]');
+    if(testOnly)testOnly.remove();
+    else if(${JSON.stringify(beforeTypography.ipa)}!==null){
+      document.querySelector('.ipa').textContent=${JSON.stringify(beforeTypography.ipa)};
+    }
   })()`);
 
   if(scale===1) {
