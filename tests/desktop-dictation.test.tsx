@@ -38,7 +38,7 @@ function setupDesktop(noiseSuppression?:boolean) {
     capabilities:vi.fn(async()=>({available:true,reason:'ready'})),
     start:vi.fn(async()=>({ok:true,sessionId:'session-1'})),
     push:vi.fn(),
-    stop:vi.fn(async()=>({finalText:'hello final'})),
+    stop:vi.fn(async()=>({finalText:'hello final',completed:true})),
     onResult:vi.fn((_listener:(result:{sessionId:string;finalText:string;interimText:string})=>void)=>()=>undefined),
     onError:vi.fn((listener:(sessionId:string,reason:'overloaded'|'failed')=>void)=>{
       asrErrorHandlers.add(listener);
@@ -105,11 +105,24 @@ describe('Electron real microphone to local ASR lifecycle',()=>{
     expect(live.finalText).toBe('hello final');
     expect(live.status).toBe('idle');
   });
+  it('warns after an unsuccessful manual Stop instead of claiming cached incomplete words are final',async()=>{
+    const {bridge}=setupDesktop(true);
+    bridge.stop.mockResolvedValueOnce({finalText:'the beginning but not the end',completed:false});
+    render(<Harness/>);
+    await waitFor(()=>expect(live.supported).toBe(true));
+    await act(async()=>{await live.start();});
+    await act(async()=>{live.stop();await Promise.resolve();});
+    expect(bridge.stop).toHaveBeenCalledWith('session-1');
+    expect(live.status).toBe('idle');
+    expect(live.finalText).toBe('');
+    expect(live.error).toContain('听写未能完整结束');
+  });
+
   it('provides actionable overload feedback without inventing a transcript or leaking audio',async()=>{
     const {bridge,track,emitAsrError}=setupDesktop(true);
     // The native close path can return the last *partial* text on failure.
     // It must not be promoted into a completed dictation result.
-    bridge.stop.mockResolvedValueOnce({finalText:'incomplete partial recognition'});
+    bridge.stop.mockResolvedValueOnce({finalText:'incomplete partial recognition',completed:false});
     render(<Harness/>);
     await waitFor(()=>expect(live.supported).toBe(true));
     await act(async()=>{await live.start()});
@@ -140,7 +153,7 @@ describe('Electron real microphone to local ASR lifecycle',()=>{
     bridge.push.mockImplementation(()=>{ordering.push('pcm');});
     bridge.stop.mockImplementation(async()=>{
       ordering.push('stop');
-      return {finalText:'last syllable retained'};
+      return {finalText:'last syllable retained',completed:true};
     });
     port.postMessage=vi.fn((message:{type:string})=>{
       expect(message).toEqual({type:'flush'});
