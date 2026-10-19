@@ -410,9 +410,10 @@ describe('useRecorder', () => {
   it('录音引擎启动失败后清除音轨监听，并允许用户正常重试', async () => {
     const firstMic = eventfulTrack(), secondMic = eventfulTrack();
     let count = 0;
-    mockDevices(() => Promise.resolve({
-      getTracks: () => [++count === 1 ? firstMic.track : secondMic.track],
-    } as unknown as MediaStream));
+    mockDevices(() => {
+      const currentTrack = ++count === 1 ? firstMic.track : secondMic.track;
+      return Promise.resolve({ getTracks: () => [currentTrack] } as unknown as MediaStream);
+    });
     vi.spyOn(MockMediaRecorder.prototype, 'start').mockImplementationOnce(() => {
       throw new Error('device startup failed');
     });
