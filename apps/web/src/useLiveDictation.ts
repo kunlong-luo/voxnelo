@@ -102,7 +102,7 @@ export function useLiveDictation(sentenceId: string) {
         onNoiseReduction:enabled=>setNoiseReduction(enabled?'enabled':'unverified'),
         onTranscript:(final,interim)=>{setFinalText(final);setInterimText(interim);},
         onLevel:setInputLevel,
-        onError:()=>{setError(t('dictationFailed'));stop();},
+        onError:reason=>{setError(t(reason==='overloaded'?'dictationOverloaded':'dictationFailed'));stop();},
         onDeviceEnded:()=>{setError(t('dictationMicrophone'));stop();},
       });
       if(!isCurrent())return;
