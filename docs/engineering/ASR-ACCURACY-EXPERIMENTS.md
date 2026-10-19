@@ -55,6 +55,41 @@ WER is the number of substitutions + deletions + insertions divided by reference
 
 Only change the **production decoder** after paired WER and latency testing shows an advantage across multiple real speakers and hardware configurations. If decoding improves but speed falls below practical real-time use, keep the existing default.
 
+## Batch comparison with measured evidence (new)
+
+Run the same recordings through BOTH decoders instead of choosing favorable examples. A real microphone is required for an eventual human recognition-quality claim; a synthetic CI fixture is only a wiring check.
+
+1. Save **local, consented and non-sensitive** English test WAVs as **16 kHz, mono, 16-bit PCM**. Record at least ten distinct sentences under quiet conditions; re-test the same short sentences in background noise. Do not record another person without their permission. Verify the reference is what you actually said, not what the recognizer returned.
+2. Create a private JSON manifest **outside the Git repository**, for example `$HOME/private-asr-tests/samples.json`. Each ID must be unique, scenarios are `quiet` or `noise`, and paths may be absolute or relative to the manifest:
+   
+   ```json
+   {
+     "samples": [
+       {"id": "q01", "scenario": "quiet", "wav": "quiet-01.wav", "reference": "Please speak English slowly"},
+       {"id": "n01", "scenario": "noise", "wav": "noise-01.wav", "reference": "Please speak English slowly"}
+     ]
+   }
+   ```
+
+3. Use the locally installed, opt-in personal Linux ASR. **Do not reinstall/remove an existing model to run this comparison.**
+
+   ```bash
+   pnpm build:electron
+   ASR_ROOT="${XDG_CONFIG_HOME:-$HOME/.config}/voxnelo/offline-asr"
+   export VOXNELO_ASR_MODEL_DIR="$ASR_ROOT/model"
+   export VOXNELO_ASR_ADDON_PATH="$ASR_ROOT/native/index.cjs"
+
+   pnpm asr:batch \
+     --manifest "$HOME/private-asr-tests/samples.json" \
+     --output-dir "$HOME/voxnelo-private-evaluation-01"
+   ```
+
+4. Read `report.md` or `report.json` in that **new, private output directory**. The command compares `greedy_search` and `modified_beam_search` against the exact same WAVs. The outputs contain only scenario, sample ID, S/D/I counts, WER and real-time factor—not spoken text, original audio, native paths or private WAV locations. Reports are created with user-only file permissions (on POSIX systems). A failed WAV or native inference makes the report `incomplete` and exits nonzero; do not use partial totals to pick a winner. The command will refuse overwriting a previous output folder.
+
+The metric is **weighted** WER = (all substitutions + deletions + insertions) / all reference words in the scenario, NOT the average percentage of the individual sentence WERs. RTF is total elapsed inference time / total audio duration (the benchmark includes model startup for each item). Keep recording conditions and model revision constant between comparisons.
+
+**Important interpretation:** The batch tool reports offline WAV inference performance. It does **not** measure first live subtitle time, final text after release, real-time microphone DSP, device disconnect or 10-minute stability; those need the separate real-device checklist. The `--report-only` path used for diagnostics is deliberately separate from the existing strict real-model CI quality gate. Batch reports cannot authorize Release publication or override the redistribution licensing review.
+
 ## Still required before closing #45
 
 - Real-device PCM→partial/final transcription checks, sustained sessions, permission/track loss, headset vs built-in microphone and measured noise outcomes.
