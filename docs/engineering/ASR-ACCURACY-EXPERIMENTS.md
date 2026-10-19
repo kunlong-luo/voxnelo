@@ -109,6 +109,15 @@ Code review identified a separate **potential truncation mechanism**, downstream
 
 **Required physical follow-up:** Using already installed personal offline ASR, compare short and long sentences in quiet conditions with Stop triggered immediately after the last word; record final text, missing last words, approximate Stop-to-final delay and any overload error. Use the same conditions when comparing previous and current builds. For an overloaded device, check whether closing CPU-heavy applications helps; do not assume more decoder iterations improve recognition on slow hardware. Use [the private batch assessment above](#batch-comparison-with-measured-evidence-new) for matched WAV metrics. No personal recording needs to be uploaded.
 
+## Explicitly verified final transcript (2026-10-19)
+
+A later main-process inspection found that the 8-second finish grace, native Worker failure, and invalid/stale ASR session paths previously returned `{finalText: lastText}` even when the Worker **never sent `finished`**. This could mislabel a cached earlier interim/partial phrase as the final recognized sentence on a normal user Stop. The previous renderer error callback was already unsubscribed during normal close, so the user might see no meaningful explanation.
+
+- Native session `stop` now returns `{finalText,completed}`. Only a Worker-confirmed `finished` can set `completed:true`. All other closure paths (error, overload, owner close, invalid session, 8-second grace) return `{finalText:'',completed:false}`. No raw audio, system paths or partial captions are sent back as a successful final result.
+- The renderer retains confirmed final results after a normal Stop. For an incomplete normal Stop it clears the finished transcript and shows a localized **recognition did not finish** notice; an expected cancellation/sentence switch does not show a false error. Existing overload/permission/device failures keep their separate handling.
+- Unit tests cover real Worker event ordering for success, failure after partial result, timeout and delayed messages. Packaged Linux Electron's real native ASR IPC smoke now explicitly asserts `completed:true` in addition to the recognized words.
+- This addresses **trustworthiness** of the completion state. It does *not* establish improved human WER, model accuracy, audio capture quality or permission for native redistribution. Keep #45 open until real microphone and legal checks.
+
 ## Still required before closing #45
 
 - Real-device PCM→partial/final transcription checks, sustained sessions, permission/track loss, headset vs built-in microphone and measured noise outcomes.

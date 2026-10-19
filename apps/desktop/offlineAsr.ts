@@ -6,11 +6,13 @@ import type { WebContents } from 'electron';
 
 export type AsrCapability={available:boolean;reason:'ready'|'not-configured'|'missing-addon'|'missing-model'};
 export type AsrOpenResult={ok:true;sessionId:string}|{ok:false;reason:'not-configured'|'busy'|'failed'};
+/** Only a worker-confirmed finish may be displayed as final recognition. */
+export type AsrStopResult={finalText:string;completed:boolean};
 interface Session {
   id:string;owner:WebContents;worker:Worker;ready:boolean;accepting:boolean;
   pendingChunks:number;stopTimer:ReturnType<typeof setTimeout>|null;
-  lastText:string;finishPromise:Promise<{finalText:string}>|null;
-  resolveFinish:((result:{finalText:string})=>void)|null;
+  lastText:string;finishPromise:Promise<AsrStopResult>|null;
+  resolveFinish:((result:AsrStopResult)=>void)|null;
   resolveOpen:((result:AsrOpenResult)=>void)|null;
 }
 /** At 100ms chunks, stop on >2s of ASR backlog instead of silently dropping speech. */
@@ -79,7 +81,7 @@ export class OfflineAsr {
           if(session.ready&&!owner.isDestroyed())owner.send('voxnelo:asr:error',{sessionId:id});
           dispose();settle({ok:false,reason:'failed'});
         }else if(result.type==='finished'){
-          dispose();
+          this.dispose(session,true);
         }
       });
       const workerFailed=()=>{
@@ -108,10 +110,10 @@ export class OfflineAsr {
     s.pendingChunks++;
     s.worker.postMessage({type:'pcm',samples:input});
   }
-  stop(owner:WebContents,id:unknown):Promise<{finalText:string}>{
+  stop(owner:WebContents,id:unknown):Promise<AsrStopResult>{
     const s=this.session;
-    if(!s||s.owner!==owner||id!==s.id)return Promise.resolve({finalText:''});
-    if(!s.accepting)return s.finishPromise??Promise.resolve({finalText:s.lastText});
+    if(!s||s.owner!==owner||id!==s.id)return Promise.resolve({finalText:'',completed:false});
+    if(!s.accepting)return s.finishPromise??Promise.resolve({finalText:'',completed:false});
     s.accepting=false;
     s.finishPromise=new Promise(resolve=>{
       s.resolveFinish=resolve;
@@ -125,7 +127,7 @@ export class OfflineAsr {
     return s.finishPromise;
   }
   close():void{if(this.session)this.dispose(this.session);}
-  private dispose(s:Session):void{
+  private dispose(s:Session,completed=false):void{
     if(this.session!==s)return;
     this.session=null;
     if(s.stopTimer)clearTimeout(s.stopTimer);
@@ -133,7 +135,9 @@ export class OfflineAsr {
     // Settle immediately rather than hanging until the 12-second timeout.
     s.resolveOpen?.({ok:false,reason:'failed'});
     s.resolveOpen=null;
-    s.resolveFinish?.({finalText:s.lastText});
+    // Worker failures, timeouts, window close and overload are NOT completed
+    // recognition. Never promote lastText from interim/earlier packets to final.
+    s.resolveFinish?.({finalText:completed?s.lastText:'',completed});
     s.resolveFinish=null;
     void s.worker.terminate();
   }

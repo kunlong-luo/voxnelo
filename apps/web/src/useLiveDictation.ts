@@ -6,6 +6,7 @@ import {
   stopBrowserRecognizer, type BrowserRecognizer,
 } from './dictation/browserRecognizer';
 import { startDesktopDictationSession } from './dictation/desktopSession';
+import type { OfflineAsrStopResult } from './desktopBridge';
 
 type DictationStatus = 'idle' | 'checking' | 'listening';
 type DictationMode = 'local' | 'browser';
@@ -22,7 +23,7 @@ export function useLiveDictation(sentenceId: string) {
   const [inputLevel,setInputLevel] = useState<number | null>(null);
   const [error,setError] = useState('');
   const current = useRef<BrowserRecognizer | null>(null);
-  const desktopStop = useRef<(() => Promise<{finalText:string}>) | null>(null);
+  const desktopStop = useRef<(() => Promise<OfflineAsrStopResult>) | null>(null);
   const [desktopAvailable,setDesktopAvailable] = useState(false);
   const [desktopReason,setDesktopReason] = useState<'ready'|'not-configured'|'missing-model'|'missing-addon'>('not-configured');
   const [noiseReduction,setNoiseReduction] = useState<'unknown'|'enabled'|'unverified'>('unknown');
@@ -53,10 +54,21 @@ export function useLiveDictation(sentenceId: string) {
     desktopStop.current=null;
     if(closeDesktop){
       void closeDesktop().then(result=>{
-        if(acceptFinalText&&!disposed.current&&requestId.current===generation&&result.finalText){
+        if(!acceptFinalText||disposed.current||requestId.current!==generation)return;
+        if(!result.completed){
+          // An 8s timeout or crashed native worker can return the cached
+          // *interim* phrase. Never publish it as the finished sentence.
+          setFinalText('');
+          setError(t('dictationIncomplete'));
+        }else if(result.finalText){
           setFinalText(result.finalText);
         }
-      }).catch(()=>{ /* offline engine may already be gone */ });
+      }).catch(()=>{
+        if(acceptFinalText&&!disposed.current&&requestId.current===generation){
+          setFinalText('');
+          setError(t('dictationIncomplete'));
+        }
+      });
     }
     const recognizer=current.current;
     current.current=null;
@@ -64,7 +76,7 @@ export function useLiveDictation(sentenceId: string) {
     setInterimText('');
     setInputLevel(null);
     setStatus('idle');
-  },[]);
+  },[t]);
   const stop = useCallback(() => endSession(true),[endSession]);
   const clear = useCallback(() => {
     stop();

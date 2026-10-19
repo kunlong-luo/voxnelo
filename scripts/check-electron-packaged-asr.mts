@@ -115,7 +115,7 @@ try{
   assert.equal(capability.available,true,'Packaged Electron ASR unavailable: '+JSON.stringify(capability));
   const open=await evaluate<{ok:boolean;sessionId?:string;reason?:string}>('window.voxneloDesktop.asr.start()');
   assert.ok(open.ok&&open.sessionId,'Packaged Electron could not start actual native worker: '+JSON.stringify(open));
-  const speech=await evaluate<{finalText:string;resultCount:number;errorCount:number}>(
+  const speech=await evaluate<{finalText:string;completed:boolean;resultCount:number;errorCount:number}>(
     `(async()=>{
       const asr=window.voxneloDesktop.asr;
       const sessionId=${JSON.stringify(open.sessionId)};
@@ -135,11 +135,12 @@ try{
           await new Promise(resolve=>setTimeout(resolve,100));
         }
         const done=await asr.stop(sessionId);
-        return {finalText:done.finalText,resultCount,errorCount};
+        return {finalText:done.finalText,completed:done.completed,resultCount,errorCount};
       }finally{unbindResult();unbindError();}
     })()`
   );
   assert.equal(speech.errorCount,0,'Packaged native ASR reported worker errors');
+  assert.equal(speech.completed,true,'Packaged native ASR never confirmed complete decoding');
   assert.ok(speech.finalText.trim(),'Packaged Electron produced no actual final English transcript');
   assert.match(speech.finalText,/english/i,'Packaged recognizer failed the English reference');
   assert.match(speech.finalText,/slowly/i,'Packaged recognizer failed the end of reference sentence');
