@@ -418,7 +418,7 @@ describe('useRecorder', () => {
     render(<Harness />);
     await act(async () => { await latest.start(); });
     expect(latest.status).toBe('idle');
-    expect(latest.error).toBe('录音失败，请检查设备后重试。');
+    expect(latest.error).toBe('无法启动录音。');
     expect(firstMic.stop).toHaveBeenCalled();
     expect(firstMic.listenerCount()).toBe(0);
     await act(async () => { await latest.start(); });
