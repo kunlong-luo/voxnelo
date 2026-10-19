@@ -21,6 +21,7 @@ export class StreamingResampler16k {
   private readonly ring = new Float32Array(RING_SIZE);
   private sampleIndex = 0;
   private nextPosition = 0;
+  private firstSample = 0;
 
   constructor(inputRate: number) {
     if (!Number.isFinite(inputRate) || inputRate < 8000 || inputRate > 192000) {
@@ -56,19 +57,22 @@ export class StreamingResampler16k {
       emit(sample);
       return;
     }
+    if(this.sampleIndex===0) this.firstSample=sample;
     this.ring[this.sampleIndex % RING_SIZE] = sample;
-    // A tiny fixed lookahead prevents interpolating with unavailable future
-    // inputs. It adds less than 3 ms even on an 8 kHz capture device.
-    while (this.nextPosition + HALF_TAPS <= this.sampleIndex) {
+    // A causal 48-tap FIR introduces ~0.5 ms of phase delay at 48 kHz,
+    // without waiting for future input or silently losing the final chunk.
+    while (this.nextPosition <= this.sampleIndex) {
       const center = Math.floor(this.nextPosition);
       const fractional = this.nextPosition - center;
       const phase = Math.min(PHASES - 1, Math.floor(fractional * PHASES));
       const weights = this.kernel[phase]!;
       let filtered = 0;
       for (let tap = 0; tap < TAP_COUNT; tap++) {
-        const index = center + tap - (HALF_TAPS - 1);
-        if (index < 0) continue;
-        filtered += (this.ring[index % RING_SIZE] ?? 0) * (weights[tap] ?? 0);
+        const index = center + tap - (TAP_COUNT - 1);
+        // Repeat the first sample during FIR warm-up: avoids suppressing the
+        // start of a spoken syllable and preserves constant microphone input.
+        const input = index < 0 ? this.firstSample : (this.ring[index % RING_SIZE] ?? 0);
+        filtered += input * (weights[tap] ?? 0);
       }
       emit(Math.max(-1, Math.min(1, filtered)));
       this.nextPosition += this.step;
