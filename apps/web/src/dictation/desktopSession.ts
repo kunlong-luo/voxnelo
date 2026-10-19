@@ -1,4 +1,4 @@
-import type { VoxneloOfflineAsr } from '../desktopBridge';
+import type { VoxneloOfflineAsr, OfflineAsrFailureReason } from '../desktopBridge';
 
 /**
  * One Electron-only microphone/AudioWorklet/ASR session.
@@ -17,7 +17,7 @@ export interface DesktopDictationCallbacks {
   onNoiseReduction:(enabled:boolean)=>void;
   onTranscript:(finalText:string,interimText:string)=>void;
   onLevel:(level:number)=>void;
-  onError:()=>void;
+  onError:(reason:OfflineAsrFailureReason)=>void;
   onDeviceEnded:()=>void;
 }
 
@@ -119,8 +119,8 @@ export async function startDesktopDictationSession(
       if(!isCurrent()||result.sessionId!==sessionId)return;
       callbacks.onTranscript(result.finalText,result.interimText);
     });
-    unsubscribeError=bridge.onError(id=>{
-      if(isCurrent()&&id===sessionId)callbacks.onError();
+    unsubscribeError=bridge.onError((id,reason)=>{
+      if(isCurrent()&&id===sessionId)callbacks.onError(reason);
     });
 
     // Worklet does the resampling from the actual device rate to 16 kHz.
