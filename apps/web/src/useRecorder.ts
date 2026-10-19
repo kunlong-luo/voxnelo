@@ -13,10 +13,15 @@ export function useRecorder() {
   const urlRef = useRef<string | null>(null);
   const disposedRef = useRef(false);
   const requestingRef = useRef(false);
+  // The current media track's 'ended' listener belongs to one recorder only.
+  const detachTrackEndedRef = useRef<(() => void) | null>(null);
   // Invalidates delayed MediaRecorder events when the user clears or changes a sentence.
   const generationRef = useRef(0);
 
   const stop = useCallback(() => {
+    // Explicit Stop must never be mistaken for an unplugged microphone.
+    detachTrackEndedRef.current?.();
+    detachTrackEndedRef.current = null;
     if (recorder.current?.state === 'recording') recorder.current.stop();
     stream.current?.getTracks().forEach((track) => track.stop());
     stream.current = null;
@@ -57,11 +62,35 @@ export function useRecorder() {
       const mediaRecorder = mime ? new MediaRecorder(granted, { mimeType: mime }) : new MediaRecorder(granted);
       recorder.current = mediaRecorder;
       const chunks: BlobPart[] = [];
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) chunks.push(event.data);
-      };
       let failed = false;
+      const tracks = granted.getTracks();
+      const detachEnded = () => {
+        tracks.forEach(track => track.removeEventListener?.('ended', onDeviceEnded));
+        if (detachTrackEndedRef.current === detachEnded) detachTrackEndedRef.current = null;
+      };
+      const onDeviceEnded = () => {
+        // Some USB/headset disconnects end MediaStreamTrack without a usable
+        // MediaRecorder result. A late event from a prior sentence/session
+        // must never stop or overwrite the new recording.
+        if (failed || disposedRef.current || generation !== generationRef.current
+          || recorder.current !== mediaRecorder) return;
+        failed = true;
+        detachEnded();
+        try {
+          if (mediaRecorder.state === 'recording') mediaRecorder.stop();
+        } catch { /* The recorder may already have stopped on device loss. */ }
+        tracks.forEach(track => track.stop());
+        if (stream.current === granted) stream.current = null;
+        if (recorder.current === mediaRecorder) recorder.current = null;
+        setStatus('idle');
+        setError(t('recorderDeviceMissing'));
+      };
+      mediaRecorder.ondataavailable = (event) => {
+        if (!failed && !disposedRef.current && generation === generationRef.current
+          && event.data.size > 0) chunks.push(event.data);
+      };
       mediaRecorder.onstop = () => {
+        detachEnded();
         granted.getTracks().forEach((track) => track.stop());
         if (stream.current === granted) stream.current = null;
         if (recorder.current === mediaRecorder) recorder.current = null;
@@ -80,6 +109,7 @@ export function useRecorder() {
       };
       mediaRecorder.onerror = () => {
         failed = true;
+        detachEnded();
         granted.getTracks().forEach((track) => track.stop());
         if (stream.current === granted) stream.current = null;
         if (recorder.current === mediaRecorder) recorder.current = null;
@@ -88,10 +118,15 @@ export function useRecorder() {
           setError(t('recorderInterrupted'));
         }
       };
+      detachTrackEndedRef.current = detachEnded;
+      tracks.forEach(track => track.addEventListener?.('ended', onDeviceEnded));
       mediaRecorder.start();
-      setStatus('recording');
+      if (!failed) setStatus('recording');
     } catch (cause) {
       if (disposedRef.current || generation !== generationRef.current) return;
+      detachTrackEndedRef.current?.();
+      detachTrackEndedRef.current = null;
+      recorder.current = null;
       stream.current?.getTracks().forEach((track) => track.stop());
       stream.current = null;
       setStatus('idle');
@@ -115,6 +150,8 @@ export function useRecorder() {
       return () => {
         disposedRef.current = true;
         generationRef.current += 1;
+        detachTrackEndedRef.current?.();
+        detachTrackEndedRef.current = null;
         if (recorder.current) recorder.current.onstop = null;
         if (recorder.current?.state === 'recording') recorder.current.stop();
         stream.current?.getTracks().forEach((track) => track.stop());
