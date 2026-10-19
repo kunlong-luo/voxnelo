@@ -69,6 +69,7 @@ export const en = {
   "dictationMicrophone": "The microphone is unavailable. Check your device and system permissions.",
   "dictationServiceUnavailable": "Speech recognition is unavailable. Desktop requires offline ASR; audio is never silently uploaded.",
   "dictationFailed": "Live dictation could not start. Please try again.",
+  "dictationIncomplete": "Dictation could not finish completely. The last words may be unreliable. Please try again.",
   "dictationOverloaded": "This device could not keep up with live dictation, so recognition stopped. Close resource-heavy apps and try again; recording and replay remain available.",
   "dictationNoiseNote": "Noise filtering depends on the device and recognition engine and cannot fully remove nearby voices.",
   "dictationNoiseEnabled": "Device noise suppression enabled",
