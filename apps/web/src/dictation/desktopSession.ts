@@ -45,19 +45,53 @@ export async function startDesktopDictationSession(
     unsubscribeResult?.();
     unsubscribeError?.();
     if(audioTrack)audioTrack.removeEventListener('ended',onDeviceEnded);
-    if(node)node.port.onmessage=null;
-    // Disconnecting prevents a queued PCM frame from reaching a disposed IPC session.
-    for(const item of [source,node,silent]){
-      try{item?.disconnect();}catch{/* already disconnected */}
-    }
+
+    // End physical capture immediately. Keep the worklet and its zero-gain
+    // destination alive only long enough to drain the last (<100 ms) PCM
+    // buffer before telling the native recognizer that speech has ended.
     media?.getTracks().forEach(track=>track.stop());
-    if(context)void context.close().catch(()=>{/* browser is already shutting down */});
+    try{source?.disconnect();}catch{/* already disconnected */}
     const id=sessionId;
-    try{
-      closePromise=id?Promise.resolve(bridge.stop(id)):Promise.resolve({finalText:''});
-    }catch{
-      closePromise=Promise.resolve({finalText:''});
-    }
+    const activeNode=node;
+    closePromise=(async()=>{
+      if(id&&activeNode){
+        await new Promise<void>(resolve=>{
+          const port=activeNode.port;
+          let settled=false;
+          const finish=()=>{
+            if(settled)return;
+            settled=true;
+            window.clearTimeout(timeout);
+            port.onmessage=null;
+            resolve();
+          };
+          // The worklet may already be gone (device unplugged / OS sleep).
+          // A bounded fallback must release the mic and native worker anyway.
+          const timeout=window.setTimeout(finish,350);
+          port.onmessage=event=>{
+            const data:unknown=event.data;
+            if(data instanceof Float32Array){
+              if(data.length>=1&&data.length<=3200){
+                try{bridge.push(id,data);}catch{/* stop still owns cleanup */}
+              }
+            }else if(data&&typeof data==='object'&&'type' in data&&data.type==='flushed'){
+              finish();
+            }
+          };
+          try{port.postMessage({type:'flush'});}catch{finish();}
+        });
+      }
+      if(activeNode)activeNode.port.onmessage=null;
+      for(const item of [activeNode,silent]){
+        try{item?.disconnect();}catch{/* already disconnected */}
+      }
+      if(context)void context.close().catch(()=>{/* browser is already shutting down */});
+      try{
+        return id?await bridge.stop(id):{finalText:''};
+      }catch{
+        return {finalText:''};
+      }
+    })();
     return closePromise;
   };
   const isCurrent=()=>!closed&&callbacks.isCurrent();
