@@ -13,6 +13,24 @@ const CHUNK_SIZE = 1600; // 100 ms at 16 kHz, mono
 
 class VoxneloPcmProcessor extends AudioWorkletProcessor {
   private readonly resampler = new StreamingResampler16k(sampleRate);
+
+  constructor() {
+    super();
+    this.port.onmessage = (event: MessageEvent<{type?:string}>) => {
+      if (event.data?.type !== 'flush') return;
+      // Partial 100-ms buffers were previously lost when the user stopped
+      // listening. Preserve actual final PCM length; do NOT pad with invented
+      // silence. Messages from this port are delivered in FIFO order, so the
+      // "flushed" acknowledgement follows the final PCM chunk.
+      if (this.outputLength > 0) {
+        const remaining = this.output.slice(0, this.outputLength);
+        this.port.postMessage(remaining, [remaining.buffer as ArrayBuffer]);
+        this.output = new Float32Array(CHUNK_SIZE);
+        this.outputLength = 0;
+      }
+      this.port.postMessage({type:'flushed'});
+    };
+  }
   private output = new Float32Array(CHUNK_SIZE);
   private outputLength = 0;
   private readonly emitSample = (sample:number):void => {
