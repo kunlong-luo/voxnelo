@@ -5,7 +5,10 @@ import path from 'node:path';
  * CommonJS adapter entry must expose OnlineRecognizer.
  * https://k2-fsa.github.io/sherpa/onnx/javascript-api/examples/api_streaming_asr.html
  */
-export function createOnlineRecognizerConfig(modelDir: string) {
+export type AsrDecodingMethod = 'greedy_search' | 'modified_beam_search';
+
+/** Keep the proven default; alternative decoding needs measured real audio WER. */
+export function createOnlineRecognizerConfig(modelDir: string, decodingMethod: AsrDecodingMethod='greedy_search') {
   return {
     featConfig: { sampleRate: 16000, featureDim: 80 },
     modelConfig: {
@@ -19,7 +22,8 @@ export function createOnlineRecognizerConfig(modelDir: string) {
       debug: 0,
       provider: 'cpu',
     },
-    decodingMethod: 'greedy_search',
+    decodingMethod,
+    ...(decodingMethod==='modified_beam_search'?{maxActivePaths:4}:{}),
     enableEndpoint: true,
     rule1MinTrailingSilence: 2.4,
     rule2MinTrailingSilence: 1.2,
