@@ -130,7 +130,9 @@ try{
   };
   // Fail the process rather than reporting a green benchmark for empty text,
   // excessive latency, or unacceptable real-model recognition errors.
-  requireRealAsrQuality(result);
+  // --report-only is an explicit local diagnostic, never used by CI.
+  // It reports poor WER rather than hiding the measurement behind an exception.
+  if(!argv.includes('--report-only'))requireRealAsrQuality(result);
   console.log(JSON.stringify(result,null,2));
 }finally{
   if(worker)await worker.terminate();
