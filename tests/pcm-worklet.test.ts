@@ -66,6 +66,44 @@ describe('Microphone AudioWorklet resampling', () => {
     expect(rms).toBeLessThan(0.4);
   });
 
+  it('flushes the exact final sub-100ms PCM tail before its stop acknowledgement',async()=>{
+    const emitted:unknown[]=[];
+    const registered=new Map<string,ProcessorConstructor>();
+    class TestWorkletBase {
+      readonly port={
+        onmessage:null as ((event:{data:{type:string}})=>void)|null,
+        postMessage:(value:unknown)=>emitted.push(value),
+      };
+    }
+    vi.stubGlobal('sampleRate',16000);
+    vi.stubGlobal('AudioWorkletProcessor',TestWorkletBase);
+    vi.stubGlobal('registerProcessor',(name:string,ctor:ProcessorConstructor)=>registered.set(name,ctor));
+    await import('../apps/web/src/audio/pcm-worklet');
+    const Constructor=registered.get('voxnelo-pcm-16k');
+    if(!Constructor)throw Error('Worklet did not register');
+    const processor=new Constructor() as Processor & {
+      port:{onmessage:((event:{data:{type:string}})=>void)|null};
+    };
+    // 1920 frames: one complete 1600-sample chunk, plus 320 samples that
+    // used to be silently lost on stop.
+    for(let i=0;i<15;i++){
+      const chunk=new Float32Array(128).fill(0.35);
+      processor.process([[chunk]]);
+    }
+    expect(emitted).toHaveLength(1);
+    expect(emitted[0]).toBeInstanceOf(Float32Array);
+    expect((emitted[0] as Float32Array).length).toBe(1600);
+    processor.port.onmessage?.({data:{type:'flush'}});
+    expect(emitted).toHaveLength(3);
+    expect((emitted[1] as Float32Array).length).toBe(320);
+    expect(Array.from(emitted[1] as Float32Array).every(x=>Math.abs(x-0.35)<1e-6)).toBe(true);
+    expect(emitted[2]).toEqual({type:'flushed'});
+    // Repeated flushes cannot add fake PCM or replay the old sentence tail.
+    processor.port.onmessage?.({data:{type:'flush'}});
+    expect(emitted).toHaveLength(4);
+    expect(emitted[3]).toEqual({type:'flushed'});
+  });
+
   it('does not invent speech samples when the microphone has no input', async () => {
     const sent: Float32Array[] = [];
     const registered = new Map<string, ProcessorConstructor>();
