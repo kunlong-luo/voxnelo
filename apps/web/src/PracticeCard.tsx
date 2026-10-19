@@ -60,11 +60,11 @@ export function PracticeCard({current,currentState,speed,showIpa,recorder,dictat
         <div className="lessonFocus @container/lesson relative flex min-h-44 min-w-0 flex-1 sm:min-h-64 flex-col items-center justify-center gap-3 px-4 py-3 text-center sm:gap-3 sm:px-5 sm:py-3 [@media(max-height:800px)]:gap-1 [@media(max-height:800px)]:py-2 [@media(max-height:680px)]:min-h-48 [@media(max-height:680px)]:gap-1.5 [@media(max-height:680px)]:py-1 @min-[560px]/workspace:px-9 @min-[700px]/workspace:min-h-[clamp(12rem,calc(100dvh-525px),18rem)]">
           <div className="sentenceContent flex w-full flex-col items-center justify-center gap-3 sm:gap-4 [@media(max-height:800px)]:gap-2 [@media(max-height:680px)]:gap-1.5">
             <span className="lessonLevel text-[11px] font-bold tracking-[.2em] text-muted-foreground uppercase">{t('speakingPractice')} · {current.level}</span>
-            <div ref={sentenceMotionRef} className="sentenceHeading flex max-w-full justify-center">
-              <h1 key={current.id} className="sentenceText max-w-full text-[clamp(2rem,6.25cqi,3.375rem)] leading-[1.25] font-extrabold tracking-[-.045em] wrap-break-word text-sentence-ink drop-shadow-[0_1px_0_rgba(255,255,255,.45)] animate-sentence-enter">{current.english}</h1>
+            <div ref={sentenceMotionRef} className="sentenceHeading flex w-full min-w-0 justify-center">
+              <h1 key={current.id} className="sentenceText max-w-full min-w-0 wrap-anywhere text-balance text-[clamp(2rem,6.25cqi,3.375rem)] leading-[1.25] font-extrabold tracking-[-.045em] wrap-break-word text-sentence-ink drop-shadow-[0_1px_0_rgba(255,255,255,.45)] animate-sentence-enter">{current.english}</h1>
             </div>
-            <div ref={translationMotionRef} className="flex min-w-0 max-w-full justify-center"><p key={current.id} className="translation text-[17px] leading-7 font-medium text-translation-ink @min-[600px]/lesson:text-xl animate-sentence-enter [animation-delay:60ms]">{current.chinese}</p></div>
-            {showIpa && current.ipa && <p className="ipa max-w-full text-sm leading-6 wrap-break-word text-ipa-ink">{current.ipa}</p>}
+            <div ref={translationMotionRef} className="flex min-w-0 max-w-full justify-center"><p key={current.id} className="translation max-w-full wrap-anywhere text-[17px] leading-7 font-medium text-translation-ink @min-[600px]/lesson:text-xl animate-sentence-enter [animation-delay:60ms]">{current.chinese}</p></div>
+            {showIpa && current.ipa && <p className="ipa max-w-full min-w-0 text-sm leading-6 wrap-anywhere text-ipa-ink">{current.ipa}</p>}
             {current.ipa ? <Button variant="ghost" size="sm" className="subtleLink rounded-full text-xs text-primary" onClick={onToggleIpa} aria-expanded={showIpa}><CircleHelp size={14}/>{t(showIpa?'ipaHide':'ipaShow')}</Button> : <span className="text-xs text-muted-foreground">{t('ipaPending')}</span>}
           </div>
           <div className="pointer-events-none hidden w-full max-w-145 opacity-95 @min-[700px]/workspace:block [@media(max-height:800px)]:hidden" aria-hidden="true"><WaveformArt/></div>
