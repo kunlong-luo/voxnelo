@@ -185,7 +185,7 @@ describe('Electron real microphone to local ASR lifecycle',()=>{
     expect(live.status).toBe('idle');
     expect(live.error).toContain('麦克风');
     expect(track.stop).toHaveBeenCalledTimes(1);
-    expect(bridge.stop).toHaveBeenCalledWith('session-1');
+    await waitFor(()=>expect(bridge.stop).toHaveBeenCalledWith('session-1'));
   });
 });
 
@@ -276,6 +276,6 @@ describe('Desktop session cancellation and resource cleanup',()=>{
     expect(live.status).toBe('idle');
     expect(live.error).toContain('未能启动');
     expect(track.stop).toHaveBeenCalledOnce();
-    expect(bridge.stop).toHaveBeenCalledWith('session-1');
+    await waitFor(()=>expect(bridge.stop).toHaveBeenCalledWith('session-1'));
   });
 });
