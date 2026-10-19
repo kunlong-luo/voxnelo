@@ -1,4 +1,4 @@
-import type { VoxneloOfflineAsr, OfflineAsrFailureReason } from '../desktopBridge';
+import type { VoxneloOfflineAsr, OfflineAsrFailureReason, OfflineAsrStopResult } from '../desktopBridge';
 
 /**
  * One Electron-only microphone/AudioWorklet/ASR session.
@@ -7,7 +7,7 @@ import type { VoxneloOfflineAsr, OfflineAsrFailureReason } from '../desktopBridg
  * SpeechRecognition. The caller supplies a generation guard so permission
  * prompts, native worker startup and worklet loading can be cancelled safely.
  */
-export type DesktopDictationStop=()=>Promise<{finalText:string}>;
+export type DesktopDictationStop=()=>Promise<OfflineAsrStopResult>;
 export type DesktopStartError='permission'|'microphone'|'failed';
 export type DesktopStartResult={ok:true}|{ok:false;reason:'cancelled'|DesktopStartError};
 
@@ -38,7 +38,7 @@ export async function startDesktopDictationSession(
   let lastLevelUpdate=0;
 
   // Idempotence matters: cancellation, device loss and worker failure may race.
-  let closePromise:Promise<{finalText:string}>|null=null;
+  let closePromise:Promise<OfflineAsrStopResult>|null=null;
   const close:DesktopDictationStop=()=>{
     if(closePromise)return closePromise;
     closed=true;
@@ -87,9 +87,9 @@ export async function startDesktopDictationSession(
       }
       if(context)void context.close().catch(()=>{/* browser is already shutting down */});
       try{
-        return id?await bridge.stop(id):{finalText:''};
+        return id?await bridge.stop(id):{finalText:'',completed:false};
       }catch{
-        return {finalText:''};
+        return {finalText:'',completed:false};
       }
     })();
     return closePromise;
