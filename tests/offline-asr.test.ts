@@ -213,13 +213,13 @@ describe('Offline ASR explicit activation and deny-by-default IPC',()=>{
     });
     const opened=await engine.open(owner);
     if(!opened.ok)throw Error('worker start failed');
-    expect(await engine.stop(stranger,opened.sessionId)).toEqual({finalText:''});
+    expect(await engine.stop(stranger,opened.sessionId)).toEqual({finalText:'',completed:false});
     expect(worker.postMessage).not.toHaveBeenCalled();
     const finished=engine.stop(owner,opened.sessionId);
     expect(worker.postMessage).toHaveBeenCalledWith({type:'finish'});
     worker.emit('message',{type:'result',finalText:'How are you?',interimText:''});
     worker.emit('message',{type:'finished'});
-    expect(await finished).toEqual({finalText:'How are you?'});
+    expect(await finished).toEqual({finalText:'How are you?',completed:true});
     engine.close();
   });
 
@@ -248,10 +248,70 @@ describe('Offline ASR explicit activation and deny-by-default IPC',()=>{
     expect(worker.postMessage).toHaveBeenCalledWith({type:'finish'});
     worker.emit('message',{type:'result',finalText:'the finished English sentence',interimText:''});
     worker.emit('message',{type:'finished'});
-    expect(await first).toEqual({finalText:'the finished English sentence'});
-    expect(await second).toEqual({finalText:'the finished English sentence'});
+    expect(await first).toEqual({finalText:'the finished English sentence',completed:true});
+    expect(await second).toEqual({finalText:'the finished English sentence',completed:true});
     expect(worker.terminate).toHaveBeenCalledTimes(1);
     engine.close();
+  });
+
+  it('does not treat a cached partial result as finished when the worker fails after Stop',async()=>{
+    const dir=root();
+    const addon=path.join(dir,'native.cjs');
+    writeFileSync(addon,'fixture');
+    for(const file of ['encoder.onnx','decoder.onnx','joiner.onnx','tokens.txt'])
+      writeFileSync(path.join(dir,file),'fixture');
+    class WorkerStub extends EventEmitter {
+      postMessage=vi.fn();
+      terminate=vi.fn(async()=>0);
+    }
+    const worker=new WorkerStub();
+    const owner={isDestroyed:()=>false,send:vi.fn(),once:vi.fn()} as unknown as WebContents;
+    const engine=new OfflineAsr(dir,addon,()=>{
+      queueMicrotask(()=>worker.emit('message',{type:'ready'}));
+      return worker as unknown as Worker;
+    });
+    const opened=await engine.open(owner);
+    if(!opened.ok)throw Error('Worker did not start');
+    worker.emit('message',{type:'result',finalText:'only part of this sentence',interimText:'of'});
+    const pending=engine.stop(owner,opened.sessionId);
+    worker.emit('message',{type:'failure'});
+    expect(await pending).toEqual({finalText:'',completed:false});
+    expect(worker.terminate).toHaveBeenCalledOnce();
+    expect(owner.send).toHaveBeenCalledWith('voxnelo:asr:error',{sessionId:opened.sessionId});
+    worker.emit('message',{type:'finished'}); // late success is ignored
+    expect(await pending).toEqual({finalText:'',completed:false});
+  });
+
+  it('returns explicit incomplete stop on native finish timeout instead of promoting lastText',async()=>{
+    const dir=root();
+    const addon=path.join(dir,'native.cjs');
+    writeFileSync(addon,'fixture');
+    for(const file of ['encoder.onnx','decoder.onnx','joiner.onnx','tokens.txt'])
+      writeFileSync(path.join(dir,file),'fixture');
+    class WorkerStub extends EventEmitter {
+      postMessage=vi.fn();
+      terminate=vi.fn(async()=>0);
+    }
+    const worker=new WorkerStub();
+    const owner={isDestroyed:()=>false,send:vi.fn(),once:vi.fn()} as unknown as WebContents;
+    const engine=new OfflineAsr(dir,addon,()=>{
+      queueMicrotask(()=>worker.emit('message',{type:'ready'}));
+      return worker as unknown as Worker;
+    });
+    const opened=await engine.open(owner);
+    if(!opened.ok)throw Error('Worker did not start');
+    worker.emit('message',{type:'result',finalText:'stale cached partial',interimText:''});
+    vi.useFakeTimers();
+    try{
+      const pending=engine.stop(owner,opened.sessionId);
+      await vi.advanceTimersByTimeAsync(8001);
+      expect(await pending).toEqual({finalText:'',completed:false});
+      expect(worker.terminate).toHaveBeenCalledOnce();
+      expect(await engine.stop(owner,opened.sessionId)).toEqual({finalText:'',completed:false});
+    }finally{
+      vi.useRealTimers();
+      engine.close();
+    }
   });
 
   it('resolves an in-flight startup immediately if its owner is destroyed',async()=>{
@@ -277,7 +337,7 @@ describe('Offline ASR explicit activation and deny-by-default IPC',()=>{
     expect(await pending).toEqual({ok:false,reason:'failed'});
     expect(worker.terminate).toHaveBeenCalledTimes(1);
     worker.emit('message',{type:'ready'});
-    expect(await engine.stop(owner,'superseded')).toEqual({finalText:''});
+    expect(await engine.stop(owner,'superseded')).toEqual({finalText:'',completed:false});
   });
 
   it('ignores late messages from an already disposed session when a new one starts',async()=>{
@@ -311,7 +371,7 @@ describe('Offline ASR explicit activation and deny-by-default IPC',()=>{
     const final=engine.stop(owner,second.sessionId);
     workers[1]!.emit('message',{type:'result',finalText:'fresh sentence',interimText:''});
     workers[1]!.emit('message',{type:'finished'});
-    expect(await final).toEqual({finalText:'fresh sentence'});
+    expect(await final).toEqual({finalText:'fresh sentence',completed:true});
     expect(owner.send).toHaveBeenCalledWith('voxnelo:asr:result',{
       sessionId:second.sessionId,finalText:'fresh sentence',interimText:'',
     });
