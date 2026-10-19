@@ -54,7 +54,7 @@ function setupDesktop(noiseSuppression?:boolean) {
     close:vi.fn(async()=>undefined),
   };
   vi.stubGlobal('AudioContext',vi.fn(function(){return audioContext}));
-  const port:{onmessage:((event:{data:Float32Array})=>void)|null}={onmessage:null};
+  const port:{onmessage:((event:{data:Float32Array|{type:string}})=>void)|null;postMessage?:(message:{type:string})=>void}={onmessage:null};
   vi.stubGlobal('AudioWorkletNode',vi.fn(function(){return {port,connect:vi.fn()}}));
   return {bridge,track,handlers,getUserMedia,audioContext,port};
 }
@@ -99,6 +99,57 @@ describe('Electron real microphone to local ASR lifecycle',()=>{
     expect(live.finalText).toBe('hello final');
     expect(live.status).toBe('idle');
   });
+  it('preserves a final partial PCM packet BEFORE completing native ASR stop',async()=>{
+    const {bridge,port,track}=setupDesktop(true);
+    const ordering:string[]=[];
+    bridge.push.mockImplementation(()=>{ordering.push('pcm');});
+    bridge.stop.mockImplementation(async()=>{
+      ordering.push('stop');
+      return {finalText:'last syllable retained'};
+    });
+    port.postMessage=vi.fn((message:{type:string})=>{
+      expect(message).toEqual({type:'flush'});
+      queueMicrotask(()=>{
+        // Simulate a queued normal chunk plus the final 27 ms.
+        port.onmessage?.({data:new Float32Array(1600).fill(0.3)});
+        port.onmessage?.({data:new Float32Array(432).fill(0.2)});
+        port.onmessage?.({data:{type:'flushed'}});
+      });
+    });
+    render(<Harness/>);
+    await waitFor(()=>expect(live.supported).toBe(true));
+    await act(async()=>{await live.start()});
+    act(()=>live.stop());
+    expect(track.stop).toHaveBeenCalledOnce();
+    await waitFor(()=>expect(bridge.stop).toHaveBeenCalledOnce());
+    expect(port.postMessage).toHaveBeenCalledOnce();
+    expect(bridge.push).toHaveBeenCalledTimes(2);
+    expect((bridge.push.mock.calls[1]?.[1] as Float32Array).length).toBe(432);
+    expect(ordering).toEqual(['pcm','pcm','stop']);
+    await waitFor(()=>expect(live.finalText).toBe('last syllable retained'));
+    expect(port.onmessage).toBeNull();
+    // Native close must be one-shot even on duplicate clicks.
+    act(()=>live.stop());
+    expect(bridge.stop).toHaveBeenCalledOnce();
+  });
+
+  it('releases the native session if an old/closed worklet never acknowledges flush',async()=>{
+    const {bridge,port,track}=setupDesktop(true);
+    port.postMessage=vi.fn(); // mimic OS sleep / detached AudioWorklet
+    render(<Harness/>);
+    await waitFor(()=>expect(live.supported).toBe(true));
+    await act(async()=>{await live.start()});
+    vi.useFakeTimers();
+    try{
+      act(()=>live.stop());
+      expect(track.stop).toHaveBeenCalledOnce();
+      expect(bridge.stop).not.toHaveBeenCalled();
+      await act(async()=>{await vi.advanceTimersByTimeAsync(351)});
+      expect(bridge.stop).toHaveBeenCalledWith('session-1');
+      expect(port.onmessage).toBeNull();
+    }finally{vi.useRealTimers();}
+  });
+
   it('allows cancelling microphone permission while checking without starting a stale ASR session',async()=>{
     const {bridge,track,getUserMedia}=setupDesktop(true);
     let finishPermission:(()=>void)|undefined;
