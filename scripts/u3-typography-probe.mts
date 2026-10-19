@@ -57,6 +57,10 @@ export const U3_TYPOGRAPHY_METRICS = `(()=>{
     horizontalContent:horizontal(phrase)&&horizontal(translation)&&horizontal(ipa)&&horizontal(hero)
       &&horizontal(rail)&&horizontal(footer),
     textOrder,actionOrder,navInside,
+    phraseBottom:Math.round(phrase.bottom),translationTop:Math.round(translation.top),
+    translationBottom:Math.round(translation.bottom),ipaTop:Math.round(ipa.top),
+    entranceAnimations:select('.sentenceText').getAnimations().filter(a=>a.playState==='running').length+
+      select('.translation').getAnimations().filter(a=>a.playState==='running').length,
     maxDocumentOverflow:doc.scrollWidth-doc.clientWidth,
     localScroll,contentOverflow,
     heroTop:Math.round(hero.top),heroBottom:Math.round(hero.bottom),
