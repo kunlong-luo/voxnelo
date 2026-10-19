@@ -57,8 +57,8 @@ export function PracticeCard({current,currentState,speed,showIpa,recorder,dictat
             </div>
           </div>
         </header>
-        <div className="lessonFocus @container/lesson relative flex min-h-44 min-w-0 flex-1 sm:min-h-64 flex-col items-center justify-center gap-4 px-4 py-4 text-center sm:gap-5 sm:px-5 sm:py-5 [@media(max-height:800px)]:gap-1 [@media(max-height:800px)]:py-2 [@media(max-height:680px)]:min-h-48 [@media(max-height:680px)]:gap-1.5 [@media(max-height:680px)]:py-1 @min-[560px]/workspace:px-9 @min-[700px]/workspace:min-h-[clamp(12rem,calc(100dvh-525px),18rem)]">
-          <div className="sentenceContent flex w-full flex-col items-center justify-center gap-3 sm:gap-5 [@media(max-height:800px)]:gap-2 [@media(max-height:680px)]:gap-1.5">
+        <div className="lessonFocus @container/lesson relative flex min-h-44 min-w-0 flex-1 sm:min-h-64 flex-col items-center justify-center gap-3 px-4 py-3 text-center sm:gap-3 sm:px-5 sm:py-3 [@media(max-height:800px)]:gap-1 [@media(max-height:800px)]:py-2 [@media(max-height:680px)]:min-h-48 [@media(max-height:680px)]:gap-1.5 [@media(max-height:680px)]:py-1 @min-[560px]/workspace:px-9 @min-[700px]/workspace:min-h-[clamp(12rem,calc(100dvh-525px),18rem)]">
+          <div className="sentenceContent flex w-full flex-col items-center justify-center gap-3 sm:gap-4 [@media(max-height:800px)]:gap-2 [@media(max-height:680px)]:gap-1.5">
             <span className="lessonLevel text-[11px] font-bold tracking-[.2em] text-muted-foreground uppercase">{t('speakingPractice')} · {current.level}</span>
             <div ref={sentenceMotionRef} className="sentenceHeading flex max-w-full justify-center">
               <h1 key={current.id} className="sentenceText max-w-full text-[clamp(2rem,6.25cqi,3.375rem)] leading-[1.25] font-extrabold tracking-[-.045em] wrap-break-word text-sentence-ink drop-shadow-[0_1px_0_rgba(255,255,255,.45)] animate-sentence-enter">{current.english}</h1>
@@ -71,7 +71,7 @@ export function PracticeCard({current,currentState,speed,showIpa,recorder,dictat
           <LiveDictationPanel dictation={dictation} blocked={recorder.status==='requesting'||recorder.status==='recording'} onStart={onStartDictation}/>
         </div>
         <PracticeControlPanel recorder={recorder} recordingBusy={recordingBusy} speed={speed} onSpeak={onSpeak} onToggleSpeed={onToggleSpeed} onRecord={onRecord} />
-        <footer className="cardFooter referenceFooter grid min-h-18 [@media(max-height:680px)]:min-h-14 grid-cols-[minmax(95px,1fr)_auto_minmax(95px,1fr)] items-center gap-2 rounded-b-[var(--radius)] border-t border-border/60 bg-card/75 px-5 py-4 sm:px-8 lg:px-10">
+        <footer className="cardFooter referenceFooter grid min-h-18 [@media(max-height:680px)]:min-h-14 grid-cols-[minmax(95px,1fr)_auto_minmax(95px,1fr)] items-center gap-2 rounded-b-[var(--radius)] border-t border-border/60 bg-card/75 px-5 py-3 sm:px-8 lg:px-10">
           <Button variant="outline" size="sm" className="prevButton pagerButton justify-self-start text-primary" onClick={onPrevious} disabled={!canGoPrevious} aria-label={t('previous')}><ChevronLeft size={16}/>{t('previous')}</Button>
           <span className="footerHint text-center text-[10px] text-muted-foreground max-[1050px]:hidden">{t('footerHint')}</span>
           <Button variant="outline" size="sm" className="nextButton pagerButton col-start-3 justify-self-end text-primary" onClick={onNext} disabled={recordingBusy} aria-label={t('nextAccessible')}>{t('next')}<ArrowRight size={16}/></Button>
