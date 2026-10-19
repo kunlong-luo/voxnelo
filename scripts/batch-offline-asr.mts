@@ -7,7 +7,7 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { pathToFileURL } from 'node:url';
 import { scoreTranscript, summarizeAsrAttempts, type MeasuredAsrAttempt } from './asr-batch-metrics.mts';
 
 export type BatchSample = { id: string; scenario: 'quiet' | 'noise'; wav: string; reference: string };
