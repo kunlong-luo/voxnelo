@@ -6,6 +6,7 @@ import { createServer } from 'node:http';
 import { mkdtemp, readFile, mkdir, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { injectU3TypographyProbe, U3_TYPOGRAPHY_METRICS } from './u3-typography-probe.mts';
 
 const out = path.resolve('browser-layout'), root=path.resolve('dist');
 const sizes: Array<[number, number]> = [[320,640],[390,844],[640,720],[800,610],[1160,760],[1440,900],[1536,900]];
@@ -29,6 +30,13 @@ const url='http://127.0.0.1:'+address.port+'/index.html';
 const profile=await mkdtemp(path.join(tmpdir(),'voxnelo-cdp-'));
 type CdpReply={result?:{value?:unknown};exceptionDetails?:{text:string};data?:string;[key:string]:unknown};
 type LayoutMetrics={progressHeight:number;progressBottom:number;feedTop:number;scrollWidth:number;clientWidth:number;mainWidth:number;containerName:string;columns:number|null;sidebar:boolean;dock:boolean;micWidth:number;micInBounds:boolean;micTop:number;micBottom:number;micInFirstViewport:boolean;heroWidth:number;heroRadius:number;sentenceFontSize:number;dictationOffset:number;dictationWidth:number;columnBottomDelta:number;workspaceScrollbarWidth:string;workspaceOverflowY:string;railFitsViewport:boolean;columnIsStretching:boolean;footerBottom:number;pagerFirstViewport:boolean};
+type TypographyMetrics={
+  viewport:number[];dpr:number;fontSize:number;lineCount:number;
+  horizontalContent:boolean;textOrder:boolean;actionOrder:boolean;navInside:boolean;
+  phraseBottom:number;translationTop:number;translationBottom:number;ipaTop:number;entranceAnimations:number;
+  maxDocumentOverflow:number;localScroll:boolean;contentOverflow:boolean;
+  heroTop:number;heroBottom:number;footerBottom:number;focusHeight:number;minTouchWidth:number;
+};
 type ThemeMaterial={theme:string;glass:string;primaryBackground:string;glassBackground:string};
 type Bounds={top:number;bottom:number;right:number;dockTop:number};
 let chrome: ReturnType<typeof spawn>|undefined;
@@ -177,6 +185,56 @@ try{
     await activate(2,'.libraryPage');await shot(w,h,'library');
     await activate(0,'.practiceLayout');
   }
+  // Keep one stable mounted lesson throughout: navigating and immediately
+  // mutating the new React tree creates a race with the initial state commit.
+  // Record current course text once; always restore it before other checks.
+  await sleep(850);
+  const realLesson=await evalJs<{english:string;chinese:string;ipa:string|null}>('(()=>({english:document.querySelector(".sentenceText").textContent,chinese:document.querySelector(".translation").textContent,ipa:document.querySelector(".ipa")?.textContent??null}))()');
+  // Synthetic text-only typography stress: not a lesson, IPA review or actual
+  // operating-system font scaling.
+  for(const [width,height,fontPercent] of [[1440,900,125],[1440,900,150],[1160,760,150]] as const){
+    await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:false});
+    await evalJs(injectU3TypographyProbe(fontPercent));
+    await sleep(750); // Wait for sentence/translation entrance animations.
+    const m=await evalJs<TypographyMetrics>(U3_TYPOGRAPHY_METRICS);
+    assert.ok(m.fontSize>=20&&m.lineCount>=2,
+      'U3 long sentence should wrap and scale: '+JSON.stringify(m));
+    assert.ok(m.horizontalContent&&m.maxDocumentOverflow<=1,
+      'U3 long text/IPA or action clipped horizontally: '+JSON.stringify(m));
+    assert.ok(m.textOrder&&m.actionOrder&&m.navInside,
+      'U3 long sentence overlaps audio or footer: '+JSON.stringify(m));
+    assert.ok(m.minTouchWidth>=32&&m.localScroll,
+      'U3 font zoom broke the controls/workspace scroll: '+JSON.stringify(m));
+    // For long multi-line sentences the footer may require local scrolling.
+    // It must remain *reachable*, not be cut off by the application shell.
+    await evalJs('(()=>{const s=document.querySelector(".content");s.scrollTo({top:s.scrollHeight,behavior:"instant"})})()');
+    await sleep(120);
+    const footerScroll=await evalJs<{reached:boolean;top:number;bottom:number;scrollTop:number;scrollHeight:number;clientHeight:number}>('(()=>{const s=document.querySelector(".content"),r=document.querySelector(".referenceFooter").getBoundingClientRect();return {reached:r.top>=-1&&r.bottom<=innerHeight+1,top:r.top,bottom:r.bottom,scrollTop:s.scrollTop,scrollHeight:s.scrollHeight,clientHeight:s.clientHeight}})()');
+    assert.ok(footerScroll.reached,'U3 long text footer cannot be reached by workspace scroll: '+JSON.stringify({m,footerScroll}));
+    await evalJs('document.querySelector(".dictationAction").scrollIntoView({block:"center",behavior:"instant"})');
+    await sleep(120);
+    const micReached=await evalJs<boolean>('(()=>{const r=document.querySelector(".dictationAction").getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight})()');
+    assert.ok(micReached,'U3 live dictation must remain reachable: '+JSON.stringify(m));
+    const footerReached=footerScroll.reached;
+    await evalJs('document.querySelector(".content").scrollTop=0');
+    await sleep(150);
+    const png=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+    if(typeof png.data!=='string')throw Error('Missing U3 typography screenshot');
+    await writeFile(path.join(out,width+'x'+height+'-long-text-font-'+fontPercent+'.png'),Buffer.from(png.data,'base64'));
+    report.push({page:'u3-long-text-font-simulation',size:[width,height],fontPercent,footerReached,micReached,...m});
+  }
+  await evalJs(`(()=>{
+    document.documentElement.style.fontSize='';
+    document.querySelector('.sentenceText').textContent=${JSON.stringify(realLesson.english)};
+    document.querySelector('.translation').textContent=${JSON.stringify(realLesson.chinese)};
+    const fixture=document.querySelector('[data-u3-typography-probe="true"]');
+    if(fixture)fixture.remove();
+    else if(${JSON.stringify(realLesson.ipa)}!==null){
+      document.querySelector('.ipa').textContent=${JSON.stringify(realLesson.ipa)};
+    }
+    document.querySelector('.content').scrollTop=0;
+    return true;
+  })()`);
   // Local desktop scrolling: the window and sidebar remain fixed while only
   // the workspace and each phrase/history list may scroll.
   await activate(1,'.catalogPage');

@@ -90,6 +90,12 @@ describe('Nordic three-column learning workspace', () => {
     expect(replayMic).toBeTruthy();
     expect(replayMic?.className).toContain('bg-[image:var(--mic-gradient)]');
     expect(container.querySelector('.sentenceText')?.className).toContain('6.25cqi');
+    // Width containment survives lengthy bilingual content and phonetic
+    // symbols: the actual wrap/overflow behavior is tested with CDP.
+    expect(container.querySelector('.sentenceHeading')?.className).toContain('min-w-0');
+    expect(container.querySelector('.sentenceText')?.className).toContain('wrap-anywhere');
+    expect(container.querySelector('.translation')?.className).toContain('wrap-anywhere');
+    expect(container.querySelector('.ipa')?.className).toContain('wrap-anywhere');
     fireEvent.click(screen.getByRole('button', { name: '上一句' }));
     fireEvent.click(screen.getByRole('button', { name: '换一句' }));
     expect(onPrevious).toHaveBeenCalledOnce();

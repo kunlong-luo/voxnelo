@@ -11,6 +11,7 @@ import { spawn, execFileSync } from 'node:child_process';
 import { createServer } from 'node:net';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { injectU3TypographyProbe, U3_TYPOGRAPHY_METRICS } from './u3-typography-probe.mts';
 
 if(process.platform!=='linux')throw Error('Linux desktop smoke requires X11');
 if(!process.env.DISPLAY)throw Error('Use xvfb-run -a node --experimental-strip-types scripts/check-electron-window.mts');
@@ -30,6 +31,13 @@ const freePort=async():Promise<number>=>new Promise((resolve,reject)=>{
   });
 });
 type CdpReply={result?:{value?:unknown};exceptionDetails?:{text:string};data?:string;[key:string]:unknown};
+type TypographyMetrics={
+  viewport:number[];dpr:number;fontSize:number;lineCount:number;
+  horizontalContent:boolean;textOrder:boolean;actionOrder:boolean;navInside:boolean;
+  phraseBottom:number;translationTop:number;translationBottom:number;ipaTop:number;entranceAnimations:number;
+  maxDocumentOverflow:number;localScroll:boolean;contentOverflow:boolean;
+  heroTop:number;heroBottom:number;footerBottom:number;focusHeight:number;minTouchWidth:number;
+};
 type DesktopMetrics={width:number;height:number;scrollWidth:number;clientWidth:number;chromeHeight:number;chromePresent:boolean;chromeTop:number;chromeLeft:number;sidebarTop:number;sidebarBottom:number;sidebarRight:number;mainContainer:string;desktopPreload:boolean;desktopPlatform:string;scheme:string;practice:boolean;micBottom:number;micTop:number;railBottom:number;mobileNav:boolean;devicePixelRatio:number};
 const port=await freePort();
 const report:Array<{label:string;[key:string]:unknown}>=[];
@@ -172,6 +180,52 @@ try{
   const winId=xdo('search','--onlyvisible','--name','^Voxnelo$').split('\n')[0];
   if(!winId)throw Error('Electron native top-level window not found via X11');
   await snapshot('1160x760-electron',1160,760);
+
+  // The Electron test runs at actual forced device scales 1 / 1.25 / 1.5.
+  // Additional root font scaling is a text-zoom simulation, NOT proof of
+  // physical Windows/macOS accessibility-font behavior.
+  const beforeTypography=await evaluate<{english:string;chinese:string;ipa:string|null}>(`(()=>({
+    english:document.querySelector('.sentenceText').textContent,
+    chinese:document.querySelector('.translation').textContent,
+    ipa:document.querySelector('.ipa')?.textContent??null,
+  }))()`);
+  const typographyPercent=scale===1?125:150;
+  await evaluate(injectU3TypographyProbe(typographyPercent));
+  await delay(750); // Measure settled text, not its 580ms entrance transition.
+  const longText=await evaluate<TypographyMetrics>(U3_TYPOGRAPHY_METRICS);
+  assert.ok(longText.fontSize>=20&&longText.lineCount>=2,
+    'Native Electron long English must wrap under high-DPI/text scaling: '+JSON.stringify(longText));
+  assert.ok(longText.horizontalContent&&longText.maxDocumentOverflow<=1,
+    'Native Electron text/IPA/control horizontal clipping: '+JSON.stringify(longText));
+  assert.ok(longText.textOrder&&longText.actionOrder&&longText.navInside&&longText.localScroll,
+    'Native Electron long lesson overlaps controls: '+JSON.stringify(longText));
+  assert.ok(longText.minTouchWidth>=32,
+    'Native Electron interactive audio controls shrink below practical size: '+JSON.stringify(longText));
+  await evaluate('(()=>{const s=document.querySelector(".content");s.scrollTo({top:s.scrollHeight,behavior:"instant"})})()');
+  await delay(150);
+  const footerScroll=await evaluate<{reached:boolean;bottom:number;scrollTop:number;scrollHeight:number;clientHeight:number}>('(()=>{const s=document.querySelector(".content"),x=document.querySelector(".referenceFooter").getBoundingClientRect();return {reached:x.top>=-1&&x.bottom<=innerHeight+1,bottom:x.bottom,scrollTop:s.scrollTop,scrollHeight:s.scrollHeight,clientHeight:s.clientHeight}})()');
+  assert.ok(footerScroll.reached,'Native Electron long-lesson footer not reachable: '+JSON.stringify({longText,footerScroll}));
+  await evaluate('document.querySelector(".dictationAction").scrollIntoView({block:"center",behavior:"instant"})');
+  await delay(150);
+  const micReached=await evaluate<boolean>('(()=>{const x=document.querySelector(".dictationAction").getBoundingClientRect();return x.top>=0&&x.bottom<=innerHeight})()');
+  assert.ok(micReached,'Native Electron dictation button not reachable: '+JSON.stringify(longText));
+  const footerReached=footerScroll.reached;
+  await evaluate('document.querySelector(".content").scrollTop=0');
+  await delay(150);
+  const typographyScreenshot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+  if(typeof typographyScreenshot.data!=='string')throw Error('Missing Electron long typography screenshot');
+  await writeFile(path.join(resultDir,'1160x760-long-lesson-font-'+typographyPercent+'.png'),Buffer.from(typographyScreenshot.data,'base64'));
+  report.push({label:'electron-long-lesson-text-zoom',fontPercent:typographyPercent,footerReached,micReached,...longText});
+  await evaluate(`(()=>{
+    document.documentElement.style.fontSize='';
+    document.querySelector('.sentenceText').textContent=${JSON.stringify(beforeTypography.english)};
+    document.querySelector('.translation').textContent=${JSON.stringify(beforeTypography.chinese)};
+    const testOnly=document.querySelector('[data-u3-typography-probe="true"]');
+    if(testOnly)testOnly.remove();
+    else if(${JSON.stringify(beforeTypography.ipa)}!==null){
+      document.querySelector('.ipa').textContent=${JSON.stringify(beforeTypography.ipa)};
+    }
+  })()`);
 
   if(scale===1) {
   xdo('windowsize',winId,'800','610');
