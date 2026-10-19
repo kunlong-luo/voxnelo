@@ -200,14 +200,15 @@ try{
     'Native Electron long lesson overlaps controls: '+JSON.stringify(longText));
   assert.ok(longText.minTouchWidth>=32,
     'Native Electron interactive audio controls shrink below practical size: '+JSON.stringify(longText));
-  await evaluate('document.querySelector(".referenceFooter").scrollIntoView({block:"end"})');
+  await evaluate('(()=>{const s=document.querySelector(".content");s.scrollTo({top:s.scrollHeight,behavior:"instant"})})()');
   await delay(150);
-  const footerReached=await evaluate<boolean>('(()=>{const x=document.querySelector(".referenceFooter").getBoundingClientRect();return x.top>=-1&&x.bottom<=innerHeight+1})()');
-  assert.ok(footerReached,'Native Electron long-lesson footer not reachable: '+JSON.stringify(longText));
-  await evaluate('document.querySelector(".dictationAction").scrollIntoView({block:"center"})');
+  const footerScroll=await evaluate<{reached:boolean;bottom:number;scrollTop:number;scrollHeight:number;clientHeight:number}>('(()=>{const s=document.querySelector(".content"),x=document.querySelector(".referenceFooter").getBoundingClientRect();return {reached:x.top>=-1&&x.bottom<=innerHeight+1,bottom:x.bottom,scrollTop:s.scrollTop,scrollHeight:s.scrollHeight,clientHeight:s.clientHeight}})()');
+  assert.ok(footerScroll.reached,'Native Electron long-lesson footer not reachable: '+JSON.stringify({longText,footerScroll}));
+  await evaluate('document.querySelector(".dictationAction").scrollIntoView({block:"center",behavior:"instant"})');
   await delay(150);
   const micReached=await evaluate<boolean>('(()=>{const x=document.querySelector(".dictationAction").getBoundingClientRect();return x.top>=0&&x.bottom<=innerHeight})()');
   assert.ok(micReached,'Native Electron dictation button not reachable: '+JSON.stringify(longText));
+  const footerReached=footerScroll.reached;
   await evaluate('document.querySelector(".content").scrollTop=0');
   await delay(150);
   const typographyScreenshot=await send('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
