@@ -33,6 +33,7 @@ type LayoutMetrics={progressHeight:number;progressBottom:number;feedTop:number;s
 type TypographyMetrics={
   viewport:number[];dpr:number;fontSize:number;lineCount:number;
   horizontalContent:boolean;textOrder:boolean;actionOrder:boolean;navInside:boolean;
+  phraseBottom:number;translationTop:number;translationBottom:number;ipaTop:number;entranceAnimations:number;
   maxDocumentOverflow:number;localScroll:boolean;contentOverflow:boolean;
   heroTop:number;heroBottom:number;footerBottom:number;focusHeight:number;minTouchWidth:number;
 };
@@ -189,7 +190,7 @@ try{
   for(const [width,height,fontPercent] of [[1440,900,125],[1440,900,150],[1160,760,150]] as const){
     await send('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:false});
     await evalJs(injectU3TypographyProbe(fontPercent));
-    await sleep(180);
+    await sleep(750); // Wait for sentence/translation entrance animations.
     const m=await evalJs<TypographyMetrics>(U3_TYPOGRAPHY_METRICS);
     assert.ok(m.fontSize>=20&&m.lineCount>=2,
       'U3 long sentence should wrap and scale: '+JSON.stringify(m));
