@@ -96,7 +96,7 @@ function registerOfflineAsr():void{
   });
   ipcMain.handle('voxnelo:asr:stop',(event,id:unknown)=>{
     const window=authorizedWindow(event);
-    if(!window)return {finalText:''};
+    if(!window)return {finalText:'',completed:false};
     return offlineAsr.stop(window.webContents,id);
   });
 }
