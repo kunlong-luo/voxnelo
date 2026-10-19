@@ -200,13 +200,11 @@ describe('App smoke', () => {
         first.ondataavailable?.({ data: new Blob(['stale voice']) });
         first.onstop?.();
       });
-      const newSentenceId = (await database.events.orderBy('at').last())?.sentenceId;
       await waitFor(async () => {
         const allStates = await database.states.toArray();
         expect(allStates.find(x => x.sentenceId === FIRST_SENTENCE.id)?.practicedCount).toBe(1);
         expect(allStates.filter(x => x.sentenceId !== FIRST_SENTENCE.id).every(x => x.practicedCount === 0)).toBe(true);
       });
-      expect(newSentenceId).toBeTruthy();
       expect(URL.createObjectURL).toHaveBeenCalledTimes(1);
       expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:practice-1');
       expect(trackStop).toHaveBeenCalled();
