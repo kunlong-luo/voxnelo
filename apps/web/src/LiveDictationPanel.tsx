@@ -43,7 +43,7 @@ export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
           <strong className="text-[13px] font-bold tracking-tight text-foreground @min-[400px]/lesson:text-sm">{t('dictationTitle')}</strong>
           <span className="inline-flex min-w-0 items-center gap-1.5 text-[11px] font-medium leading-4 text-translation-ink" role="status">
             {listening?<><span aria-hidden="true" className="size-2 shrink-0 rounded-full bg-mic-halo animate-status-breathe"/>{t('dictationListening')}</>
-              :checking||dictation.browserLocalChecking?t('dictationChecking')
+              :checking||(!window.voxneloDesktop&&dictation.localPack==='unknown')?t('dictationChecking')
               :<><AudioLines size={13} className="shrink-0 text-primary" aria-hidden="true"/>{t(dictation.mode==='browser'?'dictationCloudEnabled':'dictationPrivacy')}</>}
           </span>
         </div>
