@@ -29,7 +29,7 @@ describe('Type-safe localization resources',()=>{
   it('keeps all localized keys and placeholders in sync and nonempty',()=>{
     const zhKeys=Object.keys(zh);
     const enKeys=Object.keys(en);
-    expect(zhKeys).toHaveLength(244);
+    expect(zhKeys).toHaveLength(245);
     expect(enKeys.sort()).toEqual([...zhKeys].sort());
     const placeholders=(value:string)=>[...value.matchAll(/\\{(\\w+)\\}/g)].map(v=>v[1]).sort();
     for(const key of zhKeys){
