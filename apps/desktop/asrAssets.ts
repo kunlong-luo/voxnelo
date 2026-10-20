@@ -67,7 +67,8 @@ export function resolveAsrAssets(options: AsrAssetOptions): {modelDir:string|nul
   // packaged Linux application; it still MUST pass full inventory validation.
   const packagedDir=path.join(options.resourcesPath,'offline-asr');
   // A full audited public release always takes precedence.
-  if(existsSync(path.join(packagedDir,'model','encoder.onnx')) &&
+  if(options.isPackaged &&
+     existsSync(path.join(packagedDir,'model','encoder.onnx')) &&
      existsSync(path.join(packagedDir,'native','index.cjs'))){
     return {
       modelDir:path.join(packagedDir,'model'),
