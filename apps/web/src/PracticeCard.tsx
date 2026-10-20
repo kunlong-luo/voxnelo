@@ -21,7 +21,7 @@ const topics:Record<Sentence['topic'],TranslationKey> = {
 };
 
 /** Single glass surface, typographic hierarchy and persistent lesson controls. */
-export function PracticeCard({current,currentState,speed,showIpa,recorder,dictation,recordingBusy,canGoPrevious,onStartDictation,
+export function PracticeCard({current,currentState,speed,showIpa,recorder,dictation,recordingBusy,canGoPrevious,onStartDictation,onManageModels,
   onToggleIpa,onSpeak,onToggleSpeed,onRecord,onToggleFlag,onNext,onPrevious}:PracticeCardProps) {
   const {t}=useI18n();
   // Stable parent + keyed child: each next sentence now triggers a real DOM transition.
@@ -68,7 +68,7 @@ export function PracticeCard({current,currentState,speed,showIpa,recorder,dictat
             {current.ipa ? <Button variant="ghost" size="sm" className="subtleLink rounded-full text-xs text-primary" onClick={onToggleIpa} aria-expanded={showIpa}><CircleHelp size={14}/>{t(showIpa?'ipaHide':'ipaShow')}</Button> : <span className="text-xs text-muted-foreground">{t('ipaPending')}</span>}
           </div>
           <div className="pointer-events-none hidden w-full max-w-145 opacity-95 @min-[700px]/workspace:block [@media(max-height:800px)]:hidden" aria-hidden="true"><WaveformArt/></div>
-          <LiveDictationPanel dictation={dictation} blocked={recorder.status==='requesting'||recorder.status==='recording'} onStart={onStartDictation}/>
+          <LiveDictationPanel dictation={dictation} blocked={recorder.status==='requesting'||recorder.status==='recording'} onStart={onStartDictation} onManageModels={onManageModels}/>
         </div>
         <PracticeControlPanel recorder={recorder} recordingBusy={recordingBusy} speed={speed} onSpeak={onSpeak} onToggleSpeed={onToggleSpeed} onRecord={onRecord} />
         <footer className="cardFooter referenceFooter grid min-h-18 [@media(max-height:680px)]:min-h-14 grid-cols-[minmax(95px,1fr)_auto_minmax(95px,1fr)] items-center gap-2 rounded-b-[var(--radius)] border-t border-border/60 bg-card/75 px-5 py-3 sm:px-8 lg:px-10">
