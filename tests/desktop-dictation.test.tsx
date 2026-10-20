@@ -246,6 +246,9 @@ describe('Electron real microphone to local ASR lifecycle',()=>{
     act(()=>fireEvent.click(getAction()));
     expect(live.status).toBe('checking');
     expect(getAction().disabled).toBe(false);
+    // Wait until native capability refresh has reached the pending
+    // microphone permission prompt before exercising cancellation.
+    await waitFor(()=>expect(getUserMedia).toHaveBeenCalledOnce());
     act(()=>fireEvent.click(getAction()));
     expect(live.status).toBe('idle');
     await act(async()=>{
