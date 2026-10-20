@@ -65,6 +65,21 @@ function setupDesktop(noiseSuppression?:boolean) {
   };
 }
 
+describe('Browser dictation availability feedback',()=>{
+  it('keeps the action clickable and explains missing local recognition without cloud fallback',async()=>{
+    vi.stubGlobal('voxneloDesktop',undefined);
+    vi.stubGlobal('SpeechRecognition',undefined);
+    vi.stubGlobal('webkitSpeechRecognition',undefined);
+    render(<PanelHarness/>);
+    const action=screen.getByRole('button',{name:'开始实时听写'});
+    expect(action.hasAttribute('disabled')).toBe(false);
+    fireEvent.click(action);
+    await waitFor(()=>expect(live.error).toContain('当前环境没有可用的实时语音识别接口'));
+    expect(live.status).toBe('idle');
+    expect(live.finalText).toBe('');
+  });
+});
+
 describe('Offline dictation product guidance',()=>{
   it('shows a working help link instead of developer commands when ASR is unavailable',async()=>{
     vi.stubGlobal('voxneloDesktop',{
@@ -78,7 +93,26 @@ describe('Offline dictation product guidance',()=>{
     expect(link.getAttribute('rel')).toContain('noopener');
     expect(document.body.textContent).not.toContain('pnpm');
     expect(document.body.textContent).not.toContain('npm');
-    expect(screen.getByRole('button',{name:'开始实时听写'}).hasAttribute('disabled')).toBe(true);
+    const action=screen.getByRole('button',{name:'开始实时听写'});
+    expect(action.hasAttribute('disabled')).toBe(false);
+    fireEvent.click(action);
+    await waitFor(()=>expect(live.error).toContain('本地'));
+  });
+});
+
+describe('Native ASR capability refresh',()=>{
+  it('starts after a personal model becomes available without remounting the view',async()=>{
+    const {bridge}=setupDesktop(true);
+    bridge.capabilities.mockResolvedValueOnce({available:false,reason:'missing-model'})
+      .mockResolvedValue({available:true,reason:'ready'});
+    render(<PanelHarness/>);
+    await waitFor(()=>expect(live.desktopReason).toBe('missing-model'));
+    expect(live.supported).toBe(false);
+    fireEvent.click(screen.getByRole('button',{name:'开始实时听写'}));
+    await waitFor(()=>expect(live.status).toBe('listening'));
+    expect(bridge.capabilities).toHaveBeenCalledTimes(2);
+    expect(bridge.start).toHaveBeenCalledOnce();
+    await act(async()=>{live.stop();await Promise.resolve();});
   });
 });
 
@@ -212,6 +246,9 @@ describe('Electron real microphone to local ASR lifecycle',()=>{
     act(()=>fireEvent.click(getAction()));
     expect(live.status).toBe('checking');
     expect(getAction().disabled).toBe(false);
+    // Wait until native capability refresh has reached the pending
+    // microphone permission prompt before exercising cancellation.
+    await waitFor(()=>expect(getUserMedia).toHaveBeenCalledOnce());
     act(()=>fireEvent.click(getAction()));
     expect(live.status).toBe('idle');
     await act(async()=>{
