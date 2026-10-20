@@ -65,6 +65,21 @@ function setupDesktop(noiseSuppression?:boolean) {
   };
 }
 
+describe('Browser dictation availability feedback',()=>{
+  it('keeps the action clickable and explains missing local recognition without cloud fallback',async()=>{
+    vi.stubGlobal('voxneloDesktop',undefined);
+    vi.stubGlobal('SpeechRecognition',undefined);
+    vi.stubGlobal('webkitSpeechRecognition',undefined);
+    render(<PanelHarness/>);
+    const action=screen.getByRole('button',{name:'开始实时听写'});
+    expect(action.hasAttribute('disabled')).toBe(false);
+    fireEvent.click(action);
+    await waitFor(()=>expect(live.error).toContain('当前环境没有可用的实时语音识别接口'));
+    expect(live.status).toBe('idle');
+    expect(live.finalText).toBe('');
+  });
+});
+
 describe('Offline dictation product guidance',()=>{
   it('shows a working help link instead of developer commands when ASR is unavailable',async()=>{
     vi.stubGlobal('voxneloDesktop',{
