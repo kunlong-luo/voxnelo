@@ -55,15 +55,20 @@ export function isPersonalAsrCandidate(directory: string): boolean {
 
 /** Never use arbitrary renderer-provided model/addon paths. */
 export function resolveAsrAssets(options: AsrAssetOptions): {modelDir:string|null;addonPath:string|null} {
-  if (!options.isPackaged) {
+  if (!options.isPackaged && (options.developerModelDir || options.developerAddonPath)) {
+    // Explicit engineering paths override a user-installed pilot, but never
+    // silently substitute one half of a native/model pair.
     return {
       modelDir: options.developerModelDir ?? null,
       addonPath: options.developerAddonPath ?? null,
     };
   }
+  // Unpackaged development may use the same user-opted-in model as a
+  // packaged Linux application; it still MUST pass full inventory validation.
   const packagedDir=path.join(options.resourcesPath,'offline-asr');
   // A full audited public release always takes precedence.
-  if(existsSync(path.join(packagedDir,'model','encoder.onnx')) &&
+  if(options.isPackaged &&
+     existsSync(path.join(packagedDir,'model','encoder.onnx')) &&
      existsSync(path.join(packagedDir,'native','index.cjs'))){
     return {
       modelDir:path.join(packagedDir,'model'),
@@ -79,6 +84,7 @@ export function resolveAsrAssets(options: AsrAssetOptions): {modelDir:string|nul
       };
     }
   }
+  if(!options.isPackaged)return {modelDir:null,addonPath:null};
   return {
     modelDir:path.join(packagedDir,'model'),
     addonPath:path.join(packagedDir,'native','index.cjs'),
@@ -183,8 +189,7 @@ export async function resolveVerifiedAsrAssets(options:AsrAssetOptions):
  Promise<{modelDir:string|null;addonPath:string|null}> {
   const selected=resolveAsrAssets(options);
   const personal=options.personalDataDir&&path.join(options.personalDataDir,'offline-asr');
-  if(!options.isPackaged||!personal||
-     selected.addonPath!==path.join(personal,'native','index.cjs'))return selected;
+  if(!personal||selected.addonPath!==path.join(personal,'native','index.cjs'))return selected;
   return await verifyPersonalAsrCandidate(personal)
     ? selected
     : resolveAsrAssets({...options,personalDataDir:undefined});

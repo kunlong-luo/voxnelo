@@ -59,6 +59,7 @@ describe('Trusted offline ASR bundle discovery',()=>{
     writeFileSync(path.join(folder,'personal-install.json'),JSON.stringify({optIn:true,platform:process.platform,arch:process.arch}));
     expect(isPersonalAsrCandidate(folder)).toBe(true);
     expect(resolveAsrAssets(options)).toEqual({modelDir:model,addonPath:entry});
+    expect(resolveAsrAssets({...options,isPackaged:false})).toEqual({modelDir:model,addonPath:entry});
     writeFileSync(path.join(folder,'manifest.json'),JSON.stringify({...manifest,nativeVersion:'0.0.0'}));
     expect(isPersonalAsrCandidate(folder)).toBe(false);
     expect(resolveAsrAssets(options).addonPath).toContain('packaged');
@@ -99,6 +100,10 @@ describe('Trusted offline ASR bundle discovery',()=>{
       isPackaged:true,resourcesPath:path.join(base,'packaged'),personalDataDir:base,
     });
     expect(resolved.addonPath).toBe(path.join(base,'packaged','offline-asr','native','index.cjs'));
+    // Unpackaged Electron discovers personal installs too, but still rejects
+    // a forged/unpinned inventory before loading an executable native addon.
+    expect(await resolveVerifiedAsrAssets({isPackaged:false,resourcesPath:path.join(base,'packaged'),personalDataDir:base}))
+      .toEqual({modelDir:null,addonPath:null});
 
     writeFileSync(path.join(pilot,'model','tokens.txt'),'unexpected change');
     expect(await verifyPersonalAsrInventory(pilot)).toBe(false);

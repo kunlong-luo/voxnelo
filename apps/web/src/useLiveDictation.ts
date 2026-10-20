@@ -25,6 +25,7 @@ export function useLiveDictation(sentenceId: string) {
   const current = useRef<BrowserRecognizer | null>(null);
   const desktopStop = useRef<(() => Promise<OfflineAsrStopResult>) | null>(null);
   const [desktopAvailable,setDesktopAvailable] = useState(false);
+  const [browserLocalReady,setBrowserLocalReady] = useState(false);
   const [desktopReason,setDesktopReason] = useState<'ready'|'not-configured'|'missing-model'|'missing-addon'>('not-configured');
   const [noiseReduction,setNoiseReduction] = useState<'unknown'|'enabled'|'unverified'>('unknown');
   const requestId = useRef(0);
@@ -32,10 +33,11 @@ export function useLiveDictation(sentenceId: string) {
   const active = status !== 'idle';
   // SpeechRecognition can use a vendor network service. The desktop app never
   // opts into that mode, even when the constructor happens to exist.
-  const browserModeAvailable = !window.voxneloDesktop;
-  // Electron has no Chrome on-device speech-service binder. A Chromium
-  // constructor/method presence does NOT mean recognition can run in Electron.
-  const supported = window.voxneloDesktop ? desktopAvailable : Boolean(browserRecognizerClass());
+  const browserModeAvailable = !window.voxneloDesktop && Boolean(browserRecognizerClass());
+  // A Web Speech constructor alone often supports only network recognition.
+  // Local mode becomes actionable only after a real on-device availability probe.
+  const supported = window.voxneloDesktop ? desktopAvailable
+    : mode==='browser' ? browserModeAvailable : browserLocalReady;
   useEffect(()=>{
     const bridge=window.voxneloDesktop?.asr;
     if(!bridge)return;
@@ -46,6 +48,27 @@ export function useLiveDictation(sentenceId: string) {
       setDesktopReason(cap.reason);
       setLocalPack(cap.available?'available':'unavailable');
     }).catch(()=>{if(alive){setDesktopAvailable(false);setDesktopReason('not-configured');}});
+    return ()=>{alive=false;};
+  },[]);
+  useEffect(()=>{
+    if(window.voxneloDesktop)return;
+    const Ctor=browserRecognizerClass();
+    if(!Ctor?.available){
+      setBrowserLocalReady(false);
+      setLocalPack('unavailable');
+      return;
+    }
+    let alive=true;
+    void Ctor.available({langs:[BROWSER_SPEECH_LANGUAGE],processLocally:true}).then(value=>{
+      if(!alive)return;
+      setBrowserLocalReady(value==='available');
+      setLocalPack(value==='available'?'available':
+        value==='downloadable'||value==='downloading'?'downloadable':'unavailable');
+    }).catch(()=>{
+      if(!alive)return;
+      setBrowserLocalReady(false);
+      setLocalPack('unavailable');
+    });
     return ()=>{alive=false;};
   },[]);
   const endSession = useCallback((acceptFinalText:boolean) => {
@@ -146,7 +169,7 @@ export function useLiveDictation(sentenceId: string) {
         setInputLevel(null);
         if(started.reason!=='cancelled'){
           setError(t(started.reason==='permission'?'dictationPermission'
-            :started.reason==='microphone'?'dictationMicrophone':'dictationFailed'));
+            :started.reason==='microphone'?'dictationMicrophone':started.reason==='engine'?'dictationEngineFailed':started.reason==='busy'?'dictationBusy':'dictationFailed'));
         }
         return;
       }
@@ -163,12 +186,14 @@ export function useLiveDictation(sentenceId: string) {
         const available=await Ctor.available({langs:[BROWSER_SPEECH_LANGUAGE],processLocally:true});
         if(disposed.current||id!==requestId.current)return;
         if(available!=='available') {
+          setBrowserLocalReady(false);
           setLocalPack(available==='downloadable'||available==='downloading'?'downloadable':'unavailable');
           setError(available==='downloadable'||available==='downloading'?t('dictationPackNeeded'):t('dictationLocalRequired'));
           setStatus('idle');
           return;
         }
         setLocalPack('available');
+        setBrowserLocalReady(true);
       } catch {
         if(disposed.current||id!==requestId.current)return;
         setStatus('idle');setError(t('dictationLocalRequired'));return;
@@ -204,6 +229,7 @@ export function useLiveDictation(sentenceId: string) {
       const installed=await Ctor.install({langs:[BROWSER_SPEECH_LANGUAGE],processLocally:true});
       if(disposed.current||id!==requestId.current)return;
       setLocalPack(installed?'available':'unavailable');
+      setBrowserLocalReady(installed);
       setError(installed?'':t('dictationPackFailed'));
     }catch{
       if(!disposed.current&&id===requestId.current)setError(t('dictationPackFailed'));

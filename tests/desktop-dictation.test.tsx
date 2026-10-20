@@ -66,17 +66,36 @@ function setupDesktop(noiseSuppression?:boolean) {
 }
 
 describe('Browser dictation availability feedback',()=>{
-  it('keeps the action clickable and explains missing local recognition without cloud fallback',async()=>{
+  it('does not animate a dead web microphone when no recognition API exists',async()=>{
     vi.stubGlobal('voxneloDesktop',undefined);
     vi.stubGlobal('SpeechRecognition',undefined);
     vi.stubGlobal('webkitSpeechRecognition',undefined);
     render(<PanelHarness/>);
     const action=screen.getByRole('button',{name:'开始实时听写'});
-    expect(action.hasAttribute('disabled')).toBe(false);
+    await waitFor(()=>expect(action.hasAttribute('disabled')).toBe(true));
+    expect(screen.getByText('当前环境没有可用的实时语音识别接口，录音功能仍可使用。')).toBeTruthy();
     fireEvent.click(action);
-    await waitFor(()=>expect(live.error).toContain('当前环境没有可用的实时语音识别接口'));
     expect(live.status).toBe('idle');
     expect(live.finalText).toBe('');
+    expect(live.mode).toBe('local');
+  });
+});
+
+describe('Browser local-only capability',()=>{
+  it('does not present a network-only Web Speech API as offline dictation',async()=>{
+    class BrowserOnlineOnly {}
+    vi.stubGlobal('voxneloDesktop',undefined);
+    vi.stubGlobal('SpeechRecognition',BrowserOnlineOnly);
+    render(<PanelHarness/>);
+    const action=screen.getByRole('button',{name:'开始实时听写'});
+    await waitFor(()=>expect(action.hasAttribute('disabled')).toBe(true));
+    expect(live.supported).toBe(false);
+    expect(live.mode).toBe('local');
+    const choice=screen.getAllByRole('button',{name:'改用浏览器在线识别（可能上传音频）'})[0]!;
+    fireEvent.click(choice);
+    expect(live.mode).toBe('browser');
+    expect(action.hasAttribute('disabled')).toBe(false);
+    expect(screen.getByText('浏览器在线识别已启用，本次会话的语音可能由浏览器服务处理。')).toBeTruthy();
   });
 });
 
@@ -117,6 +136,16 @@ describe('Native ASR capability refresh',()=>{
 });
 
 describe('Electron real microphone to local ASR lifecycle',()=>{
+  it('reports a real Linux native worker startup failure instead of a generic flashing action',async()=>{
+    const {bridge,track}=setupDesktop(true);
+    bridge.start.mockResolvedValueOnce({ok:false,reason:'failed'} as never);
+    render(<Harness/>);
+    await waitFor(()=>expect(live.supported).toBe(true));
+    await act(async()=>{await live.start();});
+    expect(live.status).toBe('idle');
+    expect(live.error).toContain('离线识别引擎启动失败');
+    expect(track.stop).toHaveBeenCalled();
+  });
   it('starts explicit 16kHz PCM capture, verifies device DSP and flushes final text',async()=>{
     const {bridge,track,port,getUserMedia,audioContext}=setupDesktop(true);
     render(<Harness/>);

@@ -85,11 +85,12 @@ describe('Local-first live dictation',()=>{
   it('allows remote browser recognition only after explicit selection, never in Electron',async()=>{
     FakeRecognizer.available.mockResolvedValue('unavailable');
     const {rerender}=render(<Harness/>);
+    const localProbes=FakeRecognizer.available.mock.calls.length;
     act(()=>latest.chooseMode('browser'));
     await act(async()=>{await latest.start()});
     const engine=FakeRecognizer.instances[0];
     expect(engine?.processLocally).toBe(false);
-    expect(FakeRecognizer.available).not.toHaveBeenCalled();
+    expect(FakeRecognizer.available).toHaveBeenCalledTimes(localProbes);
     act(()=>latest.stop());
     vi.stubGlobal('voxneloDesktop',{platform:'linux',version:'0.1',windowControls:{}});
     rerender(<Harness sentence="two"/>);
