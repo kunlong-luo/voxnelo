@@ -85,6 +85,22 @@ describe('Offline dictation product guidance',()=>{
   });
 });
 
+describe('Native ASR capability refresh',()=>{
+  it('starts after a personal model becomes available without remounting the view',async()=>{
+    const {bridge}=setupDesktop(true);
+    bridge.capabilities.mockResolvedValueOnce({available:false,reason:'missing-model'})
+      .mockResolvedValue({available:true,reason:'ready'});
+    render(<PanelHarness/>);
+    await waitFor(()=>expect(live.desktopReason).toBe('missing-model'));
+    expect(live.supported).toBe(false);
+    fireEvent.click(screen.getByRole('button',{name:'开始实时听写'}));
+    await waitFor(()=>expect(live.status).toBe('listening'));
+    expect(bridge.capabilities).toHaveBeenCalledTimes(2);
+    expect(bridge.start).toHaveBeenCalledOnce();
+    await act(async()=>{live.stop();await Promise.resolve();});
+  });
+});
+
 describe('Electron real microphone to local ASR lifecycle',()=>{
   it('starts explicit 16kHz PCM capture, verifies device DSP and flushes final text',async()=>{
     const {bridge,track,port,getUserMedia,audioContext}=setupDesktop(true);
