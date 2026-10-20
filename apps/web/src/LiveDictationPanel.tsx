@@ -41,6 +41,12 @@ export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
       <div className="flex w-full min-w-0 flex-col items-center gap-1.5">
         <div className="flex min-w-0 flex-wrap items-center justify-center gap-x-2 gap-y-0.5">
           <strong className="text-[13px] font-bold tracking-tight text-foreground @min-[400px]/lesson:text-sm">{t('dictationTitle')}</strong>
+          {dictation.browserModeAvailable&&!busy&&<Button variant="ghost" size="sm"
+            className="hidden h-6 rounded-lg px-1 py-0 text-[10px] font-semibold text-primary underline-offset-2 max-[399px]:inline-flex hover:underline"
+            aria-label={t(dictation.mode==='local'?'dictationCloudEnable':'dictationCloudDisable')}
+            onClick={()=>dictation.chooseMode(dictation.mode==='local'?'browser':'local')}>
+            <Globe2 size={12} aria-hidden="true"/>{t(dictation.mode==='local'?'dictationCloudEnableShort':'dictationCloudDisable')}
+          </Button>}
           <span className="inline-flex min-w-0 items-center gap-1.5 text-[11px] font-medium leading-4 text-translation-ink" role="status">
             {listening?<><span aria-hidden="true" className="size-2 shrink-0 rounded-full bg-mic-halo animate-status-breathe"/>{t('dictationListening')}</>
               :checking||(!window.voxneloDesktop&&dictation.localPack==='unknown')?t('dictationChecking')
@@ -60,7 +66,7 @@ export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
       <p role="status" className="mt-2 hidden text-[11px] leading-4 text-translation-ink @min-[440px]/lesson:block @min-[400px]/lesson:text-center">
         {t(window.voxneloDesktop?(dictation.desktopReason==='missing-model'?'dictationModelMissing':dictation.desktopReason==='missing-addon'?'dictationAddonMissing':'dictationLocalRequired'):dictation.browserModeAvailable?'dictationLocalRequired':'dictationUnsupported')}
       </p>
-      <p role="status" className="mt-1 text-[11px] leading-4 text-translation-ink @min-[440px]/lesson:hidden">{t(!window.voxneloDesktop&&dictation.browserModeAvailable?'dictationLocalRequired':'dictationUnavailableShort')}</p>
+      <p role="status" className={cn('mt-1 text-[11px] leading-4 text-translation-ink @min-[440px]/lesson:hidden',webLocalUnavailable&&dictation.browserModeAvailable&&'max-[399px]:hidden')}>{t(!window.voxneloDesktop&&dictation.browserModeAvailable?'dictationLocalRequired':'dictationUnavailableShort')}</p>
     </>}
     {!dictation.supported&&window.voxneloDesktop&&<a
       href={SUPPORT_LINKS.guide}
@@ -75,7 +81,7 @@ export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
     {dictation.localPack==='downloadable'&&dictation.mode==='local'&&<Button variant="outline" size="sm" className="mt-2 min-h-9 rounded-xl text-xs" onClick={()=>void dictation.installLocal()} disabled={checking}>
       <Download size={14}/>{t('dictationInstallPack')}
     </Button>}
-    {dictation.browserModeAvailable&&!busy&&<div className="mt-0.5 flex items-center justify-center">
+    {dictation.browserModeAvailable&&!busy&&<div className="mt-0.5 flex items-center justify-center max-[399px]:hidden">
       <Button variant="ghost" size="sm" className="h-7 rounded-lg px-2 py-0 text-[11px] font-semibold text-primary underline-offset-2 hover:underline" onClick={()=>dictation.chooseMode(dictation.mode==='local'?'browser':'local')}
         aria-label={t(dictation.mode==='local'?'dictationCloudEnable':'dictationCloudDisable')}>
         <Globe2 size={13} aria-hidden="true"/>{t(dictation.mode==='local'?'dictationCloudEnableShort':'dictationCloudDisable')}
