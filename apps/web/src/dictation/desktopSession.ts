@@ -8,7 +8,7 @@ import type { VoxneloOfflineAsr, OfflineAsrFailureReason, OfflineAsrStopResult }
  * prompts, native worker startup and worklet loading can be cancelled safely.
  */
 export type DesktopDictationStop=()=>Promise<OfflineAsrStopResult>;
-export type DesktopStartError='permission'|'microphone'|'failed';
+export type DesktopStartError='permission'|'microphone'|'failed'|'engine'|'busy';
 export type DesktopStartResult={ok:true}|{ok:false;reason:'cancelled'|DesktopStartError};
 
 export interface DesktopDictationCallbacks {
@@ -113,7 +113,10 @@ export async function startDesktopDictationSession(
     if(opened.ok)sessionId=opened.sessionId;
     // Stop even an ASR worker that finished starting after the user navigated away.
     if(!isCurrent()){void close();return {ok:false,reason:'cancelled'};}
-    if(!opened.ok)throw Error('Offline ASR worker is not ready');
+    if(!opened.ok){
+      void close();
+      return {ok:false,reason:opened.reason==='busy'?'busy':'engine'};
+    }
     callbacks.onStopReady(close);
     unsubscribeResult=bridge.onResult(result=>{
       if(!isCurrent()||result.sessionId!==sessionId)return;
