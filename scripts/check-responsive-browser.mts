@@ -76,11 +76,9 @@ const shot=async(w:number,h:number,name:string):Promise<void>=>{
   if(name==='practice'){
     assert.equal(m.columns,m.mainWidth>=840?2:1,'wrong workbench columns at '+w);
     assert.ok(m.micWidth>=40&&m.micInBounds&&m.micInFirstViewport,'recording controls not visible on first screen at '+w+': '+JSON.stringify(m));
-    assert.ok(m.heroWidth>=64&&m.heroRadius>=m.heroWidth*.45,'U3 live microphone must be a large circular hero control: '+JSON.stringify(m));
+    assert.ok(m.heroWidth>=56&&m.heroWidth<=64&&m.heroRadius>=m.heroWidth*.45,'Live microphone must remain a compact circular action: '+JSON.stringify(m));
     assert.ok(m.sentenceFontSize>=32,'U3 lesson sentence must remain visually prominent: '+JSON.stringify(m));
-    if(m.dictationWidth>=400){
-      assert.ok(m.dictationOffset<=12,'dictation microphone is not centered '+w+'x'+h+': '+JSON.stringify(m));
-    }
+    assert.ok(m.dictationOffset<=12,'dictation microphone is not centered '+w+'x'+h+': '+JSON.stringify(m));
     if(m.mainWidth>=840&&m.railFitsViewport){
       assert.ok(m.columnIsStretching,'lesson is not stretching although insights fit '+w+'x'+h+': '+JSON.stringify(m));
       assert.ok(m.columnBottomDelta<=5,'lesson and final insights card bottoms diverge '+w+'x'+h+': '+JSON.stringify(m));
