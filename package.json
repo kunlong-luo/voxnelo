@@ -151,5 +151,21 @@
       ]
     }
   },
-  "desktopName": "app.voxnelo.desktop.desktop"
+  "desktopName": "app.voxnelo.desktop.desktop",
+  "homepage": "https://kunlong-luo.github.io/voxnelo/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kunlong-luo/voxnelo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kunlong-luo/voxnelo/issues"
+  },
+  "license": "MIT",
+  "keywords": [
+    "english-learning",
+    "speaking-practice",
+    "electron",
+    "offline-first",
+    "education"
+  ]
 }
