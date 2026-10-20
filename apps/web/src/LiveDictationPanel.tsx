@@ -65,7 +65,7 @@ export function LiveDictationPanel({dictation,blocked,onStart,onManageModels}:Pr
     </div>
     {!dictation.supported&&<>
       <p role="status" className="mt-2 hidden text-[11px] leading-4 text-translation-ink @min-[440px]/lesson:block @min-[400px]/lesson:text-center">
-        {t(window.voxneloDesktop?(dictation.desktopReason==='missing-model'?'dictationModelMissing':dictation.desktopReason==='missing-addon'?'dictationAddonMissing':'dictationLocalRequired'):dictation.browserModeAvailable?'dictationLocalRequired':'dictationUnsupported')}
+        {t(window.voxneloDesktop?(dictation.desktopReason==='invalid-personal-pack'?'dictationModelInvalid':dictation.desktopReason==='missing-model'?'dictationModelMissing':dictation.desktopReason==='missing-addon'?'dictationAddonMissing':'dictationLocalRequired'):dictation.browserModeAvailable?'dictationLocalRequired':'dictationUnsupported')}
       </p>
       <p role="status" className={cn('mt-1 text-[11px] leading-4 text-translation-ink @min-[440px]/lesson:hidden',webLocalUnavailable&&dictation.browserModeAvailable&&'max-[399px]:hidden')}>{t(!window.voxneloDesktop&&dictation.browserModeAvailable?'dictationLocalRequired':'dictationUnavailableShort')}</p>
     </>}
