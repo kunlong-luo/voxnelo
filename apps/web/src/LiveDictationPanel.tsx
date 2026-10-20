@@ -75,11 +75,11 @@ export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
     {dictation.localPack==='downloadable'&&dictation.mode==='local'&&<Button variant="outline" size="sm" className="mt-2 min-h-9 rounded-xl text-xs" onClick={()=>void dictation.installLocal()} disabled={checking}>
       <Download size={14}/>{t('dictationInstallPack')}
     </Button>}
-    {dictation.browserModeAvailable&&!busy&&<div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border/55 pt-2.5">
-      <Button variant="outline" size="sm" className="min-h-9 rounded-xl border-border/75 bg-card/70 px-3 text-xs font-medium" onClick={()=>dictation.chooseMode(dictation.mode==='local'?'browser':'local')}>
-        <Globe2 size={14} aria-hidden="true"/>{t(dictation.mode==='local'?'dictationCloudEnable':'dictationCloudDisable')}
+    {dictation.browserModeAvailable&&!busy&&<div className="mt-0.5 flex items-center justify-center">
+      <Button variant="ghost" size="sm" className="h-7 rounded-lg px-2 py-0 text-[11px] font-semibold text-primary underline-offset-2 hover:underline" onClick={()=>dictation.chooseMode(dictation.mode==='local'?'browser':'local')}
+        aria-label={t(dictation.mode==='local'?'dictationCloudEnable':'dictationCloudDisable')}>
+        <Globe2 size={13} aria-hidden="true"/>{t(dictation.mode==='local'?'dictationCloudEnableShort':'dictationCloudDisable')}
       </Button>
-
     </div>}
   </section>;
 }
