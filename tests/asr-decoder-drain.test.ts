@@ -37,6 +37,17 @@ describe('offline ASR decoder drain completeness',()=>{
     // The Worker rejects this result before emitting {type:'finished'}.
   });
 
+  it('can publish actual partial hypotheses during long decode batches',()=>{
+    const {recognizer,state}=recognizerWithFrames(22);
+    const observations:number[]=[];
+    const result=drainReadyFrames(recognizer,state,PCM_DECODE_STEPS,frames=>{
+      observations.push(frames);
+    });
+    expect(result).toEqual({decodedFrames:22,fullyDrained:true});
+    expect(observations).toEqual([1,8,16]);
+    // End-of-batch result is still checked separately by the worker.
+  });
+
   it('does not create audio or decode steps for an empty/past-end stream',()=>{
     const {recognizer,state}=recognizerWithFrames(0);
     expect(drainReadyFrames(recognizer,state,FINAL_DECODE_STEPS))
