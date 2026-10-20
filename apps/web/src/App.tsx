@@ -247,6 +247,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
               recorder={recorder}
               dictation={dictation}
               onStartDictation={startDictation}
+              onManageModels={() => nav('models')}
               recordingBusy={recordingBusy}
               canGoPrevious={historyPosition > 0 && !recordingBusy}
               onToggleIpa={() => setShowIpa((value) => !value)}
