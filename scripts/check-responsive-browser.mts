@@ -292,6 +292,10 @@ try{
   });
   await send('Emulation.setDeviceMetricsOverride',{width:320,height:640,deviceScaleFactor:1,mobile:false});
   await send('Page.reload',{ignoreCache:true});await until('!!document.querySelector(".recordAction")');
+  for(const selector of ['.dictationAction','.recordAction']){
+    const hit=await evalJs<boolean>('(()=>{const b=document.querySelector('+JSON.stringify(selector)+');b.scrollIntoView({block:"center",behavior:"instant"});const r=b.getBoundingClientRect();return document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)?.closest("button")===b&&!b.disabled})()');
+    assert.ok(hit,'Real browser pointer cannot activate '+selector+' at 320px');
+  }
   await evalJs('document.querySelector(".recordAction").click()');
   await until('!!document.querySelector(".recordingQuickStop")');
   const liveAnimation=await evalJs('getComputedStyle(document.querySelector("[data-motion=record-halo]")).animationName');
