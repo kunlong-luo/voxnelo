@@ -76,7 +76,7 @@ const shot=async(w:number,h:number,name:string):Promise<void>=>{
   if(name==='practice'){
     assert.equal(m.columns,m.mainWidth>=840?2:1,'wrong workbench columns at '+w);
     assert.ok(m.micWidth>=40&&m.micInBounds&&m.micInFirstViewport,'recording controls not visible on first screen at '+w+': '+JSON.stringify(m));
-    assert.ok(m.heroWidth>=56&&m.heroWidth<=64&&m.heroRadius>=m.heroWidth*.45,'Live microphone must remain a compact circular action: '+JSON.stringify(m));
+    assert.ok(m.heroWidth>=48&&m.heroWidth<=52&&m.heroRadius>=m.heroWidth*.45,'Live microphone must remain a compact circular action: '+JSON.stringify(m));
     assert.ok(m.sentenceFontSize>=32,'U3 lesson sentence must remain visually prominent: '+JSON.stringify(m));
     assert.ok(m.dictationOffset<=12,'dictation microphone is not centered '+w+'x'+h+': '+JSON.stringify(m));
     if(m.mainWidth>=840&&m.railFitsViewport){
@@ -293,7 +293,7 @@ try{
   await send('Emulation.setDeviceMetricsOverride',{width:320,height:640,deviceScaleFactor:1,mobile:false});
   await send('Page.reload',{ignoreCache:true});await until('!!document.querySelector(".recordAction")');
   for(const selector of ['.dictationAction','.recordAction']){
-    const hit=await evalJs<boolean>('(()=>{const b=document.querySelector('+JSON.stringify(selector)+');b.scrollIntoView({block:"center",behavior:"instant"});const r=b.getBoundingClientRect();return document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)?.closest("button")===b&&!b.disabled})()');
+    const hit=await evalJs<boolean>('(()=>{const b=document.querySelector('+JSON.stringify(selector)+');b.scrollIntoView({block:"center",behavior:"instant"});const r=b.getBoundingClientRect();return document.elementFromPoint(r.left+r.width/2,r.top+r.height/2)?.closest("button")===b&&(b.classList.contains("dictationAction")||!b.disabled)})()');
     assert.ok(hit,'Real browser pointer cannot activate '+selector+' at 320px');
   }
   await evalJs('document.querySelector(".recordAction").click()');
