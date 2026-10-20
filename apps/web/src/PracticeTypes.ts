@@ -7,7 +7,7 @@ export interface PracticeViewProps {
   current: Sentence; currentState: LearningState | undefined; stats: LearningStats;
   speed: 'normal' | 'slow'; showIpa: boolean; notice: string;
   recorder: ReturnType<typeof useRecorder>; dictation: ReturnType<typeof useLiveDictation>;
-  recordingBusy: boolean; canGoPrevious: boolean; onStartDictation: () => void; onManageModels?:()=>void;
+  recordingBusy: boolean; canGoPrevious: boolean; onStartDictation: () => void; onManageModels?:(()=>void)|undefined;
   onToggleIpa: () => void; onSpeak: () => void; onToggleSpeed: () => void;
   onRecord: () => void; onToggleFlag: (flag:'favorite'|'review') => void;
   onNext: () => void; onPrevious: () => void; onChooseRelated?: (s:Sentence) => void;
