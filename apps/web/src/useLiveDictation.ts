@@ -38,39 +38,46 @@ export function useLiveDictation(sentenceId: string) {
   // Local mode becomes actionable only after a real on-device availability probe.
   const supported = window.voxneloDesktop ? desktopAvailable
     : mode==='browser' ? browserModeAvailable : browserLocalReady;
-  useEffect(()=>{
+  // Centralize capability refresh for the dedicated model management page.
+  // Browser installation is always a separate explicit user action.
+  const refreshLocal=useCallback(async()=>{
     const bridge=window.voxneloDesktop?.asr;
-    if(!bridge)return;
-    let alive=true;
-    void bridge.capabilities().then(cap=>{
-      if(!alive)return;
-      setDesktopAvailable(cap.available);
-      setDesktopReason(cap.reason);
-      setLocalPack(cap.available?'available':'unavailable');
-    }).catch(()=>{if(alive){setDesktopAvailable(false);setDesktopReason('not-configured');}});
-    return ()=>{alive=false;};
-  },[]);
-  useEffect(()=>{
-    if(window.voxneloDesktop)return;
+    if(window.voxneloDesktop){
+      try{
+        const cap=await bridge?.capabilities();
+        if(disposed.current)return;
+        setDesktopAvailable(cap?.available===true);
+        setDesktopReason(cap?.reason??'not-configured');
+        setLocalPack(cap?.available?'available':'unavailable');
+      }catch{
+        if(!disposed.current){
+          setDesktopAvailable(false);
+          setDesktopReason('not-configured');
+          setLocalPack('unavailable');
+        }
+      }
+      return;
+    }
     const Ctor=browserRecognizerClass();
     if(!Ctor?.available){
       setBrowserLocalReady(false);
       setLocalPack('unavailable');
       return;
     }
-    let alive=true;
-    void Ctor.available({langs:[BROWSER_SPEECH_LANGUAGE],processLocally:true}).then(value=>{
-      if(!alive)return;
+    try{
+      const value=await Ctor.available({langs:[BROWSER_SPEECH_LANGUAGE],processLocally:true});
+      if(disposed.current)return;
       setBrowserLocalReady(value==='available');
       setLocalPack(value==='available'?'available':
         value==='downloadable'||value==='downloading'?'downloadable':'unavailable');
-    }).catch(()=>{
-      if(!alive)return;
-      setBrowserLocalReady(false);
-      setLocalPack('unavailable');
-    });
-    return ()=>{alive=false;};
+    }catch{
+      if(!disposed.current){
+        setBrowserLocalReady(false);
+        setLocalPack('unavailable');
+      }
+    }
   },[]);
+  useEffect(()=>{void refreshLocal();},[refreshLocal]);
   const endSession = useCallback((acceptFinalText:boolean) => {
     const generation=++requestId.current;
     const closeDesktop=desktopStop.current;
@@ -237,5 +244,5 @@ export function useLiveDictation(sentenceId: string) {
       if(!disposed.current&&id===requestId.current)setStatus('idle');
     }
   },[t]);
-  return {status,active,mode,chooseMode,supported,browserModeAvailable,desktopReason,localPack,noiseReduction,finalText,interimText,inputLevel,error,start,stop,clear,installLocal};
+  return {status,active,mode,chooseMode,supported,browserModeAvailable,desktopReason,localPack,noiseReduction,finalText,interimText,inputLevel,error,start,stop,clear,installLocal,refreshLocal};
 }

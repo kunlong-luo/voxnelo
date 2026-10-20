@@ -18,6 +18,7 @@ import { PracticeView } from './PracticeView';
 import { LibraryView, type View } from './LibraryView';
 import { CatalogView } from './CatalogView';
 import { SettingsView } from './SettingsView';
+import { OfflineModelsView } from './OfflineModelsView';
 import { DesktopTitlebar } from './DesktopTitlebar';
 import { NavigationSidebar, MobileNavigation } from './AppNavigation';
 import { Button } from './components/ui/button';
@@ -246,6 +247,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
               recorder={recorder}
               dictation={dictation}
               onStartDictation={startDictation}
+              onManageModels={() => nav('models')}
               recordingBusy={recordingBusy}
               canGoPrevious={historyPosition > 0 && !recordingBusy}
               onToggleIpa={() => setShowIpa((value) => !value)}
@@ -263,6 +265,8 @@ function AppScreen({languageSetting,onChangeLanguage}: {
             />
           ) : view === 'catalog' ? (
             <CatalogView onChoose={chooseFromLibrary} onBackToPractice={() => nav('practice')} />
+          ) : view === 'models' ? (
+            <OfflineModelsView dictation={dictation} onBack={()=>nav('practice')} />
           ) : view === 'settings' ? (
             <SettingsView
               speed={speed}
@@ -276,6 +280,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
               onToggleSpeed={() => setSpeed((value) => (value === 'normal' ? 'slow' : 'normal'))}
               onToggleIpa={() => setShowIpa((value) => !value)}
               onBackToPractice={() => nav('practice')}
+              onManageModels={() => nav('models')}
             />
           ) : (
             <LibraryView key={view}

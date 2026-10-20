@@ -1,4 +1,4 @@
-import { AudioLines, Download, Globe2, Mic2, ShieldCheck, Square } from 'lucide-react';
+import { AudioLines, Globe2, Mic2, ShieldCheck, Square, HardDriveDownload } from 'lucide-react';
 import type { useLiveDictation } from './useLiveDictation';
 import { useI18n } from './i18n';
 import { SUPPORT_LINKS } from '@voxnelo/learning';
@@ -9,13 +9,14 @@ interface Props {
   dictation: ReturnType<typeof useLiveDictation>;
   blocked: boolean;
   onStart: () => void;
+  onManageModels?:(()=>void)|undefined;
 }
 
 /**
  * U3's hero microphone belongs to live dictation, not the secondary recorder.
  * A single quiet surface groups the actual transcript with its one main action.
  */
-export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
+export function LiveDictationPanel({dictation,blocked,onStart,onManageModels}:Props) {
   const {t}=useI18n();
   const listening=dictation.status==='listening';
   const checking=dictation.status==='checking';
@@ -78,8 +79,10 @@ export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
       <ShieldCheck size={13} aria-hidden="true"/>{t(dictation.noiseReduction==='enabled'?'dictationNoiseEnabled':'dictationNoiseUnverified')}
     </p>}
     {dictation.error&&<p role="status" className="mt-2 text-[12px] leading-5 text-translation-ink">{dictation.error}</p>}
-    {dictation.localPack==='downloadable'&&dictation.mode==='local'&&<Button variant="outline" size="sm" className="mt-2 min-h-9 rounded-xl text-xs" onClick={()=>void dictation.installLocal()} disabled={checking}>
-      <Download size={14}/>{t('dictationInstallPack')}
+    {!busy&&!dictation.supported&&onManageModels&&<Button variant="ghost" size="sm"
+      className="mt-1 h-8 rounded-lg px-2 text-[11px] font-semibold text-primary [@media(max-height:780px)]:hidden"
+      onClick={onManageModels}>
+      <HardDriveDownload size={14} aria-hidden="true"/>{t('modelOpenAction')}
     </Button>}
     {dictation.browserModeAvailable&&!busy&&<div className="mt-0.5 flex items-center justify-center max-[399px]:hidden">
       <Button variant="ghost" size="sm" className="h-7 rounded-lg px-2 py-0 text-[11px] font-semibold text-primary underline-offset-2 hover:underline" onClick={()=>dictation.chooseMode(dictation.mode==='local'?'browser':'local')}

@@ -59,7 +59,7 @@ describe('Nonblocking microphone fallback', () => {
       speed="normal" showIpa={false} notice="" recorder={recorder}
       dictation={{status:'idle',active:false,mode:'local',chooseMode:()=>undefined,
         supported:false,browserModeAvailable:true,desktopReason:'not-configured' as const,noiseReduction:'unknown' as const,localPack:'unknown',finalText:'',interimText:'',inputLevel:null,
-        error:'',start:async()=>undefined,stop:()=>undefined,clear:()=>undefined,installLocal:async()=>undefined}}
+        error:'',start:async()=>undefined,stop:()=>undefined,clear:()=>undefined,installLocal:async()=>undefined,refreshLocal:async()=>undefined}}
       onStartDictation={()=>undefined} recordingBusy={false} canGoPrevious={false}
       onToggleIpa={()=>undefined} onSpeak={()=>undefined} onToggleSpeed={()=>undefined}
       onRecord={()=>undefined} onToggleFlag={()=>undefined}
