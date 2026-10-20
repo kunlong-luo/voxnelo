@@ -23,11 +23,12 @@ export function OfflineModelsView({dictation,onBack}:OfflineModelsViewProps){
   const desktop=Boolean(window.voxneloDesktop);
   const [refreshing,setRefreshing]=useState(false);
   const [installing,setInstalling]=useState(false);
+  const {refreshLocal}=dictation;
   useEffect(()=>{
     // A model can be installed in another tab or while Electron is open.
-    void dictation.refreshLocal();
+    void refreshLocal();
     // Refresh when this page mounts; do not cancel an active dictation session.
-  },[dictation.refreshLocal]);
+  },[refreshLocal]);
   const refresh=async()=>{
     if(refreshing||installing)return;
     setRefreshing(true);
