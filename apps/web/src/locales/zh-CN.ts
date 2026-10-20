@@ -60,7 +60,7 @@ export const zh = {
   "dictationPackNeeded": "需要安装本地英语识别语言包，安装后才能离线听写。",
   "dictationInstallPack": "安装本地英语识别包",
   "dictationPackFailed": "语言包无法安装，请检查设备支持情况。",
-  "dictationCloudEnableShort": "在线识别（可能上传音频）",
+  "dictationCloudEnableShort": "在线识别（可能上传）",
   "dictationCloudEnable": "改用浏览器在线识别（可能上传音频）",
   "dictationCloudEnabled": "浏览器在线识别已启用，本次会话的语音可能由浏览器服务处理。",
   "dictationCloudDisable": "返回本地识别",
