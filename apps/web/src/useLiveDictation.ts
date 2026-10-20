@@ -171,7 +171,7 @@ export function useLiveDictation(sentenceId: string) {
         setInputLevel(null);
         if(started.reason!=='cancelled'){
           setError(t(started.reason==='permission'?'dictationPermission'
-            :started.reason==='microphone'?'dictationMicrophone':'dictationFailed'));
+            :started.reason==='microphone'?'dictationMicrophone':started.reason==='engine'?'dictationEngineFailed':started.reason==='busy'?'dictationBusy':'dictationFailed'));
         }
         return;
       }
