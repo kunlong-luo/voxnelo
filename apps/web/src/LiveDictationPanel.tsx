@@ -22,7 +22,7 @@ export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
   const busy=listening||checking;
   const inactive=!dictation.supported&&!busy;
   return <section className="liveDictation mx-auto w-full max-w-140 min-w-0 rounded-[28px] border border-glass-edge bg-card/55 transition-[background-color,border-color,box-shadow] duration-500 ease-out hover:border-primary/25 hover:bg-card/60 px-3 py-3 [@media(max-height:680px)]:py-2 text-left shadow-[0_18px_45px_-32px_rgba(120,73,47,.28)] backdrop-blur-sm @min-[400px]/lesson:border-transparent @min-[400px]/lesson:bg-transparent @min-[400px]/lesson:shadow-none @min-[400px]/lesson:px-4 @min-[400px]/lesson:py-2" aria-label={t('dictationTitle')}>
-    <div className="flex min-w-0 items-center gap-2 @min-[400px]/lesson:flex-col @min-[400px]/lesson:gap-2">
+    <div className="flex min-w-0 flex-col items-center gap-2 text-center">
       <div className="relative isolate grid shrink-0 place-items-center transition-transform duration-500 ease-out hover:-translate-y-0.5">
         {/* A calm ambient light, NOT a fake live audio waveform. */}
         <span aria-hidden="true" data-motion="mic-breathe" className="pointer-events-none absolute -inset-7 rounded-full bg-primary/35 blur-2xl animate-ambient-breathe [animation-delay:-2s]"/>
@@ -37,8 +37,8 @@ export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
           {busy?<Square size={18} fill="currentColor" aria-hidden="true"/>:<Mic2 size={24} strokeWidth={1.9} aria-hidden="true"/>}
         </Button>
       </div>
-      <div className="flex min-w-0 flex-1 flex-col gap-1.5 @min-[400px]/lesson:w-full @min-[400px]/lesson:items-center">
-        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 @min-[400px]/lesson:justify-center">
+      <div className="flex w-full min-w-0 flex-col items-center gap-1.5">
+        <div className="flex min-w-0 flex-wrap items-center justify-center gap-x-2 gap-y-0.5">
           <strong className="text-[13px] font-bold tracking-tight text-foreground @min-[400px]/lesson:text-sm">{t('dictationTitle')}</strong>
           <span className="inline-flex min-w-0 items-center gap-1.5 text-[11px] font-medium leading-4 text-translation-ink" role="status">
             {listening?<><span aria-hidden="true" className="size-2 shrink-0 rounded-full bg-mic-halo animate-status-breathe"/>{t('dictationListening')}</>
@@ -49,7 +49,7 @@ export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
         {listening&&dictation.inputLevel!==null&&<div className="flex h-6 items-center justify-center gap-1" role="img" aria-label="Live microphone input level">
           {[0.55,0.8,1,0.7,0.45].map((weight,index)=><span key={index} aria-hidden="true" className="h-5 w-1.5 origin-center rounded-full bg-primary/75 transition-transform duration-100 motion-reduce:transition-none" style={{transform:`scaleY(${Math.max(0.18,Math.min(1,(dictation.inputLevel??0)*weight*2.4))})`}}/>)}
         </div>}
-        <div className="dictationTranscript max-h-20 min-h-9 w-full overflow-y-auto rounded-xl bg-muted/55 @min-[400px]/lesson:max-w-110 @min-[400px]/lesson:text-center px-3 py-2 [@media(max-height:680px)]:min-h-8 [@media(max-height:680px)]:py-1.5 text-[13px] leading-5 text-sentence-ink @min-[400px]/lesson:text-sm" data-testid="live-transcript" data-state={listening?'listening':checking?'checking':'idle'}>
+        <div className="dictationTranscript max-h-20 min-h-9 w-full max-w-110 overflow-y-auto rounded-xl bg-muted/55 text-center px-3 py-2 [@media(max-height:680px)]:min-h-8 [@media(max-height:680px)]:py-1.5 text-[13px] leading-5 text-sentence-ink @min-[400px]/lesson:text-sm" data-testid="live-transcript" data-state={listening?'listening':checking?'checking':'idle'}>
           <span aria-live="polite" className={cn('font-medium',!dictation.finalText&&'text-muted-foreground')}>{dictation.finalText||(!dictation.interimText?t('dictationPlaceholder'):'')}</span>
           {dictation.interimText&&<span className="ml-1 text-translation-ink animate-view-enter" aria-label={t('dictationInterim')}>{dictation.interimText}</span>}
         </div>
