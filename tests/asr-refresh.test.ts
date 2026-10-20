@@ -26,7 +26,7 @@ describe('Live-installed personal ASR refresh',()=>{
     const waiting=new Promise<Engine>(resolve=>{finish=resolve;});
     const loadVerified=vi.fn(()=>waiting);
     const engine=new RefreshableAsrEngine(fake('missing',false),loadVerified);
-    const checks=[engine.refreshIfUnavailable(),engine.refreshIfUnavailable()];
+    const checks:[Promise<Engine>,Promise<Engine>]=[engine.refreshIfUnavailable(),engine.refreshIfUnavailable()];
     expect(loadVerified).toHaveBeenCalledOnce();
     finish(fake('verified',true));
     const [a,b]=await Promise.all(checks);
