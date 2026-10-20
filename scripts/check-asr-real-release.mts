@@ -24,9 +24,9 @@ export function planRealAsrRelease(
   if(!existsSync(manifest)){
     return {kind:'skip',description:'No native ASR model shipped; real-model release check not applicable'};
   }
-  const releaseManifest=JSON.parse(readFileSync(manifest,'utf8')) as {releaseReady?:boolean};
-  if(releaseManifest.releaseReady===false)
-    throw Error('Internal ASR candidate is not approved for public release; complete native binary/license review and real-device QA');
+  const releaseManifest=JSON.parse(readFileSync(manifest,'utf8')) as {releaseReady?:unknown};
+  if(releaseManifest?.releaseReady!==true)
+    throw Error('Staged native ASR requires explicit releaseReady:true approval after license, platform and real-device review; candidate is not approved for public release');
   const wav=env.VOXNELO_ASR_QA_WAV;
   const expected=env.VOXNELO_ASR_QA_EXPECT;
   if(!wav||!path.isAbsolute(wav)||!existsSync(wav)||!statSync(wav).isFile()){
