@@ -105,7 +105,23 @@ export function useLiveDictation(sentenceId: string) {
     if(window.voxneloDesktop){
       // Fail closed, including on Electron builds exposing an incomplete
       // SpeechRecognition API. Do not invoke Chrome's unsupported local binder.
-      if(mode!=='local'||!bridge||!desktopAvailable){setError(t('dictationLocalRequired'));return;}
+      if(mode!=='local'||!bridge){setError(t('dictationLocalRequired'));return;}
+      // A personal ASR pack may be installed after this view mounted.
+      // Re-query on explicit user action instead of trusting stale mount-time state.
+      let available=false;
+      try {
+        const cap=await bridge.capabilities();
+        if(disposed.current)return;
+        setDesktopAvailable(cap.available);
+        setDesktopReason(cap.reason);
+        setLocalPack(cap.available?'available':'unavailable');
+        available=cap.available;
+      } catch {
+        if(disposed.current)return;
+        setDesktopAvailable(false);
+        setDesktopReason('not-configured');
+      }
+      if(!available){setError(t('dictationLocalRequired'));return;}
       const id=++requestId.current;
       setStatus('checking');
       const isCurrent=()=>!disposed.current&&id===requestId.current;
@@ -173,7 +189,7 @@ export function useLiveDictation(sentenceId: string) {
       if(id!==requestId.current)return;
       current.current=null;setStatus('idle');setError(t('dictationFailed'));
     }
-  },[status,mode,browserModeAvailable,desktopAvailable,endSession,t]);
+  },[status,mode,browserModeAvailable,endSession,t]);
   const installLocal = useCallback(async()=>{
     const Ctor=browserRecognizerClass();
     if(window.voxneloDesktop || !Ctor?.install)return setError(t('dictationLocalRequired'));
