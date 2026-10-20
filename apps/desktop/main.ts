@@ -6,6 +6,7 @@ import { allowsAudioPermissionCheck, allowsAudioPermissionRequest, APP_HOST, isA
 import { LinuxEnglishSpeech } from './linuxSpeech';
 import { LINUX_DESKTOP_FILENAME, resolveLinuxIconPath } from './linuxAppIdentity';
 import { OfflineAsr } from './offlineAsr';
+import { RefreshableAsrEngine } from './asrRefresh';
 import { resolveVerifiedAsrAssets } from './asrAssets';
 
 // Electron 推荐的标准安全自定义协议：允许 IndexedDB 使用持久且一致的 origin。
@@ -30,8 +31,7 @@ const linuxSpeech = new LinuxEnglishSpeech();
 // The renderer must never see a personal native addon until its full byte
 // inventory has been validated. Stream the ONNX/native files once on startup,
 // not on the UI thread and not again for each microphone session.
-let offlineAsr = new OfflineAsr(null,null);
-async function initializeOfflineAsr():Promise<void>{
+const offlineAsr=new RefreshableAsrEngine(new OfflineAsr(null,null),async()=>{
   const assets=await resolveVerifiedAsrAssets({
     isPackaged: app.isPackaged,
     resourcesPath: process.resourcesPath,
@@ -39,8 +39,8 @@ async function initializeOfflineAsr():Promise<void>{
     developerAddonPath: process.env.VOXNELO_ASR_ADDON_PATH,
     personalDataDir: path.join(app.getPath('appData'), 'voxnelo'),
   });
-  offlineAsr=new OfflineAsr(assets.modelDir,assets.addonPath);
-}
+  return new OfflineAsr(assets.modelDir,assets.addonPath);
+});
 
 /**
  * Window IPC is intentionally narrower than a general-purpose ipcRenderer bridge.
@@ -81,23 +81,28 @@ function registerLinuxSpeech(): void {
 }
 
 function registerOfflineAsr():void{
-  ipcMain.handle('voxnelo:asr:capabilities',(event)=>{
+  ipcMain.handle('voxnelo:asr:capabilities',async(event)=>{
     if(!authorizedWindow(event))return {available:false,reason:'not-configured'};
-    return offlineAsr.capabilities();
+    // A personal offline model can be installed while Voxnelo is open.
+    // Re-resolve ONLY fully verified main-process assets; never accept a path
+    // from renderer IPC or replace a currently active microphone session.
+    try{return (await offlineAsr.refreshIfUnavailable()).capabilities();}
+    catch{return {available:false,reason:'not-configured'};}
   });
   ipcMain.handle('voxnelo:asr:start',async(event)=>{
     const window=authorizedWindow(event);
     if(!window)return {ok:false,reason:'failed'};
-    return offlineAsr.open(window.webContents);
+    try{return await (await offlineAsr.refreshIfUnavailable()).open(window.webContents);}
+    catch{return {ok:false,reason:'failed'};}
   });
   ipcMain.on('voxnelo:asr:pcm',(event,id:unknown,samples:unknown)=>{
     const window=authorizedWindow(event);
-    if(window)offlineAsr.push(window.webContents,id,samples);
+    if(window)offlineAsr.current().push(window.webContents,id,samples);
   });
   ipcMain.handle('voxnelo:asr:stop',(event,id:unknown)=>{
     const window=authorizedWindow(event);
     if(!window)return {finalText:'',completed:false};
-    return offlineAsr.stop(window.webContents,id);
+    return offlineAsr.current().stop(window.webContents,id);
   });
 }
 
@@ -177,7 +182,7 @@ async function createWindow(): Promise<void> {
 }
 
 app.whenReady().then(async () => {
-  await initializeOfflineAsr();
+  await offlineAsr.refreshIfUnavailable();
   registerWindowControls();
   registerLinuxSpeech();
   registerOfflineAsr();
@@ -199,6 +204,6 @@ app.whenReady().then(async () => {
 
 app.on('window-all-closed', () => {
   linuxSpeech.cancel();
-  offlineAsr.close();
+  offlineAsr.current().close();
   if (process.platform !== 'darwin') app.quit();
 });
