@@ -62,8 +62,7 @@ if(sampleCount===0||sampleCount>16000*180)throw Error('WAV must contain 0-180 se
 const duration=sampleCount/16000;
 let transcript='',interim='';
 let audioFedSamples=0;
-let firstInterimAudioSamples:number|null=null;
-let firstInterimProcessingMs:number|null=null;
+const firstInterim={audioSamples:null as number|null,processingMs:null as number|null};
 let startedAt:number|null=null;
 let finishing=false;
 let worker: Worker|undefined;
@@ -81,11 +80,11 @@ const waitFor=async(type:string):Promise<void>=>{
       if(msg.type==='result'){
         transcript=String(msg.finalText??'');
         interim=String(msg.interimText??'');
-        if(!finishing&&interim.trim()&&firstInterimAudioSamples===null){
+        if(!finishing&&interim.trim()&&firstInterim.audioSamples===null){
           // Pacing-independent: at most this many input samples had been
           // submitted when the first native interim transcript arrived.
-          firstInterimAudioSamples=audioFedSamples;
-          firstInterimProcessingMs=startedAt===null?null:performance.now()-startedAt;
+          firstInterim.audioSamples=audioFedSamples;
+          firstInterim.processingMs=startedAt===null?null:performance.now()-startedAt;
         }
       }
       if(msg.type===type)return;
@@ -142,9 +141,9 @@ try{
     // Null means native ASR emitted no provisional words before finish;
     // never invent a streaming latency metric from a final-only transcript.
     firstInterimAudioSeconds:firstInterimAudioSamples===null?null:
-      Number((firstInterimAudioSamples/16000).toFixed(3)),
-    firstInterimProcessingMs:firstInterimProcessingMs===null?null:
-      Number(firstInterimProcessingMs.toFixed(1)),
+      Number((firstInterim.audioSamples/16000).toFixed(3)),
+    firstInterimProcessingMs:firstInterim.processingMs===null?null:
+      Number(firstInterim.processingMs.toFixed(1)),
     transcript:transcript||interim,
     ...(expected?{reference:expected,wordErrorRate:wordErrorRate(expected,transcript||interim)}:{}),
   };
