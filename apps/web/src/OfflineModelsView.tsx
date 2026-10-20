@@ -67,7 +67,7 @@ export function OfflineModelsView({dictation,onBack}:OfflineModelsViewProps){
             <p className="text-xs text-muted-foreground">{t(desktop?'modelDesktopSource':'modelBrowserSource')}</p>
           </div>
         </div>
-        <Badge variant="secondary" className="rounded-full px-3 py-1 text-xs" data-testid="model-status">
+        <Badge className="rounded-full px-3 py-1 text-xs" data-testid="model-status">
           {ready&&<CheckCircle2 size={14} aria-hidden="true"/>}{t(state)}
         </Badge>
       </div>
