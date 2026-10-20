@@ -78,7 +78,10 @@ describe('Offline dictation product guidance',()=>{
     expect(link.getAttribute('rel')).toContain('noopener');
     expect(document.body.textContent).not.toContain('pnpm');
     expect(document.body.textContent).not.toContain('npm');
-    expect(screen.getByRole('button',{name:'开始实时听写'}).hasAttribute('disabled')).toBe(true);
+    const action=screen.getByRole('button',{name:'开始实时听写'});
+    expect(action.hasAttribute('disabled')).toBe(false);
+    fireEvent.click(action);
+    await waitFor(()=>expect(live.error).toContain('本地'));
   });
 });
 
