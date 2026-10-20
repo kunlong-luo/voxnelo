@@ -34,6 +34,8 @@ export class OfflineAsr {
     private readonly spawnWorker:(data:{modelDir:string|null;addonPath:string|null})=>Worker=
       data=>new Worker(path.join(__dirname,'offlineAsrWorker.cjs'),{workerData:data}),
   ){}
+  /** Prevent an asset refresh from replacing a running / starting worker. */
+  hasActiveSession():boolean{return this.session!==null;}
   capabilities():AsrCapability{
     if(!this.modelDir||!this.addonPath||!path.isAbsolute(this.modelDir)||!path.isAbsolute(this.addonPath))return {available:false,reason:'not-configured'};
     if(!existsSync(this.addonPath))return {available:false,reason:'missing-addon'};
