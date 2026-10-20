@@ -91,7 +91,7 @@ describe('Browser local-only capability',()=>{
     await waitFor(()=>expect(action.hasAttribute('disabled')).toBe(true));
     expect(live.supported).toBe(false);
     expect(live.mode).toBe('local');
-    const choice=screen.getByRole('button',{name:'改用浏览器在线识别（可能上传音频）'});
+    const choice=screen.getAllByRole('button',{name:'改用浏览器在线识别（可能上传音频）'})[0]!;
     fireEvent.click(choice);
     expect(live.mode).toBe('browser');
     expect(action.hasAttribute('disabled')).toBe(false);
