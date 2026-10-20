@@ -28,6 +28,7 @@ describe('Dedicated offline ASR model management',()=>{
   it('downloads a browser language pack only after clicking within the manager',async()=>{
     vi.stubGlobal('voxneloDesktop',undefined);
     vi.stubGlobal('SpeechRecognition',FakeLocalSpeech);
+    FakeLocalSpeech.available.mockImplementation(async()=>FakeLocalSpeech.install.mock.calls.length>0?'available':'downloadable');
     render(<ModelHarness/>);
     const download=await screen.findByRole('button',{name:'下载并安装英语模型'});
     expect(FakeLocalSpeech.install).not.toHaveBeenCalled();
