@@ -47,6 +47,7 @@ export function OfflineModelsView({dictation,onBack}:OfflineModelsViewProps){
   const ready=dictation.localPack==='available';
   const checking=refreshing||dictation.localPack==='unknown';
   const state=checking?'modelStateChecking':ready?'modelStateReady'
+    :!desktop&&dictation.localPack==='downloading'?'modelStateDownloading'
     :!desktop&&dictation.localPack==='downloadable'?'modelStateDownloadable':'modelStateUnavailable';
   const canInstall=!desktop&&dictation.localPack==='downloadable'&&!refreshing&&!installing;
   return <div className="offlineModelsPage mx-auto flex w-full max-w-210 flex-col gap-5 pb-8 animate-view-enter">
@@ -78,9 +79,11 @@ export function OfflineModelsView({dictation,onBack}:OfflineModelsViewProps){
       </div>
       <p role="status" className="text-sm leading-6 text-translation-ink">
         {ready?t('modelReadyDescription')
-          :desktop?t('modelDesktopUnavailable')
+          :checking?t('modelCheckingDescription')
+          :desktop?t(dictation.desktopReason==='invalid-personal-pack'?'modelDesktopInvalid':'modelDesktopUnavailable')
+          :dictation.localPack==='downloading'?t('modelDownloadingDescription')
           :dictation.localPack==='downloadable'?t('modelDownloadDescription')
-          :checking?t('modelCheckingDescription'):t('modelBrowserUnavailable')}
+          :t('modelBrowserUnavailable')}
       </p>
       {dictation.error&&<p role="alert" className="rounded-xl bg-muted px-3 py-2 text-sm text-translation-ink">{dictation.error}</p>}
       <div className="flex flex-wrap items-center gap-2">

@@ -10,7 +10,7 @@ import type { OfflineAsrStopResult } from './desktopBridge';
 
 type DictationStatus = 'idle' | 'checking' | 'listening';
 type DictationMode = 'local' | 'browser';
-type LocalPack = 'unknown' | 'available' | 'downloadable' | 'unavailable';
+type LocalPack = 'unknown' | 'available' | 'downloadable' | 'downloading' | 'unavailable';
 
 export function useLiveDictation(sentenceId: string) {
   const {t} = useI18n();
@@ -26,7 +26,7 @@ export function useLiveDictation(sentenceId: string) {
   const desktopStop = useRef<(() => Promise<OfflineAsrStopResult>) | null>(null);
   const [desktopAvailable,setDesktopAvailable] = useState(false);
   const [browserLocalReady,setBrowserLocalReady] = useState(false);
-  const [desktopReason,setDesktopReason] = useState<'ready'|'not-configured'|'missing-model'|'missing-addon'>('not-configured');
+  const [desktopReason,setDesktopReason] = useState<'ready'|'not-configured'|'missing-model'|'missing-addon'|'invalid-personal-pack'>('not-configured');
   const [noiseReduction,setNoiseReduction] = useState<'unknown'|'enabled'|'unverified'>('unknown');
   const requestId = useRef(0);
   const disposed = useRef(false);
@@ -69,7 +69,7 @@ export function useLiveDictation(sentenceId: string) {
       if(disposed.current)return;
       setBrowserLocalReady(value==='available');
       setLocalPack(value==='available'?'available':
-        value==='downloadable'||value==='downloading'?'downloadable':'unavailable');
+        value==='downloadable'?'downloadable':value==='downloading'?'downloading':'unavailable');
     }catch{
       if(!disposed.current){
         setBrowserLocalReady(false);
@@ -142,8 +142,10 @@ export function useLiveDictation(sentenceId: string) {
       setStatus('checking');
       const isCurrent=()=>!disposed.current&&id===requestId.current;
       let available=false;
+      let lastReason:'ready'|'not-configured'|'missing-addon'|'missing-model'|'invalid-personal-pack'='not-configured';
       try {
         const cap=await bridge.capabilities();
+        lastReason=cap.reason;
         if(!isCurrent())return;
         setDesktopAvailable(cap.available);
         setDesktopReason(cap.reason);
@@ -157,7 +159,7 @@ export function useLiveDictation(sentenceId: string) {
       if(!isCurrent())return;
       if(!available){
         setStatus('idle');
-        setError(t('dictationLocalRequired'));
+        setError(t(lastReason==='invalid-personal-pack'?'dictationModelInvalid':'dictationLocalRequired'));
         return;
       }
       const started=await startDesktopDictationSession(bridge,{
@@ -194,7 +196,7 @@ export function useLiveDictation(sentenceId: string) {
         if(disposed.current||id!==requestId.current)return;
         if(available!=='available') {
           setBrowserLocalReady(false);
-          setLocalPack(available==='downloadable'||available==='downloading'?'downloadable':'unavailable');
+          setLocalPack(available==='downloadable'?'downloadable':available==='downloading'?'downloading':'unavailable');
           setError(available==='downloadable'||available==='downloading'?t('dictationPackNeeded'):t('dictationLocalRequired'));
           setStatus('idle');
           return;

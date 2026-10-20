@@ -194,3 +194,27 @@ export async function resolveVerifiedAsrAssets(options:AsrAssetOptions):
     ? selected
     : resolveAsrAssets({...options,personalDataDir:undefined});
 }
+
+
+/**
+ * A management-screen-safe diagnosis of an explicitly installed personal ASR.
+ * The main process can expose only this enum: never native paths, manifests,
+ * signatures, or model bytes to a renderer.
+ *
+ * Prefer the already completed full-file integrity check performed by
+ * resolveVerifiedAsrAssets rather than hashing a multi-GB pack twice.
+ */
+export async function resolveVerifiedAsrStatus(options:AsrAssetOptions):Promise<{
+  assets:{modelDir:string|null;addonPath:string|null};
+  invalidPersonalPack:boolean;
+}>{
+  const personal=options.personalDataDir&&path.join(options.personalDataDir,'offline-asr');
+  const selected=resolveAsrAssets(options);
+  const assets=await resolveVerifiedAsrAssets(options);
+  const invalidPersonalPack=Boolean(personal&&existsSync(personal)&&(
+    !isPersonalAsrCandidate(personal) ||
+    (selected.addonPath===path.join(personal,'native','index.cjs') &&
+      assets.addonPath!==selected.addonPath)
+  ));
+  return {assets,invalidPersonalPack};
+}

@@ -7,7 +7,7 @@ import { LinuxEnglishSpeech } from './linuxSpeech';
 import { LINUX_DESKTOP_FILENAME, resolveLinuxIconPath } from './linuxAppIdentity';
 import { OfflineAsr } from './offlineAsr';
 import { RefreshableAsrEngine } from './asrRefresh';
-import { resolveVerifiedAsrAssets } from './asrAssets';
+import { resolveVerifiedAsrStatus } from './asrAssets';
 
 // Electron 推荐的标准安全自定义协议：允许 IndexedDB 使用持久且一致的 origin。
 // 注册必须发生在 app ready 之前；不允许 bypassCSP。
@@ -31,15 +31,17 @@ const linuxSpeech = new LinuxEnglishSpeech();
 // The renderer must never see a personal native addon until its full byte
 // inventory has been validated. Stream the ONNX/native files once on startup,
 // not on the UI thread and not again for each microphone session.
+let invalidPersonalAsr=false;
 const offlineAsr=new RefreshableAsrEngine(new OfflineAsr(null,null),async()=>{
-  const assets=await resolveVerifiedAsrAssets({
+  const result=await resolveVerifiedAsrStatus({
     isPackaged: app.isPackaged,
     resourcesPath: process.resourcesPath,
     developerModelDir: process.env.VOXNELO_ASR_MODEL_DIR,
     developerAddonPath: process.env.VOXNELO_ASR_ADDON_PATH,
     personalDataDir: path.join(app.getPath('appData'), 'voxnelo'),
   });
-  return new OfflineAsr(assets.modelDir,assets.addonPath);
+  invalidPersonalAsr=result.invalidPersonalPack;
+  return new OfflineAsr(result.assets.modelDir,result.assets.addonPath);
 });
 
 /**
@@ -86,8 +88,12 @@ function registerOfflineAsr():void{
     // A personal offline model can be installed while Voxnelo is open.
     // Re-resolve ONLY fully verified main-process assets; never accept a path
     // from renderer IPC or replace a currently active microphone session.
-    try{return (await offlineAsr.refreshIfUnavailable()).capabilities();}
-    catch{return {available:false,reason:'not-configured'};}
+    try{
+      const engine=(await offlineAsr.refreshIfUnavailable()).capabilities();
+      return !engine.available&&invalidPersonalAsr
+        ? {available:false,reason:'invalid-personal-pack'}
+        : engine;
+    }catch{return {available:false,reason:'not-configured'};}
   });
   ipcMain.handle('voxnelo:asr:start',async(event)=>{
     const window=authorizedWindow(event);

@@ -51,6 +51,27 @@ describe('Dedicated offline ASR model management',()=>{
     expect(FakeLocalSpeech.install).not.toHaveBeenCalled();
   });
 
+  it('shows an in-progress browser pack download without offering another install',async()=>{
+    FakeLocalSpeech.available.mockResolvedValue('downloading');
+    vi.stubGlobal('voxneloDesktop',undefined);
+    vi.stubGlobal('SpeechRecognition',FakeLocalSpeech);
+    render(<ModelHarness/>);
+    await waitFor(()=>expect(screen.getByTestId('model-status').textContent).toContain('下载进行中'));
+    expect(screen.getByText(/浏览器正在下载英语离线语言包/)).toBeTruthy();
+    expect(screen.queryByRole('button',{name:'下载并安装英语模型'})).toBeNull();
+    expect(FakeLocalSpeech.install).not.toHaveBeenCalled();
+  });
+
+  it('explains invalid Linux personal files and never loads a browser recognizer',async()=>{
+    const capabilities=vi.fn(async()=>({available:false,reason:'invalid-personal-pack'}));
+    vi.stubGlobal('voxneloDesktop',{platform:'linux',asr:{capabilities}});
+    vi.stubGlobal('SpeechRecognition',FakeLocalSpeech);
+    render(<ModelHarness/>);
+    await waitFor(()=>expect(screen.getByText(/版本信息或完整性校验未通过/)).toBeTruthy());
+    expect(screen.queryByRole('button',{name:'下载并安装英语模型'})).toBeNull();
+    expect(FakeLocalSpeech.available).not.toHaveBeenCalled();
+  });
+
   it('shows verified native desktop status but never presents an unsupported installer',async()=>{
     const capabilities=vi.fn(async()=>({available:false,reason:'missing-model'}));
     vi.stubGlobal('voxneloDesktop',{platform:'linux',asr:{capabilities}});
