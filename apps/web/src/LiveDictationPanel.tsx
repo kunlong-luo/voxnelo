@@ -45,7 +45,7 @@ export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
             className="hidden h-6 rounded-lg px-1 py-0 text-[10px] font-semibold text-primary underline-offset-2 max-[399px]:inline-flex hover:underline"
             aria-label={t(dictation.mode==='local'?'dictationCloudEnable':'dictationCloudDisable')}
             onClick={()=>dictation.chooseMode(dictation.mode==='local'?'browser':'local')}>
-            <Globe2 size={12} aria-hidden="true"/>{t(dictation.mode==='local'?'dictationCloudEnableShort':'dictationCloudDisable')}
+            {t(dictation.mode==='local'?'dictationCloudEnableShort':'dictationCloudDisable')}
           </Button>}
           <span className="inline-flex min-w-0 items-center gap-1.5 text-[11px] font-medium leading-4 text-translation-ink" role="status">
             {listening?<><span aria-hidden="true" className="size-2 shrink-0 rounded-full bg-mic-halo animate-status-breathe"/>{t('dictationListening')}</>
