@@ -79,7 +79,7 @@ export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
       <Button variant="outline" size="sm" className="min-h-9 rounded-xl border-border/75 bg-card/70 px-3 text-xs font-medium" onClick={()=>dictation.chooseMode(dictation.mode==='local'?'browser':'local')}>
         <Globe2 size={14} aria-hidden="true"/>{t(dictation.mode==='local'?'dictationCloudEnable':'dictationCloudDisable')}
       </Button>
-      {dictation.mode==='browser'&&<span className="flex items-start gap-1.5 text-[11px] leading-4 text-translation-ink"><ShieldCheck size={13} className="mt-0.5 shrink-0" aria-hidden="true"/>{t('dictationCloudEnabled')}</span>}
+
     </div>}
   </section>;
 }
