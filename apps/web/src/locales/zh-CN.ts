@@ -66,6 +66,8 @@ export const zh = {
   "dictationPermission": "麦克风未获授权，听写无法开始；仍可继续听示范。",
   "dictationMicrophone": "当前无法访问麦克风，请检查设备连接和系统权限。",
   "dictationServiceUnavailable": "识别服务不可用。桌面端请使用离线语音识别引擎，不会自动改为在线上传。",
+  "dictationEngineFailed": "本地离线识别引擎启动失败。请完全退出并重新打开 Voxnelo；若仍失败，请检查安装包与本地识别组件版本。录音回听不受影响。",
+  "dictationBusy": "另一个听写会话尚未结束，请先停止后再试。",
   "dictationFailed": "实时听写未能启动，请重试。",
   "dictationIncomplete": "听写未能完整结束，最后的文字可能不准确。请稍后重新听写。",
   "dictationOverloaded": "当前设备暂时跟不上实时听写，已停止识别。可以关闭其他占用资源的程序后重试；录音回听仍可使用。",
