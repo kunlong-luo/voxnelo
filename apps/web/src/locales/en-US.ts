@@ -68,6 +68,8 @@ export const en = {
   "dictationPermission": "Microphone access was denied. You can still listen to examples.",
   "dictationMicrophone": "The microphone is unavailable. Check your device and system permissions.",
   "dictationServiceUnavailable": "Speech recognition is unavailable. Desktop requires offline ASR; audio is never silently uploaded.",
+  "dictationEngineFailed": "The offline recognizer could not start. Fully quit and reopen Voxnelo; if the issue persists, check the app and local recognizer versions. Recording and replay still work.",
+  "dictationBusy": "Another dictation session is still closing. Stop it before trying again.",
   "dictationFailed": "Live dictation could not start. Please try again.",
   "dictationIncomplete": "Dictation could not finish completely. The last words may be unreliable. Please try again.",
   "dictationOverloaded": "This device could not keep up with live dictation, so recognition stopped. Close resource-heavy apps and try again; recording and replay remain available.",
