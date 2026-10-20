@@ -8,7 +8,7 @@ import { Button } from './components/ui/button';
 
 /** Composition only: keep practice, controls and side information independent. */
 export function PracticeView({current,currentState,stats,speed,showIpa,notice,recorder,dictation,recordingBusy,
-  canGoPrevious,onStartDictation,onToggleIpa,onSpeak,onToggleSpeed,onRecord,onToggleFlag,onNext,onPrevious,
+  canGoPrevious,onStartDictation,onManageModels,onToggleIpa,onSpeak,onToggleSpeed,onRecord,onToggleFlag,onNext,onPrevious,
   onChooseRelated,onDismissNotice}:PracticeViewProps) {
   const {t}=useI18n();
   const layoutRef=useRef<HTMLDivElement>(null);
@@ -34,7 +34,7 @@ export function PracticeView({current,currentState,stats,speed,showIpa,notice,re
   return <div ref={layoutRef} className={`practiceLayout layoutWorkbench grid min-w-0 grid-cols-1 gap-5 animate-view-enter @min-[840px]/workspace:grid-cols-[minmax(0,1fr)_minmax(230px,28%)] @min-[1040px]/workspace:gap-7 @min-[1200px]/workspace:gap-9 ${alignFullHeight?'items-stretch':'items-start'}`}>
     <div className={`practiceColumn flex min-w-0 flex-col gap-5 ${alignFullHeight?'self-stretch':''}`}>
       <PracticeCard current={current} currentState={currentState} speed={speed} showIpa={showIpa}
-        recorder={recorder} dictation={dictation} recordingBusy={recordingBusy} canGoPrevious={canGoPrevious} onStartDictation={onStartDictation}
+        recorder={recorder} dictation={dictation} recordingBusy={recordingBusy} canGoPrevious={canGoPrevious} onStartDictation={onStartDictation} onManageModels={onManageModels}
         onToggleIpa={onToggleIpa} onSpeak={onSpeak} onToggleSpeed={onToggleSpeed}
         onRecord={onRecord} onToggleFlag={onToggleFlag} onNext={onNext} onPrevious={onPrevious}/>
       {notice && <div className="notice flex items-center justify-between gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-xs text-foreground shadow-sm" role="status">
