@@ -142,8 +142,10 @@ export function useLiveDictation(sentenceId: string) {
       setStatus('checking');
       const isCurrent=()=>!disposed.current&&id===requestId.current;
       let available=false;
+      let lastReason:'ready'|'not-configured'|'missing-addon'|'missing-model'|'invalid-personal-pack'='not-configured';
       try {
         const cap=await bridge.capabilities();
+        lastReason=cap.reason;
         if(!isCurrent())return;
         setDesktopAvailable(cap.available);
         setDesktopReason(cap.reason);
@@ -157,7 +159,7 @@ export function useLiveDictation(sentenceId: string) {
       if(!isCurrent())return;
       if(!available){
         setStatus('idle');
-        setError(t('dictationLocalRequired'));
+        setError(t(lastReason==='invalid-personal-pack'?'dictationModelInvalid':'dictationLocalRequired'));
         return;
       }
       const started=await startDesktopDictationSession(bridge,{
