@@ -66,17 +66,18 @@ function setupDesktop(noiseSuppression?:boolean) {
 }
 
 describe('Browser dictation availability feedback',()=>{
-  it('keeps the action clickable and explains missing local recognition without cloud fallback',async()=>{
+  it('does not animate a dead web microphone when no recognition API exists',async()=>{
     vi.stubGlobal('voxneloDesktop',undefined);
     vi.stubGlobal('SpeechRecognition',undefined);
     vi.stubGlobal('webkitSpeechRecognition',undefined);
     render(<PanelHarness/>);
     const action=screen.getByRole('button',{name:'开始实时听写'});
-    expect(action.hasAttribute('disabled')).toBe(false);
+    await waitFor(()=>expect(action.hasAttribute('disabled')).toBe(true));
+    expect(screen.getByText('当前环境没有可用的实时语音识别接口，录音功能仍可使用。')).toBeTruthy();
     fireEvent.click(action);
-    await waitFor(()=>expect(live.error).toContain('当前环境没有可用的实时语音识别接口'));
     expect(live.status).toBe('idle');
     expect(live.finalText).toBe('');
+    expect(live.mode).toBe('local');
   });
 });
 
