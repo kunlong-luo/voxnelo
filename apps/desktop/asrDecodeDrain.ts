@@ -27,7 +27,7 @@ export function drainReadyFrames<Stream>(
     // Native recognition is synchronous and can need many decode steps.
     // Let the worker publish confirmed partial text between frame batches,
     // not only after the entire 64-step packet has finished decoding.
-    if(onProgress && decodedFrames%8===0)onProgress(decodedFrames);
+    if(onProgress && (decodedFrames===1 || decodedFrames%8===0))onProgress(decodedFrames);
   }
   // Explicitly recheck after the last permitted decode. Reaching the budget
   // does not mean audio is fully consumed, particularly after inputFinished().
