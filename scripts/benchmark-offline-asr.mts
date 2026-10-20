@@ -140,7 +140,7 @@ try{
     realTimeFactor:Number((elapsed/duration).toFixed(3)),
     // Null means native ASR emitted no provisional words before finish;
     // never invent a streaming latency metric from a final-only transcript.
-    firstInterimAudioSeconds:firstInterimAudioSamples===null?null:
+    firstInterimAudioSeconds:firstInterim.audioSamples===null?null:
       Number((firstInterim.audioSamples/16000).toFixed(3)),
     firstInterimProcessingMs:firstInterim.processingMs===null?null:
       Number(firstInterim.processingMs.toFixed(1)),
