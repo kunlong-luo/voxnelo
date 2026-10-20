@@ -102,7 +102,7 @@ describe('Trusted offline ASR bundle discovery',()=>{
     expect(resolved.addonPath).toBe(path.join(base,'packaged','offline-asr','native','index.cjs'));
     // Unpackaged Electron discovers personal installs too, but still rejects
     // a forged/unpinned inventory before loading an executable native addon.
-    expect(await resolveVerifiedAsrAssets({...options,isPackaged:false}))
+    expect(await resolveVerifiedAsrAssets({isPackaged:false,resourcesPath:path.join(base,'packaged'),personalDataDir:base}))
       .toEqual({modelDir:null,addonPath:null});
 
     writeFileSync(path.join(pilot,'model','tokens.txt'),'unexpected change');
