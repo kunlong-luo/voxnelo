@@ -283,7 +283,7 @@ try{
   await sleep(300);
   await evalJs('document.querySelector(".recordAction").click()');
   await until('!!document.querySelector(".recordingReady")');
-  const liveRecording=await evalJs('(()=>({ready:!!document.querySelector(".recordingReady"),replay:!!document.querySelector("audio, .playbackButton")}))()');
+  const liveRecording=await evalJs<{ready:boolean;replay:boolean}>('(()=>({ready:!!document.querySelector(".recordingReady"),replay:!!document.querySelector("audio, .playbackButton")}))()');
   assert.ok(liveRecording.ready,'Chrome microphone recording did not produce a playback-ready state');
   report.push({page:'real-chromium-recorder',...liveRecording});
   await send('Page.addScriptToEvaluateOnNewDocument',{source:
