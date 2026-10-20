@@ -22,7 +22,7 @@ export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
   const busy=listening||checking;
   const inactive=!dictation.supported&&!busy;
   const webLocalUnavailable=!window.voxneloDesktop&&dictation.mode==='local'&&!dictation.supported;
-  return <section className="liveDictation mx-auto w-full max-w-140 min-w-0 rounded-[28px] border border-glass-edge bg-card/55 transition-[background-color,border-color,box-shadow] duration-500 ease-out hover:border-primary/25 hover:bg-card/60 px-3 py-3 [@media(max-height:680px)]:py-2 text-left shadow-[0_18px_45px_-32px_rgba(120,73,47,.28)] backdrop-blur-sm @min-[400px]/lesson:border-transparent @min-[400px]/lesson:bg-transparent @min-[400px]/lesson:shadow-none @min-[400px]/lesson:px-4 @min-[400px]/lesson:py-2" aria-label={t('dictationTitle')}>
+  return <section className="liveDictation mx-auto w-full max-w-140 min-w-0 rounded-[28px] border border-glass-edge bg-card/55 transition-[background-color,border-color,box-shadow] duration-500 ease-out hover:border-primary/25 hover:bg-card/60 px-3 py-3 [@media(max-height:680px)]:py-1 text-left shadow-[0_18px_45px_-32px_rgba(120,73,47,.28)] backdrop-blur-sm @min-[400px]/lesson:border-transparent @min-[400px]/lesson:bg-transparent @min-[400px]/lesson:shadow-none @min-[400px]/lesson:px-4 @min-[400px]/lesson:py-2" aria-label={t('dictationTitle')}>
     <div className="flex min-w-0 flex-col items-center gap-2 text-center">
       <div className="relative isolate grid shrink-0 place-items-center transition-transform duration-500 ease-out hover:-translate-y-0.5">
         {/* A calm ambient light, NOT a fake live audio waveform. */}
