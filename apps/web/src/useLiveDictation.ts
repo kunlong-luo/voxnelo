@@ -26,7 +26,6 @@ export function useLiveDictation(sentenceId: string) {
   const desktopStop = useRef<(() => Promise<OfflineAsrStopResult>) | null>(null);
   const [desktopAvailable,setDesktopAvailable] = useState(false);
   const [browserLocalReady,setBrowserLocalReady] = useState(false);
-  const [browserLocalChecking,setBrowserLocalChecking] = useState(false);
   const [desktopReason,setDesktopReason] = useState<'ready'|'not-configured'|'missing-model'|'missing-addon'>('not-configured');
   const [noiseReduction,setNoiseReduction] = useState<'unknown'|'enabled'|'unverified'>('unknown');
   const requestId = useRef(0);
@@ -60,7 +59,6 @@ export function useLiveDictation(sentenceId: string) {
       return;
     }
     let alive=true;
-    setBrowserLocalChecking(true);
     void Ctor.available({langs:[BROWSER_SPEECH_LANGUAGE],processLocally:true}).then(value=>{
       if(!alive)return;
       setBrowserLocalReady(value==='available');
@@ -70,7 +68,7 @@ export function useLiveDictation(sentenceId: string) {
       if(!alive)return;
       setBrowserLocalReady(false);
       setLocalPack('unavailable');
-    }).finally(()=>{if(alive)setBrowserLocalChecking(false);});
+    });
     return ()=>{alive=false;};
   },[]);
   const endSession = useCallback((acceptFinalText:boolean) => {
@@ -239,5 +237,5 @@ export function useLiveDictation(sentenceId: string) {
       if(!disposed.current&&id===requestId.current)setStatus('idle');
     }
   },[t]);
-  return {status,active,mode,chooseMode,supported,browserModeAvailable,browserLocalChecking,desktopReason,localPack,noiseReduction,finalText,interimText,inputLevel,error,start,stop,clear,installLocal};
+  return {status,active,mode,chooseMode,supported,browserModeAvailable,desktopReason,localPack,noiseReduction,finalText,interimText,inputLevel,error,start,stop,clear,installLocal};
 }
