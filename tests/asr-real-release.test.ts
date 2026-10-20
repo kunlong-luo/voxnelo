@@ -14,7 +14,7 @@ function workspace(){
   return {root,staging};
 }
 function stage(root:string,staging:string){
-  writeFileSync(path.join(staging,'manifest.json'),'{"sha256":{}}');
+  writeFileSync(path.join(staging,'manifest.json'),'{"releaseReady":true,"sha256":{}}');
   mkdirSync(path.join(staging,'model'));
   mkdirSync(path.join(staging,'native'));
   writeFileSync(path.join(staging,'native','index.cjs'),'test-only fixture');
@@ -69,7 +69,7 @@ describe('Real native ASR release gating',()=>{
 
   it('fails before benchmark if a staged release has no adapter or compiled worker',()=>{
     const {root,staging}=workspace();
-    writeFileSync(path.join(staging,'manifest.json'),'{}');
+    writeFileSync(path.join(staging,'manifest.json'),'{"releaseReady":true}');
     const wav=path.join(root,'approved.wav');
     writeFileSync(wav,'fixture');
     const env={VOXNELO_ASR_QA_WAV:wav,VOXNELO_ASR_QA_EXPECT:'hello world'};
