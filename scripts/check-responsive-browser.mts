@@ -106,7 +106,8 @@ const shot=async(w:number,h:number,name:string):Promise<void>=>{
 };
 try{
   chrome=spawn(chromeBin,['--headless=new','--disable-gpu','--no-sandbox','--disable-dev-shm-usage',
-    '--no-first-run','--remote-allow-origins=*','--remote-debugging-port=0','--user-data-dir='+profile,'--window-size=1440,900',url],{stdio:['ignore','ignore','pipe']});
+    '--no-first-run','--use-fake-device-for-media-stream','--use-fake-ui-for-media-stream',
+    '--remote-allow-origins=*','--remote-debugging-port=0','--user-data-dir='+profile,'--window-size=1440,900',url],{stdio:['ignore','ignore','pipe']});
   chrome.stderr?.on('data',(chunk:Buffer)=>{ chromeOutput=(chromeOutput+String(chunk)).slice(-6000); });
   let port=0;
   for(let i=0;i<300;i++){try{const s=await readFile(path.join(profile,'DevToolsActivePort'),'utf8');port=Number(s.split('\n')[0]);if(port)break;}catch { /* Chrome is starting. */ } if(chrome.exitCode!==null)break; await sleep(100);}
@@ -274,6 +275,17 @@ try{
   await evalJs('document.querySelector(".appearanceChoices button[aria-label*=\\"日落\\"]").click()');
   await until('document.documentElement.dataset.theme==="sunset"');
   await activate(0,'.practiceLayout');
+  // Exercise real Chromium MediaRecorder/getUserMedia with Chrome's generated
+  // fake audio device, not just a jsdom mock or a programmatic disabled-state check.
+  // No personal microphone audio leaves CI; the final transcript is not faked.
+  await evalJs('document.querySelector(".recordAction").click()');
+  await until('document.querySelector(".recordAction")?.getAttribute("aria-label")==="结束录音"');
+  await sleep(300);
+  await evalJs('document.querySelector(".recordAction").click()');
+  await until('!!document.querySelector(".recordingReady")');
+  const liveRecording=await evalJs('(()=>({ready:!!document.querySelector(".recordingReady"),replay:!!document.querySelector("audio, .playbackButton")}))()');
+  assert.ok(liveRecording.ready,'Chrome microphone recording did not produce a playback-ready state');
+  report.push({page:'real-chromium-recorder',...liveRecording});
   await send('Page.addScriptToEvaluateOnNewDocument',{source:
     'Object.defineProperty(navigator,"mediaDevices",{configurable:true,value:{getUserMedia:async()=>({getTracks:()=>[{stop(){}}]})}});'+
     'window.MediaRecorder=class {static isTypeSupported(){return true;}state="inactive";mimeType="audio/webm";onstop=null;start(){this.state="recording";}stop(){this.state="inactive";this.onstop?.();}};'
