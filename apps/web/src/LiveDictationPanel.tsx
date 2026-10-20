@@ -9,7 +9,7 @@ interface Props {
   dictation: ReturnType<typeof useLiveDictation>;
   blocked: boolean;
   onStart: () => void;
-  onManageModels?:()=>void;
+  onManageModels?:(()=>void)|undefined;
 }
 
 /**
