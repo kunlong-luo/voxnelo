@@ -28,7 +28,7 @@ Use evidence entries of the form:
 ## Automation boundaries and known code risk
 
 - `scripts/check-asr-staging.mts` proves inventory/integrity, **not** lawful redistribution.
-- `scripts/check-asr-real-release.mts` runs a reference WAV check when a staged manifest exists; it currently rejects `releaseReady:false` but does **not** require a positively approved `releaseReady:true` field. Treat this as a missing approval enforcement gate, not as approval by omission. A follow-up code change with regression tests is required before any publicly staged-ASR installer is published.
+- `scripts/check-asr-real-release.mts` runs a reference WAV check when a staged manifest exists; it now requires exact boolean `releaseReady:true` when native assets are staged, and rejects absent, false, null, and nonboolean approvals. This **fail-closed technical check does not grant legal authorization**; reviewers must establish all evidence before setting approval.
 - `.github/workflows/release.yml` uploads **unsigned, time-limited candidate artifacts**; successful CI does not fulfill signature, real-hardware, legal or human WER requirements.
 - `pnpm asr:batch` reports private offline WAV aggregate WER/RTF; it does not measure live partial/final subtitle latency or device DSP.
 
