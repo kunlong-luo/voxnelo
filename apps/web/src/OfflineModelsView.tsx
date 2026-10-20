@@ -36,8 +36,12 @@ export function OfflineModelsView({dictation,onBack}:OfflineModelsViewProps){
   const install=async()=>{
     if(desktop||installing||dictation.localPack!=='downloadable')return;
     setInstalling(true);
-    try{await dictation.installLocal();}
-    finally{setInstalling(false);}
+    try{
+      await dictation.installLocal();
+      // A successful download response is not proof that the on-device
+      // recognizer is ready; ask the browser again before claiming success.
+      await dictation.refreshLocal();
+    }finally{setInstalling(false);}
   };
   const ready=dictation.localPack==='available';
   const checking=refreshing||dictation.localPack==='unknown';
