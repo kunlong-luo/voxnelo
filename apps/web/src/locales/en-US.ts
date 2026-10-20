@@ -62,6 +62,7 @@ export const en = {
   "dictationPackNeeded": "An on-device English language pack is needed for offline dictation.",
   "dictationInstallPack": "Install on-device English language pack",
   "dictationPackFailed": "The language pack could not be installed on this device.",
+  "dictationCloudEnableShort": "Online ASR (audio may upload)",
   "dictationCloudEnable": "Use browser online recognition (audio may be uploaded)",
   "dictationCloudEnabled": "Browser online recognition is enabled. This session's speech may be processed by the browser service.",
   "dictationCloudDisable": "Return to on-device recognition",
