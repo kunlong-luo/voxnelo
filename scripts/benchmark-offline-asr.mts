@@ -61,6 +61,10 @@ const sampleCount=data.byteLength/2;
 if(sampleCount===0||sampleCount>16000*180)throw Error('WAV must contain 0-180 seconds of speech audio');
 const duration=sampleCount/16000;
 let transcript='',interim='';
+let audioFedSamples=0;
+const firstInterim={audioSamples:null as number|null,processingMs:null as number|null};
+let startedAt:number|null=null;
+let finishing=false;
 let worker: Worker|undefined;
 type AsrEvent = {type:string;finalText?:string;interimText?:string;error?:string};
 const events:AsrEvent[]=[];
@@ -76,6 +80,12 @@ const waitFor=async(type:string):Promise<void>=>{
       if(msg.type==='result'){
         transcript=String(msg.finalText??'');
         interim=String(msg.interimText??'');
+        if(!finishing&&interim.trim()&&firstInterim.audioSamples===null){
+          // Pacing-independent: at most this many input samples had been
+          // submitted when the first native interim transcript arrived.
+          firstInterim.audioSamples=audioFedSamples;
+          firstInterim.processingMs=startedAt===null?null:performance.now()-startedAt;
+        }
       }
       if(msg.type===type)return;
     }
@@ -107,14 +117,17 @@ try{
   worker.on('error',error=>emit({type:'failure',error:String(error)}));
   worker.on('exit',code=>{if(code!==0)emit({type:'failure'});});
   const start=performance.now();
+  startedAt=start;
   await waitFor('ready');
   for(let offset=0;offset<sampleCount;offset+=1600){
     const count=Math.min(1600,sampleCount-offset);
     const samples=new Float32Array(count);
     for(let i=0;i<count;i++)samples[i]=data.readInt16LE(2*(offset+i))/32768;
+    audioFedSamples=offset+count;
     worker.postMessage({type:'pcm',samples},[samples.buffer]);
     await waitFor('drained');
   }
+  finishing=true;
   worker.postMessage({type:'finish'});
   await waitFor('finished');
   const elapsed=(performance.now()-start)/1000;
@@ -125,6 +138,12 @@ try{
     durationSeconds:Number(duration.toFixed(2)),
     elapsedSeconds:Number(elapsed.toFixed(2)),
     realTimeFactor:Number((elapsed/duration).toFixed(3)),
+    // Null means native ASR emitted no provisional words before finish;
+    // never invent a streaming latency metric from a final-only transcript.
+    firstInterimAudioSeconds:firstInterim.audioSamples===null?null:
+      Number((firstInterim.audioSamples/16000).toFixed(3)),
+    firstInterimProcessingMs:firstInterim.processingMs===null?null:
+      Number(firstInterim.processingMs.toFixed(1)),
     transcript:transcript||interim,
     ...(expected?{reference:expected,wordErrorRate:wordErrorRate(expected,transcript||interim)}:{}),
   };

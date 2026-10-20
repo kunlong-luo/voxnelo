@@ -17,12 +17,17 @@ export function drainReadyFrames<Stream>(
   recognizer: ReadyFrameDecoder<Stream>,
   stream: Stream,
   limit: number,
+  onProgress?: (decodedFrames:number)=>void,
 ): { decodedFrames: number; fullyDrained: boolean } {
   if (!Number.isSafeInteger(limit) || limit < 1) throw Error('Invalid ASR decoding budget');
   let decodedFrames = 0;
   while (decodedFrames < limit && recognizer.isReady(stream)) {
     recognizer.decode(stream);
     decodedFrames++;
+    // Native recognition is synchronous and can need many decode steps.
+    // Let the worker publish confirmed partial text between frame batches,
+    // not only after the entire 64-step packet has finished decoding.
+    if(onProgress && (decodedFrames===1 || decodedFrames%8===0))onProgress(decodedFrames);
   }
   // Explicitly recheck after the last permitted decode. Reaching the budget
   // does not mean audio is fully consumed, particularly after inputFinished().

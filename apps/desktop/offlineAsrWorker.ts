@@ -20,15 +20,23 @@ const completed:string[]=[];
 let currentText='';
 let stopping=false;
 const report=()=>parent.postMessage({type:'result',finalText:completed.join(' '),interimText:currentText});
+const publishPartial=()=>{
+  const next=recognizer.getResult(stream).text?.trim()??'';
+  // Only actual ASR output, never guessed text. Revised hypotheses can
+  // replace an earlier partial without appending duplicate words.
+  if(next!==currentText){currentText=next;report();}
+};
 const decode=(finishing=false)=>{
   // C++ inference stays off Electron's main / UI threads. A packet uses a
   // small fairness budget, but a finished input MUST drain every ready frame.
   // The old 64-step finish could silently truncate the last spoken words
   // if more than 64 decoder frames remained after inputFinished().
-  const drain=drainReadyFrames(recognizer,stream,finishing?FINAL_DECODE_STEPS:PCM_DECODE_STEPS);
+  const drain=drainReadyFrames(
+    recognizer,stream,finishing?FINAL_DECODE_STEPS:PCM_DECODE_STEPS,
+    finishing?undefined:publishPartial,
+  );
   if(finishing&&!drain.fullyDrained)throw Error('Offline ASR finish budget exceeded: refusing incomplete transcript');
-  const next=recognizer.getResult(stream).text?.trim()??'';
-  if(next!==currentText){currentText=next;report();}
+  publishPartial();
   if(recognizer.isEndpoint(stream)){
     if(currentText)completed.push(currentText);
     currentText='';
