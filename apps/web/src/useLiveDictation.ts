@@ -108,23 +108,28 @@ export function useLiveDictation(sentenceId: string) {
       if(mode!=='local'||!bridge){setError(t('dictationLocalRequired'));return;}
       // A personal ASR pack may be installed after this view mounted.
       // Re-query on explicit user action instead of trusting stale mount-time state.
+      const id=++requestId.current;
+      setStatus('checking');
+      const isCurrent=()=>!disposed.current&&id===requestId.current;
       let available=false;
       try {
         const cap=await bridge.capabilities();
-        if(disposed.current)return;
+        if(!isCurrent())return;
         setDesktopAvailable(cap.available);
         setDesktopReason(cap.reason);
         setLocalPack(cap.available?'available':'unavailable');
         available=cap.available;
       } catch {
-        if(disposed.current)return;
+        if(!isCurrent())return;
         setDesktopAvailable(false);
         setDesktopReason('not-configured');
       }
-      if(!available){setError(t('dictationLocalRequired'));return;}
-      const id=++requestId.current;
-      setStatus('checking');
-      const isCurrent=()=>!disposed.current&&id===requestId.current;
+      if(!isCurrent())return;
+      if(!available){
+        setStatus('idle');
+        setError(t('dictationLocalRequired'));
+        return;
+      }
       const started=await startDesktopDictationSession(bridge,{
         isCurrent,
         onStopReady:close=>{desktopStop.current=close;},
