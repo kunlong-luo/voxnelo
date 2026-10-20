@@ -29,12 +29,12 @@ export function LiveDictationPanel({dictation,blocked,onStart}:Props) {
         <span aria-hidden="true" data-motion="mic-halo" className="pointer-events-none absolute -inset-3 rounded-full border-[2px] border-primary/55 shadow-[0_0_32px_5px_var(--canvas-glow)] animate-record-halo [animation-duration:3s]"/>
         {listening&&<><span aria-hidden="true" className="pointer-events-none absolute -inset-2 rounded-full border-2 border-primary/75 animate-live-pulse"/><span aria-hidden="true" className="pointer-events-none absolute -inset-5 rounded-full border border-mic-halo/60 animate-live-pulse [animation-delay:-1s]"/></>}
         <Button
-          className={cn('dictationAction relative size-17 shrink-0 rounded-full border-[3px] border-white/85 bg-[image:var(--mic-gradient)] p-0 text-mic-foreground shadow-[0_18px_32px_-14px_rgba(120,73,47,.55),inset_0_2px_2px_rgba(255,255,255,.4)] ring-1 ring-primary/25 transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:scale-[1.05] active:translate-y-0 active:scale-[.97]  [@media(max-height:700px)]:size-16 @min-[400px]/lesson:size-20',inactive&&'opacity-80 saturate-75')}
+          className={cn('dictationAction relative size-14 shrink-0 rounded-full border-[3px] border-white/85 bg-[image:var(--mic-gradient)] p-0 text-mic-foreground shadow-[0_18px_32px_-14px_rgba(120,73,47,.55),inset_0_2px_2px_rgba(255,255,255,.4)] ring-1 ring-primary/25 transition-[transform,box-shadow] duration-200 hover:-translate-y-1 hover:scale-[1.05] active:translate-y-0 active:scale-[.97]  [@media(max-height:700px)]:size-14 @min-[400px]/lesson:size-16',inactive&&'opacity-80 saturate-75')}
           onClick={busy?dictation.stop:onStart}
-          disabled={!busy&&(blocked||!dictation.supported)}
+          disabled={!busy&&blocked}
           aria-label={t(busy?'dictationStop':'dictationStart')}
         >
-          {busy?<Square size={22} fill="currentColor" aria-hidden="true"/>:<Mic2 size={29} strokeWidth={1.9} aria-hidden="true"/>}
+          {busy?<Square size={18} fill="currentColor" aria-hidden="true"/>:<Mic2 size={24} strokeWidth={1.9} aria-hidden="true"/>}
         </Button>
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-1.5 @min-[400px]/lesson:w-full @min-[400px]/lesson:items-center">
