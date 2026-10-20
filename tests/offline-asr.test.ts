@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { OfflineAsr } from '../apps/desktop/offlineAsr';
-import { isPersonalAsrCandidate, resolveAsrAssets, resolveVerifiedAsrAssets, verifyPersonalAsrCandidate, verifyPersonalAsrInventory } from '../apps/desktop/asrAssets';
+import { isPersonalAsrCandidate, resolveAsrAssets, resolveVerifiedAsrAssets, resolveVerifiedAsrStatus, verifyPersonalAsrCandidate, verifyPersonalAsrInventory } from '../apps/desktop/asrAssets';
 
 const roots:string[]=[];
 afterEach(()=>roots.splice(0).forEach(dir=>rmSync(dir,{recursive:true,force:true})));
@@ -114,6 +114,32 @@ describe('Trusted offline ASR bundle discovery',()=>{
     rmSync(path.join(pilot,'native','extra.cjs'));
     symlinkSync('tokens.txt',path.join(pilot,'model','unexpected-link'));
     expect(await verifyPersonalAsrInventory(pilot)).toBe(false);
+  });
+
+  it('reports an existing incomplete or tampered personal model as invalid, not absent',async()=>{
+    const base=root();
+    const personal=path.join(base,'offline-asr');
+    mkdirSync(personal,{recursive:true});
+    writeFileSync(path.join(personal,'manifest.json'),'{"not":"valid"}');
+    const result=await resolveVerifiedAsrStatus({
+      isPackaged:false,resourcesPath:path.join(base,'resources'),personalDataDir:base,
+    });
+    expect(result.invalidPersonalPack).toBe(true);
+    expect(result.assets).toEqual({modelDir:null,addonPath:null});
+    rmSync(personal,{recursive:true,force:true});
+    const absent=await resolveVerifiedAsrStatus({
+      isPackaged:false,resourcesPath:path.join(base,'resources'),personalDataDir:base,
+    });
+    expect(absent.invalidPersonalPack).toBe(false);
+  });
+
+  it('preserves the existing native failure reason when only packaged resources are missing',async()=>{
+    const base=root();
+    const status=await resolveVerifiedAsrStatus({
+      isPackaged:true,resourcesPath:path.join(base,'resources'),personalDataDir:base,
+    });
+    expect(status.invalidPersonalPack).toBe(false);
+    expect(status.assets.addonPath).toContain('offline-asr');
   });
 
   it('preserves developer-only absolute paths without allowing IPC path selection',()=>{
