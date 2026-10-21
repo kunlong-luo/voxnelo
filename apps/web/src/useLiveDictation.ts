@@ -29,6 +29,12 @@ export function useLiveDictation(sentenceId: string) {
   const [desktopReason,setDesktopReason] = useState<'ready'|'not-configured'|'missing-model'|'missing-addon'|'invalid-personal-pack'>('not-configured');
   const [noiseReduction,setNoiseReduction] = useState<'unknown'|'enabled'|'unverified'|'not-requested'>('unknown');
   const [captureProfile,setCaptureProfile]=useState<DesktopCaptureProfile>('conversation');
+  const [offlineEngine,setOfflineEngine]=useState<'zipformer'|'moonshine-medium'>('zipformer');
+  const [engineAvailability,setEngineAvailability]=useState<{zipformer:boolean;moonshineMedium:boolean}>({zipformer:false,moonshineMedium:false});
+  const chooseOfflineEngine=useCallback((engine:'zipformer'|'moonshine-medium')=>{
+    if(status!=='idle'||!engineAvailability[engine==='zipformer'?'zipformer':'moonshineMedium'])return;
+    setOfflineEngine(engine);
+  },[status,engineAvailability]);
   const requestId = useRef(0);
   const disposed = useRef(false);
   const active = status !== 'idle';
@@ -46,6 +52,8 @@ export function useLiveDictation(sentenceId: string) {
     if(window.voxneloDesktop){
       try{
         const cap=await bridge?.capabilities();
+        const engines=await bridge?.engines();
+        if(engines)setEngineAvailability(engines);
         if(disposed.current)return;
         setDesktopAvailable(cap?.available===true);
         setDesktopReason(cap?.reason??'not-configured');
@@ -180,7 +188,7 @@ export function useLiveDictation(sentenceId: string) {
         onLevel:setInputLevel,
         onError:reason=>{setFinalText('');setError(t(reason==='overloaded'?'dictationOverloaded':'dictationFailed'));endSession(false);},
         onDeviceEnded:()=>{setFinalText('');setError(t('dictationMicrophone'));endSession(false);},
-      },captureProfile);
+      },captureProfile,offlineEngine);
       if(!isCurrent())return;
       if(!started.ok){
         desktopStop.current=null;
@@ -238,7 +246,7 @@ export function useLiveDictation(sentenceId: string) {
       if(id!==requestId.current)return;
       current.current=null;setStatus('idle');setError(t('dictationFailed'));
     }
-  },[status,mode,browserModeAvailable,endSession,t,captureProfile]);
+  },[status,mode,browserModeAvailable,endSession,t,captureProfile,offlineEngine]);
   const installLocal = useCallback(async()=>{
     const Ctor=browserRecognizerClass();
     if(window.voxneloDesktop || !Ctor?.install)return setError(t('dictationLocalRequired'));
@@ -256,5 +264,5 @@ export function useLiveDictation(sentenceId: string) {
       if(!disposed.current&&id===requestId.current)setStatus('idle');
     }
   },[t]);
-  return {status,active,mode,chooseMode,captureProfile,chooseCaptureProfile,supported,browserModeAvailable,desktopReason,localPack,noiseReduction,finalText,interimText,inputLevel,error,start,stop,clear,installLocal,refreshLocal};
+  return {status,active,mode,chooseMode,offlineEngine,chooseOfflineEngine,engineAvailability,captureProfile,chooseCaptureProfile,supported,browserModeAvailable,desktopReason,localPack,noiseReduction,finalText,interimText,inputLevel,error,start,stop,clear,installLocal,refreshLocal};
 }
