@@ -43,7 +43,7 @@ export function useLiveDictation(sentenceId: string) {
   const browserModeAvailable = !window.voxneloDesktop && Boolean(browserRecognizerClass());
   // A Web Speech constructor alone often supports only network recognition.
   // Local mode becomes actionable only after a real on-device availability probe.
-  const supported = window.voxneloDesktop ? desktopAvailable
+  const supported = window.voxneloDesktop ? (offlineEngine==='moonshine-medium'?engineAvailability.moonshineMedium:desktopAvailable)
     : mode==='browser' ? browserModeAvailable : browserLocalReady;
   // Centralize capability refresh for the dedicated model management page.
   // Browser installation is always a separate explicit user action.
