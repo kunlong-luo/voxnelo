@@ -165,6 +165,16 @@ describe('Experimental external-speaker ASR microphone pickup',()=>{
 });
 
 describe('Electron real microphone to local ASR lifecycle',()=>{
+  it('starts Moonshine by default when the new Linux desktop engine is ready',async()=>{
+    const {bridge}=setupDesktop(true);
+    Object.assign(bridge,{engines:vi.fn(async()=>({zipformer:true,moonshineMedium:true}))});
+    render(<Harness/>);
+    await waitFor(()=>expect(live.supported).toBe(true));
+    expect(live.offlineEngine).toBe('moonshine-medium');
+    await act(async()=>{await live.start();});
+    expect(bridge.start).toHaveBeenCalledWith('moonshine-medium');
+    await act(async()=>{live.stop();});
+  });
   it('reports a real Linux native worker startup failure instead of a generic flashing action',async()=>{
     const {bridge,track}=setupDesktop(true);
     bridge.start.mockResolvedValueOnce({ok:false,reason:'failed'} as never);
