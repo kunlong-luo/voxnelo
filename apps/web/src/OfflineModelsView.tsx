@@ -103,6 +103,24 @@ export function OfflineModelsView({dictation,onBack}:OfflineModelsViewProps){
         <span>{t(desktop?'modelDesktopPrivacy':'modelBrowserPrivacy')}</span>
       </div>
     </Card>
+    {desktop&&<Card className="flex flex-col gap-3 rounded-[26px] border-border/70 bg-card/85 p-5 shadow-soft sm:p-7">
+      <h2 className="text-base font-bold text-foreground">{t('dictationCaptureTitle')}</h2>
+      <p className="text-xs leading-5 text-translation-ink">{t('dictationCaptureNote')}</p>
+      <div className="flex flex-wrap gap-2" role="group" aria-label={t('dictationCaptureTitle')}>
+        <Button variant={dictation.captureProfile==='conversation'?'default':'outline'}
+          className="min-h-10 rounded-xl" disabled={dictation.active}
+          aria-pressed={dictation.captureProfile==='conversation'}
+          onClick={()=>dictation.chooseCaptureProfile('conversation')}>
+          {t('dictationCaptureConversation')}
+        </Button>
+        <Button variant={dictation.captureProfile==='external-playback'?'default':'outline'}
+          className="min-h-10 rounded-xl" disabled={dictation.active}
+          aria-pressed={dictation.captureProfile==='external-playback'}
+          onClick={()=>dictation.chooseCaptureProfile('external-playback')}>
+          {t('dictationCaptureExternal')}
+        </Button>
+      </div>
+    </Card>}
     <div className="flex items-start gap-3 rounded-2xl border border-border/70 bg-card/70 px-4 py-4 text-xs leading-5 text-translation-ink">
       <CircleHelp size={18} className="mt-0.5 shrink-0 text-primary"/>
       <div className="flex flex-col gap-2">

@@ -9,7 +9,7 @@ import { SettingsView } from '../apps/web/src/SettingsView';
 afterEach(cleanup);
 
 const dictation = {
-  status:'idle' as const,active:false,mode:'local' as const,chooseMode:()=>undefined,
+  status:'idle' as const,active:false,mode:'local' as const,chooseMode:()=>undefined,captureProfile:'conversation' as const,chooseCaptureProfile:()=>undefined,
   supported:false,browserModeAvailable:true,desktopReason:'not-configured' as const,noiseReduction:'unknown' as const,localPack:'unknown' as const,finalText:'',
   interimText:'',inputLevel:null,error:'',start:async()=>undefined,stop:()=>undefined,
   clear:()=>undefined,installLocal:async()=>undefined,refreshLocal:async()=>undefined,

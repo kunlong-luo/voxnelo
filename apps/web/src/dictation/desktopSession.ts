@@ -10,6 +10,23 @@ import type { VoxneloOfflineAsr, OfflineAsrFailureReason, OfflineAsrStopResult }
 export type DesktopDictationStop=()=>Promise<OfflineAsrStopResult>;
 export type DesktopStartError='permission'|'microphone'|'failed'|'engine'|'busy';
 export type DesktopStartResult={ok:true}|{ok:false;reason:'cancelled'|DesktopStartError};
+/**
+ * Diagnostic profile for another device playing speech into this microphone.
+ * Keep noise processing ON by default for normal conversational dictation.
+ * Neither option starts capture before the user presses the microphone.
+ */
+export type DesktopCaptureProfile='conversation'|'external-playback';
+export function getDesktopCaptureConstraints(profile:DesktopCaptureProfile){
+  return {
+    audio:{
+      echoCancellation:profile==='conversation',
+      noiseSuppression:profile==='conversation',
+      autoGainControl:profile==='conversation',
+      channelCount:1,
+    },
+    video:false,
+  };
+}
 
 export interface DesktopDictationCallbacks {
   isCurrent:()=>boolean;
@@ -24,6 +41,7 @@ export interface DesktopDictationCallbacks {
 export async function startDesktopDictationSession(
   bridge:VoxneloOfflineAsr,
   callbacks:DesktopDictationCallbacks,
+  captureProfile:DesktopCaptureProfile='conversation',
 ):Promise<DesktopStartResult> {
   let media:MediaStream|null=null;
   let context:AudioContext|null=null;
@@ -100,10 +118,7 @@ export async function startDesktopDictationSession(
   };
 
   try{
-    media=await navigator.mediaDevices.getUserMedia({
-      audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1},
-      video:false,
-    });
+    media=await navigator.mediaDevices.getUserMedia(getDesktopCaptureConstraints(captureProfile));
     if(!isCurrent()){void close();return {ok:false,reason:'cancelled'};}
     audioTrack=media.getAudioTracks()[0]??null;
     callbacks.onNoiseReduction(audioTrack?.getSettings().noiseSuppression===true);

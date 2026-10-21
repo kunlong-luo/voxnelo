@@ -72,6 +72,22 @@ describe('Dedicated offline ASR model management',()=>{
     expect(FakeLocalSpeech.available).not.toHaveBeenCalled();
   });
 
+  it('shows opt-in external-speaker capture only on desktop and never changes default silently',async()=>{
+    const capabilities=vi.fn(async()=>({available:true,reason:'ready'}));
+    vi.stubGlobal('voxneloDesktop',{platform:'linux',asr:{capabilities}});
+    render(<ModelHarness/>);
+    const normal=await screen.findByRole('button',{name:'日常讲话（降噪）'});
+    const external=screen.getByRole('button',{name:'外放英语测试（实验）'});
+    expect(normal.getAttribute('aria-pressed')).toBe('true');
+    expect(external.getAttribute('aria-pressed')).toBe('false');
+    fireEvent.click(external);
+    expect(normal.getAttribute('aria-pressed')).toBe('false');
+    expect(external.getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByText(/不能保证更准确/)).toBeTruthy();
+    fireEvent.click(normal);
+    expect(normal.getAttribute('aria-pressed')).toBe('true');
+  });
+
   it('shows verified native desktop status but never presents an unsupported installer',async()=>{
     const capabilities=vi.fn(async()=>({available:false,reason:'missing-model'}));
     vi.stubGlobal('voxneloDesktop',{platform:'linux',asr:{capabilities}});
