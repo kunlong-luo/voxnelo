@@ -21,6 +21,7 @@
     "asr:native:stage": "node --experimental-strip-types scripts/stage-asr-native.mts",
     "asr:verify-real": "node --experimental-strip-types scripts/check-asr-real-release.mts",
     "asr:batch": "node --experimental-strip-types scripts/batch-offline-asr.mts",
+    "asr:compare:moonshine": "node --experimental-strip-types scripts/batch-offline-asr.mts --compare-moonshine",
     "worklet:build": "node --experimental-strip-types scripts/build-audio-worklet.mts",
     "typecheck": "tsc --noEmit",
     "lint": "node --experimental-strip-types ./node_modules/eslint/bin/eslint.js --flag unstable_native_nodejs_ts_config . --max-warnings=0",
