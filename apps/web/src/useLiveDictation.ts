@@ -52,7 +52,7 @@ export function useLiveDictation(sentenceId: string) {
     if(window.voxneloDesktop){
       try{
         const cap=await bridge?.capabilities();
-        const engines=await bridge?.engines();
+        const engines=await bridge?.engines?.();
         if(engines){
           setEngineAvailability(engines);
           // Prefer the new streaming engine automatically when the verified
@@ -169,7 +169,7 @@ export function useLiveDictation(sentenceId: string) {
       let lastReason:'ready'|'not-configured'|'missing-addon'|'missing-model'|'invalid-personal-pack'='not-configured';
       try {
         const cap=await bridge.capabilities();
-        const engines=await bridge.engines();
+        const engines=await bridge.engines?.();
         lastReason=cap.reason;
         if(!isCurrent())return;
         if(engines)setEngineAvailability(engines);
