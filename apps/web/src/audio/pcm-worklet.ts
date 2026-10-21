@@ -9,7 +9,7 @@ declare const sampleRate: number;
 declare const AudioWorkletProcessor: {new(): {readonly port: MessagePort}};
 declare function registerProcessor(name: string, processor: new () => {process(inputs: Float32Array[][]): boolean}): void;
 
-const CHUNK_SIZE = 1600; // 100 ms at 16 kHz, mono
+const CHUNK_SIZE = 800; // 50 ms at 16 kHz, mono; keep ASR input responsive
 
 class VoxneloPcmProcessor extends AudioWorkletProcessor {
   private readonly resampler = new StreamingResampler16k(sampleRate);
@@ -18,7 +18,7 @@ class VoxneloPcmProcessor extends AudioWorkletProcessor {
     super();
     this.port.onmessage = (event: MessageEvent<{type?:string}>) => {
       if (event.data?.type !== 'flush') return;
-      // Partial 100-ms buffers were previously lost when the user stopped
+      // Partial PCM buffers were previously lost when the user stopped
       // listening. Preserve actual final PCM length; do NOT pad with invented
       // silence. Messages from this port are delivered in FIFO order, so the
       // "flushed" acknowledgement follows the final PCM chunk.
