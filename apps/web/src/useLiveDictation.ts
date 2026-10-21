@@ -5,7 +5,7 @@ import {
   BROWSER_SPEECH_LANGUAGE, browserRecognizerClass, createBrowserRecognizer,
   stopBrowserRecognizer, type BrowserRecognizer,
 } from './dictation/browserRecognizer';
-import { startDesktopDictationSession } from './dictation/desktopSession';
+import { startDesktopDictationSession, type DesktopCaptureProfile } from './dictation/desktopSession';
 import type { OfflineAsrStopResult } from './desktopBridge';
 
 type DictationStatus = 'idle' | 'checking' | 'listening';
@@ -27,7 +27,8 @@ export function useLiveDictation(sentenceId: string) {
   const [desktopAvailable,setDesktopAvailable] = useState(false);
   const [browserLocalReady,setBrowserLocalReady] = useState(false);
   const [desktopReason,setDesktopReason] = useState<'ready'|'not-configured'|'missing-model'|'missing-addon'|'invalid-personal-pack'>('not-configured');
-  const [noiseReduction,setNoiseReduction] = useState<'unknown'|'enabled'|'unverified'>('unknown');
+  const [noiseReduction,setNoiseReduction] = useState<'unknown'|'enabled'|'unverified'|'not-requested'>('unknown');
+  const [captureProfile,setCaptureProfile]=useState<DesktopCaptureProfile>('conversation');
   const requestId = useRef(0);
   const disposed = useRef(false);
   const active = status !== 'idle';
@@ -123,6 +124,11 @@ export function useLiveDictation(sentenceId: string) {
     };
   },[stop]);
   useEffect(() => { clear(); },[sentenceId,clear]);
+  const chooseCaptureProfile=useCallback((value:DesktopCaptureProfile)=>{
+    if(status!=='idle'||!window.voxneloDesktop)return;
+    setCaptureProfile(value);
+    setNoiseReduction('unknown');
+  },[status]);
   const chooseMode = useCallback((value:DictationMode) => {
     if(value==='browser' && !browserModeAvailable)return;
     stop();setMode(value);setError('');
@@ -169,12 +175,12 @@ export function useLiveDictation(sentenceId: string) {
       const started=await startDesktopDictationSession(bridge,{
         isCurrent,
         onStopReady:close=>{desktopStop.current=close;},
-        onNoiseReduction:enabled=>setNoiseReduction(enabled?'enabled':'unverified'),
+        onNoiseReduction:enabled=>setNoiseReduction(captureProfile==='external-playback'?'not-requested':enabled?'enabled':'unverified'),
         onTranscript:(final,interim)=>{setFinalText(final);setInterimText(interim);},
         onLevel:setInputLevel,
         onError:reason=>{setFinalText('');setError(t(reason==='overloaded'?'dictationOverloaded':'dictationFailed'));endSession(false);},
         onDeviceEnded:()=>{setFinalText('');setError(t('dictationMicrophone'));endSession(false);},
-      });
+      },captureProfile);
       if(!isCurrent())return;
       if(!started.ok){
         desktopStop.current=null;
@@ -232,7 +238,7 @@ export function useLiveDictation(sentenceId: string) {
       if(id!==requestId.current)return;
       current.current=null;setStatus('idle');setError(t('dictationFailed'));
     }
-  },[status,mode,browserModeAvailable,endSession,t]);
+  },[status,mode,browserModeAvailable,endSession,t,captureProfile]);
   const installLocal = useCallback(async()=>{
     const Ctor=browserRecognizerClass();
     if(window.voxneloDesktop || !Ctor?.install)return setError(t('dictationLocalRequired'));
@@ -250,5 +256,5 @@ export function useLiveDictation(sentenceId: string) {
       if(!disposed.current&&id===requestId.current)setStatus('idle');
     }
   },[t]);
-  return {status,active,mode,chooseMode,supported,browserModeAvailable,desktopReason,localPack,noiseReduction,finalText,interimText,inputLevel,error,start,stop,clear,installLocal,refreshLocal};
+  return {status,active,mode,chooseMode,captureProfile,chooseCaptureProfile,supported,browserModeAvailable,desktopReason,localPack,noiseReduction,finalText,interimText,inputLevel,error,start,stop,clear,installLocal,refreshLocal};
 }
