@@ -22,8 +22,9 @@ contextBridge.exposeInMainWorld('voxneloDesktop', {
   version: APP_VERSION,
   windowControls,
   asr: {
+    engines: () => ipcRenderer.invoke('voxnelo:asr:engines') as Promise<null|{zipformer:boolean;moonshineMedium:boolean}>,
     capabilities: () => ipcRenderer.invoke('voxnelo:asr:capabilities') as Promise<{available:boolean;reason:'ready'|'not-configured'|'missing-addon'|'missing-model'|'invalid-personal-pack'}>,
-    start: () => ipcRenderer.invoke('voxnelo:asr:start') as Promise<{ok:true;sessionId:string}|{ok:false;reason:string}>,
+    start: (engine?:'zipformer'|'moonshine-medium') => ipcRenderer.invoke('voxnelo:asr:start',engine) as Promise<{ok:true;sessionId:string}|{ok:false;reason:string}>,
     push: (id:string,samples:Float32Array) => ipcRenderer.send('voxnelo:asr:pcm',id,samples),
     stop: (id:string) => ipcRenderer.invoke('voxnelo:asr:stop',id) as Promise<{finalText:string;completed:boolean}>,
     onResult: (callback:(event:{sessionId:string;finalText:string;interimText:string})=>void) => {
