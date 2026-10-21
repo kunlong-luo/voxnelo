@@ -59,6 +59,7 @@ const moonshinePilot=(!app.isPackaged&&process.platform==='linux'&&
         }}),['encoder.ort','adapter.ort','cross_kv.ort','decoder_kv.ort','streaming_config.json','tokenizer.bin'],true)
   :null;
 let activeAsr:OfflineAsr|null=null;
+let openingAsr=false;
 
 /**
  * Window IPC is intentionally narrower than a general-purpose ipcRenderer bridge.
@@ -119,8 +120,11 @@ function registerOfflineAsr():void{
   ipcMain.handle('voxnelo:asr:start',async(event,requested:unknown)=>{
     const window=authorizedWindow(event);
     if(!window)return {ok:false,reason:'failed'};
+    // Reserve the single native microphone engine before any async asset
+    // verification. Concurrent renderer starts must not open two workers.
+    if(openingAsr||activeAsr?.hasActiveSession())return {ok:false,reason:'busy'};
+    openingAsr=true;
     try{
-      if(activeAsr?.hasActiveSession())return {ok:false,reason:'busy'};
       const engine=requested==='moonshine-medium'?moonshinePilot:
         requested===undefined||requested==='zipformer'?(await offlineAsr.refreshIfUnavailable()):null;
       if(!engine)return {ok:false,reason:'not-configured'};
@@ -128,6 +132,7 @@ function registerOfflineAsr():void{
       if(opened.ok)activeAsr=engine;
       return opened;
     }catch{return {ok:false,reason:'failed'};}
+    finally{openingAsr=false;}
   });
   ipcMain.on('voxnelo:asr:pcm',(event,id:unknown,samples:unknown)=>{
     const window=authorizedWindow(event);
