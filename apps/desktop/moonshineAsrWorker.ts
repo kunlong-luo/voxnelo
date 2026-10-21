@@ -51,9 +51,12 @@ try{
     if(data.type!=='pcm'||!(data.samples instanceof Float32Array)||data.samples.length<1||data.samples.length>3200)return fail();
     const samples=Array.from(data.samples);
     if(samples.some(v=>!Number.isFinite(v)||Math.abs(v)>1))return fail();
-    if(!proc.stdin.write(JSON.stringify({type:'pcm',samples})+'\n')) {
-      // Fail closed on child-process pipe saturation; never silently drop audio.
-      fail();
-    }
+    // A false write() return is NORMAL stream backpressure, not failed audio.
+    // Node queues that chunk and Python emits 'drained' only after processing.
+    // The main-process MAX_PENDING_PCM_CHUNKS limit bounds outstanding audio.
+    try{
+      proc.stdin.write(JSON.stringify({type:'pcm',samples})+'\n');
+      if(proc.stdin.writableLength>1024*1024)fail();
+    }catch{fail();}
   });
 }catch{fail();}
