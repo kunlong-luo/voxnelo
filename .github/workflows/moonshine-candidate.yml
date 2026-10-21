@@ -92,10 +92,10 @@ jobs:
             --manifest "$ROOT/manifest.json" --output-dir "$ROOT/numeric-report"
           cat "$ROOT/numeric-report/report.md"
           # Real SDK and actual quantized Moonshine model, no transcript upload.
-          "$VOXNELO_MOONSHINE_PYTHON" scripts/check-moonshine-stream-pilot.py \\
-            --python "$VOXNELO_MOONSHINE_PYTHON" \\
-            --script scripts/moonshine-stream-pilot.py \\
-            --model "$VOXNELO_MOONSHINE_MODEL_DIR" \\
+          "$VOXNELO_MOONSHINE_PYTHON" scripts/check-moonshine-stream-pilot.py \
+            --python "$VOXNELO_MOONSHINE_PYTHON" \
+            --script scripts/moonshine-stream-pilot.py \
+            --model "$VOXNELO_MOONSHINE_MODEL_DIR" \
             --wav "$ROOT/audio/quiet02.wav"
       - name: Upload numeric-only evidence
         if: always()
