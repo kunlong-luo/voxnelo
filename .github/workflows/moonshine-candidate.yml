@@ -87,7 +87,7 @@ jobs:
           # before enabling the Linux packaged default. Only public model
           # filenames/checksums are logged; no user speech or transcripts.
           echo "Official Medium Streaming model inventory:"
-          (cd "$MODEL_DIR" && find . -type f -printf '%P\\n' | LC_ALL=C sort | while IFS= read -r name; do sha256sum "$name"; done)
+          (cd "$MODEL_DIR" && find . -type f ! -name '*.lock' -print0 | LC_ALL=C sort -z | xargs -0 sha256sum)
           export VOXNELO_ASR_MODEL_DIR="$RUNNER_TEMP/old-zipformer/model"
           export VOXNELO_ASR_ADDON_PATH="$(node -p 'require.resolve("sherpa-onnx-node",{paths:[process.env.RUNNER_TEMP+"/voxnelo-native/node_modules"]})')"
           export LD_LIBRARY_PATH="$RUNNER_TEMP/voxnelo-native/node_modules/sherpa-onnx-node/lib:${LD_LIBRARY_PATH:-}"
