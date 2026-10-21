@@ -21,9 +21,11 @@ try{
   if(![cfg.pythonPath,cfg.scriptPath,cfg.modelDir].every(v=>typeof v==='string'&&v.startsWith('/')&&existsSync(v)))
     throw Error('Missing verified local runtime');
   child=spawn(cfg.pythonPath,['-I',cfg.scriptPath,'--model-dir',cfg.modelDir],{
-    stdio:['pipe','pipe','ignore'],env:{...process.env,PYTHONNOUSERSITE:'1'},shell:false,
+    stdio:['pipe','pipe','pipe'],env:{...process.env,PYTHONNOUSERSITE:'1'},shell:false,
   });
   const proc=child;
+  // Drain stderr without forwarding native errors, private model paths or audio.
+  proc.stderr.resume();
   const lines=createInterface({input:proc.stdout,crlfDelay:Infinity});
   lines.on('line',(line)=>{
     try{
