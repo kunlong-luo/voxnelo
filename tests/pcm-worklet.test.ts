@@ -39,6 +39,27 @@ describe('Microphone AudioWorklet resampling', () => {
     expect(sent.every(chunk => chunk.length === 800 && chunk.every(sample => Math.abs(sample - 0.25) < 1e-5))).toBe(true);
   });
 
+  it('emits the first native PCM packet at 50ms rather than waiting 100ms',async()=>{
+    const sent:Float32Array[]=[];
+    const registered=new Map<string,ProcessorConstructor>();
+    vi.stubGlobal('sampleRate',16000);
+    vi.stubGlobal('AudioWorkletProcessor',class{
+      readonly port={postMessage:(samples:Float32Array)=>sent.push(new Float32Array(samples))};
+    });
+    vi.stubGlobal('registerProcessor',(name:string,ctor:ProcessorConstructor)=>registered.set(name,ctor));
+    await import('../apps/web/src/audio/pcm-worklet');
+    const Constructor=registered.get('voxnelo-pcm-16k');
+    if(!Constructor)throw Error('Worklet did not register');
+    const processor=new Constructor();
+    // A 50ms / 800-sample packet must arrive immediately at that boundary.
+    for(let i=0;i<6;i++)processor.process([[new Float32Array(128).fill(0.4)]]);
+    expect(sent).toHaveLength(0);
+    processor.process([[new Float32Array(32).fill(0.4)]]);
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toHaveLength(800);
+    expect(Array.from(sent[0]!).every(sample=>Math.abs(sample-0.4)<1e-6)).toBe(true);
+  });
+
   it('preserves active speech on channel 1 of a stereo device',async()=>{
     const sent:Float32Array[]=[];
     const registered=new Map<string,ProcessorConstructor>();
