@@ -48,6 +48,8 @@ jobs:
         run: pnpm build
       - name: Validate offline ASR worker IPC transport (mock inference only)
         run: node --experimental-strip-types scripts/check-offline-asr-worker.mts
+      - name: Smoke-test Moonshine Electron worker to Python subprocess transport
+        run: node --experimental-strip-types scripts/check-moonshine-electron-bridge.mts
       - name: Test Moonshine PCM subprocess protocol (no SDK or model download)
         run: python3 scripts/test-moonshine-stream-pilot.py
       - name: Check real-model benchmark CLI syntax (no download or native model)
