@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { scoreTranscript, summarizeAsrAttempts, tokenizeAsr, type MeasuredAsrAttempt } from '../scripts/asr-batch-metrics.mts';
-import { buildBatchReport, formatBatchMarkdown, parseBatchManifest, validatePcm16Wav } from '../scripts/batch-offline-asr.mts';
+import { buildBatchReport, formatBatchMarkdown, parseBatchManifest, selectedBatchDecoders, validatePcm16Wav } from '../scripts/batch-offline-asr.mts';
 import { requireRealAsrQuality } from '../apps/desktop/asrAcceptance';
 
 describe('private local ASR word error scoring', () => {
@@ -44,6 +44,25 @@ describe('private local ASR word error scoring', () => {
       sampleCount:2,referenceWords:10,substitutions:2,wordErrorRate:0.2,realTimeFactor:0.5,
     });
     expect(summary[0]?.wordErrorRate).not.toBe(0.3125);
+  });
+  it('keeps existing offline decoders as defaults and compares Moonshine only on explicit opt-in',()=>{
+    expect(selectedBatchDecoders(false)).toEqual(['greedy_search','modified_beam_search']);
+    expect(selectedBatchDecoders(true,'medium')).toEqual([
+      'greedy_search','modified_beam_search','moonshine-medium-streaming',
+    ]);
+    expect(selectedBatchDecoders(true,'small')).toEqual([
+      'greedy_search','modified_beam_search','moonshine-small-streaming',
+    ]);
+    const outcomes=summarizeAsrAttempts([
+      trial('q',4,2,2),
+      {...trial('q',4,1,2),decoder:'moonshine-medium-streaming' as const},
+      {...trial('n',4,0,2),scenario:'noise' as const,decoder:'moonshine-medium-streaming' as const},
+    ]);
+    expect(outcomes.map(x=>[x.scenario,x.decoder,x.wordErrorRate])).toEqual([
+      ['quiet','greedy_search',0.5],
+      ['quiet','moonshine-medium-streaming',0.25],
+      ['noise','moonshine-medium-streaming',0],
+    ]);
   });
   it('keeps quiet/noise and greedy/beam groups separate',()=>{
     const data=[trial('s1',2,1,1),{...trial('s1',2,0,1),decoder:'modified_beam_search' as const},
