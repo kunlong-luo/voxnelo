@@ -44,6 +44,11 @@ try{
     if(finished||failed)return;
     if(!msg||typeof msg!=='object'||!('type' in msg))return fail();
     const data=msg as {type:string;samples?:Float32Array};
+    if(data.type==='shutdown'){
+      finished=true; // Cancellation is not a completed transcript.
+      proc.kill();
+      return;
+    }
     if(data.type==='finish'){
       proc.stdin.write('{"type":"finish"}\n');
       return;
