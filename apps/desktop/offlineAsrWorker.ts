@@ -2,6 +2,7 @@ import { parentPort, workerData } from 'node:worker_threads';
 import { createRequire } from 'node:module';
 import { createOnlineRecognizerConfig, type AsrDecodingMethod } from './asrConfig';
 import { drainReadyFrames, FINAL_DECODE_STEPS, PCM_DECODE_STEPS } from './asrDecodeDrain';
+import { appendRecentWords } from './asrTranscriptHistory';
 
 type Stream = { acceptWaveform(input:{samples:Float32Array;sampleRate:number}):void; inputFinished():void };
 type Recognizer = {
@@ -16,15 +17,8 @@ if(!parent)throw new Error('Offline ASR must run in an isolated worker');
 const {addonPath,modelDir,decodingMethod}=workerData as Init;
 let recognizer:Recognizer;
 let stream:Stream;
-// Keep only recent finalized phrases; the full history must not grow without bound.
-const MAX_FINAL_WORDS=120;
+// Keep only recent finalized phrases; interim hypotheses remain separate.
 const completed:string[]=[];
-const appendCompleted=(value:string)=>{
-  const words=value.trim().split(/\s+/).filter(Boolean);
-  if(!words.length)return;
-  completed.push(...words);
-  if(completed.length>MAX_FINAL_WORDS)completed.splice(0,completed.length-MAX_FINAL_WORDS);
-};
 let currentText='';
 let stopping=false;
 const report=()=>parent.postMessage({type:'result',finalText:completed.join(' '),interimText:currentText});
@@ -46,7 +40,7 @@ const decode=(finishing=false)=>{
   if(finishing&&!drain.fullyDrained)throw Error('Offline ASR finish budget exceeded: refusing incomplete transcript');
   publishPartial();
   if(recognizer.isEndpoint(stream)){
-    if(currentText)appendCompleted(currentText);
+    if(currentText)appendRecentWords(completed,currentText);
     currentText='';
     recognizer.reset(stream);
     report();
@@ -74,7 +68,7 @@ try{
         stopping=true;
         stream.inputFinished();
         decode(true);
-        if(currentText)appendCompleted(currentText);
+        if(currentText)appendRecentWords(completed,currentText);
         parent.postMessage({type:'result',finalText:completed.join(' '),interimText:''});
         parent.postMessage({type:'finished'});
       }
