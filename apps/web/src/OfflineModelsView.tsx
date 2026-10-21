@@ -70,7 +70,7 @@ export function OfflineModelsView({dictation,onBack}:OfflineModelsViewProps){
           <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-secondary text-primary"><HardDriveDownload size={23}/></span>
           <div className="flex flex-col gap-1">
             <h2 className="text-base font-bold text-foreground">{t('modelEnglish')}</h2>
-            <p className="text-xs text-muted-foreground">{t(desktop?'modelDesktopSource':'modelBrowserSource')}</p>
+            <p className="text-xs text-muted-foreground">{desktop&&dictation.offlineEngine==='moonshine-medium'?t('modelMoonshineDefault'):t(desktop?'modelDesktopSource':'modelBrowserSource')}</p>
           </div>
         </div>
         <Badge className="rounded-full px-3 py-1 text-xs" data-testid="model-status">
