@@ -1,10 +1,12 @@
-import { AudioLines, Globe2, Mic2, ShieldCheck, Square, HardDriveDownload } from 'lucide-react';
+import { useId, useState } from 'react';
+import { AudioLines, Globe2, History, Mic2, ShieldCheck, Square, HardDriveDownload } from 'lucide-react';
 import type { useLiveDictation } from './useLiveDictation';
 import { useI18n } from './i18n';
 import { SUPPORT_LINKS } from '@voxnelo/learning';
 import { Button } from './components/ui/button';
 import { cn } from './lib/utils';
 import { formatAsrTranscriptForDisplay } from './dictation/formatTranscript';
+import { focusTranscript } from './dictation/transcriptFocus';
 
 interface Props {
   dictation: ReturnType<typeof useLiveDictation>;
@@ -24,6 +26,13 @@ export function LiveDictationPanel({dictation,blocked,onStart,onManageModels}:Pr
   const busy=listening||checking;
   const inactive=!dictation.supported&&!busy;
   const webLocalUnavailable=!window.voxneloDesktop&&dictation.mode==='local'&&!dictation.supported;
+  const [historyOpen,setHistoryOpen]=useState(false);
+  const historyId=useId();
+  const focused=focusTranscript(dictation.finalText,dictation.interimText);
+  const startFresh=()=>{
+    setHistoryOpen(false);
+    onStart();
+  };
   return <section className="liveDictation mx-auto w-full max-w-140 min-w-0 rounded-[28px] border border-glass-edge bg-card/55 transition-[background-color,border-color,box-shadow] duration-500 ease-out hover:border-primary/25 hover:bg-card/60 px-3 py-3 [@media(max-height:680px)]:py-1 text-left shadow-[0_18px_45px_-32px_rgba(120,73,47,.28)] backdrop-blur-sm @min-[400px]/lesson:border-transparent @min-[400px]/lesson:bg-transparent @min-[400px]/lesson:shadow-none @min-[400px]/lesson:px-4 @min-[400px]/lesson:py-2" aria-label={t('dictationTitle')}>
     <div className="flex min-w-0 flex-col items-center gap-2 text-center">
       <div className="relative isolate grid shrink-0 place-items-center transition-transform duration-500 ease-out hover:-translate-y-0.5">
@@ -33,7 +42,7 @@ export function LiveDictationPanel({dictation,blocked,onStart,onManageModels}:Pr
         {listening&&<><span aria-hidden="true" className="pointer-events-none absolute -inset-2 rounded-full border-2 border-primary/75 animate-live-pulse"/><span aria-hidden="true" className="pointer-events-none absolute -inset-5 rounded-full border border-mic-halo/60 animate-live-pulse [animation-delay:-1s]"/></>}
         <Button
           className={cn('dictationAction relative size-12 shrink-0 rounded-full border-[3px] border-white/85 bg-[image:var(--mic-gradient)] p-0 text-mic-foreground shadow-[0_18px_32px_-14px_rgba(120,73,47,.55),inset_0_2px_2px_rgba(255,255,255,.4)] ring-1 ring-primary/25 transition-[transform,box-shadow] duration-200 hover:scale-[1.03] active:translate-y-0 active:scale-[.97]  [@media(max-height:700px)]:size-12 @min-[400px]/lesson:size-13',inactive&&'opacity-80 saturate-75')}
-          onClick={busy?dictation.stop:onStart}
+          onClick={busy?dictation.stop:startFresh}
           disabled={!busy&&(blocked||webLocalUnavailable)}
           aria-label={t(busy?'dictationStop':'dictationStart')}
         >
@@ -58,10 +67,31 @@ export function LiveDictationPanel({dictation,blocked,onStart,onManageModels}:Pr
         {listening&&dictation.inputLevel!==null&&<div className="flex h-6 items-center justify-center gap-1" role="img" aria-label="Live microphone input level">
           {[0.55,0.8,1,0.7,0.45].map((weight,index)=><span key={index} aria-hidden="true" className="h-5 w-1.5 origin-center rounded-full bg-primary/75 transition-transform duration-100 motion-reduce:transition-none" style={{transform:`scaleY(${Math.max(0.18,Math.min(1,(dictation.inputLevel??0)*weight*2.4))})`}}/>)}
         </div>}
-        {(busy||dictation.finalText||dictation.interimText)&&<div className="dictationTranscript max-h-20 min-h-9 w-full max-w-110 overflow-y-auto rounded-xl bg-muted/55 text-center px-3 py-2 [@media(max-height:680px)]:min-h-8 [@media(max-height:680px)]:py-1.5 text-[13px] leading-5 text-sentence-ink @min-[400px]/lesson:text-sm" data-testid="live-transcript" data-state={listening?'listening':checking?'checking':'idle'}>
-          <span aria-live="polite" className={cn('font-medium',!dictation.finalText&&'text-muted-foreground')}>{dictation.finalText?formatAsrTranscriptForDisplay(dictation.finalText):(!dictation.interimText?t('dictationPlaceholder'):'')}</span>
-          {dictation.interimText&&<span className="ml-1 text-translation-ink animate-view-enter" aria-label={t('dictationInterim')}>{formatAsrTranscriptForDisplay(dictation.interimText)}</span>}
-        </div>}
+        {(busy||dictation.finalText||dictation.interimText)&&<>
+          <div className="dictationTranscript relative min-h-9 w-full max-w-110 min-w-0 rounded-xl bg-muted/55 px-3 py-1.5 text-center text-[13px] leading-5 text-sentence-ink @min-[400px]/lesson:text-sm"
+            data-testid="live-transcript" data-state={listening?'listening':checking?'checking':'idle'}>
+            <div className="flex min-h-5 items-center justify-center gap-2">
+              <span className="text-[10px] font-semibold text-translation-ink">{t(focused.source==='interim'?'dictationCurrentText':'dictationRecentText')}</span>
+              {focused.hasHistory&&<Button variant="ghost" size="sm"
+                className="h-6 min-h-6 rounded-md px-1.5 py-0 text-[10px] font-medium text-primary"
+                onClick={()=>setHistoryOpen(value=>!value)}
+                aria-expanded={historyOpen} aria-controls={historyId}>
+                <History size={12} aria-hidden="true"/>{t(historyOpen?'dictationHideHistory':'dictationShowHistory')}
+              </Button>}
+            </div>
+            <p aria-live="polite" aria-label={t(focused.source==='interim'?'dictationCurrentText':'dictationRecentText')}
+              className={cn('max-h-12 overflow-hidden break-words font-semibold leading-5',focused.source==='empty'&&'font-normal text-muted-foreground')}>
+              {focused.source==='empty'?t('dictationPlaceholder'):formatAsrTranscriptForDisplay(focused.text)}
+            </p>
+          </div>
+          {historyOpen&&focused.hasHistory&&<div id={historyId} role="region" aria-label={t('dictationHistoryLabel')}
+            className="w-full max-w-110 min-w-0 rounded-xl border border-border/60 bg-card/80 p-3 text-left text-xs leading-5 text-translation-ink">
+            <p className="mb-1 font-bold text-foreground">{t('dictationHistoryLabel')}</p>
+            <p data-testid="dictation-history" className="max-h-32 overflow-y-auto break-words" tabIndex={0}>
+              {formatAsrTranscriptForDisplay(dictation.finalText)}
+            </p>
+          </div>}
+        </>}
       </div>
     </div>
     {!dictation.supported&&<>
