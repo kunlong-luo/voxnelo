@@ -6,6 +6,7 @@ import { allowsAudioPermissionCheck, allowsAudioPermissionRequest, APP_HOST, isA
 import { LinuxEnglishSpeech } from './linuxSpeech';
 import { LINUX_DESKTOP_FILENAME, resolveLinuxIconPath } from './linuxAppIdentity';
 import { OfflineAsr } from './offlineAsr';
+import { engineChoices } from './asrEngineSelection';
 import { RefreshableAsrEngine } from './asrRefresh';
 import { resolveVerifiedAsrStatus } from './asrAssets';
 
@@ -83,6 +84,14 @@ function registerLinuxSpeech(): void {
 }
 
 function registerOfflineAsr():void{
+  // Safe, read-only engine discovery. Moonshine must remain unavailable until
+  // its verified model, runtime and Electron streaming transport all exist.
+  ipcMain.handle('voxnelo:asr:engines',async(event)=>{
+    if(!authorizedWindow(event))return null;
+    const zipformer=(await offlineAsr.refreshIfUnavailable()).capabilities().available;
+    return engineChoices({zipformer,moonshineModelVerified:false,
+      moonshineRuntimeVerified:false,moonshineStreamConnected:false});
+  });
   ipcMain.handle('voxnelo:asr:capabilities',async(event)=>{
     if(!authorizedWindow(event))return {available:false,reason:'not-configured'};
     // A personal offline model can be installed while Voxnelo is open.
