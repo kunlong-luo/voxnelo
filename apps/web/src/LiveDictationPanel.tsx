@@ -107,7 +107,7 @@ export function LiveDictationPanel({dictation,blocked,onStart,onManageModels}:Pr
       className="mt-2 inline-flex min-h-8 items-center rounded-xl px-3 py-1 [@media(max-height:780px)]:hidden text-[11px] font-semibold text-primary underline-offset-4 transition-colors hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
     >{t('dictationHelp')}</a>}
     {listening&&window.voxneloDesktop&&dictation.noiseReduction!=='unknown'&&<p className="mt-2 flex items-center gap-1.5 text-[11px] leading-4 text-translation-ink">
-      <ShieldCheck size={13} aria-hidden="true"/>{t(dictation.noiseReduction==='enabled'?'dictationNoiseEnabled':'dictationNoiseUnverified')}
+      <ShieldCheck size={13} aria-hidden="true"/>{t(dictation.noiseReduction==='not-requested'?'dictationNoiseNotRequested':dictation.noiseReduction==='enabled'?'dictationNoiseEnabled':'dictationNoiseUnverified')}
     </p>}
     {dictation.error&&<p role="status" className="mt-2 text-[12px] leading-5 text-translation-ink">{dictation.error}</p>}
     {!busy&&!dictation.supported&&onManageModels&&<Button variant="ghost" size="sm"
