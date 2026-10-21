@@ -35,8 +35,8 @@ describe('Microphone AudioWorklet resampling', () => {
       chunk.fill(0.25);
       expect(processor.process([[chunk]])).toBe(true);
     }
-    expect(sent).toHaveLength(10);
-    expect(sent.every(chunk => chunk.length === 1600 && chunk.every(sample => Math.abs(sample - 0.25) < 1e-5))).toBe(true);
+    expect(sent).toHaveLength(20);
+    expect(sent.every(chunk => chunk.length === 800 && chunk.every(sample => Math.abs(sample - 0.25) < 1e-5))).toBe(true);
   });
 
   it('preserves active speech on channel 1 of a stereo device',async()=>{
@@ -58,7 +58,7 @@ describe('Microphone AudioWorklet resampling', () => {
         channel1[i]=0.8*Math.sin(2*Math.PI*1000*(offset+i)/48000);
       expect(processor.process([[channel0.subarray(0,channel1.length),channel1]])).toBe(true);
     }
-    expect(sent).toHaveLength(5);
+    expect(sent).toHaveLength(10);
     const samples=sent.at(-1);
     if(!samples)throw Error('No output PCM');
     const rms=Math.sqrt(samples.reduce((sum,x)=>sum+x*x,0)/samples.length);
@@ -66,7 +66,7 @@ describe('Microphone AudioWorklet resampling', () => {
     expect(rms).toBeLessThan(0.4);
   });
 
-  it('flushes the exact final sub-100ms PCM tail before its stop acknowledgement',async()=>{
+  it('flushes the exact final sub-50ms PCM tail before its stop acknowledgement',async()=>{
     const emitted:unknown[]=[];
     const registered=new Map<string,ProcessorConstructor>();
     class TestWorkletBase {
@@ -84,24 +84,23 @@ describe('Microphone AudioWorklet resampling', () => {
     const processor=new Constructor() as Processor & {
       port:{onmessage:((event:{data:{type:string}})=>void)|null};
     };
-    // 1920 frames: one complete 1600-sample chunk, plus 320 samples that
+    // 1920 frames: two complete 800-sample chunks, plus 320 samples that
     // used to be silently lost on stop.
     for(let i=0;i<15;i++){
       const chunk=new Float32Array(128).fill(0.35);
       processor.process([[chunk]]);
     }
-    expect(emitted).toHaveLength(1);
-    expect(emitted[0]).toBeInstanceOf(Float32Array);
-    expect((emitted[0] as Float32Array).length).toBe(1600);
-    processor.port.onmessage?.({data:{type:'flush'}});
-    expect(emitted).toHaveLength(3);
-    expect((emitted[1] as Float32Array).length).toBe(320);
-    expect(Array.from(emitted[1] as Float32Array).every(x=>Math.abs(x-0.35)<1e-6)).toBe(true);
-    expect(emitted[2]).toEqual({type:'flushed'});
-    // Repeated flushes cannot add fake PCM or replay the old sentence tail.
+    expect(emitted).toHaveLength(2);
+    expect(emitted.slice(0,2).every(chunk=>chunk instanceof Float32Array&&(chunk as Float32Array).length===800)).toBe(true);
     processor.port.onmessage?.({data:{type:'flush'}});
     expect(emitted).toHaveLength(4);
+    expect((emitted[2] as Float32Array).length).toBe(320);
+    expect(Array.from(emitted[2] as Float32Array).every(x=>Math.abs(x-0.35)<1e-6)).toBe(true);
     expect(emitted[3]).toEqual({type:'flushed'});
+    // Repeated flushes cannot add fake PCM or replay the old sentence tail.
+    processor.port.onmessage?.({data:{type:'flush'}});
+    expect(emitted).toHaveLength(5);
+    expect(emitted[4]).toEqual({type:'flushed'});
   });
 
   it('does not invent speech samples when the microphone has no input', async () => {
