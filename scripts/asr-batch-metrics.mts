@@ -9,10 +9,11 @@ export interface WordCounts {
   insertions: number;
   wordErrorRate: number;
 }
+export type AsrDecoderId = 'greedy_search' | 'modified_beam_search' | 'moonshine-small-streaming' | 'moonshine-medium-streaming';
 export interface MeasuredAsrAttempt extends WordCounts {
   id: string;
   scenario: 'quiet' | 'noise';
-  decoder: 'greedy_search' | 'modified_beam_search';
+  decoder: AsrDecoderId;
   durationSeconds: number;
   elapsedSeconds: number;
   realTimeFactor: number;
@@ -53,13 +54,13 @@ export function scoreTranscript(reference: string, transcript: string): WordCoun
 }
 export interface AsrGroupSummary extends WordCounts {
   scenario: 'quiet' | 'noise';
-  decoder: 'greedy_search' | 'modified_beam_search';
+  decoder: AsrDecoderId;
   sampleCount: number;
   realTimeFactor: number;
 }
 export function summarizeAsrAttempts(attempts: readonly MeasuredAsrAttempt[]): AsrGroupSummary[] {
   const scenarios = ['quiet', 'noise'] as const;
-  const decoders = ['greedy_search', 'modified_beam_search'] as const;
+  const decoders: readonly AsrDecoderId[] = ['greedy_search', 'modified_beam_search', 'moonshine-small-streaming', 'moonshine-medium-streaming'];
   const output: AsrGroupSummary[] = [];
   for (const scenario of scenarios) for (const decoder of decoders) {
     const items = attempts.filter(a => a.scenario === scenario && a.decoder === decoder);
