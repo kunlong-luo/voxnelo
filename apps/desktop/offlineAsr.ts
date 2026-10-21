@@ -15,8 +15,8 @@ interface Session {
   resolveFinish:((result:AsrStopResult)=>void)|null;
   resolveOpen:((result:AsrOpenResult)=>void)|null;
 }
-/** At 100ms chunks, stop on >2s of ASR backlog instead of silently dropping speech. */
-const MAX_PENDING_PCM_CHUNKS=20;
+/** 40 x 50-ms capture packets ≈ 2s of audio: reject overload, never lose speech silently. */
+const MAX_PENDING_PCM_CHUNKS=40;
 // Native decoding can need several seconds to flush the last speech frames.
 // Do not truncate the final transcript after only 1.5 seconds.
 const FINISH_GRACE_MS=8000;
