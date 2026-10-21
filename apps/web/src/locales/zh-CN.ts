@@ -53,6 +53,7 @@ export const zh = {
   "modelSettingsDescription": "查看英语识别模型是否就绪、安装浏览器离线语言包，并管理识别环境。",
   "modelOpenAction": "管理离线模型",
   "modelEnglish": "英语语音识别 · en-US",
+  "modelMoonshineDefault": "Moonshine Medium Streaming · Linux 默认离线识别引擎",
   "modelBrowserSource": "浏览器设备端语言包",
   "modelDesktopSource": "Linux / 桌面本地识别引擎",
   "modelStateChecking": "检查中",
