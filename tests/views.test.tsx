@@ -103,8 +103,13 @@ describe('PracticeView', () => {
     expect(container.querySelector('.recordAction')).toBeTruthy();
     rerender(<PracticeView {...basePracticeProps} dictation={stubDictation({supported:true,status:'listening',active:true,finalText:'Hello',interimText:'world'})} recordingBusy/>);
     expect(screen.getByRole('button',{name:'停止听写'})).toBeTruthy();
-    expect(screen.getByTestId('live-transcript').textContent).toContain('Hello');
     expect(screen.getByTestId('live-transcript').textContent).toContain('world');
+    expect(screen.getByTestId('live-transcript').textContent).not.toContain('Hello');
+    expect(screen.queryByTestId('dictation-history')).toBeNull();
+    fireEvent.click(screen.getByRole('button',{name:'查看历史'}));
+    expect(screen.getByTestId('dictation-history').textContent).toContain('Hello');
+    fireEvent.click(screen.getByRole('button',{name:'收起历史'}));
+    expect(screen.queryByTestId('dictation-history')).toBeNull();
     // The native model can output all-uppercase English. Render a readable
     // display only; never mutate the recognition state or its raw transcript.
     const nativeCaps=stubDictation({
@@ -112,12 +117,35 @@ describe('PracticeView', () => {
       finalText:'HELLO',interimText:'I AM LEARNING ENGLISH WITH AI',
     });
     rerender(<PracticeView {...basePracticeProps} dictation={nativeCaps} recordingBusy/>);
-    expect(screen.getByTestId('live-transcript').textContent).toContain('Hello');
+    expect(screen.getByTestId('live-transcript').textContent).not.toContain('Hello');
     expect(screen.getByTestId('live-transcript').textContent).toContain('I am learning English with AI');
     expect(screen.getByTestId('live-transcript').textContent).not.toContain('LEARNING ENGLISH');
     expect(nativeCaps.finalText).toBe('HELLO');
     expect(nativeCaps.interimText).toBe('I AM LEARNING ENGLISH WITH AI');
     expect((screen.getByRole('button',{name:'开口跟读'}) as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('keeps hours of finalized text out of current subtitle while allowing explicit history inspection',()=>{
+    const words=Array.from({length:80},(_,i)=>'line'+i).join(' ');
+    const {rerender}=render(<PracticeView {...basePracticeProps}
+      dictation={stubDictation({supported:true,status:'listening',active:true,finalText:words,interimText:'THE CURRENT WORDS'})}
+      recordingBusy/>);
+    const current=screen.getByTestId('live-transcript');
+    expect(current.textContent).toContain('The current words');
+    expect(current.textContent).not.toContain('line0');
+    expect(screen.queryByTestId('dictation-history')).toBeNull();
+    const show=screen.getByRole('button',{name:'查看历史'});
+    expect(show.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(show);
+    expect(screen.getByTestId('dictation-history').textContent).toContain('line0 line1');
+    expect(screen.getByRole('button',{name:'收起历史'}).getAttribute('aria-expanded')).toBe('true');
+    fireEvent.click(screen.getByRole('button',{name:'收起历史'}));
+    expect(screen.queryByTestId('dictation-history')).toBeNull();
+    rerender(<PracticeView {...basePracticeProps}
+      dictation={stubDictation({supported:true,status:'listening',active:true,finalText:words,interimText:''})}
+      recordingBusy/>);
+    expect(screen.getByTestId('live-transcript').textContent).toContain('line79');
+    expect(screen.getByTestId('live-transcript').textContent).not.toContain('line0');
   });
 
   it('同一个录音按钮点击开始，录音中改为可点击的结束按钮，其他操作锁定', () => {
