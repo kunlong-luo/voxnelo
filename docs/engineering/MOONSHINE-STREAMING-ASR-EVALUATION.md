@@ -19,7 +19,7 @@ Sources:
 
 ## Private local A/B pilot
 
-1. In an isolated Python environment, install a reviewed compatible moonshine-voice Python SDK version. Explicitly opt in to the upstream model download with the official Moonshine CLI command: moonshine-voice download --stt --language en. Save the model revision, SDK version, SHA-256 file hashes and upstream licenses in a private QA log. Model download MUST NOT happen silently when Voxnelo starts. Pin model bytes and audit third-party libraries before any app integration.
+1. In an isolated Python environment, use the actual CI-tested pinned SDK version `moonshine-voice==0.0.65`. Its Python-module download entrypoint is `python -m moonshine_voice.download --stt --language en --root /absolute/local/cache` (the newer `moonshine-voice` command is **not** installed by SDK v0.0.65). Explicitly opt in to downloading; record the SHA-256 hashes and upstream licenses. Model download MUST NOT happen silently when Voxnelo starts. Pin **all** model weights and native wheels before app integration.
 2. Keep the Moonshine model outside Voxnelo's verified offline-asr personal directory: its .ort components are **incompatible** with the legacy sherpa-onnx OnlineRecognizer CJS addon. Never overwrite a working model with these files.
 3. Use the same **locally stored, consented** 16kHz mono PCM16 WAV clips (max 180 seconds) and exact spoken English text for all engines. Include at least 30 representative phrases across close-talk, external speaker playback and noisy audio. Do NOT upload human audio or transcripts to CI or GitHub Issues.
 4. Put samples in an absolute private JSON manifest such as:
@@ -37,7 +37,27 @@ Choose Small Streaming by adding --moonshine-size small and pointing VOXNELO_MOO
 
 Scores and diagnostics: for each exact same WAV, the existing two Sherpa decoders and the specified Moonshine streaming candidate are run separately, weighted WER equals sum of substitutions/deletions/insertions divided by reference word total. Report RTF separately, including failed attempts. JSON/Markdown reports stay outside the Git checkout and contain only sample IDs and numeric metrics, never WAV filenames, text, recognized transcripts, or native paths. If an attempt fails, the entire comparison is marked INCOMPLETE.
 
-The Python candidate uses the official Transcriber streaming interface: starts fresh, feeds 800 PCM samples (=50ms @16kHz) each call, captures LineTextChanged interim and LineCompleted final callbacks. It returns a model-first-interim audio fed measure, **not** display latency. The candidate SDK and model must be installed before this command; CI checks only input validation and scoring without downloading binary artifacts.
+The Python candidate uses the official Transcriber streaming interface: starts fresh, feeds 800 PCM samples (=50ms @16kHz) each call, captures LineTextChanged interim and LineCompleted final callbacks. It returns a model-first-interim audio fed measure, **not** display latency. The candidate SDK and model must be installed before this command; Ordinary app CI checks only input validation and scoring without downloading binaries. A separate experimental workflow explicitly downloads models in a disposable CI sandbox and runs full real inference; it never uploads those model binaries.
+
+## Real Linux model-to-model evidence (2026-10-21)
+
+PR #120 / [experimental run 39530848953](https://github.com/kunlong-luo/voxnelo/actions/runs/39530848953) **passed with the actual English Medium Streaming quantized Moonshine .ort model** and the current pinned Sherpa Zipformer 2023-02-21 model. The *same three non-user espeak-generated English WAV clips*, 18 total reference words, produced:
+
+| Model + decoder | Substitutions | Deletions | Insertions | Weighted WER | Aggregate RTF |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Existing Zipformer greedy | 2 | 10 | 0 | 66.67% | 0.3629 |
+| Existing Zipformer modified beam | 3 | 6 | 0 | 50.00% | 0.3724 |
+| Candidate Moonshine Medium Streaming (quantized) | 0 | 0 | 0 | **0%** | 0.4494 |
+
+This is a **genuine matched-input** test, much more informative than cross-comparing unrelated published WER leaderboards. However, 18 words and synthetic voices are **far too small to establish real-device generalization**. These RTF values are offline CI throughput, not Linux microphone first-subtitle latency. This is a strong reason to build a reversible local Moonshine pilot, not justification to automatically replace the user's working engine or mark #117 completed.
+
+SHA-256 example *partial provenance* from that run (quantized files under the English Medium Streaming model cache):
+
+- `encoder.ort`: `a5f11167a62eef61787fe8410453257d6ddb8eba90af461a9604e5f2e93d5322`
+- `decoder_kv.ort`: `fa67aa87521247f5bf44d3e44d4e4978e58c1f114249c3c6909c882624056715`
+- `tokenizer.bin`: `6884b35fd6377d4c4d32336a0bc152f36b64d1e45b6503683cdc238250a8472d`
+
+**These three hashes do not secure the whole model.** Other .ort files, config, third-party shared libraries and Python dependencies still need a complete, verified and signed inventory. Model downloads in the CI are deliberately disposable and not published to app users.
 
 ## Do-not-switch promotion gate
 
