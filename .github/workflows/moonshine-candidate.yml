@@ -83,6 +83,11 @@ jobs:
           MODEL_DIR="$(cat "$ROOT/candidate-model-path.txt")"
           echo "Experimental Moonshine model fingerprints:"
           sha256sum "$MODEL_DIR/encoder.ort" "$MODEL_DIR/decoder_kv.ort" "$MODEL_DIR/tokenizer.bin"
+          # Establish the full *official* model-file fingerprint inventory
+          # before enabling the Linux packaged default. Only public model
+          # filenames/checksums are logged; no user speech or transcripts.
+          echo "Official Medium Streaming model inventory:"
+          (cd "$MODEL_DIR" && find . -type f -printf '%P\\n' | LC_ALL=C sort | while IFS= read -r name; do sha256sum "$name"; done)
           export VOXNELO_ASR_MODEL_DIR="$RUNNER_TEMP/old-zipformer/model"
           export VOXNELO_ASR_ADDON_PATH="$(node -p 'require.resolve("sherpa-onnx-node",{paths:[process.env.RUNNER_TEMP+"/voxnelo-native/node_modules"]})')"
           export LD_LIBRARY_PATH="$RUNNER_TEMP/voxnelo-native/node_modules/sherpa-onnx-node/lib:${LD_LIBRARY_PATH:-}"
