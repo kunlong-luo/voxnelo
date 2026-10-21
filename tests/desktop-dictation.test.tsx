@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SUPPORT_LINKS } from '@voxnelo/learning';
 import { useLiveDictation } from '../apps/web/src/useLiveDictation';
 import { LiveDictationPanel } from '../apps/web/src/LiveDictationPanel';
+import { getDesktopCaptureConstraints } from '../apps/web/src/dictation/desktopSession';
 
 let live: ReturnType<typeof useLiveDictation>;
 function Harness() {
@@ -131,6 +132,34 @@ describe('Native ASR capability refresh',()=>{
     await waitFor(()=>expect(live.status).toBe('listening'));
     expect(bridge.capabilities).toHaveBeenCalledTimes(2);
     expect(bridge.start).toHaveBeenCalledOnce();
+    await act(async()=>{live.stop();await Promise.resolve();});
+  });
+});
+
+describe('Experimental external-speaker ASR microphone pickup',()=>{
+  it('preserves the default conversational DSP and makes external pickup an explicit local-only choice',()=>{
+    expect(getDesktopCaptureConstraints('conversation')).toEqual({
+      audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1},
+      video:false,
+    });
+    expect(getDesktopCaptureConstraints('external-playback')).toEqual({
+      audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false,channelCount:1},
+      video:false,
+    });
+  });
+
+  it('applies playback profile only after user selection and prohibits changes mid-listening',async()=>{
+    const {getUserMedia}=setupDesktop(true);
+    render(<Harness/>);
+    await waitFor(()=>expect(live.supported).toBe(true));
+    expect(live.captureProfile).toBe('conversation');
+    act(()=>live.chooseCaptureProfile('external-playback'));
+    expect(live.captureProfile).toBe('external-playback');
+    await act(async()=>{await live.start();});
+    expect(getUserMedia).toHaveBeenCalledWith(getDesktopCaptureConstraints('external-playback'));
+    expect(live.noiseReduction).toBe('not-requested');
+    act(()=>live.chooseCaptureProfile('conversation'));
+    expect(live.captureProfile).toBe('external-playback');
     await act(async()=>{live.stop();await Promise.resolve();});
   });
 });
