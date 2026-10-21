@@ -8,7 +8,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { scoreTranscript, summarizeAsrAttempts, type MeasuredAsrAttempt } from './asr-batch-metrics.mts';
+import { scoreTranscript, summarizeAsrAttempts, type AsrDecoderId, type MeasuredAsrAttempt } from './asr-batch-metrics.mts';
 
 export type BatchSample = { id: string; scenario: 'quiet' | 'noise'; wav: string; reference: string };
 export type BatchManifest = { samples: BatchSample[] };
@@ -127,22 +127,27 @@ export function validatePcm16Wav(buffer: Buffer): number {
   return sampleBytes / 2;
 }
 
-const decoders = ['greedy_search', 'modified_beam_search'] as const;
-function runOne(item: BatchSample, decoder: typeof decoders[number], manifestDir: string): MeasuredAsrAttempt {
+const sherpaDecoders:readonly AsrDecoderId[]=['greedy_search','modified_beam_search'];
+export function selectedBatchDecoders(compareMoonshine:boolean,moonshineSize:'small'|'medium'='medium'):readonly AsrDecoderId[]{
+  return compareMoonshine?[...sherpaDecoders,moonshineSize==='medium'?'moonshine-medium-streaming':'moonshine-small-streaming']:sherpaDecoders;
+}
+function runOne(item: BatchSample, decoder: AsrDecoderId, manifestDir: string): MeasuredAsrAttempt {
   const wavPath = path.resolve(manifestDir, item.wav);
   // A single recording is bounded to ~6 MB; inspect before spawning a native
   // process and never print its filename, full path, voice or transcript.
   const waveform = readFileSync(wavPath);
   if (waveform.length > 7_000_000) throw Error('invalid-wav-or-inference');
   validatePcm16Wav(waveform);
-  const result = spawnSync(process.execPath, [
-    '--experimental-strip-types',
-    path.resolve('scripts/benchmark-offline-asr.mts'),
-    '--wav', wavPath,
-    '--expect', item.reference,
-    '--decoding-method', decoder,
-    '--report-only',
-  ], {
+  const moonshine=decoder.startsWith('moonshine-');
+  const args=moonshine
+    ? [path.resolve('scripts/benchmark-moonshine-voice.py'),
+       '--wav',wavPath,'--model-dir',process.env.VOXNELO_MOONSHINE_MODEL_DIR??'',
+       '--size',decoder==='moonshine-medium-streaming'?'medium':'small']
+    : ['--experimental-strip-types',
+       path.resolve('scripts/benchmark-offline-asr.mts'),
+       '--wav',wavPath,'--expect',item.reference,
+       '--decoding-method',decoder,'--report-only'];
+  const result = spawnSync(moonshine?(process.env.VOXNELO_MOONSHINE_PYTHON??'python3'):process.execPath,args, {
     cwd: path.resolve('.'), env: process.env, encoding: 'utf8',
     timeout: 240000, maxBuffer: 1024 * 512, windowsHide: true,
   });
@@ -176,6 +181,13 @@ export function runBatch(): void {
     throw Error('Manifest and output directory must both be absolute paths');
   if (!process.env.VOXNELO_ASR_MODEL_DIR || !process.env.VOXNELO_ASR_ADDON_PATH)
     throw Error('Set your local VOXNELO_ASR_MODEL_DIR and VOXNELO_ASR_ADDON_PATH; no auto-download occurs');
+  const compareMoonshine=process.argv.includes('--compare-moonshine');
+  const moonshineSize=arg('moonshine-size')??'medium';
+  if(moonshineSize!=='small'&&moonshineSize!=='medium')throw Error('Moonshine size must be small or medium');
+  if(compareMoonshine&&(!process.env.VOXNELO_MOONSHINE_MODEL_DIR ||
+      !path.isAbsolute(process.env.VOXNELO_MOONSHINE_MODEL_DIR)))
+    throw Error('Set absolute VOXNELO_MOONSHINE_MODEL_DIR for local Moonshine comparison; no downloads occur');
+  const decoders=selectedBatchDecoders(compareMoonshine,moonshineSize);
   const project = path.resolve('.');
   const output = path.resolve(outputArg);
   const relative = path.relative(project, output);
