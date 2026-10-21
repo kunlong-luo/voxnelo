@@ -168,7 +168,7 @@ export function useLiveDictation(sentenceId: string) {
         setDesktopAvailable(cap.available);
         setDesktopReason(cap.reason);
         setLocalPack(cap.available?'available':'unavailable');
-        available=cap.available;
+        available=offlineEngine==='moonshine-medium'?engineAvailability.moonshineMedium:cap.available;
       } catch {
         if(!isCurrent())return;
         setDesktopAvailable(false);
