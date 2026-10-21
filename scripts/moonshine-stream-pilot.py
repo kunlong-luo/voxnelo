@@ -62,12 +62,14 @@ def run(model_dir):
                          model_arch=ModelArch.MEDIUM_STREAMING, update_interval=0.25)
     engine.add_listener(Listener())
     engine.start()
+    stopped = False
     emit({"type":"ready"})
     try:
         for line in sys.stdin:
             message = json.loads(line)
-            if message.get("type") == "finish":
+            if isinstance(message, dict) and message.get("type") == "finish":
                 engine.stop()
+                stopped = True
                 emit({"type":"result","finalText":" ".join(completed)[-MAX_FINAL:],
                       "interimText":""})
                 emit({"type":"finished"})
@@ -79,7 +81,8 @@ def run(model_dir):
         emit({"type":"failure"})
     finally:
         try:
-            engine.stop()
+            if not stopped:
+                engine.stop()
         finally:
             close = getattr(engine, "close", None)
             if callable(close):
