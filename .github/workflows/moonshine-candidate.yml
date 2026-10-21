@@ -1,0 +1,99 @@
+name: Experimental Moonshine vs Zipformer (real Linux ASR)
+
+# Separate from release gates. Disposable internal candidate evaluation only.
+# Never uploads model bytes, native binaries, WAVs, or raw transcripts.
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/moonshine-candidate.yml'
+      - 'scripts/benchmark-moonshine-voice.py'
+      - 'scripts/batch-offline-asr.mts'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compare-real-models:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - name: Checkout pinned Voxnelo source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Setup pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          version: 12.11.2
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install pinned repo dependencies and build ASR worker
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build:electron
+      - name: Install non-user speech fixture generators
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y espeak-ng sox python3-venv
+      - name: Prepare current pinned Sherpa Zipformer model and native adapter
+        run: |
+          pnpm asr:model:prepare --out "$RUNNER_TEMP/old-zipformer/model"
+          npm install --no-save --prefix "$RUNNER_TEMP/voxnelo-native" sherpa-onnx-node@1.13.8
+      - name: Create isolated Moonshine Python and download model for CI only
+        env:
+          MOONSHINE_VOICE_CACHE: ${{ runner.temp }}/moonshine-model-cache
+        run: |
+          python3 -m venv "$RUNNER_TEMP/moonshine-venv"
+          "$RUNNER_TEMP/moonshine-venv/bin/python" -m pip install --disable-pip-version-check --no-cache-dir 'moonshine-voice==0.0.65'
+          "$RUNNER_TEMP/moonshine-venv/bin/python" -m moonshine_voice.download --stt --language en
+      - name: Run both real recognizers on identical generated English WAVs
+        env:
+          MOONSHINE_VOICE_CACHE: ${{ runner.temp }}/moonshine-model-cache
+        run: |
+          set -euo pipefail
+          ROOT="$RUNNER_TEMP/voxnelo-moonshine-compare"
+          mkdir -p "$ROOT/audio"
+          espeak-ng -v en-us -s 120 --stdout "please speak English slowly" |
+            sox -t wav - -r 16000 -c 1 -b 16 -e signed-integer "$ROOT/audio/quiet01.wav"
+          espeak-ng -v en-us -s 145 --stdout "I am learning to speak English every day" |
+            sox -t wav - -r 16000 -c 1 -b 16 -e signed-integer "$ROOT/audio/quiet02.wav"
+          espeak-ng -v en-sc -s 135 --stdout "we practice listening and pronunciation together" |
+            sox -t wav - -r 16000 -c 1 -b 16 -e signed-integer "$ROOT/audio/quiet03.wav"
+          python3 - <<'PY'
+          import json,os,pathlib
+          root=pathlib.Path(os.environ['RUNNER_TEMP'])/'voxnelo-moonshine-compare'
+          samples=[
+            {'id':'quiet01','scenario':'quiet','wav':'audio/quiet01.wav','reference':'please speak English slowly'},
+            {'id':'quiet02','scenario':'quiet','wav':'audio/quiet02.wav','reference':'I am learning to speak English every day'},
+            {'id':'quiet03','scenario':'quiet','wav':'audio/quiet03.wav','reference':'we practice listening and pronunciation together'},
+          ]
+          (root/'manifest.json').write_text(json.dumps({'samples':samples}))
+          cache=pathlib.Path(os.environ['MOONSHINE_VOICE_CACHE'])
+          matches=[p.parent for p in cache.rglob('streaming_config.json')
+                   if 'medium-streaming-en' in str(p.parent)
+                   and (p.parent/'encoder.ort').is_file()
+                   and (p.parent/'tokenizer.bin').is_file()]
+          if len(matches)!=1:raise SystemExit('Expected one downloaded English Medium Streaming model')
+          (root/'candidate-model-path.txt').write_text(str(matches[0]))
+          PY
+          MODEL_DIR="$(cat "$ROOT/candidate-model-path.txt")"
+          echo "Experimental Moonshine model fingerprints:"
+          sha256sum "$MODEL_DIR/encoder.ort" "$MODEL_DIR/decoder_kv.ort" "$MODEL_DIR/tokenizer.bin"
+          export VOXNELO_ASR_MODEL_DIR="$RUNNER_TEMP/old-zipformer/model"
+          export VOXNELO_ASR_ADDON_PATH="$(node -p 'require.resolve("sherpa-onnx-node",{paths:[process.env.RUNNER_TEMP+"/voxnelo-native/node_modules"]})')"
+          export LD_LIBRARY_PATH="$RUNNER_TEMP/voxnelo-native/node_modules/sherpa-onnx-node/lib:${LD_LIBRARY_PATH:-}"
+          export VOXNELO_MOONSHINE_MODEL_DIR="$MODEL_DIR"
+          export VOXNELO_MOONSHINE_PYTHON="$RUNNER_TEMP/moonshine-venv/bin/python"
+          pnpm asr:compare:moonshine \
+            --manifest "$ROOT/manifest.json" --output-dir "$ROOT/numeric-report"
+          cat "$ROOT/numeric-report/report.md"
+      - name: Upload numeric-only evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: moonshine-vs-zipformer-numeric-evidence
+          path: ${{ runner.temp }}/voxnelo-moonshine-compare/numeric-report/report.json
+          retention-days: 14
+          if-no-files-found: ignore
