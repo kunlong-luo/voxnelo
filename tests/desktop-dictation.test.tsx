@@ -168,6 +168,20 @@ describe('Electron real microphone to local ASR lifecycle',()=>{
     expect(live.finalText).toBe('hello final');
     expect(live.status).toBe('idle');
   });
+  it('clears the previous utterance before a new native microphone session',async()=>{
+    const {bridge}=setupDesktop(true);
+    render(<Harness/>);
+    await waitFor(()=>expect(live.supported).toBe(true));
+    await act(async()=>{await live.start();});
+    await act(async()=>{live.stop();await Promise.resolve();});
+    expect(live.finalText).toBe('hello final');
+    await act(async()=>{await live.start();});
+    expect(live.finalText).toBe('');
+    expect(live.interimText).toBe('');
+    expect(live.status).toBe('listening');
+    expect(bridge.start).toHaveBeenCalledTimes(2);
+    await act(async()=>{live.stop();await Promise.resolve();});
+  });
   it('warns after an unsuccessful manual Stop instead of claiming cached incomplete words are final',async()=>{
     const {bridge}=setupDesktop(true);
     bridge.stop.mockResolvedValueOnce({finalText:'the beginning but not the end',completed:false});

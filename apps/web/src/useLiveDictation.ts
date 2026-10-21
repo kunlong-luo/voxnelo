@@ -129,6 +129,10 @@ export function useLiveDictation(sentenceId: string) {
   },[browserModeAvailable,stop]);
   const start = useCallback(async() => {
     if(status!=='idle')return;
+    // A new session starts from a clean transcript; otherwise words from an
+    // earlier listening attempt masquerade as the currently spoken phrase.
+    setFinalText('');
+    setInterimText('');
     const Ctor=browserRecognizerClass();
     setError('');
     const bridge=window.voxneloDesktop?.asr;
