@@ -8,6 +8,7 @@ import { allowsAudioPermissionCheck, allowsAudioPermissionRequest, APP_HOST, isA
 import { LinuxEnglishSpeech } from './linuxSpeech';
 import { LINUX_DESKTOP_FILENAME, resolveLinuxIconPath } from './linuxAppIdentity';
 import { OfflineAsr } from './offlineAsr';
+import { defaultDesktopAsrEngine, resolveDesktopAsrEngine } from './asrDefault';
 import { RefreshableAsrEngine } from './asrRefresh';
 import { resolveVerifiedAsrStatus } from './asrAssets';
 
@@ -106,6 +107,11 @@ function registerOfflineAsr():void{
     // Re-resolve ONLY fully verified main-process assets; never accept a path
     // from renderer IPC or replace a currently active microphone session.
     try{
+      if(defaultDesktopAsrEngine(process.platform)==='moonshine-medium'){
+        // Linux reports only the selected default's readiness. Existing
+        // Zipformer packs must not disguise an absent Moonshine installation.
+        return moonshinePilot?.capabilities()??{available:false,reason:'not-configured'};
+      }
       const engine=(await offlineAsr.refreshIfUnavailable()).capabilities();
       return !engine.available&&invalidPersonalAsr
         ? {available:false,reason:'invalid-personal-pack'}
@@ -125,8 +131,11 @@ function registerOfflineAsr():void{
     if(openingAsr||activeAsr?.hasActiveSession())return {ok:false,reason:'busy'};
     openingAsr=true;
     try{
-      const engine=requested==='moonshine-medium'?moonshinePilot:
-        requested===undefined||requested==='zipformer'?(await offlineAsr.refreshIfUnavailable()):null;
+      const selected=resolveDesktopAsrEngine(process.platform,requested);
+      // An unconfigured Moonshine engine is a setup error. Never silently
+      // switch to Zipformer when the user's default model is missing.
+      const engine=selected==='moonshine-medium'?moonshinePilot:
+        selected==='zipformer'?(await offlineAsr.refreshIfUnavailable()):null;
       if(!engine)return {ok:false,reason:'not-configured'};
       const opened=await engine.open(window.webContents);
       if(opened.ok)activeAsr=engine;
