@@ -55,6 +55,7 @@ export const en = {
   "modelSettingsDescription": "Check recognition readiness, install a browser on-device English pack, and manage speech setup.",
   "modelOpenAction": "Manage offline models",
   "modelEnglish": "English speech recognition · en-US",
+  "modelMoonshineDefault": "Moonshine Medium Streaming · default Linux offline recognizer",
   "modelBrowserSource": "Browser on-device language pack",
   "modelDesktopSource": "Linux / desktop offline recognizer",
   "modelStateChecking": "Checking",
