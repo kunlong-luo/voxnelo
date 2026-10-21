@@ -62,12 +62,16 @@ def evaluate(pcm: bytes, frame_count: int, model_dir: Path, size: str) -> dict:
 
     arch = ModelArch.MEDIUM_STREAMING if size == "medium" else ModelArch.SMALL_STREAMING
     completed: list[str] = []
-    progress = {"fed": 0, "first": None}
+    progress = {"fed": 0, "first": None, "first_wall": None, "started": None}
     class Listener(TranscriptEventListener):
         def on_line_text_changed(self, event):
             text = (event.line.text or "").strip()
             if text and progress["first"] is None:
                 progress["first"] = progress["fed"]
+                # Wall-clock delay includes synchronous inference during audio feed.
+                # It is distinct from the amount of audio submitted so far.
+                if progress["started"] is not None:
+                    progress["first_wall"] = time.perf_counter() - progress["started"]
 
         def on_line_completed(self, event):
             text = (event.line.text or "").strip()
@@ -80,6 +84,7 @@ def evaluate(pcm: bytes, frame_count: int, model_dir: Path, size: str) -> dict:
     engine.add_listener(Listener())
     model_load_ms = (time.perf_counter() - load_start) * 1000
     started = time.perf_counter()
+    progress["started"] = started
     engine.start()
     try:
         wave_samples = np.frombuffer(pcm, dtype="<i2").astype(np.float32) / 32768.0
@@ -104,6 +109,10 @@ def evaluate(pcm: bytes, frame_count: int, model_dir: Path, size: str) -> dict:
         "modelLoadMs": round(model_load_ms, 1),
         "firstInterimAudioSeconds":
             None if progress["first"] is None else round(progress["first"] / 16000, 3),
+        # This is callback latency in the fast-fed offline benchmark, not
+        # end-to-end microphone-to-rendered-subtitle latency on a real device.
+        "firstInterimWallMs":
+            None if progress["first_wall"] is None else round(progress["first_wall"] * 1000, 1),
         "transcript": " ".join(completed),
     }
 
