@@ -29,7 +29,13 @@ export function useLiveDictation(sentenceId: string) {
   const [desktopReason,setDesktopReason] = useState<'ready'|'not-configured'|'missing-model'|'missing-addon'|'invalid-personal-pack'>('not-configured');
   const [noiseReduction,setNoiseReduction] = useState<'unknown'|'enabled'|'unverified'|'not-requested'>('unknown');
   const [captureProfile,setCaptureProfile]=useState<DesktopCaptureProfile>('conversation');
-  const [offlineEngine,setOfflineEngine]=useState<'zipformer'|'moonshine-medium'>('zipformer');
+  const [offlineEngine,setOfflineEngine]=useState<'zipformer'|'moonshine-medium'>(()=>{
+    // New Linux desktop builds expose engine discovery and use Moonshine as the
+    // sole user-facing default, including while its model is not yet installed.
+    // Older preload builds without discovery retain their compatible path.
+    return window.voxneloDesktop?.platform==='linux'&&
+      typeof window.voxneloDesktop.asr?.engines==='function'?'moonshine-medium':'zipformer';
+  });
   const [engineAvailability,setEngineAvailability]=useState<{zipformer:boolean;moonshineMedium:boolean}>({zipformer:false,moonshineMedium:false});
   const chooseOfflineEngine=useCallback((engine:'zipformer'|'moonshine-medium')=>{
     if(status!=='idle'||!engineAvailability[engine==='zipformer'?'zipformer':'moonshineMedium'])return;
@@ -55,15 +61,15 @@ export function useLiveDictation(sentenceId: string) {
         const engines=await bridge?.engines?.();
         if(engines){
           setEngineAvailability(engines);
-          // Prefer the new streaming engine automatically when the verified
-          // development pilot is present; no manual legacy model switch UI.
-          if(engines.moonshineMedium)setOfflineEngine('moonshine-medium');
+          // Preserve the Linux Moonshine default even when not installed.
+          // Never silently reselect Zipformer based on model availability.
+          if(window.voxneloDesktop?.platform==='linux')setOfflineEngine('moonshine-medium');
         }
         if(disposed.current)return;
-        const anyReady=cap?.available===true||engines?.moonshineMedium===true;
-        setDesktopAvailable(cap?.available===true);
-        setDesktopReason(anyReady?'ready':cap?.reason??'not-configured');
-        setLocalPack(anyReady?'available':'unavailable');
+        const ready=cap?.available===true;
+        setDesktopAvailable(ready);
+        setDesktopReason(cap?.reason??'not-configured');
+        setLocalPack(ready?'available':'unavailable');
       }catch{
         if(!disposed.current){
           setDesktopAvailable(false);
@@ -173,11 +179,14 @@ export function useLiveDictation(sentenceId: string) {
         lastReason=cap.reason;
         if(!isCurrent())return;
         if(engines)setEngineAvailability(engines);
-        const anyReady=cap.available||engines?.moonshineMedium===true;
+        // New Linux IPC reports Moonshine as its capability; the optional
+        // engines() call provides extra diagnostics, not an implicit fallback.
         setDesktopAvailable(cap.available);
-        setDesktopReason(anyReady?'ready':cap.reason);
-        setLocalPack(anyReady?'available':'unavailable');
-        available=offlineEngine==='moonshine-medium'?engines?.moonshineMedium===true:cap.available;
+        setDesktopReason(cap.reason);
+        setLocalPack(cap.available?'available':'unavailable');
+        available=offlineEngine==='moonshine-medium'
+          ?engines?.moonshineMedium===true
+          :cap.available;
       } catch {
         if(!isCurrent())return;
         setDesktopAvailable(false);
