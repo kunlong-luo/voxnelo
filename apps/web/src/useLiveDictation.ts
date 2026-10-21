@@ -53,7 +53,12 @@ export function useLiveDictation(sentenceId: string) {
       try{
         const cap=await bridge?.capabilities();
         const engines=await bridge?.engines();
-        if(engines)setEngineAvailability(engines);
+        if(engines){
+          setEngineAvailability(engines);
+          // Prefer the new streaming engine automatically when the verified
+          // development pilot is present; no manual legacy model switch UI.
+          if(engines.moonshineMedium)setOfflineEngine('moonshine-medium');
+        }
         if(disposed.current)return;
         setDesktopAvailable(cap?.available===true);
         setDesktopReason(cap?.reason??'not-configured');
