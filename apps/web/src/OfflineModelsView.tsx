@@ -104,23 +104,6 @@ export function OfflineModelsView({dictation,onBack}:OfflineModelsViewProps){
       </div>
     </Card>
     {desktop&&<Card className="flex flex-col gap-3 rounded-[26px] border-border/70 bg-card/85 p-5 shadow-soft sm:p-7">
-      <h2 className="text-base font-bold text-foreground">Offline recognition engine</h2>
-      <p className="text-xs text-translation-ink">Zipformer remains the default. Moonshine Medium is an experimental Linux development-only option and requires a separately installed, verified local runtime.</p>
-      <div className="flex flex-wrap gap-2" role="group" aria-label="Choose offline recognition engine">
-        <Button variant={dictation.offlineEngine==='zipformer'?'default':'outline'}
-          disabled={dictation.active||!dictation.engineAvailability.zipformer}
-          aria-pressed={dictation.offlineEngine==='zipformer'}
-          onClick={()=>dictation.chooseOfflineEngine('zipformer')}>Zipformer</Button>
-        <Button variant={dictation.offlineEngine==='moonshine-medium'?'default':'outline'}
-          disabled={dictation.active||!dictation.engineAvailability.moonshineMedium}
-          aria-pressed={dictation.offlineEngine==='moonshine-medium'}
-          onClick={()=>dictation.chooseOfflineEngine('moonshine-medium')}>
-          Moonshine Medium {dictation.engineAvailability.moonshineMedium?'(experimental)':'(not installed)'}
-        </Button>
-      </div>
-      <p className="text-xs text-translation-ink" role="status">Selected: {dictation.offlineEngine==='zipformer'?'Zipformer':'Moonshine Medium'} — changes apply to the next dictation session.</p>
-    </Card>}
-    {desktop&&<Card className="flex flex-col gap-3 rounded-[26px] border-border/70 bg-card/85 p-5 shadow-soft sm:p-7">
       <h2 className="text-base font-bold text-foreground">{t('dictationCaptureTitle')}</h2>
       <p className="text-xs leading-5 text-translation-ink">{t('dictationCaptureNote')}</p>
       <div className="flex flex-wrap gap-2" role="group" aria-label={t('dictationCaptureTitle')}>
