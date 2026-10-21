@@ -60,9 +60,10 @@ export function useLiveDictation(sentenceId: string) {
           if(engines.moonshineMedium)setOfflineEngine('moonshine-medium');
         }
         if(disposed.current)return;
+        const anyReady=cap?.available===true||engines?.moonshineMedium===true;
         setDesktopAvailable(cap?.available===true);
-        setDesktopReason(cap?.reason??'not-configured');
-        setLocalPack(cap?.available?'available':'unavailable');
+        setDesktopReason(anyReady?'ready':cap?.reason??'not-configured');
+        setLocalPack(anyReady?'available':'unavailable');
       }catch{
         if(!disposed.current){
           setDesktopAvailable(false);
@@ -168,12 +169,15 @@ export function useLiveDictation(sentenceId: string) {
       let lastReason:'ready'|'not-configured'|'missing-addon'|'missing-model'|'invalid-personal-pack'='not-configured';
       try {
         const cap=await bridge.capabilities();
+        const engines=await bridge.engines();
         lastReason=cap.reason;
         if(!isCurrent())return;
+        if(engines)setEngineAvailability(engines);
+        const anyReady=cap.available||engines?.moonshineMedium===true;
         setDesktopAvailable(cap.available);
-        setDesktopReason(cap.reason);
-        setLocalPack(cap.available?'available':'unavailable');
-        available=offlineEngine==='moonshine-medium'?engineAvailability.moonshineMedium:cap.available;
+        setDesktopReason(anyReady?'ready':cap.reason);
+        setLocalPack(anyReady?'available':'unavailable');
+        available=offlineEngine==='moonshine-medium'?engines?.moonshineMedium===true:cap.available;
       } catch {
         if(!isCurrent())return;
         setDesktopAvailable(false);
