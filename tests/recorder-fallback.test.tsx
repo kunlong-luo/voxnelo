@@ -57,7 +57,8 @@ describe('Nonblocking microphone fallback', () => {
     render(<PracticeView current={FIRST_SENTENCE} currentState={undefined}
       stats={{viewed:0,practiced:0,favorites:0,review:0}}
       speed="normal" showIpa={false} notice="" recorder={recorder}
-      dictation={{status:'idle',active:false,mode:'local',chooseMode:()=>undefined,captureProfile:'conversation' as const,chooseCaptureProfile:()=>undefined,
+      dictation={{status:'idle',active:false,mode:'local',chooseMode:()=>undefined,offlineEngine:'zipformer' as const,
+    chooseOfflineEngine:()=>undefined,engineAvailability:{zipformer:false,moonshineMedium:false},captureProfile:'conversation' as const,chooseCaptureProfile:()=>undefined,
         supported:false,browserModeAvailable:true,desktopReason:'not-configured' as const,noiseReduction:'unknown' as const,localPack:'unknown',finalText:'',interimText:'',inputLevel:null,
         error:'',start:async()=>undefined,stop:()=>undefined,clear:()=>undefined,installLocal:async()=>undefined,refreshLocal:async()=>undefined}}
       onStartDictation={()=>undefined} recordingBusy={false} canGoPrevious={false}
