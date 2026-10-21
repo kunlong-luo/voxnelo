@@ -47,7 +47,7 @@ export async function startDesktopDictationSession(
     if(audioTrack)audioTrack.removeEventListener('ended',onDeviceEnded);
 
     // End physical capture immediately. Keep the worklet and its zero-gain
-    // destination alive only long enough to drain the last (<100 ms) PCM
+    // destination alive only long enough to drain the last (<50 ms) PCM
     // buffer before telling the native recognizer that speech has ended.
     media?.getTracks().forEach(track=>track.stop());
     try{source?.disconnect();}catch{/* already disconnected */}

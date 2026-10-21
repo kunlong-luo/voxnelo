@@ -212,12 +212,14 @@ describe('Offline ASR explicit activation and deny-by-default IPC',()=>{
     engine.push(owner,started.sessionId,new Float32Array(3201));
     expect(worker.postMessage).not.toHaveBeenCalled();
 
-    for(let i=0;i<20;i++)engine.push(owner,started.sessionId,new Float32Array(1600));
-    expect(worker.postMessage).toHaveBeenCalledTimes(20);
+    // The same ~2 seconds of allowable queued audio now spans 40 x 50ms
+    // packets. A single drained packet must free exactly one slot.
+    for(let i=0;i<40;i++)engine.push(owner,started.sessionId,new Float32Array(800));
+    expect(worker.postMessage).toHaveBeenCalledTimes(40);
     worker.emit('message',{type:'drained'});
-    engine.push(owner,started.sessionId,new Float32Array(1600));
-    expect(worker.postMessage).toHaveBeenCalledTimes(21);
-    engine.push(owner,started.sessionId,new Float32Array(1600));
+    engine.push(owner,started.sessionId,new Float32Array(800));
+    expect(worker.postMessage).toHaveBeenCalledTimes(41);
+    engine.push(owner,started.sessionId,new Float32Array(800));
     expect(owner.send).toHaveBeenCalledWith('voxnelo:asr:error',{
       sessionId:started.sessionId,reason:'overloaded',
     });
