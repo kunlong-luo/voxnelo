@@ -37,7 +37,13 @@ def emit(event):
 def run(model_dir):
     import numpy as np
     from moonshine_voice import ModelArch, Transcriber, TranscriptEventListener
-    from importlib.util import spec_from_file_location, module_from_spec\n    spec = spec_from_file_location('benchmark_moonshine_voice', Path(__file__).with_name('benchmark-moonshine-voice.py'))\n    if spec is None or spec.loader is None:\n        raise RuntimeError('Missing validator')\n    validator = module_from_spec(spec)\n    spec.loader.exec_module(validator)\n    validate_model = validator.validate_model
+    from importlib.util import spec_from_file_location, module_from_spec
+    spec = spec_from_file_location('benchmark_moonshine_voice', Path(__file__).with_name('benchmark-moonshine-voice.py'))
+    if spec is None or spec.loader is None:
+        raise RuntimeError('Missing validator')
+    validator = module_from_spec(spec)
+    spec.loader.exec_module(validator)
+    validate_model = validator.validate_model
     validate_model(str(model_dir))
     completed = []
     partial = [""]
