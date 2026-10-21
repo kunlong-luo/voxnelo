@@ -33,13 +33,14 @@ export class OfflineAsr {
     private readonly addonPath:string|null,
     private readonly spawnWorker:(data:{modelDir:string|null;addonPath:string|null})=>Worker=
       data=>new Worker(path.join(__dirname,'offlineAsrWorker.cjs'),{workerData:data}),
+    private readonly modelFiles:readonly string[]=expected,
   ){}
   /** Prevent an asset refresh from replacing a running / starting worker. */
   hasActiveSession():boolean{return this.session!==null;}
   capabilities():AsrCapability{
     if(!this.modelDir||!this.addonPath||!path.isAbsolute(this.modelDir)||!path.isAbsolute(this.addonPath))return {available:false,reason:'not-configured'};
     if(!existsSync(this.addonPath))return {available:false,reason:'missing-addon'};
-    if(!expected.every(name=>existsSync(path.join(this.modelDir!,name))))return {available:false,reason:'missing-model'};
+    if(!this.modelFiles.every(name=>existsSync(path.join(this.modelDir!,name))))return {available:false,reason:'missing-model'};
     return {available:true,reason:'ready'};
   }
   async open(owner:WebContents):Promise<AsrOpenResult>{
