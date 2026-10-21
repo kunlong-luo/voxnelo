@@ -56,7 +56,7 @@ const moonshinePilot=(!app.isPackaged&&process.platform==='linux'&&
         path.join(__dirname,'moonshineAsrWorker.cjs'),{workerData:{
           modelDir:data.modelDir,pythonPath:data.addonPath,
           scriptPath:path.join(__dirname,'..','scripts','moonshine-stream-pilot.py'),
-        }}))
+        }}),['encoder.ort','adapter.ort','cross_kv.ort','decoder_kv.ort','streaming_config.json','tokenizer.bin'])
   :null;
 let activeAsr:OfflineAsr|null=null;
 
