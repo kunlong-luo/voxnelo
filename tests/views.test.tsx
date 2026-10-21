@@ -105,6 +105,18 @@ describe('PracticeView', () => {
     expect(screen.getByRole('button',{name:'停止听写'})).toBeTruthy();
     expect(screen.getByTestId('live-transcript').textContent).toContain('Hello');
     expect(screen.getByTestId('live-transcript').textContent).toContain('world');
+    // The native model can output all-uppercase English. Render a readable
+    // display only; never mutate the recognition state or its raw transcript.
+    const nativeCaps=stubDictation({
+      supported:true,status:'listening',active:true,
+      finalText:'HELLO',interimText:'I AM LEARNING ENGLISH WITH AI',
+    });
+    rerender(<PracticeView {...basePracticeProps} dictation={nativeCaps} recordingBusy/>);
+    expect(screen.getByTestId('live-transcript').textContent).toContain('Hello');
+    expect(screen.getByTestId('live-transcript').textContent).toContain('I am learning English with AI');
+    expect(screen.getByTestId('live-transcript').textContent).not.toContain('LEARNING ENGLISH');
+    expect(nativeCaps.finalText).toBe('HELLO');
+    expect(nativeCaps.interimText).toBe('I AM LEARNING ENGLISH WITH AI');
     expect((screen.getByRole('button',{name:'开口跟读'}) as HTMLButtonElement).disabled).toBe(true);
   });
 
