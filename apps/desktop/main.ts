@@ -1,5 +1,7 @@
 import { app, BrowserWindow, ipcMain, net, shell, protocol, session, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron';
 import path from 'node:path';
+import { Worker } from 'node:worker_threads';
+import { existsSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { APP_ORIGIN, APP_SCHEME, THEME_BACKGROUND, WINDOW_SIZE } from '@voxnelo/core';
 import { allowsAudioPermissionCheck, allowsAudioPermissionRequest, APP_HOST, isAllowedSupportUrl, isTrustedUrl, resolveLocalFile } from './security';
@@ -43,6 +45,21 @@ const offlineAsr=new RefreshableAsrEngine(new OfflineAsr(null,null),async()=>{
   invalidPersonalAsr=result.invalidPersonalPack;
   return new OfflineAsr(result.assets.modelDir,result.assets.addonPath);
 });
+
+// Explicit local development pilot only: no automatic model download or public
+// redistribution. Real candidate installation and integrity approval remain gated.
+const moonshinePilot=(!app.isPackaged&&process.platform==='linux'&&
+  process.env.VOXNELO_MOONSHINE_PYTHON&&process.env.VOXNELO_MOONSHINE_MODEL_DIR&&
+  existsSync(path.join(__dirname,'..','scripts','moonshine-stream-pilot.py')))
+  ?new OfflineAsr(process.env.VOXNELO_MOONSHINE_MODEL_DIR,
+      process.env.VOXNELO_MOONSHINE_PYTHON, data=>new Worker(
+        path.join(__dirname,'moonshineAsrWorker.cjs'),{workerData:{
+          modelDir:data.modelDir,pythonPath:data.addonPath,
+          scriptPath:path.join(__dirname,'..','scripts','moonshine-stream-pilot.py'),
+        }}),['encoder.ort','adapter.ort','cross_kv.ort','decoder_kv.ort','streaming_config.json','tokenizer.bin'],true)
+  :null;
+let activeAsr:OfflineAsr|null=null;
+let openingAsr=false;
 
 /**
  * Window IPC is intentionally narrower than a general-purpose ipcRenderer bridge.
@@ -95,20 +112,36 @@ function registerOfflineAsr():void{
         : engine;
     }catch{return {available:false,reason:'not-configured'};}
   });
-  ipcMain.handle('voxnelo:asr:start',async(event)=>{
+  ipcMain.handle('voxnelo:asr:engines',(event)=>{
+    if(!authorizedWindow(event))return null;
+    return {zipformer:offlineAsr.current().capabilities().available,
+      moonshineMedium:moonshinePilot?.capabilities().available===true};
+  });
+  ipcMain.handle('voxnelo:asr:start',async(event,requested:unknown)=>{
     const window=authorizedWindow(event);
     if(!window)return {ok:false,reason:'failed'};
-    try{return await (await offlineAsr.refreshIfUnavailable()).open(window.webContents);}
-    catch{return {ok:false,reason:'failed'};}
+    // Reserve the single native microphone engine before any async asset
+    // verification. Concurrent renderer starts must not open two workers.
+    if(openingAsr||activeAsr?.hasActiveSession())return {ok:false,reason:'busy'};
+    openingAsr=true;
+    try{
+      const engine=requested==='moonshine-medium'?moonshinePilot:
+        requested===undefined||requested==='zipformer'?(await offlineAsr.refreshIfUnavailable()):null;
+      if(!engine)return {ok:false,reason:'not-configured'};
+      const opened=await engine.open(window.webContents);
+      if(opened.ok)activeAsr=engine;
+      return opened;
+    }catch{return {ok:false,reason:'failed'};}
+    finally{openingAsr=false;}
   });
   ipcMain.on('voxnelo:asr:pcm',(event,id:unknown,samples:unknown)=>{
     const window=authorizedWindow(event);
-    if(window)offlineAsr.current().push(window.webContents,id,samples);
+    if(window)activeAsr?.push(window.webContents,id,samples);
   });
   ipcMain.handle('voxnelo:asr:stop',(event,id:unknown)=>{
     const window=authorizedWindow(event);
     if(!window)return {finalText:'',completed:false};
-    return offlineAsr.current().stop(window.webContents,id);
+    return activeAsr?.stop(window.webContents,id)??{finalText:'',completed:false};
   });
 }
 
@@ -211,5 +244,6 @@ app.whenReady().then(async () => {
 app.on('window-all-closed', () => {
   linuxSpeech.cancel();
   offlineAsr.current().close();
+  moonshinePilot?.close();
   if (process.platform !== 'darwin') app.quit();
 });

@@ -12,7 +12,7 @@ function fixture(){
   const model=path.join(root,'model');
   mkdirSync(model);
   for(const f of ['encoder.ort','adapter.ort','cross_kv.ort','decoder_kv.ort',
-                  'frontend.model.ort','streaming_config.json','tokenizer.bin']){
+                  'frontend.model.ort','frontend.weights.ort','streaming_config.json','tokenizer.bin']){
     writeFileSync(path.join(model,f),'test-only');
   }
   const wav=path.join(root,'sample.wav');

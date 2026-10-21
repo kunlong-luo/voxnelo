@@ -14,8 +14,9 @@ export interface OfflineAsrResult {sessionId:string;finalText:string;interimText
 export interface OfflineAsrStopResult {finalText:string;completed:boolean}
 export type OfflineAsrFailureReason = 'overloaded' | 'failed';
 export interface VoxneloOfflineAsr {
+  engines():Promise<null|{zipformer:boolean;moonshineMedium:boolean}>;
   capabilities():Promise<{available:boolean;reason:'ready'|'not-configured'|'missing-addon'|'missing-model'|'invalid-personal-pack'}>;
-  start():Promise<{ok:true;sessionId:string}|{ok:false;reason:'not-configured'|'busy'|'failed'}>;
+  start(engine?:'zipformer'|'moonshine-medium'):Promise<{ok:true;sessionId:string}|{ok:false;reason:'not-configured'|'busy'|'failed'}>;
   push(sessionId:string,samples:Float32Array):void;
   stop(sessionId:string):Promise<OfflineAsrStopResult>;
   onResult(listener:(result:OfflineAsrResult)=>void):()=>void;

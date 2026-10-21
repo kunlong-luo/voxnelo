@@ -29,10 +29,14 @@ def validate_model(directory: str) -> Path:
         item = root / filename
         if not item.is_file() or item.is_symlink() or item.stat().st_size == 0:
             raise ValueError("Missing or invalid local Moonshine model component")
-    frontends = ("frontend.ort", "frontend.model.ort")
-    if not any((root / filename).is_file() and not (root / filename).is_symlink()
-               for filename in frontends):
-        raise ValueError("Missing local Moonshine model frontend")
+    # Current quantized streaming models split the frontend into model+weights.
+    # A standalone frontend.ort is only valid for the older single-file layout.
+    standalone = root / "frontend.ort"
+    split = (root / "frontend.model.ort", root / "frontend.weights.ort")
+    def valid_component(file):
+        return file.is_file() and not file.is_symlink() and file.stat().st_size > 0
+    if not (valid_component(standalone) or all(valid_component(file) for file in split)):
+        raise ValueError("Missing or incomplete local Moonshine model frontend")
     return root
 
 
