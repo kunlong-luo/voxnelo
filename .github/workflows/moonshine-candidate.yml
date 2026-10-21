@@ -47,7 +47,7 @@ jobs:
         run: |
           python3 -m venv "$RUNNER_TEMP/moonshine-venv"
           "$RUNNER_TEMP/moonshine-venv/bin/python" -m pip install --disable-pip-version-check --no-cache-dir 'moonshine-voice==0.0.65'
-          "$RUNNER_TEMP/moonshine-venv/bin/moonshine-voice" download --stt --language en
+          "$RUNNER_TEMP/moonshine-venv/bin/python" -m moonshine_voice.download --language en
       - name: Run both real recognizers on identical generated English WAVs
         env:
           MOONSHINE_VOICE_CACHE: ${{ runner.temp }}/moonshine-model-cache
