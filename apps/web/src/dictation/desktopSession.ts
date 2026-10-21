@@ -42,6 +42,7 @@ export async function startDesktopDictationSession(
   bridge:VoxneloOfflineAsr,
   callbacks:DesktopDictationCallbacks,
   captureProfile:DesktopCaptureProfile='conversation',
+  engine:'zipformer'|'moonshine-medium'='zipformer',
 ):Promise<DesktopStartResult> {
   let media:MediaStream|null=null;
   let context:AudioContext|null=null;
@@ -124,7 +125,7 @@ export async function startDesktopDictationSession(
     callbacks.onNoiseReduction(audioTrack?.getSettings().noiseSuppression===true);
     audioTrack?.addEventListener('ended',onDeviceEnded);
 
-    const opened=await bridge.start();
+    const opened=await bridge.start(engine);
     if(opened.ok)sessionId=opened.sessionId;
     // Stop even an ASR worker that finished starting after the user navigated away.
     if(!isCurrent()){void close();return {ok:false,reason:'cancelled'};}
