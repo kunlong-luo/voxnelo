@@ -119,8 +119,10 @@ try{
   const start=performance.now();
   startedAt=start;
   await waitFor('ready');
-  for(let offset=0;offset<sampleCount;offset+=1600){
-    const count=Math.min(1600,sampleCount-offset);
+  // Match the 50-ms live AudioWorklet cadence so candidate-model
+  // first-interim measurements reflect the actual Linux microphone path.
+  for(let offset=0;offset<sampleCount;offset+=800){
+    const count=Math.min(800,sampleCount-offset);
     const samples=new Float32Array(count);
     for(let i=0;i<count;i++)samples[i]=data.readInt16LE(2*(offset+i))/32768;
     audioFedSamples=offset+count;
