@@ -2,6 +2,7 @@ import { parentPort, workerData } from 'node:worker_threads';
 import { createRequire } from 'node:module';
 import { createOnlineRecognizerConfig, type AsrDecodingMethod } from './asrConfig';
 import { drainReadyFrames, FINAL_DECODE_STEPS, PCM_DECODE_STEPS } from './asrDecodeDrain';
+import { appendRecentWords } from './asrTranscriptHistory';
 
 type Stream = { acceptWaveform(input:{samples:Float32Array;sampleRate:number}):void; inputFinished():void };
 type Recognizer = {
@@ -38,7 +39,7 @@ const decode=(finishing=false)=>{
   if(finishing&&!drain.fullyDrained)throw Error('Offline ASR finish budget exceeded: refusing incomplete transcript');
   publishPartial();
   if(recognizer.isEndpoint(stream)){
-    if(currentText)completed.push(currentText);
+    if(currentText)appendRecentWords(completed,currentText);
     currentText='';
     recognizer.reset(stream);
     report();
@@ -66,7 +67,7 @@ try{
         stopping=true;
         stream.inputFinished();
         decode(true);
-        if(currentText)completed.push(currentText);
+        if(currentText)appendRecentWords(completed,currentText);
         parent.postMessage({type:'result',finalText:completed.join(' '),interimText:''});
         parent.postMessage({type:'finished'});
       }
