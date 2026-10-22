@@ -6,6 +6,7 @@
  */
 import {spawnSync} from 'node:child_process';
 import {mkdir,rm,cp} from 'node:fs/promises';
+import {writeSync} from 'node:fs';
 import {homedir} from 'node:os';
 import path from 'node:path';
 import {PINNED_MOONSHINE_MEDIUM_FILES,verifyPinnedMoonshineMediumModel}
@@ -14,7 +15,8 @@ import {verifyMoonshinePythonRuntime} from '../apps/desktop/moonshinePaths.ts';
 import {provisionMoonshineDirectory} from './moonshine-install-transaction.mts';
 import {moonshineStageLine,type MoonshineInstallStage} from '../apps/desktop/moonshineInstallProgress.ts';
 
-function report(stage:MoonshineInstallStage):void{process.stdout.write(moonshineStageLine(stage));}
+// A synchronous marker must leave the process before spawnSync blocks Node's event loop.
+function report(stage:MoonshineInstallStage):void{writeSync(1,moonshineStageLine(stage));}
 function run(executable:string,args:string[],env:NodeJS.ProcessEnv=process.env):void{
   const result=spawnSync(executable,args,{encoding:'utf8',stdio:'inherit',env,timeout:180000});
   if(result.status!==0||result.error)
