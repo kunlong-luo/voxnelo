@@ -27,25 +27,25 @@ Voxnelo 是一款开源、本地优先的英语口语跟读桌面应用。听一
 
 ## 下载安装与测试
 
-**0.1.5 仍是测试构建，不是正式稳定版。** 当前尚未发布该版本的公开 GitHub Release。需要试用时，可前往 [CI 运行记录](https://github.com/kunlong-luo/voxnelo/actions/workflows/ci.yml?query=branch%3Amain)，打开 `main` 分支成功的构建，并在 Artifacts 中下载测试安装包。下载可能需要登录 GitHub，且附件会过期。
+**v0.1.5 Linux Early Access 是公开预览版，安装包未签名，并非已通过全平台验收的稳定版本。** 正式发布后，可从 [GitHub Releases](https://github.com/kunlong-luo/voxnelo/releases) 下载 Linux x64 `.deb`、`.AppImage` 和 `SHA256SUMS-linux.txt`。若发布页尚无 v0.1.5，仍可从 [主分支 CI](https://github.com/kunlong-luo/voxnelo/actions/workflows/ci.yml?query=branch%3Amain) 获取过期的测试构建，不能将其视为已公开发布。
 
 | 平台 | 当前安装包情况 |
 | --- | --- |
-| Linux（x64） | 提供测试用 `.deb` 和 `.AppImage`；Linux CI 附件包含内容一致的 `Voxnelo.deb` 和 `voxnelo_0.1.5_amd64.deb`。 |
+| Linux（x64） | Early Access `.deb` 和 `.AppImage`；发布页提供内容一致的 `Voxnelo.deb` 和 `voxnelo_0.1.5_amd64.deb`，以及 SHA-256 清单。 |
 | Windows | 已有未签名的 NSIS 安装程序构建流程，尚未作为公开 Release 附件提供。 |
 | macOS | 已有未签名、未公证的 DMG 构建流程，尚未作为公开 Release 附件提供。 |
 
-使用 Debian 系 Linux 时，先解压 CI 附件，然后可以双击 `Voxnelo.deb` 通过图形安装器打开，或在版本号安装包所在目录执行：
+使用 Debian 系 Linux 时，下载发布页的 DEB 安装包，然后可以双击 `Voxnelo.deb` 通过图形安装器打开，或在版本号安装包所在目录执行：
 
 ```bash
 sudo apt install ./voxnelo_0.1.5_amd64.deb
 ```
 
-旧版可直接升级，无需先卸载。详细限制见 [安装与候选版验收说明](docs/engineering/V0.1-RC-PLAYBOOK.md)。日后公开的安装包会放在 [GitHub Releases](https://github.com/kunlong-luo/voxnelo/releases)。
+旧版通常可直接升级，无需先卸载。详细限制见 [安装与候选版验收说明](docs/engineering/V0.1-RC-PLAYBOOK.md)。
 
 ## 实时听写与隐私
 
-**实时听写目前只是实验性入口，不是标准桌面安装包开箱即用的功能。** 标准安装包**不包含第三方离线语音识别引擎或模型**。Linux 用户可以自行选择配置 [个人 ASR 内测引擎](docs/engineering/LOCAL-ASR-PERSONAL-PILOT.md)，但真实设备识别准确率和降噪效果尚未完成发布验收。当前**没有自动发音评分或逐词纠音**功能。
+**Linux 默认使用 Moonshine Medium Streaming 进行本地实时英语听写。** 标准安装包不内置第三方模型或原生推理 SDK。首次使用请在应用「离线模型管理」页主动点击「安装 Moonshine 离线识别模型」，由应用下载安装固定版本的本机 SDK/模型并校验 SHA-256。首次安装需要网络、Python 3 + venv、足够磁盘空间和 Linux x64 环境；之后在本机识别，不自动切换回 Zipformer。真实设备的不同口音、背景噪声、精确延迟仍需更多验收。当前**没有自动发音评分或逐词纠音**。详见 [Moonshine 安装说明](docs/engineering/MOONSHINE-LINUX-INSTALLATION.md)。
 
 学习记录和收藏保存在当前设备上，没有 Voxnelo 账号及跨设备同步。只有在授权后才会使用麦克风；录音仅供当前句子临时回听，Voxnelo 不会上传跟读录音。如果在网页中尝试语音识别，浏览器提供的服务可能具有不同的联网和隐私行为。
 
@@ -60,4 +60,4 @@ sudo apt install ./voxnelo_0.1.5_amd64.deb
 
 提交公开 Issue 时请遮盖个人信息，不要上传私人语音录音。
 
-> **发布状态：** 自动化 CI 通过不代表真实麦克风、首批课程内容及第三方分发授权已经完成验收，相关工作仍在进行。
+> **发布状态：** Linux Early Access 属于公开预览版。自动化 CI 与首轮用户测试不能替代所有设备的真实麦克风测试、课程内容审校及第三方授权核查，稳定版验收仍在进行。

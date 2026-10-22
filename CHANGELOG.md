@@ -69,7 +69,15 @@
 - 无用依赖 `zod`、`zustand`（全仓零引用）；`App.tsx` 3 个无用图标导入；
   删除从未被调用的 `exportLearningData`（备份/恢复待 V0.3 完整设计后再做）。
 
-## [0.1.5] - 2026-10-18
+## [0.1.5] - 2026-10-22
+
+### Linux Early Access 发布说明
+
+- 仅向 Linux x64 提供未签名的公开 Early Access DEB/AppImage，附 SHA-256 文件校验；Windows/macOS 仅留在内部 CI 候选包。
+- Linux 实时英语识别默认使用 Moonshine Voice Medium Streaming。用户在独立模型管理页主动下载安装个人模型与 Python 环境，逐文件 SHA-256 与 SDK 版本检查通过后才能使用；不会静默退回 Zipformer。
+- Electron → 独立工作线程 → 本地 Python 推理进程的 16 kHz PCM 与 interim/final 字幕通道已接入。增加积压保护、终止清理、事件净化及字幕历史限长。
+- CI 已验证真实 Moonshine 模型、个人安装器与打包后的 Linux Electron 音频识别链路；这些测试使用合成参考音频，不代表所有实机麦克风、环境噪声或口音的精度验收。
+- 初次安装 Moonshine 需要网络、Linux x64、Python 3/venv；模型并未随 DEB/AppImage 捆绑。本版本是公开预览版，未取得签名/公证与完整教学内容审核结论。
 
 ### Improved
 
@@ -79,7 +87,7 @@
 
 ### Limits
 
-- Discover 可能缓存旧应用信息；软件中心最终显示仍需在 Pop!_OS 实机复核。本次不更改离线 ASR 模型、原生模块或语音识别算法。
+- Discover 可能缓存旧应用信息；软件中心最终显示仍需在 Pop!_OS 实机复核。原 10 月 18 日打包改进本身不改 ASR；后续 10 月 22 日 Early Access 合并了上述 Moonshine 默认引擎与模型管理改动。
 
 ## [0.1.4] - 2026-10-18
 
