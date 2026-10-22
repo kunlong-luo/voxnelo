@@ -6,7 +6,7 @@
 
 Voxnelo is an open-source, local-first desktop app for practicing spoken English. Listen to a short sentence, say it yourself, and play back your recording. No account is required.
 
-**Current version:** `0.1.6` · **Stage:** Early Access (testing) · **Maintainer:** Leo Luo · **License:** [MIT](LICENSE)
+**Source version:** `0.1.7` (unreleased candidate; public download remains `v0.1.6`) · **Stage:** Early Access (testing) · **Maintainer:** Leo Luo · **License:** [MIT](LICENSE)
 
 ## What works in 0.1.6
 
