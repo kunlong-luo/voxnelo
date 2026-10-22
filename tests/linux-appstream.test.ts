@@ -24,7 +24,9 @@ describe('Linux AppStream / KDE Discover branding',()=>{
     expect(appstream).toContain('https://github.com/kunlong-luo/voxnelo/issues');
   });
   it('does not misrepresent experimental local speech recognition as part of standard installers',()=>{
-    expect(appstream).toContain('not included in standard public installers');
+    expect(appstream).toContain('optional, user-approved model and Python runtime installation');
+    expect(appstream).toContain('Windows and macOS use platform-specific capabilities');
+    expect(appstream).not.toContain('bundled Moonshine model');
   });
   it('runs brand injection in both local and CI Linux packaging flows',()=>{
     const pkg=JSON.parse(readFileSync(path.join(root,'package.json'),'utf8')) as {
