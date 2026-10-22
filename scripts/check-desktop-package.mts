@@ -41,6 +41,25 @@ for(const [label,filename,minBytes] of requiredFiles){
   const info=await stat(filename);
   assert.ok(info.isFile()&&info.size>minBytes,label+' missing/empty: '+filename);
 }
+// The installed Electron app must contain the exact local Python protocol
+// scripts; without these the verified personal Moonshine pack cannot start.
+for(const filename of ['moonshine-stream-pilot.py','benchmark-moonshine-voice.py']){
+  const script=path.join(resources,'moonshine','scripts',filename);
+  const info=await stat(script);
+  assert.ok(info.isFile()&&info.size>1000,'Packaged Moonshine runtime script missing: '+filename);
+}
+// Exercise the *actual packaged* installer's opt-in guard without downloading
+// anything. This catches ASAR path and ELECTRON_RUN_AS_NODE integration failures.
+if(platform==='linux'){
+  const installer=path.join(resources,'app.asar','dist-electron','moonshineInstaller.cjs');
+  const result=spawnSync(executable,[installer,'--help'],{
+    encoding:'utf8',timeout:20000,maxBuffer:4096,
+    env:{...process.env,ELECTRON_RUN_AS_NODE:'1',NODE_OPTIONS:''},
+  });
+  assert.equal(result.status,0,'Packaged Moonshine installer cannot start with --help');
+  assert.match(result.stdout,/--accept-experimental-runtime/,
+    'Packaged Moonshine installer lost its explicit consent gate');
+}
 const png=await readFile(icon);
 assert.equal(png.subarray(0,8).toString('hex'),'89504e470d0a1a0a','Wrong branded PNG magic');
 if(platform==='darwin'){
@@ -137,6 +156,7 @@ if(platform==='linux'){
   const dependencies=spawnSync('dpkg-deb',['--field',debPath,'Depends'],{encoding:'utf8'});
   assert.equal(dependencies.status,0,'dpkg-deb could not inspect dependencies: '+dependencies.stderr);
   assert.match(dependencies.stdout,/(?:^|[,\s])fonts-noto-cjk(?:[,\s(]|$)/,'Debian installer must provide Chinese CJK font support');
+  assert.match(dependencies.stdout,/(?:^|[,\s])python3-venv(?:[,\s(]|$)/,'Debian Moonshine installer needs Python venv support');
   // electron-builder 26.15.3 does not expand the newer `default` keyword here.
   // Keep this assertion: a literal Depends: default makes the DEB uninstallable.
   assert.doesNotMatch(dependencies.stdout,/(?:^|[,\s])default(?:[,\s(]|$)/,'Builder did not expand default Debian dependencies');

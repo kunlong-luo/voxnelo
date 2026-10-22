@@ -23,6 +23,7 @@ contextBridge.exposeInMainWorld('voxneloDesktop', {
   windowControls,
   asr: {
     engines: () => ipcRenderer.invoke('voxnelo:asr:engines') as Promise<null|{zipformer:boolean;moonshineMedium:boolean}>,
+    installMoonshine: () => ipcRenderer.invoke('voxnelo:asr:install-moonshine') as Promise<{ok:boolean;reason?:string}>,
     capabilities: () => ipcRenderer.invoke('voxnelo:asr:capabilities') as Promise<{available:boolean;reason:'ready'|'not-configured'|'missing-addon'|'missing-model'|'invalid-personal-pack'}>,
     start: (engine?:'zipformer'|'moonshine-medium') => ipcRenderer.invoke('voxnelo:asr:start',engine) as Promise<{ok:true;sessionId:string}|{ok:false;reason:string}>,
     push: (id:string,samples:Float32Array) => ipcRenderer.send('voxnelo:asr:pcm',id,samples),

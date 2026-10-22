@@ -1,5 +1,7 @@
 import { app, BrowserWindow, ipcMain, net, shell, protocol, session, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron';
 import path from 'node:path';
+import {execFile} from 'node:child_process';
+import {promisify} from 'node:util';
 import { Worker } from 'node:worker_threads';
 import { existsSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
@@ -8,6 +10,9 @@ import { allowsAudioPermissionCheck, allowsAudioPermissionRequest, APP_HOST, isA
 import { LinuxEnglishSpeech } from './linuxSpeech';
 import { LINUX_DESKTOP_FILENAME, resolveLinuxIconPath } from './linuxAppIdentity';
 import { OfflineAsr } from './offlineAsr';
+import { defaultDesktopAsrEngine, resolveDesktopAsrEngine } from './asrDefault';
+import { verifyPinnedMoonshineMediumModel } from './moonshineIntegrity';
+import { resolveMoonshinePaths, verifyMoonshinePythonRuntime } from './moonshinePaths';
 import { RefreshableAsrEngine } from './asrRefresh';
 import { resolveVerifiedAsrStatus } from './asrAssets';
 
@@ -46,20 +51,30 @@ const offlineAsr=new RefreshableAsrEngine(new OfflineAsr(null,null),async()=>{
   return new OfflineAsr(result.assets.modelDir,result.assets.addonPath);
 });
 
-// Explicit local development pilot only: no automatic model download or public
-// redistribution. Real candidate installation and integrity approval remain gated.
-const moonshinePilot=(!app.isPackaged&&process.platform==='linux'&&
-  process.env.VOXNELO_MOONSHINE_PYTHON&&process.env.VOXNELO_MOONSHINE_MODEL_DIR&&
-  existsSync(path.join(__dirname,'..','scripts','moonshine-stream-pilot.py')))
-  ?new OfflineAsr(process.env.VOXNELO_MOONSHINE_MODEL_DIR,
-      process.env.VOXNELO_MOONSHINE_PYTHON, data=>new Worker(
-        path.join(__dirname,'moonshineAsrWorker.cjs'),{workerData:{
-          modelDir:data.modelDir,pythonPath:data.addonPath,
-          scriptPath:path.join(__dirname,'..','scripts','moonshine-stream-pilot.py'),
-        }}),['encoder.ort','adapter.ort','cross_kv.ort','decoder_kv.ort','streaming_config.json','tokenizer.bin'],true)
+// Installed Linux apps resolve only one fixed, personal, opt-in runtime path.
+// The app does not silently download native code or accept renderer paths.
+const moonshinePaths=resolveMoonshinePaths({
+  isPackaged:app.isPackaged,platform:process.platform,
+  resourcesPath:process.resourcesPath,bundleDir:__dirname,
+  personalDataDir:path.join(app.getPath('appData'),'voxnelo'),
+  developerPython:process.env.VOXNELO_MOONSHINE_PYTHON,
+  developerModelDir:process.env.VOXNELO_MOONSHINE_MODEL_DIR,
+});
+const moonshinePilot=moonshinePaths&&
+  existsSync(moonshinePaths.scriptPath)&&existsSync(moonshinePaths.validationScriptPath)
+  ?new OfflineAsr(moonshinePaths.modelDir,moonshinePaths.pythonPath,
+    data=>new Worker(path.join(__dirname,'moonshineAsrWorker.cjs'),{
+      workerData:{modelDir:data.modelDir,pythonPath:data.addonPath,
+        scriptPath:moonshinePaths.scriptPath},
+    }),['encoder.ort','adapter.ort','cross_kv.ort','decoder_kv.ort',
+      'frontend.ort','streaming_config.json','tokenizer.bin'],true)
   :null;
+// Only the exact pinned official model bytes may activate the Linux pilot.
+let moonshineModelVerified=false;
 let activeAsr:OfflineAsr|null=null;
 let openingAsr=false;
+let installingMoonshine=false;
+const execFileAsync=promisify(execFile);
 
 /**
  * Window IPC is intentionally narrower than a general-purpose ipcRenderer bridge.
@@ -100,12 +115,44 @@ function registerLinuxSpeech(): void {
 }
 
 function registerOfflineAsr():void{
+  // Explicit user action only. The Python SDK/model are never fetched during
+  // application startup, capability probing, or microphone sessions.
+  ipcMain.handle('voxnelo:asr:install-moonshine',async(event)=>{
+    if(!authorizedWindow(event)||process.platform!=='linux'||!moonshinePilot||!moonshinePaths)
+      return {ok:false,reason:'unsupported'};
+    if(installingMoonshine||openingAsr||activeAsr?.hasActiveSession())
+      return {ok:false,reason:'busy'};
+    if(moonshineModelVerified)return {ok:true};
+    installingMoonshine=true;
+    try{
+      const executable=path.join(__dirname,'moonshineInstaller.cjs');
+      if(!existsSync(executable))return {ok:false,reason:'unsupported'};
+      // Electron acts as Node for this isolated, first-party bundled installer;
+      // no renderer input, arbitrary executable path or shell string accepted.
+      await execFileAsync(process.execPath,
+        [executable,'--accept-experimental-runtime'],{
+          env:{...process.env,ELECTRON_RUN_AS_NODE:'1',NODE_OPTIONS:''},
+          timeout:900000,maxBuffer:1024*1024,
+        });
+      moonshineModelVerified=(await verifyPinnedMoonshineMediumModel(moonshinePaths.modelDir))&&
+        (await verifyMoonshinePythonRuntime(moonshinePaths.pythonPath));
+      return moonshineModelVerified?{ok:true}:{ok:false,reason:'verification'};
+    }catch{return {ok:false,reason:'failed'};}
+    finally{installingMoonshine=false;}
+  });
   ipcMain.handle('voxnelo:asr:capabilities',async(event)=>{
     if(!authorizedWindow(event))return {available:false,reason:'not-configured'};
     // A personal offline model can be installed while Voxnelo is open.
     // Re-resolve ONLY fully verified main-process assets; never accept a path
     // from renderer IPC or replace a currently active microphone session.
     try{
+      if(defaultDesktopAsrEngine(process.platform)==='moonshine-medium'){
+        // Linux reports only the selected default's readiness. Existing
+        // Zipformer packs must not disguise an absent Moonshine installation.
+        return moonshinePilot
+          ?moonshineModelVerified?moonshinePilot.capabilities():{available:false,reason:'missing-model'}
+          :{available:false,reason:'not-configured'};
+      }
       const engine=(await offlineAsr.refreshIfUnavailable()).capabilities();
       return !engine.available&&invalidPersonalAsr
         ? {available:false,reason:'invalid-personal-pack'}
@@ -115,7 +162,7 @@ function registerOfflineAsr():void{
   ipcMain.handle('voxnelo:asr:engines',(event)=>{
     if(!authorizedWindow(event))return null;
     return {zipformer:offlineAsr.current().capabilities().available,
-      moonshineMedium:moonshinePilot?.capabilities().available===true};
+      moonshineMedium:moonshineModelVerified&&moonshinePilot?.capabilities().available===true};
   });
   ipcMain.handle('voxnelo:asr:start',async(event,requested:unknown)=>{
     const window=authorizedWindow(event);
@@ -125,8 +172,11 @@ function registerOfflineAsr():void{
     if(openingAsr||activeAsr?.hasActiveSession())return {ok:false,reason:'busy'};
     openingAsr=true;
     try{
-      const engine=requested==='moonshine-medium'?moonshinePilot:
-        requested===undefined||requested==='zipformer'?(await offlineAsr.refreshIfUnavailable()):null;
+      const selected=resolveDesktopAsrEngine(process.platform,requested);
+      // An unconfigured Moonshine engine is a setup error. Never silently
+      // switch to Zipformer when the user's default model is missing.
+      const engine=selected==='moonshine-medium'&&moonshineModelVerified?moonshinePilot:
+        selected==='zipformer'?(await offlineAsr.refreshIfUnavailable()):null;
       if(!engine)return {ok:false,reason:'not-configured'};
       const opened=await engine.open(window.webContents);
       if(opened.ok)activeAsr=engine;
@@ -221,6 +271,12 @@ async function createWindow(): Promise<void> {
 }
 
 app.whenReady().then(async () => {
+  // Full eight-file verification is asynchronous and runs once before any
+  // renderer can request capabilities or start a streaming inference worker.
+  if(moonshinePilot&&moonshinePaths){
+    moonshineModelVerified=(await verifyPinnedMoonshineMediumModel(moonshinePaths.modelDir))&&
+      (await verifyMoonshinePythonRuntime(moonshinePaths.pythonPath));
+  }
   await offlineAsr.refreshIfUnavailable();
   registerWindowControls();
   registerLinuxSpeech();

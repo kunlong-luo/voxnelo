@@ -100,6 +100,20 @@ describe('Local-first live dictation',()=>{
     expect(latest.error).toContain('本地英语识别');
     expect(FakeRecognizer.instances).toHaveLength(1);
   });
+  it('defaults to Moonshine on new Linux desktops without silently using Zipformer',async()=>{
+    const start=vi.fn();
+    const engines=vi.fn(async()=>({zipformer:true,moonshineMedium:false}));
+    const capabilities=vi.fn(async()=>({available:false,reason:'not-configured' as const}));
+    vi.stubGlobal('voxneloDesktop',{platform:'linux',asr:{engines,capabilities,start}});
+    render(<Harness/>);
+    await act(async()=>{await Promise.resolve();});
+    expect(latest.offlineEngine).toBe('moonshine-medium');
+    expect(latest.supported).toBe(false);
+    expect(latest.localPack).toBe('unavailable');
+    await act(async()=>{await latest.start();});
+    expect(start).not.toHaveBeenCalled();
+    expect(latest.status).toBe('idle');
+  });
   it('Electron never probes unsupported Chromium ASR when native ONNX assets are absent',async()=>{
     const capabilities=vi.fn(async()=>({available:false,reason:'missing-addon'}));
     vi.stubGlobal('voxneloDesktop',{platform:'linux',asr:{capabilities}});
