@@ -25,7 +25,7 @@
 ## 依赖安全审计
 
 `.github/workflows/security-dependency-audit.yml` 会在 Python 安装器或
-pnpm 锁文件变更的 PR，以及每周定时任务中执行安全告警扫描。Python
+pnpm 锁文件变更的 PR，以及每周定时任务中执行安全告警扫描。生产依赖 High/Critical 报警会阻断检查；测试/开发工具中的已知告警仍作为显式警告保留，并由 [Issue #138](https://github.com/kunlong-luo/voxnelo/issues/138) 跟进，尚未完成修复。Python
 侧固定 Moonshine SDK 版本后实际解析其传递依赖，再用 pip-audit 检查
 公开漏洞数据库；JavaScript 侧用 pnpm audit 检查锁文件。扫描有结果不代表
 原生 wheel 的完整来源、所有许可或恶意代码风险已得到认证。发现告警后
