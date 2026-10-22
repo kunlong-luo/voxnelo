@@ -12,7 +12,9 @@ import {PINNED_MOONSHINE_MEDIUM_FILES,verifyPinnedMoonshineMediumModel}
   from '../apps/desktop/moonshineIntegrity.ts';
 import {verifyMoonshinePythonRuntime} from '../apps/desktop/moonshinePaths.ts';
 import {provisionMoonshineDirectory} from './moonshine-install-transaction.mts';
+import {moonshineStageLine,type MoonshineInstallStage} from '../apps/desktop/moonshineInstallProgress.ts';
 
+function report(stage:MoonshineInstallStage):void{process.stdout.write(moonshineStageLine(stage));}
 function run(executable:string,args:string[],env:NodeJS.ProcessEnv=process.env):void{
   const result=spawnSync(executable,args,{encoding:'utf8',stdio:'inherit',env,timeout:180000});
   if(result.status!==0||result.error)
@@ -40,14 +42,18 @@ async function main():Promise<void>{
   await provisionMoonshineDirectory(root,repair?'repair':'install',async(stage)=>{
     const venv=path.join(stage,'venv');
     const python=path.join(venv,'bin','python');
+    report('environment');
     run('python3',['-m','venv',venv]);
+    report('dependencies');
     run(python,['-m','pip','install','--isolated','--disable-pip-version-check',
       '--no-input','--only-binary=:all:','--index-url','https://pypi.org/simple',
       'moonshine-voice==0.0.65']);
     const cache=path.join(stage,'download-cache');
     await mkdir(cache,{mode:0o700});
+    report('model-download');
     run(python,['-m','moonshine_voice.download','--stt','--language','en'],
       {...process.env,MOONSHINE_VOICE_CACHE:cache,PYTHONNOUSERSITE:'1'});
+    report('model-verification');
     const candidate=path.join(cache,'download.moonshine.ai','model',
       'medium-streaming-en','quantized');
     const model=path.join(stage,'model');
@@ -58,7 +64,9 @@ async function main():Promise<void>{
     if(!await verifyPinnedMoonshineMediumModel(model))
       throw Error('Moonshine downloaded model hashes did not match pinned CI evidence');
     await rm(cache,{recursive:true,force:true});
+    report('activation');
   },verify);
+  report('complete');
   console.log('Moonshine personal runtime and model verified. Restart Voxnelo if needed.');
 }
 void main().catch(()=>{
