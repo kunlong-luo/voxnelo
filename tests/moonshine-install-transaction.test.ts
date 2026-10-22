@@ -1,6 +1,6 @@
 import {afterEach,describe,expect,it} from 'vitest';
 import {mkdtempSync,readFileSync,mkdirSync,readdirSync,rmSync,symlinkSync,writeFileSync} from 'node:fs';
-import {mkdtemp,writeFile} from 'node:fs/promises';
+import {writeFile} from 'node:fs/promises';
 import path from 'node:path';
 import {tmpdir} from 'node:os';
 import {provisionMoonshineDirectory} from '../scripts/moonshine-install-transaction.mts';
