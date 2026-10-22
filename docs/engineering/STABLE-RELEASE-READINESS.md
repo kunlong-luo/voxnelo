@@ -5,7 +5,7 @@
 ## 两层必须独立满足的条件
 
 1. 人工与许可：依照示例 docs/release/stable-evidence.example.json，在 docs/release/stable-approval/vX.Y.Z.json 为 F001–F012、内容与参考音频版权、麦克风隐私、Linux/Windows/macOS 真机、Moonshine 许可和噪声精度、UI/无障碍、升级数据保留、发布者签名身份分别提供独立审核人、日期和 HTTPS 证据。至少五位不同的英语初学者完成闭环测试。绝不上传私密录音、密钥、个人路径或设备 ID。
-2. 包与原生签名：先建立包含真正签名且已公证附件的私有 Release Draft（当前 release-draft 流水线生成的 unsigned 安装件不能替代）。签名之后重算三个 SHA256SUMS 清单，并记录最终字节 SHA256。stable-readiness.yml 只读下载这些实际附件并绑定 Release tag SHA。Windows Runner 实测 Get-AuthenticodeSignature 为 Valid 且有受信任时间戳；macOS Runner 验证 DMG 与 App stapler、严格 codesign、spctl Gatekeeper 和 Team ID。Linux 发行包亦必须与证据及摘要一致。
+2. 包与原生签名：先建立包含真正签名且已公证附件的私有 Release Draft（当前 release-draft 流水线生成的 unsigned 安装件不能替代）。签名之后重算三个 SHA256SUMS 清单，并记录最终字节 SHA256。审核记录还必须包含 `signingIdentity.windowsCertificateSha1`（受信任发布证书的 40 位 SHA-1 指纹，不是私钥）与 `signingIdentity.appleTeamId`（Apple 10 位 Team ID）。stable-readiness.yml 只读下载这些实际附件并绑定 Release tag SHA。Windows Runner **再次核对重新下载 EXE 的 SHA-256**，再确认 Get-AuthenticodeSignature 为 Valid、受信任时间戳及证书指纹一致；macOS Runner **再次核对重新下载 DMG 的 SHA-256**，再检查 DMG 与 App stapler、严格 codesign、spctl Gatekeeper、指定 Team ID 以及真实 bundle ID `app.voxnelo.desktop`。即使 Draft 在审核与原生 Runner 执行之间被更换，也不能通过。Linux 发行包亦必须与证据及摘要一致。
 3. GitHub Actions 选择 Validate Stable readiness (NEVER publish)，在 main 输入版本及 VERIFY_STABLE_READINESS_ONLY。找不到审核记录、未签名、公证失败或哈希不一致，就失败。该工作流绝不创建、更改、发布或覆盖任何 GitHub Release。
 
 ## 需要发布者提供而不能由程序凭空完成
