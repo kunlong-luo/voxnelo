@@ -37,8 +37,8 @@ try{
   const venv=path.join(root,'venv');
   const python=path.join(venv,'bin','python');
   run('python3',['-m','venv',venv]);
-  run(python,['-m','pip','install','--disable-pip-version-check','--no-input',
-    'moonshine-voice==0.0.65']);
+  run(python,['-m','pip','install','--isolated','--disable-pip-version-check','--no-input',
+    '--only-binary=:all:','--index-url','https://pypi.org/simple','moonshine-voice==0.0.65']);
   const cache=path.join(root,'download-cache');
   await mkdir(cache,{recursive:true,mode:0o700});
   // The official SDK downloads from its own documented Moonshine model URL.
