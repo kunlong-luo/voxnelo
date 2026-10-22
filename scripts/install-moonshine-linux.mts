@@ -1,69 +1,67 @@
 #!/usr/bin/env node
-/** Linux-only explicit personal Moonshine provisioning.
- * This is a developer opt-in path, NOT an audited public app-store downloader.
- * No model/native code is downloaded or executed without an explicit flag.
+/** Explicit, fail-closed Linux personal Moonshine provisioning.
+ * Builds a complete verified runtime in a private staging directory.
+ * --repair is permitted only after the user explicitly initiates setup;
+ * existing unknown user files and symlinks are never deleted.
  */
 import {spawnSync} from 'node:child_process';
-import {existsSync} from 'node:fs';
 import {mkdir,rm,cp} from 'node:fs/promises';
 import {homedir} from 'node:os';
 import path from 'node:path';
 import {PINNED_MOONSHINE_MEDIUM_FILES,verifyPinnedMoonshineMediumModel}
   from '../apps/desktop/moonshineIntegrity.ts';
+import {verifyMoonshinePythonRuntime} from '../apps/desktop/moonshinePaths.ts';
+import {provisionMoonshineDirectory} from './moonshine-install-transaction.mts';
 
 function run(executable:string,args:string[],env:NodeJS.ProcessEnv=process.env):void{
   const result=spawnSync(executable,args,{encoding:'utf8',stdio:'inherit',env,timeout:180000});
-  if(result.status!==0||result.error)throw Error('Moonshine installation step failed; do not use partial files');
+  if(result.status!==0||result.error)
+    throw Error('Moonshine installation step failed; previous files were preserved');
 }
 async function main():Promise<void>{
-const help=process.argv.includes('--help')||process.argv.includes('-h');
-if(help){
-  console.log('Usage: pnpm asr:moonshine:install --accept-experimental-runtime');
-  console.log('Installs personally opted-in Linux SDK v0.0.65 and pinned Medium Streaming model.');
-  process.exit(0);
-}
-if(process.argv.length!==3||process.argv[2]!=='--accept-experimental-runtime')
-  throw Error('Explicit --accept-experimental-runtime required; no automatic installation');
-if(process.platform!=='linux'||process.arch!=='x64')
-  throw Error('Personal Moonshine runtime currently supports Linux x64 only');
-const root=path.join(process.env.XDG_CONFIG_HOME??path.join(homedir(),'.config'),
-  'voxnelo','moonshine');
-const config=path.dirname(root);
-await mkdir(config,{recursive:true});
-if(existsSync(root))
-  throw Error('Existing Moonshine installation found; refusing overwrite. Inspect it before retrying.');
-await mkdir(root,{recursive:false,mode:0o700});
-let installed=false;
-try{
-  const venv=path.join(root,'venv');
-  const python=path.join(venv,'bin','python');
-  run('python3',['-m','venv',venv]);
-  run(python,['-m','pip','install','--isolated','--disable-pip-version-check','--no-input',
-    '--only-binary=:all:','--index-url','https://pypi.org/simple','moonshine-voice==0.0.65']);
-  const cache=path.join(root,'download-cache');
-  await mkdir(cache,{recursive:true,mode:0o700});
-  // The official SDK downloads from its own documented Moonshine model URL.
-  // Nothing is fetched until the user runs this command with the opt-in flag.
-  run(python,['-m','moonshine_voice.download','--stt','--language','en'],
-    {...process.env,MOONSHINE_VOICE_CACHE:cache,PYTHONNOUSERSITE:'1'});
-  const candidate=path.join(cache,'download.moonshine.ai','model',
-    'medium-streaming-en','quantized');
-  // Copy a precise allowlist; never trust a downloaded manifest or extra files.
-  const model=path.join(root,'model');
-  await mkdir(model,{recursive:false,mode:0o700});
-  for(const filename of Object.keys(PINNED_MOONSHINE_MEDIUM_FILES))
-    await cp(path.join(candidate,filename),path.join(model,filename),{dereference:false,errorOnExist:true,force:false});
-  if(!await verifyPinnedMoonshineMediumModel(model))
-    throw Error('Moonshine file hashes did not match pinned official CI evidence');
-  await rm(cache,{recursive:true,force:true});
-  installed=true;
-  console.log('Moonshine personal runtime and model verified. Restart Voxnelo.');
-}finally{
-  if(!installed)await rm(root,{recursive:true,force:true});
-}
+  if(process.argv.includes('--help')||process.argv.includes('-h')){
+    console.log('Usage: pnpm asr:moonshine:install --accept-experimental-runtime [--repair]');
+    console.log('Installs/repairs verified Moonshine Voice 0.0.65 English Medium Streaming.');
+    return;
+  }
+  const flags=process.argv.slice(2);
+  if(flags.length<1||flags.length>2||flags[0]!=='--accept-experimental-runtime'||
+    (flags.length===2&&flags[1]!=='--repair'))
+    throw Error('Explicit consent required; use --accept-experimental-runtime [--repair]');
+  if(process.platform!=='linux'||process.arch!=='x64')
+    throw Error('Personal Moonshine runtime currently supports Linux x64 only');
+  const repair=flags.includes('--repair');
+  const root=path.join(process.env.XDG_CONFIG_HOME??path.join(homedir(),'.config'),
+    'voxnelo','moonshine');
+  const verify=async(dir:string)=>
+    (await verifyPinnedMoonshineMediumModel(path.join(dir,'model')))&&
+    (await verifyMoonshinePythonRuntime(path.join(dir,'venv','bin','python')));
 
+  await provisionMoonshineDirectory(root,repair?'repair':'install',async(stage)=>{
+    const venv=path.join(stage,'venv');
+    const python=path.join(venv,'bin','python');
+    run('python3',['-m','venv',venv]);
+    run(python,['-m','pip','install','--isolated','--disable-pip-version-check',
+      '--no-input','--only-binary=:all:','--index-url','https://pypi.org/simple',
+      'moonshine-voice==0.0.65']);
+    const cache=path.join(stage,'download-cache');
+    await mkdir(cache,{mode:0o700});
+    run(python,['-m','moonshine_voice.download','--stt','--language','en'],
+      {...process.env,MOONSHINE_VOICE_CACHE:cache,PYTHONNOUSERSITE:'1'});
+    const candidate=path.join(cache,'download.moonshine.ai','model',
+      'medium-streaming-en','quantized');
+    const model=path.join(stage,'model');
+    await mkdir(model,{mode:0o700});
+    for(const filename of Object.keys(PINNED_MOONSHINE_MEDIUM_FILES))
+      await cp(path.join(candidate,filename),path.join(model,filename),
+        {dereference:false,errorOnExist:true,force:false});
+    if(!await verifyPinnedMoonshineMediumModel(model))
+      throw Error('Moonshine downloaded model hashes did not match pinned CI evidence');
+    await rm(cache,{recursive:true,force:true});
+  },verify);
+  console.log('Moonshine personal runtime and model verified. Restart Voxnelo if needed.');
 }
 void main().catch(()=>{
-  console.error('Moonshine installation failed; incomplete files were not enabled.');
+  console.error('Moonshine installation/repair failed; existing files were preserved.');
   process.exitCode=1;
 });
