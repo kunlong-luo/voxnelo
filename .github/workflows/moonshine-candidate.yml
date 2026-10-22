@@ -44,14 +44,19 @@ jobs:
         run: |
           pnpm asr:model:prepare --out "$RUNNER_TEMP/old-zipformer/model"
           npm install --no-save --prefix "$RUNNER_TEMP/voxnelo-native" sherpa-onnx-node@1.13.8
-      - name: Create isolated Moonshine Python and download model for CI only
-        env:
-          MOONSHINE_VOICE_CACHE: ${{ runner.temp }}/moonshine-model-cache
+      - name: Execute the same opt-in installer used by the packaged desktop
         run: |
-          mkdir -p "$XDG_CONFIG_HOME/voxnelo/moonshine"
-          python3 -m venv "$XDG_CONFIG_HOME/voxnelo/moonshine/venv"
-          "$XDG_CONFIG_HOME/voxnelo/moonshine/venv/bin/python" -m pip install --disable-pip-version-check --no-cache-dir 'moonshine-voice==0.0.65'
-          "$XDG_CONFIG_HOME/voxnelo/moonshine/venv/bin/python" -m moonshine_voice.download --stt --language en
+          set -euo pipefail
+          # Real installer creates a personal venv, installs the SDK, downloads
+          # the official model and verifies the pinned eight-file SHA manifest.
+          node --experimental-strip-types scripts/install-moonshine-linux.mts --accept-experimental-runtime
+          test -x "$XDG_CONFIG_HOME/voxnelo/moonshine/venv/bin/python"
+          test "$(find "$XDG_CONFIG_HOME/voxnelo/moonshine/model" -maxdepth 1 -type f | wc -l)" -eq 8
+          # An existing personal install must never be silently overwritten.
+          if node --experimental-strip-types scripts/install-moonshine-linux.mts --accept-experimental-runtime; then
+            echo "Unsafe second install overwrote a previous model" >&2
+            exit 1
+          fi
       - name: Run both real recognizers on identical generated English WAVs
         env:
           MOONSHINE_VOICE_CACHE: ${{ runner.temp }}/moonshine-model-cache
@@ -74,13 +79,10 @@ jobs:
             {'id':'quiet03','scenario':'quiet','wav':'audio/quiet03.wav','reference':'we practice listening and pronunciation together'},
           ]
           (root/'manifest.json').write_text(json.dumps({'samples':samples}))
-          cache=pathlib.Path(os.environ['MOONSHINE_VOICE_CACHE'])
-          matches=[p.parent for p in cache.rglob('streaming_config.json')
-                   if 'medium-streaming-en' in str(p.parent)
-                   and (p.parent/'encoder.ort').is_file()
-                   and (p.parent/'tokenizer.bin').is_file()]
-          if len(matches)!=1:raise SystemExit('Expected one downloaded English Medium Streaming model')
-          (root/'candidate-model-path.txt').write_text(str(matches[0]))
+          model=pathlib.Path(os.environ['XDG_CONFIG_HOME'])/'voxnelo'/'moonshine'/'model'
+          if not (model/'encoder.ort').is_file() or not (model/'tokenizer.bin').is_file():
+              raise SystemExit('The actual opt-in installer did not install the model')
+          (root/'candidate-model-path.txt').write_text(str(model))
           PY
           MODEL_DIR="$(cat "$ROOT/candidate-model-path.txt")"
           echo "Experimental Moonshine model fingerprints:"
@@ -104,19 +106,6 @@ jobs:
             --script scripts/moonshine-stream-pilot.py \
             --model "$VOXNELO_MOONSHINE_MODEL_DIR" \
             --wav "$ROOT/audio/quiet02.wav"
-      - name: Stage downloaded pinned Moonshine for personal packaged-app smoke
-        env:
-          MOONSHINE_VOICE_CACHE: ${{ runner.temp }}/moonshine-model-cache
-        run: |
-          set -euo pipefail
-          ROOT="$RUNNER_TEMP/voxnelo-moonshine-compare"
-          MODEL_DIR="$(cat "$ROOT/candidate-model-path.txt")"
-          DEST="$XDG_CONFIG_HOME/voxnelo/moonshine/model"
-          mkdir -p "$DEST"
-          for filename in adapter.ort cross_kv.ort decoder_kv.ort decoder_kv_with_attention.ort encoder.ort frontend.ort streaming_config.json tokenizer.bin; do
-            cp -- "$MODEL_DIR/$filename" "$DEST/$filename"
-          done
-          test "$(find "$DEST" -maxdepth 1 -type f | wc -l)" -eq 8
       - name: Build installed Linux Electron application with Moonshine launcher
         run: |
           pnpm build:renderer
