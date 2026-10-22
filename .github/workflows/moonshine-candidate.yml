@@ -15,9 +15,6 @@ on:
 permissions:
   contents: read
 
-env:
-  XDG_CONFIG_HOME: ${{ runner.temp }}/voxnelo-moonshine-ci-config
-
 jobs:
   compare-real-models:
     runs-on: ubuntu-24.04
@@ -40,6 +37,7 @@ jobs:
           pnpm build:electron
       - name: Install non-user speech fixture generators
         run: |
+          echo "XDG_CONFIG_HOME=$RUNNER_TEMP/voxnelo-moonshine-ci-config" >> "$GITHUB_ENV"
           sudo apt-get update -qq
           sudo apt-get install -y espeak-ng sox python3-venv xvfb openbox xdotool
       - name: Prepare current pinned Sherpa Zipformer model and native adapter
