@@ -9,6 +9,10 @@ on:
       - 'scripts/benchmark-moonshine-voice.py'
       - 'scripts/moonshine-stream-pilot.py'
       - 'scripts/check-moonshine-stream-pilot.py'
+      - 'scripts/install-moonshine-linux.mts'
+      - 'scripts/moonshine-install-transaction.mts'
+      - 'apps/desktop/moonshineIntegrity.ts'
+      - 'apps/desktop/moonshinePaths.ts'
       - 'scripts/batch-offline-asr.mts'
   workflow_dispatch:
 
