@@ -55,7 +55,7 @@ export const en = {
   "modelSettingsDescription": "Check recognition readiness, install a browser on-device English pack, and manage speech setup.",
   "modelOpenAction": "Manage offline models",
   "modelEnglish": "English speech recognition · en-US",
-  "modelMoonshineInstallAction": "Install Moonshine offline recognition",
+  "modelMoonshineInstallAction": "Install or repair Moonshine offline recognition",
   "modelMoonshineInstalling": "Installing and verifying Moonshine…",
   "modelMoonshineInstallFailed": "Moonshine installation or verification failed. Check that Python 3 and internet access are available; no other model was selected.",
   "modelMoonshineInstallNote": "Your choice downloads the Moonshine Voice Python SDK and its English Medium Streaming model from official sources. After installation, recognition runs on this device. The files are SHA-256 checked before use.",
