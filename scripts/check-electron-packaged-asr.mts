@@ -111,9 +111,16 @@ try{
     else current.resolve(value.result??{});
   });
   await send('Runtime.enable');
-  const capability=await evaluate<{available:boolean;reason:string}>('window.voxneloDesktop.asr.capabilities()');
-  assert.equal(capability.available,true,'Packaged Electron ASR unavailable: '+JSON.stringify(capability));
-  const open=await evaluate<{ok:boolean;sessionId?:string;reason?:string}>('window.voxneloDesktop.asr.start()');
+  // This legacy-model candidate test is intentionally NOT a test of the
+  // Linux user-facing default (Moonshine). The candidate package explicitly
+  // stages Zipformer, so check its diagnostic engine and select it only here.
+  const defaultCapability=await evaluate<{available:boolean;reason:string}>('window.voxneloDesktop.asr.capabilities()');
+  assert.deepEqual(defaultCapability,{available:false,reason:'missing-model'},
+    'An absent Moonshine default must remain unavailable, without silent Zipformer fallback');
+  const engines=await evaluate<{zipformer:boolean;moonshineMedium:boolean}>('window.voxneloDesktop.asr.engines()');
+  assert.equal(engines.zipformer,true,'Legacy model candidate was not verified');
+  assert.equal(engines.moonshineMedium,false,'Unexpected Moonshine candidate in legacy test');
+  const open=await evaluate<{ok:boolean;sessionId?:string;reason?:string}>('window.voxneloDesktop.asr.start("zipformer")');
   assert.ok(open.ok&&open.sessionId,'Packaged Electron could not start actual native worker: '+JSON.stringify(open));
   const speech=await evaluate<{finalText:string;completed:boolean;resultCount:number;errorCount:number}>(
     `(async()=>{
