@@ -42,7 +42,8 @@
     "icon:linux:dev": "node --experimental-strip-types scripts/register-linux-dev-launcher.mts",
     "icon:linux:dev:remove": "node --experimental-strip-types scripts/register-linux-dev-launcher.mts --remove",
     "ui:check": "node --experimental-strip-types scripts/check-ui-style-architecture.mts",
-    "diagnose:linux": "node --experimental-strip-types scripts/diagnose-linux-installer.mts"
+    "diagnose:linux": "node --experimental-strip-types scripts/diagnose-linux-installer.mts",
+    "asr:moonshine:install": "node --experimental-strip-types scripts/install-moonshine-linux.mts"
   },
   "dependencies": {
     "dexie": "^4.2.0",
@@ -135,6 +136,14 @@
       {
         "from": "build/offline-asr",
         "to": "offline-asr"
+      },
+      {
+        "from": "scripts/moonshine-stream-pilot.py",
+        "to": "moonshine/scripts/moonshine-stream-pilot.py"
+      },
+      {
+        "from": "scripts/benchmark-moonshine-voice.py",
+        "to": "moonshine/scripts/benchmark-moonshine-voice.py"
       }
     ],
     "deb": {
