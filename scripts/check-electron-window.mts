@@ -174,7 +174,7 @@ try{
     report.push({label:'real-electron-microphone-permission',...mic});
   }
   const offline=await evaluate('window.voxneloDesktop.asr.capabilities()');
-  assert.deepEqual(offline,{available:false,reason:'not-configured'},'Packaged/default Electron must not implicitly load native ASR or a cloud provider');
+  assert.deepEqual(offline,{available:false,reason:'missing-model'},'Linux default must report a missing Moonshine model, never start an unverified native ASR or cloud fallback');
   report.push({label:'context-isolation',...secure});
 
   const winId=xdo('search','--onlyvisible','--name','^Voxnelo$').split('\n')[0];
