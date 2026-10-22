@@ -107,8 +107,8 @@ describe('Dedicated offline ASR model management',()=>{
     vi.stubGlobal('voxneloDesktop',{platform:'linux',asr:{capabilities}});
     vi.stubGlobal('SpeechRecognition',FakeLocalSpeech);
     render(<ModelHarness/>);
-    await waitFor(()=>expect(screen.getByText(/当前桌面版不提供应用内自动下载/)).toBeTruthy());
-    expect(screen.queryByRole('button',{name:'下载并安装英语模型'})).toBeNull();
+    await waitFor(()=>expect(screen.getByText(/Moonshine 尚未安装或未通过校验/)).toBeTruthy());
+    expect(screen.queryByRole('button',{name:'安装 Moonshine 离线识别模型'})).toBeNull();
     expect(screen.getByText(/发行授权和兼容性审核尚未完成/)).toBeTruthy();
     expect(FakeLocalSpeech.available).not.toHaveBeenCalled();
     expect(FakeLocalSpeech.install).not.toHaveBeenCalled();
