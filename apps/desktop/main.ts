@@ -10,6 +10,7 @@ import { LINUX_DESKTOP_FILENAME, resolveLinuxIconPath } from './linuxAppIdentity
 import { OfflineAsr } from './offlineAsr';
 import { defaultDesktopAsrEngine, resolveDesktopAsrEngine } from './asrDefault';
 import { verifyPinnedMoonshineMediumModel } from './moonshineIntegrity';
+import { resolveMoonshinePaths } from './moonshinePaths';
 import { RefreshableAsrEngine } from './asrRefresh';
 import { resolveVerifiedAsrStatus } from './asrAssets';
 
@@ -48,17 +49,23 @@ const offlineAsr=new RefreshableAsrEngine(new OfflineAsr(null,null),async()=>{
   return new OfflineAsr(result.assets.modelDir,result.assets.addonPath);
 });
 
-// Explicit local development pilot only: no automatic model download or public
-// redistribution. Real candidate installation and integrity approval remain gated.
-const moonshinePilot=(!app.isPackaged&&process.platform==='linux'&&
-  process.env.VOXNELO_MOONSHINE_PYTHON&&process.env.VOXNELO_MOONSHINE_MODEL_DIR&&
-  existsSync(path.join(__dirname,'..','scripts','moonshine-stream-pilot.py')))
-  ?new OfflineAsr(process.env.VOXNELO_MOONSHINE_MODEL_DIR,
-      process.env.VOXNELO_MOONSHINE_PYTHON, data=>new Worker(
-        path.join(__dirname,'moonshineAsrWorker.cjs'),{workerData:{
-          modelDir:data.modelDir,pythonPath:data.addonPath,
-          scriptPath:path.join(__dirname,'..','scripts','moonshine-stream-pilot.py'),
-        }}),['encoder.ort','adapter.ort','cross_kv.ort','decoder_kv.ort','streaming_config.json','tokenizer.bin'],true)
+// Installed Linux apps resolve only one fixed, personal, opt-in runtime path.
+// The app does not silently download native code or accept renderer paths.
+const moonshinePaths=resolveMoonshinePaths({
+  isPackaged:app.isPackaged,platform:process.platform,
+  resourcesPath:process.resourcesPath,bundleDir:__dirname,
+  personalDataDir:path.join(app.getPath('appData'),'voxnelo'),
+  developerPython:process.env.VOXNELO_MOONSHINE_PYTHON,
+  developerModelDir:process.env.VOXNELO_MOONSHINE_MODEL_DIR,
+});
+const moonshinePilot=moonshinePaths&&
+  existsSync(moonshinePaths.scriptPath)&&existsSync(moonshinePaths.validationScriptPath)
+  ?new OfflineAsr(moonshinePaths.modelDir,moonshinePaths.pythonPath,
+    data=>new Worker(path.join(__dirname,'moonshineAsrWorker.cjs'),{
+      workerData:{modelDir:data.modelDir,pythonPath:data.addonPath,
+        scriptPath:moonshinePaths.scriptPath},
+    }),['encoder.ort','adapter.ort','cross_kv.ort','decoder_kv.ort',
+      'frontend.ort','streaming_config.json','tokenizer.bin'],true)
   :null;
 // Only the exact pinned official model bytes may activate the Linux pilot.
 let moonshineModelVerified=false;
@@ -237,9 +244,8 @@ async function createWindow(): Promise<void> {
 app.whenReady().then(async () => {
   // Full eight-file verification is asynchronous and runs once before any
   // renderer can request capabilities or start a streaming inference worker.
-  if(moonshinePilot&&process.env.VOXNELO_MOONSHINE_MODEL_DIR){
-    moonshineModelVerified=await verifyPinnedMoonshineMediumModel(
-      process.env.VOXNELO_MOONSHINE_MODEL_DIR);
+  if(moonshinePilot&&moonshinePaths){
+    moonshineModelVerified=await verifyPinnedMoonshineMediumModel(moonshinePaths.modelDir);
   }
   await offlineAsr.refreshIfUnavailable();
   registerWindowControls();
