@@ -53,7 +53,7 @@ export const zh = {
   "modelSettingsDescription": "查看英语识别模型是否就绪、安装浏览器离线语言包，并管理识别环境。",
   "modelOpenAction": "管理离线模型",
   "modelEnglish": "英语语音识别 · en-US",
-  "modelMoonshineInstallAction": "安装 Moonshine 离线识别模型",
+  "modelMoonshineInstallAction": "安装或修复 Moonshine 离线模型",
   "modelMoonshineInstalling": "正在安装并校验 Moonshine…",
   "modelMoonshineInstallFailed": "Moonshine 安装或校验失败。请检查是否已安装 Python 3、网络是否可用；不会自动切换其他识别模型。",
   "modelMoonshineInstallNote": "点击安装后才会从官方来源下载 Moonshine Voice Python SDK 与英语 Medium Streaming 模型。安装后识别在本机运行，使用前将逐文件校验 SHA-256。",
