@@ -23,6 +23,7 @@ export function OfflineModelsView({dictation,onBack}:OfflineModelsViewProps){
   const desktop=Boolean(window.voxneloDesktop);
   const [refreshing,setRefreshing]=useState(false);
   const [installing,setInstalling]=useState(false);
+  const [installError,setInstallError]=useState('');
   const {refreshLocal}=dictation;
   useEffect(()=>{
     // A model can be installed in another tab or while Electron is open.
@@ -35,12 +36,28 @@ export function OfflineModelsView({dictation,onBack}:OfflineModelsViewProps){
     try{await dictation.refreshLocal();}finally{setRefreshing(false);}
   };
   const install=async()=>{
-    if(desktop||installing||dictation.localPack!=='downloadable')return;
+    if(installing||dictation.active)return;
+    if(desktop){
+      // Desktop installation is an explicit consented action: never install
+      // models or execute downloaded code during mount/status refresh.
+      const installer=window.voxneloDesktop?.asr?.installMoonshine;
+      if(window.voxneloDesktop?.platform!=='linux'||
+         dictation.offlineEngine!=='moonshine-medium'||!installer)return;
+      setInstallError('');
+      setInstalling(true);
+      try{
+        const result=await installer();
+        if(!result.ok)setInstallError(t('modelMoonshineInstallFailed'));
+        await dictation.refreshLocal();
+      }catch{setInstallError(t('modelMoonshineInstallFailed'));}
+      finally{setInstalling(false);}
+      return;
+    }
+    if(dictation.localPack!=='downloadable')return;
     setInstalling(true);
     try{
       await dictation.installLocal();
-      // A successful download response is not proof that the on-device
-      // recognizer is ready; ask the browser again before claiming success.
+      // Ask the browser again before claiming the installed pack is ready.
       await dictation.refreshLocal();
     }finally{setInstalling(false);}
   };
@@ -49,7 +66,11 @@ export function OfflineModelsView({dictation,onBack}:OfflineModelsViewProps){
   const state=checking?'modelStateChecking':ready?'modelStateReady'
     :!desktop&&dictation.localPack==='downloading'?'modelStateDownloading'
     :!desktop&&dictation.localPack==='downloadable'?'modelStateDownloadable':'modelStateUnavailable';
-  const canInstall=!desktop&&dictation.localPack==='downloadable'&&!refreshing&&!installing;
+  const canInstall=desktop
+    ?window.voxneloDesktop?.platform==='linux'&&dictation.offlineEngine==='moonshine-medium'&&
+      !ready&&!refreshing&&!installing&&!dictation.active&&
+      typeof window.voxneloDesktop.asr?.installMoonshine==='function'
+    :dictation.localPack==='downloadable'&&!refreshing&&!installing;
   return <div className="offlineModelsPage mx-auto flex w-full max-w-210 flex-col gap-5 pb-8 animate-view-enter">
     <header className="relative overflow-hidden rounded-[28px] border border-glass-edge bg-glass-surface px-5 py-6 shadow-glass backdrop-blur-[var(--glass-blur)] sm:px-8">
       <div className="pointer-events-none absolute -right-20 -top-18 size-52 rounded-full bg-brand-mist/35 blur-3xl" aria-hidden="true"/>
@@ -85,13 +106,16 @@ export function OfflineModelsView({dictation,onBack}:OfflineModelsViewProps){
           :dictation.localPack==='downloadable'?t('modelDownloadDescription')
           :t('modelBrowserUnavailable')}
       </p>
+      {desktop&&dictation.offlineEngine==='moonshine-medium'&&!ready&&
+        <p className="text-xs leading-5 text-translation-ink">{t('modelMoonshineInstallNote')}</p>}
+      {installError&&<p role="alert" className="text-sm text-destructive">{installError}</p>}
       {dictation.error&&<p role="alert" className="rounded-xl bg-muted px-3 py-2 text-sm text-translation-ink">{dictation.error}</p>}
       <div className="flex flex-wrap items-center gap-2">
         {canInstall&&<Button className="min-h-10 rounded-xl px-4" onClick={()=>void install()}>
-          <Download size={16}/>{t('modelDownloadAction')}
+          <Download size={16}/>{t(desktop?'modelMoonshineInstallAction':'modelDownloadAction')}
         </Button>}
         {installing&&<Button className="min-h-10 rounded-xl px-4" disabled>
-          <Download size={16}/>{t('modelInstalling')}
+          <Download size={16}/>{t(desktop?'modelMoonshineInstalling':'modelInstalling')}
         </Button>}
         <Button variant="outline" className="min-h-10 rounded-xl" onClick={()=>void refresh()} disabled={refreshing||installing||dictation.active}>
           <RefreshCcw size={16}/>{t('modelRefreshAction')}
