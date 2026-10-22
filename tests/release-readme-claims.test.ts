@@ -32,12 +32,18 @@ describe('Current release README claims (English first, Chinese equivalent)', ()
       expect(content).not.toMatch(/SpeakFeed|Speak Karaoke|Smart Prompt|V1\.0|coming soon|敬请期待/);
       expect(content).toContain('0.1.5');
     }
-    expect(en).toContain('do **not** bundle a third-party offline speech-recognition engine');
-    expect(zh).toContain('不包含第三方离线语音识别引擎');
-    expect(en).toContain('no automatic pronunciation score');
+    // Linux now defaults to Moonshine, but its Python runtime and model are
+    // installed separately by a user gesture, never bundled or auto-run.
+    expect(en).toContain('Linux Early Access uses Moonshine Medium Streaming');
+    expect(en).toContain('Standard installers do not bundle');
+    expect(en).toContain('no automatic pronunciation scoring');
+    expect(zh).toContain('Linux 默认使用 Moonshine Medium Streaming');
+    expect(zh).toContain('标准安装包不内置第三方模型');
     expect(zh).toContain('没有自动发音评分');
-    expect(en).toContain('no published GitHub Release');
-    expect(zh).toContain('尚未发布该版本的公开 GitHub Release');
+    expect(en).toContain('GitHub Releases');
+    expect(zh).toContain('GitHub Releases');
+    expect(en).toContain('unsigned');
+    expect(zh).toContain('未签名');
   });
 
   it('keeps local Markdown links valid across both languages and the development guide', () => {
@@ -54,7 +60,7 @@ describe('Current release README claims (English first, Chinese equivalent)', ()
   });
 });
 
-describe('Release workflow remains manual and draft-only', () => {
+describe('Release approval and guarded Linux Early Access workflow', () => {
   it('requires explicit intent before building or uploading installers', () => {
     const workflow = read('.github/workflows/release-draft.yml');
     expect(workflow).toMatch(/on:\s*\n\s+workflow_dispatch:/);
@@ -70,12 +76,33 @@ describe('Release workflow remains manual and draft-only', () => {
     expect(workflow).not.toContain('gh release edit');
   });
 
+  it('only publishes the versioned Linux Early Access after complete artifact validation', () => {
+    const workflow = read('.github/workflows/publish-linux-v0.1.5.yml');
+    expect(workflow).toContain('paths:');
+    expect(workflow).toContain("'.github/workflows/publish-linux-v0.1.5.yml'");
+    expect(workflow).toContain("github.ref == 'refs/heads/main'");
+    expect(workflow).toContain('contents: write');
+    expect(workflow).toContain('pnpm check');
+    expect(workflow).toContain('VOXNELO_REQUIRE_INSTALLERS');
+    expect(workflow).toContain('sha256sum --check SHA256SUMS-linux.txt');
+    expect(workflow).toContain('sudo apt-get install -y ./release/voxnelo_0.1.5_amd64.deb');
+    expect(workflow).toContain('gh release create v0.1.5');
+    expect(workflow).toContain('--prerelease');
+    expect(workflow).not.toContain('--draft --prerelease');
+    expect(workflow).toContain("gh release view v0.1.5");
+    expect(workflow).toContain('git ls-remote --exit-code --tags');
+    expect(workflow).not.toContain('release/*.exe');
+    expect(workflow).not.toContain('release/*.dmg');
+  });
+
   it('provides a version-specific candidate note and human-release approval guidance', () => {
     const notes = read('docs/release-notes/v' + packageInfo.version + '.md');
     expect(notes).toContain(packageInfo.version);
     expect(notes).toContain('尚未');
     expect(notes).toContain('未完成');
-    expect(notes).toContain('不自带离线实时英语识别模型');
+    expect(notes).toContain('模型不随安装包内置');
+    expect(notes).toContain('未签名');
+    expect(notes).toContain('Linux Early Access');
     expect(read('docs/engineering/GITHUB-RELEASE-DRAFT.md')).toContain('Publish release');
   });
 });
