@@ -25,6 +25,20 @@ afterEach(()=>{
 });
 
 describe('Dedicated offline ASR model management',()=>{
+  it('starts personal Moonshine provisioning only after a direct Linux model-page click',async()=>{
+    const installMoonshine=vi.fn(async()=>({ok:false,reason:'failed'}));
+    const capabilities=vi.fn(async()=>({available:false,reason:'not-configured'}));
+    const engines=vi.fn(async()=>({zipformer:true,moonshineMedium:false}));
+    vi.stubGlobal('voxneloDesktop',{platform:'linux',asr:{capabilities,engines,installMoonshine}});
+    render(<ModelHarness/>);
+    const button=await screen.findByRole('button',{name:'安装 Moonshine 离线识别模型'});
+    expect(installMoonshine).not.toHaveBeenCalled();
+    fireEvent.click(button);
+    await waitFor(()=>expect(installMoonshine).toHaveBeenCalledOnce());
+    expect(screen.getByRole('alert').textContent).toContain('安装或校验失败');
+    expect(screen.getByTestId('model-status').textContent).toContain('不可用');
+    expect(engines).toHaveBeenCalled();
+  });
   it('downloads a browser language pack only after clicking within the manager',async()=>{
     vi.stubGlobal('voxneloDesktop',undefined);
     vi.stubGlobal('SpeechRecognition',FakeLocalSpeech);
