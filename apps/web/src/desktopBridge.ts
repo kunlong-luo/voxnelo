@@ -10,13 +10,14 @@ export type DesktopSpeechResult =
   | { ok: true; wavBase64: string }
   | { ok: false; reason: 'not-installed' | 'failed' | 'cancelled' | 'invalid' };
 
+export type MoonshineInstallStage='environment'|'dependencies'|'model-download'|'model-verification'|'activation'|'complete';
 export interface OfflineAsrResult {sessionId:string;finalText:string;interimText:string}
 export interface OfflineAsrStopResult {finalText:string;completed:boolean}
 export type OfflineAsrFailureReason = 'overloaded' | 'failed';
 export interface VoxneloOfflineAsr {
   engines():Promise<null|{zipformer:boolean;moonshineMedium:boolean}>;
   installMoonshine?():Promise<{ok:true}|{ok:false;reason:'unsupported'|'busy'|'verification'|'failed'}>;
-  onMoonshineInstallProgress?(listener:(stage:'environment'|'dependencies'|'model-download'|'model-verification'|'activation'|'complete')=>void):()=>void;
+  onMoonshineInstallProgress?(listener:(stage:MoonshineInstallStage)=>void):()=>void;
   capabilities():Promise<{available:boolean;reason:'ready'|'not-configured'|'missing-addon'|'missing-model'|'invalid-personal-pack'}>;
   start(engine?:'zipformer'|'moonshine-medium'):Promise<{ok:true;sessionId:string}|{ok:false;reason:'not-configured'|'busy'|'failed'}>;
   push(sessionId:string,samples:Float32Array):void;
