@@ -137,6 +137,49 @@ describe('useRecorder', () => {
     expect(MockMediaRecorder.instances).toHaveLength(1);
   });
 
+  it('取消未完成的授权后可再次请求，旧授权晚到不得接管新录音或解锁请求', async () => {
+    const grants: Array<(stream: MediaStream) => void> = [];
+    const getUserMedia = vi.fn(() => new Promise<MediaStream>((resolve) => { grants.push(resolve); }));
+    Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia } });
+    render(<Harness />);
+    let cancelled!: Promise<void>;
+    act(() => { cancelled = latest.start(); });
+    expect(latest.status).toBe('requesting');
+    act(() => latest.clearAudio());
+    expect(latest.status).toBe('idle');
+    let replacement!: Promise<void>;
+    act(() => { replacement = latest.start(); });
+    expect(getUserMedia).toHaveBeenCalledTimes(2);
+    const oldStop = vi.fn(), currentStop = vi.fn();
+    await act(async () => {
+      grants[0]?.({ getTracks: () => [{ stop: oldStop }] } as unknown as MediaStream);
+      await cancelled;
+    });
+    expect(oldStop).toHaveBeenCalledTimes(1);
+    expect(latest.status).toBe('requesting');
+    await act(async () => { await latest.start(); });
+    expect(getUserMedia).toHaveBeenCalledTimes(2);
+    await act(async () => {
+      grants[1]?.({ getTracks: () => [{ stop: currentStop }] } as unknown as MediaStream);
+      await replacement;
+    });
+    expect(latest.status).toBe('recording');
+    expect(MockMediaRecorder.instances).toHaveLength(1);
+    act(() => latest.clearAudio());
+    expect(currentStop).toHaveBeenCalled();
+    expect(latest.recordingUrl).toBeNull();
+  });
+
+  it('取消已失败的录音请求时清除上一句麦克风错误', async () => {
+    mockDevices(() => Promise.reject(Object.assign(new Error('denied'), { name: 'NotAllowedError' })));
+    render(<Harness />);
+    await act(async () => { await latest.start(); });
+    expect(latest.error).toBeTruthy();
+    act(() => latest.clearAudio());
+    expect(latest.error).toBeNull();
+    expect(latest.status).toBe('idle');
+  });
+
   it('完整录音流程：请求中→录音中→就绪并产出回听地址', async () => {
     mockDevices(() => Promise.resolve(fakeStream()));
     render(<Harness />);

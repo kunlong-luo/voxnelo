@@ -134,6 +134,47 @@ describe('App smoke', () => {
       expect(view.container.querySelector('h1.sentenceText')?.textContent).not.toBe(FIRST_SENTENCE.english);
     });
   });
+  it('F004: the visible microphone button cancels a pending OS grant without making a phantom practice', async () => {
+    const oldMedia = Object.getOwnPropertyDescriptor(navigator, 'mediaDevices');
+    let grant: ((stream: MediaStream) => void) | undefined;
+    const stopOldTrack = vi.fn();
+    const getUserMedia = vi.fn(() => new Promise<MediaStream>(resolve => { grant = resolve; }));
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: { getUserMedia },
+    });
+    class NoCaptureUntilAuthorized {
+      static isTypeSupported() { return true; }
+      state: RecordingState = 'inactive';
+      start() { this.state = 'recording'; }
+      stop() { this.state = 'inactive'; }
+    }
+    vi.stubGlobal('MediaRecorder', NoCaptureUntilAuthorized);
+    try {
+      render(<App />);
+      await screen.findByText(FIRST_SENTENCE.english);
+      fireEvent.click(screen.getByRole('button', { name: '开口跟读' }));
+      const cancel = await screen.findByRole('button', { name: '取消录音授权请求' });
+      expect((cancel as HTMLButtonElement).disabled).toBe(false);
+      expect(getUserMedia).toHaveBeenCalledTimes(1);
+      fireEvent.click(cancel);
+      expect(screen.queryByRole('button', { name: '取消录音授权请求' })).toBeNull();
+      expect(screen.getByRole('button', { name: '开口跟读' })).toBeTruthy();
+      const { act } = await import('@testing-library/react');
+      await act(async () => {
+        grant?.({ getTracks: () => [{ stop: stopOldTrack }] } as unknown as MediaStream);
+      });
+      expect(stopOldTrack).toHaveBeenCalledTimes(1);
+      expect(screen.queryByRole('button', { name: '结束录音' })).toBeNull();
+      expect(screen.getByRole('button', { name: '开口跟读' })).toBeTruthy();
+      expect((await database.states.toArray()).every(item => item.practicedCount === 0)).toBe(true);
+    } finally {
+      vi.unstubAllGlobals();
+      if (oldMedia) Object.defineProperty(navigator, 'mediaDevices', oldMedia);
+      else Reflect.deleteProperty(navigator, 'mediaDevices');
+    }
+  });
+
   it('F004/F005: a late recorder callback cannot attribute the previous sentence to the next', async () => {
     const oldMedia = Object.getOwnPropertyDescriptor(navigator, 'mediaDevices');
     const oldCreate = Object.getOwnPropertyDescriptor(URL, 'createObjectURL');
