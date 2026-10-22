@@ -64,9 +64,9 @@ The separate `.github/workflows/security-dependency-audit.yml` runs scheduled
 and change-triggered checks. It installs the exact pinned Moonshine SDK into
 a disposable Python venv, freezes the *resolved* runtime dependencies and scans
 them using pip-audit; pnpm's lockfile is also checked against known advisories.
-Production-package high/critical findings hard-fail the audit. Existing
-Vitest 3 test-toolchain issues are reported in [Issue #138](https://github.com/kunlong-luo/voxnelo/issues/138)
-and remain unresolved; the full development scan emits an explicit warning.
+High/critical advisories in both production and test/development dependencies
+hard-fail the CI audit. See [Issue #138](https://github.com/kunlong-luo/voxnelo/issues/138)
+for the historical Vitest/tinypool/glob remediation and lockfile regression checks.
 Findings or unavailable advisory services require follow-up, **not** a claim
 that the runtime is safe. This check does not validate native wheel provenance
 or licensing and is not a publisher signature.
