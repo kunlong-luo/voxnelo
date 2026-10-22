@@ -1,0 +1,186 @@
+name: Signed QA candidates (never publish)
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        required: true
+        type: string
+      expected_commit:
+        required: true
+        type: string
+      confirmation:
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: voxnelo-signed-candidate
+  cancel-in-progress: false
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_VERSION: ${{ inputs.version }}
+      EXPECTED_COMMIT: ${{ inputs.expected_commit }}
+      CONFIRMATION: ${{ inputs.confirmation }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Block wrong source or existing release
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = 'kunlong-luo/voxnelo'
+          test "$GITHUB_REF" = 'refs/heads/main'
+          test "$CONFIRMATION" = 'BUILD_SIGNED_QA_ONLY'
+          [[ "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          [[ "$EXPECTED_COMMIT" =~ ^[a-f0-9]{40}$ ]]
+          test "$EXPECTED_COMMIT" = "$GITHUB_SHA"
+          test "$RELEASE_VERSION" = "$(node -p 'require("./package.json").version')"
+          test -f "docs/release-notes/v$RELEASE_VERSION.md"
+          if gh release view "v$RELEASE_VERSION" >/dev/null 2>&1; then
+            echo '::error::Cannot overwrite existing draft or release'
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/v$RELEASE_VERSION" >/dev/null; then
+            echo '::error::Cannot overwrite existing version tag'
+            exit 1
+          fi
+  windows:
+    needs: preflight
+    runs-on: windows-latest
+    environment: stable-signing
+    timeout-minutes: 60
+    env:
+      WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+      WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+      APPROVED_CERT_SHA1: ${{ vars.STABLE_WIN_CERT_SHA1 }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          version: 12.11.2
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Require real exportable OV certificate and reviewed thumbprint
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          if (-not $env:WIN_CSC_LINK -or -not $env:WIN_CSC_KEY_PASSWORD) { throw 'Missing Windows certificate secrets' }
+          if ($env:APPROVED_CERT_SHA1 -cnotmatch '^[A-F0-9]{40}$') { throw 'Missing approved certificate SHA-1 thumbprint' }
+      - name: Install, audit and verify
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          pnpm install --frozen-lockfile; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm audit --prod --audit-level high; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm audit --audit-level high; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm typecheck; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm test; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm build; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          pnpm asr:verify-real; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build signed NSIS (do not publish)
+        run: pnpm exec electron-builder --win nsis --x64 --publish never
+      - name: Verify actual signed EXE and compute final SHA-256
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $files=@(Get-ChildItem release -Filter 'Voxnelo*.exe' -File)
+          if ($files.Count -ne 1) { throw 'Expected exactly one NSIS installer' }
+          $sig=Get-AuthenticodeSignature -LiteralPath $files[0].FullName
+          if ($sig.Status -ne 'Valid' -or -not $sig.SignerCertificate) { throw 'Unsigned/untrusted installer' }
+          if ($sig.SignerCertificate.Thumbprint.ToUpperInvariant() -cne $env:APPROVED_CERT_SHA1) { throw 'Unapproved signer' }
+          if (-not $sig.TimeStamperCertificate) { throw 'Missing trusted timestamp' }
+          $sha=(Get-FileHash -LiteralPath $files[0].FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          Set-Content release/SHA256SUMS-win32.txt -Value "$sha  $($files[0].Name)" -Encoding ascii
+      - uses: actions/upload-artifact@v4
+        with:
+          name: voxnelo-windows-signed-qa
+          path: |
+            release/*.exe
+            release/SHA256SUMS-win32.txt
+          retention-days: 7
+          if-no-files-found: error
+  macos:
+    needs: preflight
+    runs-on: macos-latest
+    environment: stable-signing
+    timeout-minutes: 90
+    env:
+      CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+      CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+      APPLE_ID: ${{ secrets.APPLE_ID }}
+      APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      APPLE_TEAM_ID: ${{ vars.STABLE_APPLE_TEAM_ID }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          version: 12.11.2
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Require Developer ID certificate and Apple notarization credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$CSC_LINK" && test -n "$CSC_KEY_PASSWORD"
+          test -n "$APPLE_ID" && test -n "$APPLE_APP_SPECIFIC_PASSWORD"
+          [[ "$APPLE_TEAM_ID" =~ ^[A-Z0-9]{10}$ ]]
+      - name: Install, audit and verify
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm install --frozen-lockfile
+          pnpm audit --prod --audit-level high
+          pnpm audit --audit-level high
+          pnpm typecheck && pnpm test
+          pnpm build && pnpm asr:verify-real
+      - name: Build signed notarized app and DMG
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm exec electron-builder --mac dmg --arm64 --publish never \
+            --config.mac.notarize=true \
+            --config.mac.hardenedRuntime=true \
+            --config.mac.entitlements=build/stable-entitlements.mac.plist \
+            --config.mac.entitlementsInherit=build/stable-entitlements.mac.inherit.plist
+      - name: Verify app identity, notarize DMG separately, then hash final bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          app='release/mac-arm64/Voxnelo.app'
+          test -d "$app"
+          dmg="$(find release -maxdepth 1 -type f -name 'Voxnelo-*.dmg' -print -quit)"
+          test -n "$dmg"
+          test "$(find release -maxdepth 1 -type f -name 'Voxnelo-*.dmg' | wc -l)" -eq 1
+          codesign --verify --deep --strict --verbose=2 "$app"
+          xcrun stapler validate "$app"
+          spctl --assess --type execute --verbose=2 "$app"
+          team="$(codesign -dv --verbose=4 "$app" 2>&1 | sed -n 's/^TeamIdentifier=//p')"
+          test "$team" = "$APPLE_TEAM_ID"
+          bundle_id="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$app/Contents/Info.plist")"
+          test "$bundle_id" = 'app.voxnelo.desktop'
+          xcrun notarytool submit "$dmg" --apple-id "$APPLE_ID" \
+            --team-id "$APPLE_TEAM_ID" --password "$APPLE_APP_SPECIFIC_PASSWORD" --wait
+          xcrun stapler staple "$dmg"
+          xcrun stapler validate "$dmg"
+          shasum -a 256 "$dmg" | awk '{print $1 "  " $2}' > release/SHA256SUMS-darwin.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: voxnelo-macos-notarized-qa
+          path: |
+            release/*.dmg
+            release/SHA256SUMS-darwin.txt
+          retention-days: 7
+          if-no-files-found: error
+# All assets are short-lived QA outputs. No draft release, tag, or public publication.
