@@ -2,10 +2,21 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, CheckCircle2, CircleHelp, Download, HardDriveDownload, RefreshCcw, ShieldCheck } from 'lucide-react';
 import { SUPPORT_LINKS } from '@voxnelo/learning';
 import type { useLiveDictation } from './useLiveDictation';
+import type { MoonshineInstallStage } from './desktopBridge';
+import type { TranslationKey } from './i18n';
 import { useI18n } from './i18n';
 import { Button } from './components/ui/button';
 import { Card } from './components/ui/card';
 import { Badge } from './components/ui/badge';
+
+const stageTranslation:Record<MoonshineInstallStage,TranslationKey>={
+  environment:'modelMoonshineStageEnvironment',
+  dependencies:'modelMoonshineStageDependencies',
+  'model-download':'modelMoonshineStageModelDownload',
+  'model-verification':'modelMoonshineStageModelVerification',
+  activation:'modelMoonshineStageActivation',
+  complete:'modelMoonshineStageComplete',
+};
 
 interface OfflineModelsViewProps {
   dictation:ReturnType<typeof useLiveDictation>;
@@ -23,6 +34,7 @@ export function OfflineModelsView({dictation,onBack}:OfflineModelsViewProps){
   const desktop=Boolean(window.voxneloDesktop);
   const [refreshing,setRefreshing]=useState(false);
   const [installing,setInstalling]=useState(false);
+  const [installStage,setInstallStage]=useState<MoonshineInstallStage|null>(null);
   const [installError,setInstallError]=useState('');
   const {refreshLocal}=dictation;
   useEffect(()=>{
@@ -44,13 +56,23 @@ export function OfflineModelsView({dictation,onBack}:OfflineModelsViewProps){
       if(window.voxneloDesktop?.platform!=='linux'||
          dictation.offlineEngine!=='moonshine-medium'||!installer)return;
       setInstallError('');
+      setInstallStage('environment');
       setInstalling(true);
+      // Older desktop builds do not expose progress events. Keep generic
+      // installing text for those builds, but do not invent a percentage.
+      const unsubscribe=window.voxneloDesktop?.asr?.onMoonshineInstallProgress?.(
+        stage=>setInstallStage(stage)
+      );
       try{
         const result=await installer();
         if(!result.ok)setInstallError(t('modelMoonshineInstallFailed'));
         await dictation.refreshLocal();
       }catch{setInstallError(t('modelMoonshineInstallFailed'));}
-      finally{setInstalling(false);}
+      finally{
+        unsubscribe?.();
+        setInstallStage(null);
+        setInstalling(false);
+      }
       return;
     }
     if(dictation.localPack!=='downloadable')return;
@@ -117,6 +139,10 @@ export function OfflineModelsView({dictation,onBack}:OfflineModelsViewProps){
         {installing&&<Button className="min-h-10 rounded-xl px-4" disabled>
           <Download size={16}/>{t(desktop?'modelMoonshineInstalling':'modelInstalling')}
         </Button>}
+        {installing&&desktop&&installStage&&
+          <p role="status" data-testid="moonshine-install-stage" className="text-xs leading-5 text-translation-ink">
+            {t(stageTranslation[installStage])}
+          </p>}
         <Button variant="outline" className="min-h-10 rounded-xl" onClick={()=>void refresh()} disabled={refreshing||installing||dictation.active}>
           <RefreshCcw size={16}/>{t('modelRefreshAction')}
         </Button>
