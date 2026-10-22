@@ -48,6 +48,18 @@ for(const filename of ['moonshine-stream-pilot.py','benchmark-moonshine-voice.py
   const info=await stat(script);
   assert.ok(info.isFile()&&info.size>1000,'Packaged Moonshine runtime script missing: '+filename);
 }
+// Exercise the *actual packaged* installer's opt-in guard without downloading
+// anything. This catches ASAR path and ELECTRON_RUN_AS_NODE integration failures.
+if(platform==='linux'){
+  const installer=path.join(resources,'app.asar','dist-electron','moonshineInstaller.mjs');
+  const result=spawnSync(executable,[installer,'--help'],{
+    encoding:'utf8',timeout:20000,maxBuffer:4096,
+    env:{...process.env,ELECTRON_RUN_AS_NODE:'1',NODE_OPTIONS:''},
+  });
+  assert.equal(result.status,0,'Packaged Moonshine installer cannot start with --help');
+  assert.match(result.stdout,/--accept-experimental-runtime/,
+    'Packaged Moonshine installer lost its explicit consent gate');
+}
 const png=await readFile(icon);
 assert.equal(png.subarray(0,8).toString('hex'),'89504e470d0a1a0a','Wrong branded PNG magic');
 if(platform==='darwin'){
