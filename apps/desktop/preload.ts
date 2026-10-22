@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron';
 import { APP_VERSION } from '@voxnelo/core';
+import {MOONSHINE_INSTALL_STAGES} from './moonshineInstallProgress';
 
 // Only explicitly named window and local English speech capabilities are exposed.
 // The full ipcRenderer, arbitrary channels, filesystem and shell are never exposed.
@@ -24,6 +25,14 @@ contextBridge.exposeInMainWorld('voxneloDesktop', {
   asr: {
     engines: () => ipcRenderer.invoke('voxnelo:asr:engines') as Promise<null|{zipformer:boolean;moonshineMedium:boolean}>,
     installMoonshine: () => ipcRenderer.invoke('voxnelo:asr:install-moonshine') as Promise<{ok:boolean;reason?:string}>,
+    onMoonshineInstallProgress: (callback:(stage:typeof MOONSHINE_INSTALL_STAGES[number])=>void) => {
+      const listener=(_event:IpcRendererEvent,stage:unknown)=>{
+        if(typeof stage==='string'&&MOONSHINE_INSTALL_STAGES.some(s=>s===stage))
+          callback(stage as typeof MOONSHINE_INSTALL_STAGES[number]);
+      };
+      ipcRenderer.on('voxnelo:asr:moonshine-install-progress',listener);
+      return ()=>ipcRenderer.removeListener('voxnelo:asr:moonshine-install-progress',listener);
+    },
     capabilities: () => ipcRenderer.invoke('voxnelo:asr:capabilities') as Promise<{available:boolean;reason:'ready'|'not-configured'|'missing-addon'|'missing-model'|'invalid-personal-pack'}>,
     start: (engine?:'zipformer'|'moonshine-medium') => ipcRenderer.invoke('voxnelo:asr:start',engine) as Promise<{ok:true;sessionId:string}|{ok:false;reason:string}>,
     push: (id:string,samples:Float32Array) => ipcRenderer.send('voxnelo:asr:pcm',id,samples),
