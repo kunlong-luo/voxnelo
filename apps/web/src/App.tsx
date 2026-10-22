@@ -196,7 +196,10 @@ function AppScreen({languageSetting,onChangeLanguage}: {
 
   const handleRecorder = () => {
     if (dictation.active) return;
-    if (recorder.status === 'recording') {
+    if (recorder.status === 'requesting') {
+      // Cancel this application's request; a late OS permission grant is ignored.
+      recorder.clearAudio();
+    } else if (recorder.status === 'recording') {
       recorder.stop();
     } else {
       // 示范音与录音不可重叠，防止把扬声器输出录为自己的跟读。

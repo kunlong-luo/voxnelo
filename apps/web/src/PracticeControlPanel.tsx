@@ -1,4 +1,4 @@
-import { CheckCircle2, CircleHelp, LoaderCircle, Mic, ShieldCheck, Square, Turtle, Volume2 } from 'lucide-react';
+import { CheckCircle2, CircleHelp, Mic, ShieldCheck, Square, Turtle, Volume2, X } from 'lucide-react';
 import type { PracticeViewProps } from './PracticeTypes';
 import { RecordingPlayback } from './RecordingPlayback';
 import { Tooltip } from './Tooltip';
@@ -37,12 +37,12 @@ export function PracticeControlPanel({recorder,recordingBusy,speed,onSpeak,onTog
             <ActionSlot label={t('speedSlow')} detail={speed==='slow'?'0.75×':t('speedNormal')}>
               <Button variant="outline" size="icon-lg" className={utilityButton} onClick={onToggleSpeed} disabled={recordingBusy} aria-pressed={speed==='slow'} aria-label={t('speedSwitch')}><Turtle size={21}/></Button>
             </ActionSlot>
-            <ActionSlot label={t(requesting?'micPermission':recording?'stopRecording':'recordingSecondary')} detail={t(requesting?'micRequestHint':recording?'micRecordingHint':ready?'micReadyHint':'micStartHint')}>
+            <ActionSlot label={t(requesting?'micCancelRequest':recording?'stopRecording':'recordingSecondary')} detail={t(requesting?'micRequestHint':recording?'micRecordingHint':ready?'micReadyHint':'micStartHint')}>
               <div className="relative isolate grid place-items-center">
                 {recording && <span aria-hidden="true" data-motion="record-halo" className="pointer-events-none absolute -inset-2 rounded-[26px] border-2 border-primary/75 shadow-[0_0_26px_var(--canvas-glow)] animate-live-pulse"/>}
                 {requesting && <span aria-hidden="true" data-motion="permission-halo" className="pointer-events-none absolute -inset-1 rounded-[26px] border-2 border-primary/40 animate-status-breathe"/>}
-                <Button variant="default" size="icon-lg" className={cn('recordAction relative size-11 rounded-2xl border border-primary/25 bg-[image:var(--mic-gradient)] text-mic-foreground shadow-[0_10px_24px_-12px_rgba(100,69,40,.5)] @min-[440px]/workspace:size-12 transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-1 hover:scale-[1.04] active:translate-y-0 active:scale-[.97] hover:bg-accent ',recording&&'bg-secondary ring-2 ring-mic-halo/50')} onClick={onRecord} disabled={requesting||(recordingBusy&&!recording)} aria-pressed={recording} aria-label={t(requesting?'micPermission':recording?'stopRecording':'micStart')}>
-                  {requesting?<LoaderCircle size={28} aria-hidden="true" className="animate-spin"/>:recording?<Square size={21} fill="currentColor" aria-hidden="true"/>:<Mic size={23} aria-hidden="true"/>}
+                <Button variant="default" size="icon-lg" className={cn('recordAction relative size-11 rounded-2xl border border-primary/25 bg-[image:var(--mic-gradient)] text-mic-foreground shadow-[0_10px_24px_-12px_rgba(100,69,40,.5)] @min-[440px]/workspace:size-12 transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-1 hover:scale-[1.04] active:translate-y-0 active:scale-[.97] hover:bg-accent ',recording&&'bg-secondary ring-2 ring-mic-halo/50')} onClick={onRecord} disabled={recordingBusy&&!recording&&!requesting} aria-pressed={recording} aria-label={t(requesting?'micCancelRequest':recording?'stopRecording':'micStart')}>
+                  {requesting?<X size={24} aria-hidden="true"/>:recording?<Square size={21} fill="currentColor" aria-hidden="true"/>:<Mic size={23} aria-hidden="true"/>}
                 </Button>
               </div>
             </ActionSlot>

@@ -12,7 +12,9 @@ export function useRecorder() {
   const stream = useRef<MediaStream | null>(null);
   const urlRef = useRef<string | null>(null);
   const disposedRef = useRef(false);
-  const requestingRef = useRef(false);
+  // A cancelled getUserMedia promise may settle after a replacement request starts.
+  // Keep the lock scoped to its generation so stale finally blocks cannot unlock it.
+  const pendingRequestGenerationRef = useRef<number | null>(null);
   // The current media track's 'ended' listener belongs to one recorder only.
   const detachTrackEndedRef = useRef<(() => void) | null>(null);
   // Invalidates delayed MediaRecorder events when the user clears or changes a sentence.
@@ -31,19 +33,20 @@ export function useRecorder() {
     // A sentence change must invalidate callbacks and physically release any
     // active microphone, even if the MediaRecorder's stop event arrives later.
     generationRef.current += 1;
+    pendingRequestGenerationRef.current = null;
     stop();
     if (urlRef.current) URL.revokeObjectURL(urlRef.current);
     urlRef.current = null;
     setRecordingUrl(null);
     setStatus('idle');
+    setError(null);
   }, [stop]);
 
   const start = useCallback(async () => {
-    if (requestingRef.current || status === 'requesting' || status === 'recording') return;
-    requestingRef.current = true;
-    setError(null);
+    if (pendingRequestGenerationRef.current !== null || status === 'requesting' || status === 'recording') return;
     clearAudio();
     const generation = generationRef.current;
+    pendingRequestGenerationRef.current = generation;
     setStatus('requesting');
     try {
       if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
@@ -140,7 +143,9 @@ export function useRecorder() {
               : t('recorderFailure'),
       );
     } finally {
-      requestingRef.current = false;
+      if (pendingRequestGenerationRef.current === generation) {
+        pendingRequestGenerationRef.current = null;
+      }
     }
   }, [clearAudio, status, t]);
 
@@ -150,6 +155,7 @@ export function useRecorder() {
       return () => {
         disposedRef.current = true;
         generationRef.current += 1;
+        pendingRequestGenerationRef.current = null;
         detachTrackEndedRef.current?.();
         detachTrackEndedRef.current = null;
         if (recorder.current) recorder.current.onstop = null;
