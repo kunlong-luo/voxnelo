@@ -27,15 +27,15 @@ The example voice is **system text-to-speech (TTS)**, not a professionally recor
 
 ## Installation and testing
 
-**0.1.5 is a test build, not a stable public release.** There is no published GitHub Release for this version yet. For evaluation builds, open the [CI workflow runs](https://github.com/kunlong-luo/voxnelo/actions/workflows/ci.yml?query=branch%3Amain), choose a successful run on `main`, and check its downloadable artifacts. Artifacts may require a GitHub sign-in and expire.
+**v0.1.5 Linux Early Access is an unsigned public preview, not a stable cross-platform release.** Get verified Linux x64 `.deb`, `.AppImage` and `SHA256SUMS-linux.txt` files from [GitHub Releases](https://github.com/kunlong-luo/voxnelo/releases) when the v0.1.5 prerelease is published. If it has not appeared, the [main CI artifacts](https://github.com/kunlong-luo/voxnelo/actions/workflows/ci.yml?query=branch%3Amain) remain test-only downloads.
 
 | Platform | Current packaging |
 | --- | --- |
-| Linux (x64) | Test `.deb` and `.AppImage` builds. The Linux CI artifact includes `Voxnelo.deb` and `voxnelo_0.1.5_amd64.deb` (identical package contents). |
-| Windows | Unsigned NSIS test installer; not yet available as a public Release download. |
-| macOS | Unsigned/unnotarized DMG test installer; not yet available as a public Release download. |
+| Linux (x64) | Early Access `.deb` and `.AppImage` candidates; friendly `Voxnelo.deb` and `voxnelo_0.1.5_amd64.deb` have identical contents. |
+| Windows | Unsigned NSIS **CI test installer only**; not yet a public Release download. |
+| macOS | Unsigned/unnotarized DMG **CI test installer only**; not yet a public Release download. |
 
-For Debian-based Linux systems, extract the CI artifact first. You can open `Voxnelo.deb` in a package installer, or install the versioned package from its directory:
+For Debian-based Linux systems, download a DEB from the release, open `Voxnelo.deb` in your package manager, or install the versioned package from its directory:
 
 ```bash
 sudo apt install ./voxnelo_0.1.5_amd64.deb
@@ -45,7 +45,7 @@ An existing installation can be upgraded without uninstalling it first. See the 
 
 ## Speech recognition and privacy
 
-**Live dictation is experimental, not an out-of-the-box desktop feature.** Standard desktop packages do **not** bundle a third-party offline speech-recognition engine or model. A separately configured, opt-in [Linux personal ASR pilot](docs/engineering/LOCAL-ASR-PERSONAL-PILOT.md) exists, but its real-device accuracy and noise handling have not passed release acceptance. There is **no automatic pronunciation score or word-by-word correction**.
+**Linux Early Access uses Moonshine Medium Streaming as the default offline English dictation engine.** Standard installers do not bundle the third-party native runtime or model: on first use, open **Offline Models** and explicitly choose **Install Moonshine**. The app downloads the pinned SDK and model, checks model SHA-256 before use, then performs recognition locally. Initial setup requires internet, Python 3 with venv and Linux x64. No silent Zipformer fallback, automatic pronunciation scoring or word-by-word correction is provided. Real-device noise/accuracy acceptance remains ongoing; see the [Moonshine installation guide](docs/engineering/MOONSHINE-LINUX-INSTALLATION.md).
 
 Practice progress and favorites are stored on the device; there is no Voxnelo account or cross-device sync. Microphone recording requires your permission. Recordings are temporary for playback in the current sentence and are not uploaded by Voxnelo. If you try speech recognition in a web browser, browser-provided services can have different privacy and network behavior.
 
@@ -60,4 +60,4 @@ Voxnelo uses Electron, React, TypeScript, Rsbuild, and local IndexedDB storage. 
 
 Please remove personal information from public issue reports and do not upload private voice recordings.
 
-> **Release status:** Automated checks do not replace real-device microphone testing, content review, or redistribution-rights verification. Those release checks remain in progress.
+> **Release status:** Linux Early Access is a public preview only. Automated checks and initial user testing do not certify all devices, course-content review, native redistribution rights, or unsigned package authenticity. The stable release gates remain open.
