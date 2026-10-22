@@ -15,6 +15,7 @@ function run(executable:string,args:string[],env:NodeJS.ProcessEnv=process.env):
   const result=spawnSync(executable,args,{encoding:'utf8',stdio:'inherit',env,timeout:180000});
   if(result.status!==0||result.error)throw Error('Moonshine installation step failed; do not use partial files');
 }
+async function main():Promise<void>{
 const help=process.argv.includes('--help')||process.argv.includes('-h');
 if(help){
   console.log('Usage: pnpm asr:moonshine:install --accept-experimental-runtime');
@@ -60,3 +61,9 @@ try{
 }finally{
   if(!installed)await rm(root,{recursive:true,force:true});
 }
+
+}
+void main().catch(()=>{
+  console.error('Moonshine installation failed; incomplete files were not enabled.');
+  process.exitCode=1;
+});
