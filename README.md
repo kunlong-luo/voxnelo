@@ -6,9 +6,9 @@
 
 Voxnelo is an open-source, local-first desktop app for practicing spoken English. Listen to a short sentence, say it yourself, and play back your recording. No account is required.
 
-**Current version:** `0.1.5` · **Stage:** Early Access (testing) · **Maintainer:** Leo Luo · **License:** [MIT](LICENSE)
+**Current version:** `0.1.6` · **Stage:** Early Access (testing) · **Maintainer:** Leo Luo · **License:** [MIT](LICENSE)
 
-## What works in 0.1.5
+## What works in 0.1.6
 
 - **40 English sentences** with Chinese translations, topics, difficulty levels, and optional IPA pronunciation guides.
 - **Listen and repeat:** play a sentence using your system's English text-to-speech voice; switch between normal and slow playback.
@@ -25,27 +25,29 @@ Voxnelo is an open-source, local-first desktop app for practicing spoken English
 
 The example voice is **system text-to-speech (TTS)**, not a professionally recorded native-speaker voice. Availability and offline playback depend on your operating system and installed voices.
 
-## Installation and testing
+## Download & installation
 
-**v0.1.5 Linux Early Access is an unsigned public preview, not a stable cross-platform release.** Get verified Linux x64 `.deb`, `.AppImage` and `SHA256SUMS-linux.txt` files from [GitHub Releases](https://github.com/kunlong-luo/voxnelo/releases) when the v0.1.5 prerelease is published. If it has not appeared, the [main CI artifacts](https://github.com/kunlong-luo/voxnelo/actions/workflows/ci.yml?query=branch%3Amain) remain test-only downloads.
+**v0.1.6 is a PUBLIC, unsigned Early Access preview — not a stable or signed release.** The [GitHub Releases page](https://github.com/kunlong-luo/voxnelo/releases/tag/v0.1.6) provides installers and independent SHA-256 manifests for **Linux, Windows and macOS**. Only use installers from the official releases page; hashes detect mismatched files but do not replace digital signatures.
 
-| Platform | Current packaging |
-| --- | --- |
-| Linux (x64) | Early Access `.deb` and `.AppImage` candidates; friendly `Voxnelo.deb` and `voxnelo_0.1.5_amd64.deb` have identical contents. |
-| Windows | Unsigned NSIS **CI test installer only**; not yet a public Release download. |
-| macOS | Unsigned/unnotarized DMG **CI test installer only**; not yet a public Release download. |
+| Platform | Installer in v0.1.6 | Important limits |
+| --- | --- | --- |
+| Linux x64 | `Voxnelo.deb` / `voxnelo_0.1.6_amd64.deb` (identical bytes); `Voxnelo-0.1.6.AppImage` | DEB for Debian/Ubuntu/Pop!_OS; AppImage requires suitable system libraries |
+| Windows | NSIS `.exe` | **Unsigned**, so SmartScreen may warn; native Moonshine dictation is not provided on Windows |
+| macOS | `.dmg` | **Unsigned and not notarized**; Gatekeeper may warn; check your Mac chip architecture and DMG compatibility |
 
-For Debian-based Linux systems, download a DEB from the release, open `Voxnelo.deb` in your package manager, or install the versioned package from its directory:
+Each platform also has a checksum file: `SHA256SUMS-linux.txt`, `SHA256SUMS-win32.txt` or `SHA256SUMS-darwin.txt`. On Linux, place the appropriate manifest beside the downloaded files and run `sha256sum -c SHA256SUMS-linux.txt`.
+
+To upgrade on Debian-based Linux, download the new package, open `Voxnelo.deb` with your package manager or install the versioned file from its download directory:
 
 ```bash
-sudo apt install ./voxnelo_0.1.5_amd64.deb
+sudo apt install ./voxnelo_0.1.6_amd64.deb
 ```
 
-An existing installation can be upgraded without uninstalling it first. See the [installation and candidate-testing guide](docs/engineering/V0.1-RC-PLAYBOOK.md) for platform-specific checks. The [Releases page](https://github.com/kunlong-luo/voxnelo/releases) will list published downloads when they are available.
+Existing installations normally upgrade in place; you should not have to uninstall first. Windows/macOS installers are public **test builds**, not evidence of completed device certification, publisher signing or Apple notarization. See the [user guide](docs/USER-GUIDE.md) and [release notes](docs/release-notes/v0.1.6.md).
 
 ## Speech recognition and privacy
 
-**Linux Early Access uses Moonshine Medium Streaming as the default offline English dictation engine.** Standard installers do not bundle the third-party native runtime or model: on first use, open **Offline Models** and explicitly choose **Install Moonshine**. The app downloads the pinned SDK and model, checks model SHA-256 before use, then performs recognition locally. Initial setup requires internet, Python 3 with venv and Linux x64. There is no silent Zipformer fallback, no automatic pronunciation scoring, and no word-by-word correction. Real-device noise/accuracy acceptance remains ongoing; see the [Moonshine installation guide](docs/engineering/MOONSHINE-LINUX-INSTALLATION.md).
+**Linux Early Access uses Moonshine Medium Streaming as the default offline English dictation engine.** Standard installers do not bundle the third-party native runtime or model: on Linux, open **Offline Models** and explicitly choose **Install Moonshine**. On Windows and macOS, desktop practice and microphone recording are available, but the same native Moonshine engine is not included or promised to work. The app downloads the pinned SDK and model, checks model SHA-256 before use, then performs recognition locally. Initial setup requires internet, Python 3 with venv and Linux x64. There is no silent Zipformer fallback, no automatic pronunciation scoring, and no word-by-word correction. Real-device noise/accuracy acceptance remains ongoing; see the [Moonshine installation guide](docs/engineering/MOONSHINE-LINUX-INSTALLATION.md).
 
 Practice progress and favorites are stored on the device; there is no Voxnelo account or cross-device sync. Microphone recording requires your permission. Recordings are temporary for playback in the current sentence and are not uploaded by Voxnelo. If you try speech recognition in a web browser, browser-provided services can have different privacy and network behavior.
 

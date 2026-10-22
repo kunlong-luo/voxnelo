@@ -1,35 +1,37 @@
-# Voxnelo · 用户帮助（0.1 Early Access）
+# Voxnelo 用户帮助（v0.1.6 Early Access）
 
-Voxnelo 是免费、本地优先的英语口语练习应用。无需注册即可练习。项目开源地址：<https://github.com/kunlong-luo/voxnelo>。
+Voxnelo 是一款免费、本地优先的英语口语练习桌面应用，无需注册即可开始使用。**这是未签名公开预览版，不是完成所有平台验收的稳定版。** 维护者：Leo Luo。
 
-## 从第一句开始
+## 安装与升级
 
-1. 打开「练习」，点击「播放示范」听当前英语句子。朗读依赖系统提供的英语语音引擎。
-2. 点击「开口跟读」并允许麦克风权限，再次点击结束录音。随后可以回听自己的录音。
-3. 「换一句」进入下一条；「收藏」「复习」方便以后找回短句。
-4. 「历史」和学习标记保存在当前设备上，无需账号。
+到 [GitHub Releases v0.1.6](https://github.com/kunlong-luo/voxnelo/releases/tag/v0.1.6) 下载适合系统的安装包，优先检查发布页的 SHA-256 校验文件：
 
-## 实时听写的可用性
+- **Linux x64**：Debian、Ubuntu、Pop!_OS 推荐 `Voxnelo.deb`（与 `voxnelo_0.1.6_amd64.deb` 相同）；其他兼容系统可尝试 `.AppImage`。升级通常不需卸载旧版。DEB 会通过包管理器安装所需系统依赖。
+- **Windows**：下载 NSIS `.exe` 并正常安装。安装包暂未进行数字签名；SmartScreen 警告要如实对待并先确认来源，不要将其当成经认证的稳定应用。
+- **macOS**：下载 `.dmg`，核对 DMG 架构兼容性，按系统流程安装。安装器未签名、未公证，Gatekeeper 可能阻止打开；若不愿接受此限制，请暂不安装预览版。
 
-实时听写是实验性入口，**并非所有桌面安装包都有离线英语识别引擎**。当设置缺少引擎或语言模型时，会提示不可用；这时仍可使用「录制回听」。不要把自评或录音次数理解为自动发音评分。
+## 第一条英语练习
+
+1. 打开「练习」，选择一条短句，点击播放示范（取决于系统英语 TTS 语音包）。
+2. 点击录音按钮、授权麦克风、说英语，再次点击停止后即可回听。
+3. 「换一句」切换短句；收藏、复习和历史保存在当前设备上。
+4. 界面可切换中文/英文、Nordic/Sunset 主题、IPA 和减少动效设置。
+
+## Linux 实时英语听写（Moonshine）
+
+Linux x64 默认使用 Moonshine Voice Medium Streaming，**模型与 Python 运行时不会随安装包自动下载**。打开「离线模型管理」并点击「安装 Moonshine 离线识别模型」，在你主动同意后才下载官方 SDK 与模型。首次需要网络、Python 3 的 `venv` 支持和可用磁盘空间；校验 SDK 版本及模型文件哈希通过后才会启用本机推理，缺失时不会静默切回旧引擎。识别后如需断网使用，应先确保模型已完整安装。
+
+**Windows / macOS 不承诺与 Linux 相同的原生 Moonshine 离线听写可用性**，但仍能使用课程学习与麦克风录音回听。没有自动发音评分或音素级纠音。更完整的模型目录与安装说明见 [Moonshine Linux 指南](engineering/MOONSHINE-LINUX-INSTALLATION.md)。
 
 ## 常见问题
 
-- **听不到示范**：检查系统音量、输出设备与英语语音引擎。
-- **无法录音**：在系统权限设置中允许 Voxnelo 使用麦克风，检查设备连接，退出其他占用麦克风的应用。
-- **未显示旧录音**：本版本的录音仅供当前练习临时回听，切换句子后会清理；收藏与学习历史会继续保存在本机。
-- **无法实时听写**：当前安装包可能不包含本地 ASR 引擎／模型。这与麦克风是否正常是不同的问题。
-- **Linux 安装和软件中心显示问题**：可在终端运行 `pnpm diagnose:linux`（需要项目源码和本地 DEB），把错误文字整理后提交 Issue。不要上传个人录音。
+- **示范没有声音**：核对系统音量、输出设备、英语 TTS 引擎及其语音包。
+- **无法录音或听写**：核对系统麦克风权限、输入设备连接、设备是否被其他软件占用；Linux 检查模型管理页是否显示 Moonshine 已校验。
+- **Moonshine 下载失败**：检查 Python 3/venv、网络、磁盘容量和依赖环境；安装失败不代表模型可用，也不会切换到未验证模型。
+- **无法播放上一句的录音**：本版本的录音只在当前练习中临时回听；换句后旧音频会清理。本机历史、收藏和复习记录会保留。
+- **Windows SmartScreen / macOS Gatekeeper 警告**：当前公开安装包尚未进行发行者数字签名或 macOS 公证；SHA-256 不等于身份认证。
+- **安装失败**：记录安装包文件名、版本、系统版本、操作步骤及脱敏错误提示，到 [GitHub Issues](https://github.com/kunlong-luo/voxnelo/issues) 反馈。不要公开上传私人麦克风录音、系统序列号或私有文件路径。
 
-## 帮助与反馈
+## 隐私与边界
 
-- [报告软件问题](https://github.com/kunlong-luo/voxnelo/issues/new?template=bug_report.yml)
-- [提出功能建议](https://github.com/kunlong-luo/voxnelo/issues/new?template=feature_request.yml)
-- [查看开源仓库](https://github.com/kunlong-luo/voxnelo)
-- [MIT 许可证](https://github.com/kunlong-luo/voxnelo/blob/main/LICENSE)
-
-提交 GitHub Issue 通常需要 GitHub 账户。**Issue 是公开页面**，发布截图和日志前请遮盖姓名、账号、私人文件路径、令牌和其他敏感信息，不要上传自己的语音录音。打开这些链接需要网络，但 Voxnelo 的基本学习操作不依赖反馈服务器。
-
-## 软件信息
-
-版本号在「设置 → 关于 Voxnelo」展示，V0.1 当前标注为 Early Access。版本号并不代表具备所有规划中的语音识别功能。
+无需账号、学习记录本地保存。录音在用户同意使用麦克风后才开始，本地 Moonshine 识别不需要向 Voxnelo 服务器上传录音；浏览器体验版如果使用系统 Web Speech 服务则可能受浏览器提供商不同的联网/隐私政策影响。课程文本、TTS 及第三方运行时授权和跨设备实测仍在持续审核。参见 [发行说明](release-notes/v0.1.6.md)。
