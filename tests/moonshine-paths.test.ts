@@ -9,10 +9,10 @@ describe('Moonshine packaged desktop paths',()=>{
   it('uses only fixed packaged resources and private personal install',()=>{
     expect(resolveMoonshinePaths({...base,isPackaged:true,developerPython:'/tmp/untrusted/python',
       developerModelDir:'/tmp/untrusted/model'})).toEqual({
-      scriptPath:'/opt/Voxnelo/resources/moonshine/scripts/moonshine-stream-pilot.py',
-      validationScriptPath:'/opt/Voxnelo/resources/moonshine/scripts/benchmark-moonshine-voice.py',
-      pythonPath:'/home/user/.config/voxnelo/moonshine/venv/bin/python',
-      modelDir:'/home/user/.config/voxnelo/moonshine/model',
+      scriptPath:path.join(base.resourcesPath,'moonshine','scripts','moonshine-stream-pilot.py'),
+      validationScriptPath:path.join(base.resourcesPath,'moonshine','scripts','benchmark-moonshine-voice.py'),
+      pythonPath:path.join(base.personalDataDir,'moonshine','venv','bin','python'),
+      modelDir:path.join(base.personalDataDir,'moonshine','model'),
     });
   });
   it('keeps developer overrides only in the unpackaged Linux application',()=>{

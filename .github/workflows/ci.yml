@@ -119,6 +119,8 @@ jobs:
           cache: pnpm
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
+      - name: Cross-platform Moonshine path policy regression
+        run: pnpm exec vitest run tests/moonshine-paths.test.ts
       - name: Build renderer and Electron
         run: pnpm build
       - name: Gate optional native ASR payload on real WAV inference

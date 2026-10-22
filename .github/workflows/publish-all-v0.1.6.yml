@@ -1,8 +1,10 @@
 name: Publish Voxnelo v0.1.6 Early Access (Linux Windows macOS)
 
-# Deliberately one-shot: runs only when this workflow file is first merged to
-# main. No tag-triggered or ordinary source-push publishing, and never replaces
-# an existing release or tag.
+# Explicit workflow-file-only release trigger. Initial publish was blocked
+# before publication by Windows CI's Unix-path test fixture; this change
+# retries only after a source fix passes protected main branch review.
+# No tag-triggered or ordinary source-push publishing. Preflight and publish
+# both refuse to replace an existing version tag or release.
 on:
   push:
     branches: [main]
