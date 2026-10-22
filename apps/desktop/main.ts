@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, net, shell, protocol, session, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron';
 import path from 'node:path';
-import {execFile} from 'node:child_process';
-import {promisify} from 'node:util';
+import {spawn} from 'node:child_process';
+import {createInterface} from 'node:readline';
 import { Worker } from 'node:worker_threads';
 import { existsSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
@@ -12,6 +12,7 @@ import { LINUX_DESKTOP_FILENAME, resolveLinuxIconPath } from './linuxAppIdentity
 import { OfflineAsr } from './offlineAsr';
 import { defaultDesktopAsrEngine, resolveDesktopAsrEngine } from './asrDefault';
 import { verifyPinnedMoonshineMediumModel } from './moonshineIntegrity';
+import {parseMoonshineInstallStage,type MoonshineInstallStage} from './moonshineInstallProgress';
 import { resolveMoonshinePaths, verifyMoonshinePythonRuntime } from './moonshinePaths';
 import { RefreshableAsrEngine } from './asrRefresh';
 import { resolveVerifiedAsrStatus } from './asrAssets';
@@ -74,7 +75,31 @@ let moonshineModelVerified=false;
 let activeAsr:OfflineAsr|null=null;
 let openingAsr=false;
 let installingMoonshine=false;
-const execFileAsync=promisify(execFile);
+async function executeMoonshineInstaller(
+  executable:string,onStage:(stage:MoonshineInstallStage)=>void,
+):Promise<void>{
+  await new Promise<void>((resolve,reject)=>{
+    // stderr is deliberately not forwarded; pip, wheel and model output can
+    // contain private install paths. Only parse known first-party stage markers.
+    const child=spawn(process.execPath,
+      [executable,'--accept-experimental-runtime','--repair'],{
+        env:{...process.env,ELECTRON_RUN_AS_NODE:'1',NODE_OPTIONS:''},
+        stdio:['ignore','pipe','ignore'],timeout:900000,
+      });
+    if(child.stdout){
+      const lines=createInterface({input:child.stdout,crlfDelay:Infinity});
+      lines.on('line',line=>{
+        const stage=parseMoonshineInstallStage(line);
+        if(stage)onStage(stage);
+      });
+    }
+    child.once('error',reject);
+    child.once('close',(code,signal)=>{
+      if(code===0)resolve();
+      else reject(Error('Moonshine installer failed: '+(signal?'interrupted':'nonzero exit')));
+    });
+  });
+}
 
 /**
  * Window IPC is intentionally narrower than a general-purpose ipcRenderer bridge.
@@ -118,7 +143,8 @@ function registerOfflineAsr():void{
   // Explicit user action only. The Python SDK/model are never fetched during
   // application startup, capability probing, or microphone sessions.
   ipcMain.handle('voxnelo:asr:install-moonshine',async(event)=>{
-    if(!authorizedWindow(event)||process.platform!=='linux'||!moonshinePilot||!moonshinePaths)
+    const installWindow=authorizedWindow(event);
+    if(!installWindow||process.platform!=='linux'||!moonshinePilot||!moonshinePaths)
       return {ok:false,reason:'unsupported'};
     if(installingMoonshine||openingAsr||activeAsr?.hasActiveSession())
       return {ok:false,reason:'busy'};
@@ -129,11 +155,12 @@ function registerOfflineAsr():void{
       if(!existsSync(executable))return {ok:false,reason:'unsupported'};
       // Electron acts as Node for this isolated, first-party bundled installer;
       // no renderer input, arbitrary executable path or shell string accepted.
-      await execFileAsync(process.execPath,
-        [executable,'--accept-experimental-runtime','--repair'],{
-          env:{...process.env,ELECTRON_RUN_AS_NODE:'1',NODE_OPTIONS:''},
-          timeout:900000,maxBuffer:1024*1024,
-        });
+      const emitProgress=(stage:MoonshineInstallStage)=>{
+        if(!installWindow.isDestroyed()&&!installWindow.webContents.isDestroyed())
+          installWindow.webContents.send('voxnelo:asr:moonshine-install-progress',stage);
+      };
+      emitProgress('environment');
+      await executeMoonshineInstaller(executable,emitProgress);
       moonshineModelVerified=(await verifyPinnedMoonshineMediumModel(moonshinePaths.modelDir))&&
         (await verifyMoonshinePythonRuntime(moonshinePaths.pythonPath));
       return moonshineModelVerified?{ok:true}:{ok:false,reason:'verification'};

@@ -39,6 +39,37 @@ describe('Dedicated offline ASR model management',()=>{
     expect(screen.getByTestId('model-status').textContent).toContain('不可用');
     expect(engines).toHaveBeenCalled();
   });
+  it('shows actual native install phases, filters none into percentages and unsubscribes on completion',async()=>{
+    type Stage='environment'|'dependencies'|'model-download'|'model-verification'|'activation'|'complete';
+    let sendStage:(stage:Stage)=>void=()=>undefined;
+    let completeInstall:(result:{ok:true})=>void=()=>undefined;
+    const unsubscribe=vi.fn();
+    const installMoonshine=vi.fn(()=>new Promise<{ok:true}>(resolve=>{completeInstall=resolve;}));
+    const onMoonshineInstallProgress=vi.fn((listener:(stage:Stage)=>void)=>{
+      sendStage=listener;
+      return unsubscribe;
+    });
+    vi.stubGlobal('voxneloDesktop',{platform:'linux',asr:{
+      installMoonshine,onMoonshineInstallProgress,
+      capabilities:vi.fn(async()=>({available:false,reason:'missing-model'})),
+      engines:vi.fn(async()=>({zipformer:false,moonshineMedium:false})),
+    }});
+    render(<ModelHarness/>);
+    const button=await screen.findByRole('button',{name:'安装或修复 Moonshine 离线模型'});
+    expect(installMoonshine).not.toHaveBeenCalled();
+    fireEvent.click(button);
+    await waitFor(()=>expect(onMoonshineInstallProgress).toHaveBeenCalledOnce());
+    expect(screen.getByTestId('moonshine-install-stage').textContent).toContain('Python 环境');
+    act(()=>sendStage('model-download'));
+    expect(screen.getByTestId('moonshine-install-stage').textContent).toContain('下载英语离线模型');
+    expect(screen.getByTestId('moonshine-install-stage').textContent).not.toMatch(/\\d+%/);
+    act(()=>sendStage('model-verification'));
+    expect(screen.getByTestId('moonshine-install-stage').textContent).toContain('SHA-256');
+    await act(async()=>{completeInstall({ok:true});});
+    await waitFor(()=>expect(unsubscribe).toHaveBeenCalledOnce());
+    expect(screen.queryByTestId('moonshine-install-stage')).toBeNull();
+    expect(installMoonshine).toHaveBeenCalledOnce();
+  });
   it('downloads a browser language pack only after clicking within the manager',async()=>{
     vi.stubGlobal('voxneloDesktop',undefined);
     vi.stubGlobal('SpeechRecognition',FakeLocalSpeech);
