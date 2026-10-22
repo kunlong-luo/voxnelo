@@ -130,7 +130,7 @@ function registerOfflineAsr():void{
       // Electron acts as Node for this isolated, first-party bundled installer;
       // no renderer input, arbitrary executable path or shell string accepted.
       await execFileAsync(process.execPath,
-        [executable,'--accept-experimental-runtime'],{
+        [executable,'--accept-experimental-runtime','--repair'],{
           env:{...process.env,ELECTRON_RUN_AS_NODE:'1',NODE_OPTIONS:''},
           timeout:900000,maxBuffer:1024*1024,
         });
