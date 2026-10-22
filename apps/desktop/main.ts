@@ -1,5 +1,7 @@
 import { app, BrowserWindow, ipcMain, net, shell, protocol, session, type IpcMainEvent, type IpcMainInvokeEvent } from 'electron';
 import path from 'node:path';
+import {execFile} from 'node:child_process';
+import {promisify} from 'node:util';
 import { Worker } from 'node:worker_threads';
 import { existsSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
@@ -71,6 +73,8 @@ const moonshinePilot=moonshinePaths&&
 let moonshineModelVerified=false;
 let activeAsr:OfflineAsr|null=null;
 let openingAsr=false;
+let installingMoonshine=false;
+const execFileAsync=promisify(execFile);
 
 /**
  * Window IPC is intentionally narrower than a general-purpose ipcRenderer bridge.
@@ -111,6 +115,31 @@ function registerLinuxSpeech(): void {
 }
 
 function registerOfflineAsr():void{
+  // Explicit user action only. The Python SDK/model are never fetched during
+  // application startup, capability probing, or microphone sessions.
+  ipcMain.handle('voxnelo:asr:install-moonshine',async(event)=>{
+    if(!authorizedWindow(event)||process.platform!=='linux'||!moonshinePilot||!moonshinePaths)
+      return {ok:false,reason:'unsupported'};
+    if(installingMoonshine||openingAsr||activeAsr?.hasActiveSession())
+      return {ok:false,reason:'busy'};
+    if(moonshineModelVerified)return {ok:true};
+    installingMoonshine=true;
+    try{
+      const executable=path.join(__dirname,'moonshineInstaller.mjs');
+      if(!existsSync(executable))return {ok:false,reason:'unsupported'};
+      // Electron acts as Node for this isolated, first-party bundled installer;
+      // no renderer input, arbitrary executable path or shell string accepted.
+      await execFileAsync(process.execPath,
+        [executable,'--accept-experimental-runtime'],{
+          env:{...process.env,ELECTRON_RUN_AS_NODE:'1',NODE_OPTIONS:''},
+          timeout:900000,maxBuffer:1024*1024,
+        });
+      moonshineModelVerified=(await verifyPinnedMoonshineMediumModel(moonshinePaths.modelDir))&&
+        (await verifyMoonshinePythonRuntime(moonshinePaths.pythonPath));
+      return moonshineModelVerified?{ok:true}:{ok:false,reason:'verification'};
+    }catch{return {ok:false,reason:'failed'};}
+    finally{installingMoonshine=false;}
+  });
   ipcMain.handle('voxnelo:asr:capabilities',async(event)=>{
     if(!authorizedWindow(event))return {available:false,reason:'not-configured'};
     // A personal offline model can be installed while Voxnelo is open.
