@@ -34,3 +34,9 @@ v0.1.5 是只提供 Linux 下载的公开 Early Access。保持既有标签、�
 ## v0.1.7 候选（尚未公开）
 
 经 PR 审查与完整 CI 后，维护者可从 `main` 手动执行 `Prepare GitHub release draft`，输入 `version=0.1.7`、`confirmation=PREPARE_DRAFT_ONLY`。该流程会要求三平台构建、全部 pnpm High/Critical 依赖审计、安装包清单与 SHA-256 校验、Linux apt 安装，并创建**未发布的 Draft**。另外保留每周 Moonshine Python 严格审计、真实 Moonshine 推理和实际设备验收证据。人工确认前不得公开；如发布，必须标记为未签名的 Early Access prerelease，而非 Stable。保留 v0.1.6 原标签和安装包，待解决签名、公证、原生依赖授权、内容及 F001–F012 逐项验收。
+
+## v0.1.7 一次性私有草稿自动准备
+
+为避免重复要求维护者手动操作，新增 `.github/workflows/prepare-v0.1.7-draft-once.yml`，它**仅在该工作流文件首次合并进 main 时触发**，确认当前源码版本为 `0.1.7`，且没有同名 tag/Release 后，自动在 Linux、Windows、macOS 编译未签名安装包，执行严格 pnpm 审计、完整包及哈希校验和 Linux DEB 实装，再创建 **PRIVATE / prerelease Draft**。这一自动化不发布到公开下载页，也不代表证书、Apple 公证、真实麦克风、许可或 F001–F012 已通过。
+
+如果自动草稿构建失败，应修复根因并进行独立 PR；已有同名 Release 或 tag 时绝不覆盖。为正式 Stable 提供签名后的新候选需遵循 [Stable readiness](STABLE-RELEASE-READINESS.md) 流程，绝不能直接公开此次 unsigned Draft。
