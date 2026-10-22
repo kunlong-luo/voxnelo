@@ -177,7 +177,8 @@ describe('PracticeView', () => {
     const requesting = container.querySelector('[data-motion="permission-halo"]');
     expect(requesting?.getAttribute('aria-hidden')).toBe('true');
     expect(container.querySelector('[data-motion="record-halo"]')).toBeNull();
-    expect((screen.getByRole('button', { name: '正在获取权限' }) as HTMLButtonElement).disabled).toBe(true);
+    // The pending permission control is now an explicit app-side cancel action.
+    expect((screen.getByRole('button', { name: '取消录音授权请求' }) as HTMLButtonElement).disabled).toBe(false);
     expect(screen.queryByRole('button', {name:'结束录音'})).toBeNull();
 
     rerender(<PracticeView {...basePracticeProps} recorder={stubRecorder({ status: 'recording' })} recordingBusy />);
