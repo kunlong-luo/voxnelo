@@ -15,6 +15,9 @@ on:
 permissions:
   contents: read
 
+env:
+  XDG_CONFIG_HOME: ${{ runner.temp }}/voxnelo-moonshine-ci-config
+
 jobs:
   compare-real-models:
     runs-on: ubuntu-24.04
@@ -38,7 +41,7 @@ jobs:
       - name: Install non-user speech fixture generators
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y espeak-ng sox python3-venv
+          sudo apt-get install -y espeak-ng sox python3-venv xvfb openbox xdotool
       - name: Prepare current pinned Sherpa Zipformer model and native adapter
         run: |
           pnpm asr:model:prepare --out "$RUNNER_TEMP/old-zipformer/model"
@@ -47,9 +50,10 @@ jobs:
         env:
           MOONSHINE_VOICE_CACHE: ${{ runner.temp }}/moonshine-model-cache
         run: |
-          python3 -m venv "$RUNNER_TEMP/moonshine-venv"
-          "$RUNNER_TEMP/moonshine-venv/bin/python" -m pip install --disable-pip-version-check --no-cache-dir 'moonshine-voice==0.0.65'
-          "$RUNNER_TEMP/moonshine-venv/bin/python" -m moonshine_voice.download --stt --language en
+          mkdir -p "$XDG_CONFIG_HOME/voxnelo/moonshine"
+          python3 -m venv "$XDG_CONFIG_HOME/voxnelo/moonshine/venv"
+          "$XDG_CONFIG_HOME/voxnelo/moonshine/venv/bin/python" -m pip install --disable-pip-version-check --no-cache-dir 'moonshine-voice==0.0.65'
+          "$XDG_CONFIG_HOME/voxnelo/moonshine/venv/bin/python" -m moonshine_voice.download --stt --language en
       - name: Run both real recognizers on identical generated English WAVs
         env:
           MOONSHINE_VOICE_CACHE: ${{ runner.temp }}/moonshine-model-cache
@@ -92,7 +96,7 @@ jobs:
           export VOXNELO_ASR_ADDON_PATH="$(node -p 'require.resolve("sherpa-onnx-node",{paths:[process.env.RUNNER_TEMP+"/voxnelo-native/node_modules"]})')"
           export LD_LIBRARY_PATH="$RUNNER_TEMP/voxnelo-native/node_modules/sherpa-onnx-node/lib:${LD_LIBRARY_PATH:-}"
           export VOXNELO_MOONSHINE_MODEL_DIR="$MODEL_DIR"
-          export VOXNELO_MOONSHINE_PYTHON="$RUNNER_TEMP/moonshine-venv/bin/python"
+          export VOXNELO_MOONSHINE_PYTHON="$XDG_CONFIG_HOME/voxnelo/moonshine/venv/bin/python"
           pnpm asr:compare:moonshine \
             --manifest "$ROOT/manifest.json" --output-dir "$ROOT/numeric-report"
           cat "$ROOT/numeric-report/report.md"
@@ -102,6 +106,28 @@ jobs:
             --script scripts/moonshine-stream-pilot.py \
             --model "$VOXNELO_MOONSHINE_MODEL_DIR" \
             --wav "$ROOT/audio/quiet02.wav"
+      - name: Stage downloaded pinned Moonshine for personal packaged-app smoke
+        env:
+          MOONSHINE_VOICE_CACHE: ${{ runner.temp }}/moonshine-model-cache
+        run: |
+          set -euo pipefail
+          ROOT="$RUNNER_TEMP/voxnelo-moonshine-compare"
+          MODEL_DIR="$(cat "$ROOT/candidate-model-path.txt")"
+          DEST="$XDG_CONFIG_HOME/voxnelo/moonshine/model"
+          mkdir -p "$DEST"
+          for filename in adapter.ort cross_kv.ort decoder_kv.ort decoder_kv_with_attention.ort encoder.ort frontend.ort streaming_config.json tokenizer.bin; do
+            cp -- "$MODEL_DIR/$filename" "$DEST/$filename"
+          done
+          test "$(find "$DEST" -maxdepth 1 -type f | wc -l)" -eq 8
+      - name: Build installed Linux Electron application with Moonshine launcher
+        run: |
+          pnpm build:renderer
+          pnpm exec electron-builder --linux --dir --publish never
+      - name: Test packaged Electron default Moonshine with genuine PCM recognition
+        env:
+          VOXNELO_MOONSHINE_CI_WAV: ${{ runner.temp }}/voxnelo-moonshine-compare/audio/quiet01.wav
+        run: |
+          xvfb-run -a -s "-screen 0 1600x1000x24" node --experimental-strip-types scripts/check-electron-packaged-moonshine.mts
       - name: Upload numeric-only evidence
         if: always()
         uses: actions/upload-artifact@v4
