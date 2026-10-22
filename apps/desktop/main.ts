@@ -125,7 +125,7 @@ function registerOfflineAsr():void{
     if(moonshineModelVerified)return {ok:true};
     installingMoonshine=true;
     try{
-      const executable=path.join(__dirname,'moonshineInstaller.mjs');
+      const executable=path.join(__dirname,'moonshineInstaller.cjs');
       if(!existsSync(executable))return {ok:false,reason:'unsupported'};
       // Electron acts as Node for this isolated, first-party bundled installer;
       // no renderer input, arbitrary executable path or shell string accepted.
