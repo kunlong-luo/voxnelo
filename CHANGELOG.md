@@ -69,6 +69,17 @@
 - 无用依赖 `zod`、`zustand`（全仓零引用）；`App.tsx` 3 个无用图标导入；
   删除从未被调用的 `exportLearningData`（备份/恢复待 V0.3 完整设计后再做）。
 
+## [0.1.7] - 待发布（Early Access 补丁候选）
+
+### Fixed
+- Moonshine Linux 离线模型支持用户主动启动的安全安装／修复、隔离校验、回滚与个人文件保护（#136）。
+- 模型管理页显示真实 Python 环境、SDK、模型下载、校验与启用阶段，不伪造百分比或输出敏感日志（#137）。
+- Vitest 及 coverage-v8 升级至 4.1.12，移除旧 tinypool 与高危 glob@10.4.5；完整 pnpm High/Critical 审计恢复为硬门禁（#139 / #138）。
+
+### Release status
+- 尚未公开 v0.1.7 安装包；现有 v0.1.6 标签及附件不修改。
+- 当前仍为未签名、macOS 未公证的 Early Access。签名、许可证与全平台人工验收未完成。
+
 ## [0.1.6] - 2026-10-22
 
 ### Early Access downloads

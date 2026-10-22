@@ -30,3 +30,7 @@
 ## v0.1.5 历史
 
 v0.1.5 是只提供 Linux 下载的公开 Early Access。保持既有标签、附件和下载完整性不变；新平台安装包在 v0.1.6 中独立发行，避免同一个版本号指向不同安装文件。
+
+## v0.1.7 候选（尚未公开）
+
+经 PR 审查与完整 CI 后，维护者可从 `main` 手动执行 `Prepare GitHub release draft`，输入 `version=0.1.7`、`confirmation=PREPARE_DRAFT_ONLY`。该流程会要求三平台构建、全部 pnpm High/Critical 依赖审计、安装包清单与 SHA-256 校验、Linux apt 安装，并创建**未发布的 Draft**。另外保留每周 Moonshine Python 严格审计、真实 Moonshine 推理和实际设备验收证据。人工确认前不得公开；如发布，必须标记为未签名的 Early Access prerelease，而非 Stable。保留 v0.1.6 原标签和安装包，待解决签名、公证、原生依赖授权、内容及 F001–F012 逐项验收。

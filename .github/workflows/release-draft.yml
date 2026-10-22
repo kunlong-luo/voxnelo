@@ -71,6 +71,8 @@ jobs:
           cache: pnpm
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
+      - name: Gate High/Critical advisories including dev dependencies
+        run: pnpm audit --prod --audit-level high && pnpm audit --audit-level high
       - name: Typecheck and test
         run: pnpm typecheck && pnpm test
       - name: Build Electron and renderer

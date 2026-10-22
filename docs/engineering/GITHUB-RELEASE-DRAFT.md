@@ -17,3 +17,7 @@
 v0.1.6 发布页的 Linux `.deb` / `.AppImage`、Windows NSIS `.exe`、macOS `.dmg` 必须全部来自同一个 `main` 合并 SHA，所有文件与 `SHA256SUMS-linux.txt` / `-win32.txt` / `-darwin.txt` 匹配。该构建是 unsigned candidate 的公开 Early Access 分发，尚无 Apple 公证或受信任的数字签名。**SHA-256 完整性不能证明代码签名或受法律认证。** Mac/Windows 离线 Moonshine 原生支持尚不能据此宣称可用。
 
 详见 [发布运维细则](RELEASE-OPERATIONS.md)、[V0.1 验收矩阵](V0.1-ACCEPTANCE-MATRIX.md)、[用户指南](../USER-GUIDE.md)。
+
+## v0.1.7 候选
+
+源码 0.1.7 版本准备 PR 不会创建 tag 或公开 Release。PR 合并且所有检查通过后，在 `main` 手动运行 `Prepare GitHub release draft`，指定 `0.1.7` 和 `PREPARE_DRAFT_ONLY`；生成的候选 Draft 仍需三平台验证及人工发布审批。公开下载仍是 v0.1.6。
