@@ -69,6 +69,14 @@
 - 无用依赖 `zod`、`zustand`（全仓零引用）；`App.tsx` 3 个无用图标导入；
   删除从未被调用的 `exportLearningData`（备份/恢复待 V0.3 完整设计后再做）。
 
+## [0.1.6] - 2026-10-22
+
+### Early Access downloads
+- 在公开 GitHub Release 中提供 **Linux x64 DEB/AppImage、Windows x64 NSIS EXE、macOS DMG** 及三平台 SHA-256 校验清单；所有安装包均未签名，macOS 未公证。
+- 发行流水线跨操作系统运行类型检查、测试、实际打包与安装包文件校验，Linux 增加实际 apt 安装；合并时仅发布一次且不覆盖已有 Release 或标签。
+- 中英文 README、用户指南、发布说明与验收文档同步说明各平台可用能力和风险。Linux Moonshine 默认模型仍需用户主动下载；Windows/macOS 不声称已支持同等 Moonshine 离线推理。
+- 保留 v0.1.5 Linux-only Early Access 历史附件，不修改旧版下载或标签。
+
 ## [0.1.5] - 2026-10-22
 
 ### Linux Early Access 发布说明

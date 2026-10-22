@@ -29,6 +29,6 @@ describe('Voxnelo release identity',()=>{
   });
 
   it('uses a patch version newer than the previous Linux DEB',()=>{
-    expect(readVersion('package.json')).toBe('0.1.5');
+    expect(readVersion('package.json')).toBe('0.1.6');
   });
 });

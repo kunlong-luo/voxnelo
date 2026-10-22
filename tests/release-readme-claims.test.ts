@@ -30,7 +30,7 @@ describe('Current release README claims (English first, Chinese equivalent)', ()
 
     for (const content of [en, zh]) {
       expect(content).not.toMatch(/SpeakFeed|Speak Karaoke|Smart Prompt|V1\.0|coming soon|敬请期待/);
-      expect(content).toContain('0.1.5');
+      expect(content).toContain(packageInfo.version);
     }
     // Linux now defaults to Moonshine, but its Python runtime and model are
     // installed separately by a user gesture, never bundled or auto-run.
@@ -93,6 +93,23 @@ describe('Release approval and guarded Linux Early Access workflow', () => {
     expect(workflow).toContain('git ls-remote --exit-code --tags');
     expect(workflow).not.toContain('release/*.exe');
     expect(workflow).not.toContain('release/*.dmg');
+  });
+
+  it('publishes all three OS installer formats as a versioned, unsigned Early Access only after integrity checks', () => {
+    const workflow = read('.github/workflows/publish-all-v0.1.6.yml');
+    expect(workflow).toContain("'.github/workflows/publish-all-v0.1.6.yml'");
+    expect(workflow).toContain('windows-latest');
+    expect(workflow).toContain('macos-latest');
+    expect(workflow).toContain('ubuntu-24.04');
+    expect(workflow).toContain('VOXNELO_REQUIRE_INSTALLERS');
+    expect(workflow).toContain('sha256sum -c');
+    expect(workflow).toContain('*.exe');
+    expect(workflow).toContain('*.dmg');
+    expect(workflow).toContain('*.AppImage');
+    expect(workflow).toContain('v0.1.6');
+    expect(workflow).toContain('--prerelease');
+    expect(workflow).toContain('Refuse to overwrite');
+    expect(workflow).not.toContain('gh release edit');
   });
 
   it('provides a version-specific candidate note and human-release approval guidance', () => {
