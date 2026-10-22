@@ -10,7 +10,7 @@ import { LINUX_DESKTOP_FILENAME, resolveLinuxIconPath } from './linuxAppIdentity
 import { OfflineAsr } from './offlineAsr';
 import { defaultDesktopAsrEngine, resolveDesktopAsrEngine } from './asrDefault';
 import { verifyPinnedMoonshineMediumModel } from './moonshineIntegrity';
-import { resolveMoonshinePaths } from './moonshinePaths';
+import { resolveMoonshinePaths, verifyMoonshinePythonRuntime } from './moonshinePaths';
 import { RefreshableAsrEngine } from './asrRefresh';
 import { resolveVerifiedAsrStatus } from './asrAssets';
 
@@ -245,7 +245,8 @@ app.whenReady().then(async () => {
   // Full eight-file verification is asynchronous and runs once before any
   // renderer can request capabilities or start a streaming inference worker.
   if(moonshinePilot&&moonshinePaths){
-    moonshineModelVerified=await verifyPinnedMoonshineMediumModel(moonshinePaths.modelDir);
+    moonshineModelVerified=(await verifyPinnedMoonshineMediumModel(moonshinePaths.modelDir))&&
+      (await verifyMoonshinePythonRuntime(moonshinePaths.pythonPath));
   }
   await offlineAsr.refreshIfUnavailable();
   registerWindowControls();
