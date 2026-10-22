@@ -17,6 +17,11 @@ jobs:
   evidence:
     name: Verify human evidence and exact release hashes
     runs-on: ubuntu-latest
+    outputs:
+      windows_sha256: ${{ steps.pin.outputs.windows_sha256 }}
+      macos_sha256: ${{ steps.pin.outputs.macos_sha256 }}
+      windows_certificate_sha1: ${{ steps.pin.outputs.windows_certificate_sha1 }}
+      apple_team_id: ${{ steps.pin.outputs.apple_team_id }}
     env:
       RELEASE_VERSION: ${{ inputs.version }}
       CONFIRMATION: ${{ inputs.confirmation }}
@@ -50,6 +55,25 @@ jobs:
         run: gh release download "v$RELEASE_VERSION" --dir verified-assets
       - name: Fail closed on missing reviewer, license, physical QA or digest
         run: node --experimental-strip-types scripts/check-stable-evidence.mts "docs/release/stable-approval/v$RELEASE_VERSION.json" "$RELEASE_VERSION" "$RELEASE_COMMIT" verified-assets
+      - name: Pin approved final installer hashes and publisher identity for native jobs
+        id: pin
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import { appendFileSync, readFileSync } from 'node:fs';
+          const approval=JSON.parse(readFileSync(`docs/release/stable-approval/v${process.env.RELEASE_VERSION}.json`,'utf8'));
+          const fields={
+            windows_sha256:approval.artifacts.win32[0].sha256,
+            macos_sha256:approval.artifacts.darwin[0].sha256,
+            windows_certificate_sha1:approval.signingIdentity.windowsCertificateSha1,
+            apple_team_id:approval.signingIdentity.appleTeamId,
+          };
+          for(const [key,val] of Object.entries(fields)){
+            if(!/^[A-Za-z0-9]+$/.test(val))throw Error('Unsafe signed-artifact identity field: '+key);
+            appendFileSync(process.env.GITHUB_OUTPUT,`${key}=${val}\n`);
+          }
+          NODE
 
   windows-signature:
     name: Require trusted Windows Authenticode signature and timestamp
@@ -58,6 +82,8 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       RELEASE_VERSION: ${{ inputs.version }}
+      EXPECTED_WINDOWS_SHA256: ${{ needs.evidence.outputs.windows_sha256 }}
+      EXPECTED_WINDOWS_CERT_SHA1: ${{ needs.evidence.outputs.windows_certificate_sha1 }}
     steps:
       - name: Download actual final NSIS EXE
         shell: pwsh
@@ -68,11 +94,18 @@ jobs:
           $ErrorActionPreference='Stop'
           $files=@(Get-ChildItem signed-assets -Filter '*.exe' -File)
           if ($files.Count -ne 1) {throw 'Require exactly one signed EXE'}
+          $actualHash=(Get-FileHash -LiteralPath $files[0].FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actualHash -cne $env:EXPECTED_WINDOWS_SHA256) {
+            throw 'Stable blocked: native Windows EXE differs from approved SHA-256'
+          }
           $sig=Get-AuthenticodeSignature -LiteralPath $files[0].FullName
           if ($sig.Status -ne 'Valid' -or -not $sig.SignerCertificate) {
             throw 'Stable blocked: Authenticode not trusted'
           }
           if (-not $sig.TimeStamperCertificate) {throw 'Stable blocked: timestamp absent'}
+          if ($sig.SignerCertificate.Thumbprint.ToUpperInvariant() -cne $env:EXPECTED_WINDOWS_CERT_SHA1) {
+            throw 'Stable blocked: trusted publisher certificate differs from approved signer'
+          }
           Write-Host "Validated signer $($sig.SignerCertificate.Thumbprint)"
 
   macos-notarization:
@@ -82,6 +115,8 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       RELEASE_VERSION: ${{ inputs.version }}
+      EXPECTED_MACOS_SHA256: ${{ needs.evidence.outputs.macos_sha256 }}
+      EXPECTED_APPLE_TEAM_ID: ${{ needs.evidence.outputs.apple_team_id }}
     steps:
       - name: Download actual final DMG
         shell: bash
@@ -93,6 +128,7 @@ jobs:
           dmg="$(find signed-assets -maxdepth 1 -type f -name '*.dmg' -print -quit)"
           test -n "$dmg"
           test "$(find signed-assets -maxdepth 1 -type f -name '*.dmg' | wc -l)" -eq 1
+          printf '%s  %s\n' "$EXPECTED_MACOS_SHA256" "$dmg" | shasum -a 256 --check
           xcrun stapler validate "$dmg"
           mkdir mounted
           hdiutil attach -readonly -nobrowse -mountpoint "$PWD/mounted" "$dmg"
@@ -102,6 +138,9 @@ jobs:
           codesign --verify --deep --strict --verbose=2 "$app"
           xcrun stapler validate "$app"
           spctl --assess --type execute --verbose=2 "$app"
-          codesign -dv --verbose=4 "$app" 2>&1 | grep -E '^TeamIdentifier=[A-Z0-9]+$'
+          team_id="$(codesign -dv --verbose=4 "$app" 2>&1 | sed -n 's/^TeamIdentifier=//p')"
+          test "$team_id" = "$EXPECTED_APPLE_TEAM_ID" || { echo '::error::Apple signer Team ID differs from approved team'; exit 1; }
+          bundle_id="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$app/Contents/Info.plist")"
+          test "$bundle_id" = 'app.voxnelo.desktop' || { echo '::error::Signed app bundle identity mismatch'; exit 1; }
 
 # This read-only workflow does not sign, notarize, publish or approve human reviews.

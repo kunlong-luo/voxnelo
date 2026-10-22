@@ -149,5 +149,9 @@
     "linux": [],
     "win32": [],
     "darwin": []
+  },
+  "signingIdentity": {
+    "windowsCertificateSha1": "REPLACE_WITH_APPROVED_40_CHAR_CERT_SHA1",
+    "appleTeamId": "REPLACE_WITH_VERIFIED_10_CHAR_TEAM_ID"
   }
 }

@@ -9,9 +9,11 @@ const tag='a'.repeat(40),version='0.1.7';
 const sum=(s:string)=>createHash('sha256').update(s).digest('hex');
 const pass=()=>({status:'pass',reviewer:'reviewed human',date:'2026-10-22',
   evidenceUrl:'https://github.com/kunlong-luo/voxnelo/issues/141'});
+const windowsThumbprint='A'.repeat(40),appleTeamId='AB12CD34EF';
 const files={linux:['Voxnelo.deb','voxnelo_0.1.7_amd64.deb','Voxnelo-0.1.7.AppImage'],
   win32:['Voxnelo.Setup.0.1.7.exe'],darwin:['Voxnelo-0.1.7-arm64.dmg']};
 const example=()=>({schemaVersion:1,version,sourceCommit:tag,releaseOwner:pass(),
+  signingIdentity:{windowsCertificateSha1:windowsThumbprint,appleTeamId},
   features:Object.fromEntries(FEATURES.map(id=>[id,pass()])),
   gates:Object.fromEntries(GATES.map(id=>[id,pass()])),
   noviceTesters:Array.from({length:5},(_,i)=>({...pass(),anonymousId:'volunteer-'+i})),
@@ -24,6 +26,13 @@ describe('Fail-closed Stable release approval gate',()=>{
   it('rejects missing evidence and mismatched source',()=>{
     expect(stableBlockers({},version,tag).length).toBeGreaterThan(20);
     expect(stableBlockers(example(),version,'b'.repeat(40))).toContain('tag target SHA mismatch');
+  });
+  it('rejects missing or malformed publisher identities, even if remaining evidence is approved',()=>{
+    const evidence=example();
+    evidence.signingIdentity.windowsCertificateSha1='';
+    evidence.signingIdentity.appleTeamId='FAKE';
+    expect(stableBlockers(evidence,version,tag).join(' ')).toMatch(/Windows certificate SHA-1 thumbprint missing/);
+    expect(stableBlockers(evidence,version,tag).join(' ')).toMatch(/Apple Team ID missing/);
   });
   it('rejects pending F004, missing model rights and repeated tester identities',()=>{
     const evidence=example();
@@ -56,6 +65,12 @@ describe('Fail-closed Stable release approval gate',()=>{
     expect(yml).toContain('Get-AuthenticodeSignature');
     expect(yml).toContain('xcrun stapler validate');
     expect(yml).toContain('codesign --verify');
+    expect(yml).toContain('Get-FileHash');
+    expect(yml).toContain('Get-AuthenticodeSignature');
+    expect(yml).toContain('EXPECTED_WINDOWS_SHA256');
+    expect(yml).toContain('EXPECTED_APPLE_TEAM_ID');
+    expect(yml).toContain('EXPECTED_MACOS_SHA256');
+    expect(yml).toContain('CFBundleIdentifier');
     expect(yml).not.toMatch(/^\s+push:/m);
     expect(yml).not.toMatch(/gh release (?:create|edit|upload)/);
   });

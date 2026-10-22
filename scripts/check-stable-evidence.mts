@@ -45,6 +45,12 @@ export function stableBlockers(input: unknown, version: string, tagSha: string):
       requireReview(errors,'noviceTesters['+i+']',item);
     }
   }
+  // A valid certificate from a different publisher must never authorize our artifact.
+  const signer=row(data.signingIdentity);
+  if(!/^[A-F0-9]{40}$/.test(txt(signer.windowsCertificateSha1)))
+    errors.push('publisher Windows certificate SHA-1 thumbprint missing or invalid');
+  if(!/^[A-Z0-9]{10}$/.test(txt(signer.appleTeamId)))
+    errors.push('publisher Apple Team ID missing or invalid');
   const all=row(data.artifacts);
   for(const platform of PLATFORMS){
     const entries=all[platform];
