@@ -70,11 +70,9 @@ export async function provisionMoonshineDirectory(
   }catch(error){
     if(promoted){
       await rm(root,{recursive:true,force:true});
-      promoted=false;
     }
     if(backedUp){
       await rename(backup,root);
-      backedUp=false;
     }
     throw error;
   }finally{
