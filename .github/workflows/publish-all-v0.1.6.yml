@@ -1,0 +1,198 @@
+name: Publish Voxnelo v0.1.6 Early Access (Linux Windows macOS)
+
+# Deliberately one-shot: runs only when this workflow file is first merged to
+# main. No tag-triggered or ordinary source-push publishing, and never replaces
+# an existing release or tag.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-all-v0.1.6.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: voxnelo-v0.1.6-public-early-access
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    name: Verify release identity and intended audience
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Require v0.1.6, truthful preview notes, and no existing tag
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = 'refs/heads/main'
+          test "$(node -p 'require("./package.json").version')" = '0.1.6'
+          test -s docs/release-notes/v0.1.6.md
+          grep -q 'Linux' docs/release-notes/v0.1.6.md
+          grep -q 'Windows' docs/release-notes/v0.1.6.md
+          grep -q 'macOS' docs/release-notes/v0.1.6.md
+          grep -q '未签名' docs/release-notes/v0.1.6.md
+          if gh release view v0.1.6 >/dev/null 2>&1; then
+            echo '::error::v0.1.6 Release exists; refusing to overwrite'
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags https://github.com/kunlong-luo/voxnelo.git refs/tags/v0.1.6 >/dev/null 2>&1; then
+            echo '::error::v0.1.6 tag exists; refusing overwrite'
+            exit 1
+          fi
+
+  build:
+    name: Build and verify unsigned ${{ matrix.target }} installers
+    needs: preflight
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: linux
+            args: --linux deb AppImage
+          - os: windows-latest
+            target: windows
+            args: --win nsis
+          - os: macos-latest
+            target: mac
+            args: --mac dmg
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          version: 12.11.2
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install pinned dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck, tests, renderer and Electron build
+        run: pnpm typecheck && pnpm test && pnpm build
+      - name: Verify optional locally staged ASR, never bundle unverified binaries
+        run: pnpm asr:verify-real
+      - name: Build unsigned OS-native installers
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: pnpm exec electron-builder ${{ matrix.args }} --publish never
+      - name: Embed Linux AppStream metadata and user-friendly DEB alias
+        if: runner.os == 'Linux'
+        run: node --experimental-strip-types scripts/brand-linux-installer.mts
+      - name: Validate real package content and installer file identities
+        env:
+          VOXNELO_REQUIRE_INSTALLERS: '1'
+        run: node --experimental-strip-types scripts/check-desktop-package.mts
+      - name: Generate SHA256SUMS and auditable candidate manifest
+        run: node --experimental-strip-types scripts/write-candidate-manifest.mts
+      - name: Actually install Linux DEB using apt
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y ./release/voxnelo_0.1.6_amd64.deb
+          test "$(dpkg-query -W -f='${Version}' voxnelo)" = '0.1.6'
+          test "$(dpkg-query -W -f='${Status}' fonts-noto-cjk)" = 'install ok installed'
+          test "$(dpkg-query -W -f='${Status}' python3-venv)" = 'install ok installed'
+          dpkg -L voxnelo | grep -F '/usr/share/metainfo/app.voxnelo.desktop.metainfo.xml'
+      - name: Upload verified candidates to release assembly
+        uses: actions/upload-artifact@v4
+        with:
+          name: voxnelo-${{ matrix.target }}-v0.1.6-unsigned
+          path: |
+            release/*.deb
+            release/*.AppImage
+            release/*.exe
+            release/*.dmg
+            release/SHA256SUMS-*.txt
+            release/candidate-manifest-*.json
+          retention-days: 30
+          if-no-files-found: error
+
+  publish:
+    name: Publish complete three-platform Early Access, never stable
+    needs: [preflight, build]
+    runs-on: ubuntu-24.04
+    if: github.repository == 'kunlong-luo/voxnelo' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: voxnelo-*-v0.1.6-unsigned
+          path: release-assets
+          merge-multiple: true
+      - name: Validate all three platform SHA-256 inventories and asset counts
+        shell: bash
+        run: |
+          set -euo pipefail
+          for platform in linux win32 darwin; do
+            test -s "release-assets/SHA256SUMS-$platform.txt"
+            test -s "release-assets/candidate-manifest-$platform.json"
+            (cd release-assets && sha256sum -c "SHA256SUMS-$platform.txt")
+          done
+          test -s release-assets/Voxnelo.deb
+          test -s release-assets/voxnelo_0.1.6_amd64.deb
+          test -s release-assets/Voxnelo-0.1.6.AppImage
+          cmp -s release-assets/Voxnelo.deb release-assets/voxnelo_0.1.6_amd64.deb
+          test "$(find release-assets -maxdepth 1 -type f -name '*.exe' | wc -l)" -eq 1
+          test "$(find release-assets -maxdepth 1 -type f -name '*.dmg' | wc -l)" -eq 1
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          for(const platform of ['linux','win32','darwin']){
+            const m=JSON.parse(readFileSync('release-assets/candidate-manifest-'+platform+'.json','utf8'));
+            if(m.platform!==platform || !m.candidateOnly || !m.unsigned || m.publicReleaseApproved!==false)
+              throw Error('Not a valid unsigned candidate manifest for '+platform);
+            if(!Array.isArray(m.files)||m.files.length<1)throw Error('Missing '+platform+' asset inventory');
+            for(const asset of m.files){
+              if(!/^[a-f0-9]{64}$/.test(asset.sha256) || asset.sizeBytes<1024*1024)
+                throw Error('Invalid '+platform+' asset integrity metadata');
+            }
+          }
+          NODE
+          # Validate the actual payload list before publishing; the JSON
+          # manifests remain internal CI evidence, not public release claims.
+          find release-assets -maxdepth 1 -type f | LC_ALL=C sort
+      - name: Refuse to overwrite an existing release or version tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view v0.1.6 >/dev/null 2>&1; then
+            echo "::error::Release v0.1.6 already exists"
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags https://github.com/kunlong-luo/voxnelo.git refs/tags/v0.1.6 >/dev/null 2>&1; then
+            echo "::error::Tag v0.1.6 already exists"
+            exit 1
+          fi
+      - name: Publish publicly labeled UNSIGNED Early Access installers
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create v0.1.6 \
+            release-assets/*.deb \
+            release-assets/*.AppImage \
+            release-assets/*.exe \
+            release-assets/*.dmg \
+            release-assets/SHA256SUMS-*.txt \
+            --target "$GITHUB_SHA" \
+            --title "Voxnelo v0.1.6 — All-Platform Early Access (Unsigned)" \
+            --notes-file docs/release-notes/v0.1.6.md \
+            --prerelease
+          gh release view v0.1.6 --json isDraft,isPrerelease,tagName --jq '. | select(.isDraft == false and .isPrerelease == true and .tagName == "v0.1.6") | .tagName' | grep -qx v0.1.6
+          test "$(gh release view v0.1.6 --json assets --jq '.assets | length')" -ge 7
