@@ -82,7 +82,7 @@ export async function stableArtifactBlockers(input:unknown,dir:string):Promise<s
     if(!existsSync(checksum)){errors.push(platform+': missing SHA256SUMS');continue;}
     const manifest=new Map<string,string>();
     for(const line of readFileSync(checksum,'utf8').trim().split(/\r?\n/)){
-      const hit=/^([a-f0-9]{64})  ([A-Za-z0-9_.-]+)$/.exec(line);
+      const hit=/^([a-f0-9]{64}) {2}([A-Za-z0-9_.-]+)$/.exec(line);
       if(!hit || manifest.has(hit[2]!)){errors.push(platform+': invalid checksum entry');continue;}
       manifest.set(hit[2]!,hit[1]!);
     }
