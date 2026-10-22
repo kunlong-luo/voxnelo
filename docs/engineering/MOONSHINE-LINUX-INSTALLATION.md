@@ -47,6 +47,27 @@ backups, and competing installers block destructive replacement. Do not
 manually delete personal model data or recovery backups while dictation is
 active; contact support if an interrupted operation left a recovery backup.
 
+## Setup status in the model manager
+
+After a user explicitly clicks **Install or repair**, Voxnelo displays real
+qualitative stages: creating an isolated Python environment, installing the
+runtime dependencies, downloading the English model, validating its SHA-256,
+and activating the verified model. These events come from fixed first-party
+progress markers inside the installer; arbitrary pip output, private paths,
+network logs, and raw transcripts are not exposed to the renderer. A stage
+is **not** a percentage or estimated remaining time. If installation fails,
+the existing safe-repair rollback still applies.
+
+## Dependency vulnerability monitoring
+
+The separate `.github/workflows/security-dependency-audit.yml` runs scheduled
+and change-triggered checks. It installs the exact pinned Moonshine SDK into
+a disposable Python venv, freezes the *resolved* runtime dependencies and scans
+them using pip-audit; pnpm's lockfile is also checked against known advisories.
+Findings or unavailable advisory services require follow-up, **not** a claim
+that the runtime is safe. This check does not validate native wheel provenance
+or licensing and is not a publisher signature.
+
 ## Release validation
 
 - `tests/asr-default.test.ts`: single Linux default, no silent fallback
