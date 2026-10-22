@@ -1,0 +1,153 @@
+{
+  "schemaVersion": 1,
+  "version": "TO_BE_APPROVED",
+  "sourceCommit": "REPLACE_WITH_RELEASE_TAG_COMMIT",
+  "releaseOwner": {
+    "status": "pending",
+    "reviewer": "",
+    "date": "",
+    "evidenceUrl": ""
+  },
+  "features": {
+    "F001": {
+      "status": "pending",
+      "reviewer": "",
+      "date": "",
+      "evidenceUrl": ""
+    },
+    "F002": {
+      "status": "pending",
+      "reviewer": "",
+      "date": "",
+      "evidenceUrl": ""
+    },
+    "F003": {
+      "status": "pending",
+      "reviewer": "",
+      "date": "",
+      "evidenceUrl": ""
+    },
+    "F004": {
+      "status": "pending",
+      "reviewer": "",
+      "date": "",
+      "evidenceUrl": ""
+    },
+    "F005": {
+      "status": "pending",
+      "reviewer": "",
+      "date": "",
+      "evidenceUrl": ""
+    },
+    "F006": {
+      "status": "pending",
+      "reviewer": "",
+      "date": "",
+      "evidenceUrl": ""
+    },
+    "F007": {
+      "status": "pending",
+      "reviewer": "",
+      "date": "",
+      "evidenceUrl": ""
+    },
+    "F008": {
+      "status": "pending",
+      "reviewer": "",
+      "date": "",
+      "evidenceUrl": ""
+    },
+    "F009": {
+      "status": "pending",
+      "reviewer": "",
+      "date": "",
+      "evidenceUrl": ""
+    },
+    "F010": {
+      "status": "pending",
+      "reviewer": "",
+      "date": "",
+      "evidenceUrl": ""
+    },
+    "F011": {
+      "status": "pending",
+      "reviewer": "",
+      "date": "",
+      "evidenceUrl": ""
+    },
+    "F012": {
+      "status": "pending",
+      "reviewer": "",
+      "date": "",
+      "evidenceUrl": ""
+    }
+  },
+  "gates": {
+    "contentRights": {
+      "status": "pending",
+      "reviewer": "",
+      "date": "",
+      "evidenceUrl": ""
+    },
+    "referenceAudioRights": {
+      "status": "pending",
+      "reviewer": "",
+      "date": "",
+      "evidenceUrl": ""
+    },
+    "privacy": {
+      "status": "pending",
+      "reviewer": "",
+      "date": "",
+      "evidenceUrl": ""
+    },
+    "linuxDeviceQA": {
+      "status": "pending",
+      "reviewer": "",
+      "date": "",
+      "evidenceUrl": ""
+    },
+    "windowsDeviceQA": {
+      "status": "pending",
+      "reviewer": "",
+      "date": "",
+      "evidenceUrl": ""
+    },
+    "macosDeviceQA": {
+      "status": "pending",
+      "reviewer": "",
+      "date": "",
+      "evidenceUrl": ""
+    },
+    "offlineAsrLicenseAndQuality": {
+      "status": "pending",
+      "reviewer": "",
+      "date": "",
+      "evidenceUrl": ""
+    },
+    "accessibilityVisual": {
+      "status": "pending",
+      "reviewer": "",
+      "date": "",
+      "evidenceUrl": ""
+    },
+    "upgradeDataIntegrity": {
+      "status": "pending",
+      "reviewer": "",
+      "date": "",
+      "evidenceUrl": ""
+    },
+    "publisherSigningAndNotarization": {
+      "status": "pending",
+      "reviewer": "",
+      "date": "",
+      "evidenceUrl": ""
+    }
+  },
+  "noviceTesters": [],
+  "artifacts": {
+    "linux": [],
+    "win32": [],
+    "darwin": []
+  }
+}

@@ -1,0 +1,107 @@
+name: Validate Stable readiness (NEVER publish)
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Exact version of existing signed private draft'
+        type: string
+        required: true
+      confirmation:
+        description: 'Enter VERIFY_STABLE_READINESS_ONLY'
+        type: string
+        required: true
+permissions:
+  contents: read
+
+jobs:
+  evidence:
+    name: Verify human evidence and exact release hashes
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_VERSION: ${{ inputs.version }}
+      CONFIRMATION: ${{ inputs.confirmation }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+      - name: Require trusted intent, correct source and existing private draft
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = 'kunlong-luo/voxnelo'
+          test "$GITHUB_REF" = 'refs/heads/main'
+          test "$CONFIRMATION" = 'VERIFY_STABLE_READINESS_ONLY'
+          [[ "$RELEASE_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          test "$RELEASE_VERSION" = "$(node -p 'require("./package.json").version')"
+          test -f "docs/release/stable-approval/v$RELEASE_VERSION.json" || {
+            echo '::error::F001-F012 and external human evidence missing; Stable BLOCKED'
+            exit 1
+          }
+          gh release view "v$RELEASE_VERSION" --json isDraft,isPrerelease \
+            --jq '.isDraft and .isPrerelease' | grep -Fx true
+          git fetch origin "refs/tags/v$RELEASE_VERSION:refs/tags/v$RELEASE_VERSION"
+          echo "RELEASE_COMMIT=$(git rev-list -n 1 "v$RELEASE_VERSION")" >> "$GITHUB_ENV"
+      - name: Download all real final signed draft assets
+        run: gh release download "v$RELEASE_VERSION" --dir verified-assets
+      - name: Fail closed on missing reviewer, license, physical QA or digest
+        run: node --experimental-strip-types scripts/check-stable-evidence.mts "docs/release/stable-approval/v$RELEASE_VERSION.json" "$RELEASE_VERSION" "$RELEASE_COMMIT" verified-assets
+
+  windows-signature:
+    name: Require trusted Windows Authenticode signature and timestamp
+    needs: evidence
+    runs-on: windows-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_VERSION: ${{ inputs.version }}
+    steps:
+      - name: Download actual final NSIS EXE
+        shell: pwsh
+        run: gh release download "v$env:RELEASE_VERSION" --repo "$env:GITHUB_REPOSITORY" --dir signed-assets --pattern '*.exe'
+      - name: Verify trusted code signing
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $files=@(Get-ChildItem signed-assets -Filter '*.exe' -File)
+          if ($files.Count -ne 1) {throw 'Require exactly one signed EXE'}
+          $sig=Get-AuthenticodeSignature -LiteralPath $files[0].FullName
+          if ($sig.Status -ne 'Valid' -or -not $sig.SignerCertificate) {
+            throw 'Stable blocked: Authenticode not trusted'
+          }
+          if (-not $sig.TimeStamperCertificate) {throw 'Stable blocked: timestamp absent'}
+          Write-Host "Validated signer $($sig.SignerCertificate.Thumbprint)"
+
+  macos-notarization:
+    name: Require Apple-stapled DMG and signed Gatekeeper-approved app
+    needs: evidence
+    runs-on: macos-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_VERSION: ${{ inputs.version }}
+    steps:
+      - name: Download actual final DMG
+        shell: bash
+        run: gh release download "v$RELEASE_VERSION" --repo "$GITHUB_REPOSITORY" --dir signed-assets --pattern '*.dmg'
+      - name: Verify real notarization and identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          dmg="$(find signed-assets -maxdepth 1 -type f -name '*.dmg' -print -quit)"
+          test -n "$dmg"
+          test "$(find signed-assets -maxdepth 1 -type f -name '*.dmg' | wc -l)" -eq 1
+          xcrun stapler validate "$dmg"
+          mkdir mounted
+          hdiutil attach -readonly -nobrowse -mountpoint "$PWD/mounted" "$dmg"
+          trap 'hdiutil detach "$PWD/mounted" || true' EXIT
+          app="$(find mounted -maxdepth 2 -name '*.app' -type d -print -quit)"
+          test -n "$app"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          xcrun stapler validate "$app"
+          spctl --assess --type execute --verbose=2 "$app"
+          codesign -dv --verbose=4 "$app" 2>&1 | grep -E '^TeamIdentifier=[A-Z0-9]+$'
+
+# This read-only workflow does not sign, notarize, publish or approve human reviews.
