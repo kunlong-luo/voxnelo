@@ -16,6 +16,7 @@ export type OfflineAsrFailureReason = 'overloaded' | 'failed';
 export interface VoxneloOfflineAsr {
   engines():Promise<null|{zipformer:boolean;moonshineMedium:boolean}>;
   installMoonshine?():Promise<{ok:true}|{ok:false;reason:'unsupported'|'busy'|'verification'|'failed'}>;
+  onMoonshineInstallProgress?(listener:(stage:'environment'|'dependencies'|'model-download'|'model-verification'|'activation'|'complete')=>void):()=>void;
   capabilities():Promise<{available:boolean;reason:'ready'|'not-configured'|'missing-addon'|'missing-model'|'invalid-personal-pack'}>;
   start(engine?:'zipformer'|'moonshine-medium'):Promise<{ok:true;sessionId:string}|{ok:false;reason:'not-configured'|'busy'|'failed'}>;
   push(sessionId:string,samples:Float32Array):void;
