@@ -1,8 +1,7 @@
 name: Supply-chain dependency audit (Moonshine Python and pnpm)
 
-# Production advisories fail the job. Existing dev-test advisories are explicitly
-# reported as tracked security debt in #138, not misrepresented as remediated.
-# Auditing package metadata cannot authenticate native wheels.
+# Strict audit for the full JavaScript dependency tree, including test tools,
+# and the actual installed Python runtime. Audits do not verify wheel provenance.
 on:
   pull_request:
     paths:
@@ -79,18 +78,5 @@ jobs:
           node-version: 22
       - name: Gate production workspace dependencies on high/critical advisories
         run: pnpm audit --prod --audit-level high
-      - name: Audit development/test dependencies (open remediation issue 138)
-        id: development
-        continue-on-error: true
+      - name: Gate full dependency tree including development/test tools
         run: pnpm audit --audit-level high
-      - name: Record unresolved development dependency advisories
-        if: steps.development.outcome == 'failure'
-        shell: bash
-        run: |
-          echo "::warning file=package.json::Development/test tool audit found known high/critical advisories; see issue #138. Production audit remains a hard gate."
-          {
-            echo '### Development dependency audit: remediation required'
-            echo 'The **unfiltered** pnpm audit reported vulnerabilities in the development/test toolchain.'
-            echo 'Tracked at https://github.com/kunlong-luo/voxnelo/issues/138.'
-            echo 'Do not treat a green production audit as proof that all dependencies are clean.'
-          } >> "$GITHUB_STEP_SUMMARY"
