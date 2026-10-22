@@ -108,7 +108,7 @@ jobs:
           test "$(dpkg-query -W -f='${Status}' python3-venv)" = 'install ok installed'
           dpkg -L voxnelo | grep -F '/usr/share/metainfo/app.voxnelo.desktop.metainfo.xml'
       - name: Upload verified candidates to release assembly
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: voxnelo-${{ matrix.target }}-v0.1.6-unsigned
           path: |
@@ -134,7 +134,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: voxnelo-*-v0.1.6-unsigned
           path: release-assets

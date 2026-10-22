@@ -99,7 +99,7 @@ jobs:
           if (-not $sig.TimeStamperCertificate) { throw 'Missing trusted timestamp' }
           $sha=(Get-FileHash -LiteralPath $files[0].FullName -Algorithm SHA256).Hash.ToLowerInvariant()
           Set-Content release/SHA256SUMS-win32.txt -Value "$sha  $($files[0].Name)" -Encoding ascii
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: voxnelo-windows-signed-qa
           path: |
@@ -175,7 +175,7 @@ jobs:
           xcrun stapler staple "$dmg"
           xcrun stapler validate "$dmg"
           shasum -a 256 "$dmg" | awk '{print $1 "  " $2}' > release/SHA256SUMS-darwin.txt
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: voxnelo-macos-notarized-qa
           path: |

@@ -110,7 +110,7 @@ jobs:
           test "$(dpkg-query -W -f='${Version}' voxnelo)" = "$version"
           dpkg -L voxnelo | grep -Fx '/usr/share/metainfo/app.voxnelo.desktop.metainfo.xml'
       - name: Upload candidate for draft assembly
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: voxnelo-${{ matrix.target }}-draft
           path: |
@@ -135,7 +135,7 @@ jobs:
       RELEASE_VERSION: '0.1.7'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: voxnelo-*-draft
           path: draft-assets

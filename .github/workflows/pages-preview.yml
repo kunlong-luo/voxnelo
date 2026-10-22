@@ -42,11 +42,11 @@ jobs:
       - name: Check project-relative files and branded assets
         run: node --experimental-strip-types scripts/check-pages-artifact.mts
       - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
         # Initialize Settings → Pages → Build and deployment → GitHub Actions once as a repository admin.
         # Do not attempt to create the site with the workflow GITHUB_TOKEN.
       - name: Upload static site
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: dist
 
@@ -64,4 +64,4 @@ jobs:
     steps:
       - name: Publish web preview only
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
