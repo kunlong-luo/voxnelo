@@ -157,7 +157,8 @@
         "libatspi2.0-0",
         "libuuid1",
         "libsecret-1-0",
-        "fonts-noto-cjk"
+        "fonts-noto-cjk",
+        "python3-venv"
       ]
     }
   },
