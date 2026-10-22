@@ -112,6 +112,25 @@ describe('Release approval and guarded Linux Early Access workflow', () => {
     expect(workflow).not.toContain('gh release edit');
   });
 
+
+  it('creates v0.1.7 one-time PRIVATE unsigned QA draft with immutable source and checksum gates', () => {
+    const workflow = read('.github/workflows/prepare-v0.1.7-draft-once.yml');
+    expect(workflow).toContain('push:');
+    expect(workflow).toContain("'.github/workflows/prepare-v0.1.7-draft-once.yml'");
+    expect(workflow).toContain("RELEASE_VERSION: '0.1.7'");
+    expect(workflow).toContain('PREPARE_DRAFT_ONLY');
+    expect(workflow).toContain('pnpm audit --prod --audit-level high');
+    expect(workflow).toContain('pnpm asr:verify-real');
+    expect(workflow).toContain('sha256sum -c');
+    expect(workflow).toContain('Verify actual installers');
+    expect(workflow).toContain('Refuse to overwrite an existing release or version tag');
+    expect(workflow).toContain('Existing version tag; refusing to overwrite');
+    expect(workflow).toContain('--draft --prerelease');
+    expect(workflow).toContain('Build unsigned OS installers');
+    expect(workflow).not.toMatch(/gh release (?:edit|upload|publish)/);
+    expect(workflow).not.toMatch(/^\s+tags:/m);
+    expect(workflow).toContain("test \"$GITHUB_REPOSITORY\" = 'kunlong-luo/voxnelo'");
+  });
   it('provides a version-specific candidate note and human-release approval guidance', () => {
     const notes = read('docs/release-notes/v' + packageInfo.version + '.md');
     expect(notes).toContain(packageInfo.version);
