@@ -3,6 +3,7 @@ import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { Worker } from 'node:worker_threads';
 import type { WebContents } from 'electron';
+import { normalizeAsrWorkerEvent } from './asrEngineContract';
 
 export type AsrCapability={available:boolean;reason:'ready'|'not-configured'|'missing-addon'|'missing-model'};
 export type AsrOpenResult={ok:true;sessionId:string}|{ok:false;reason:'not-configured'|'busy'|'failed'};
@@ -69,16 +70,15 @@ export class OfflineAsr {
         // A terminated worker can still have queued messages. Never publish
         // them or mark a superseded session ready.
         if(this.session!==session)return;
-        if(!message||typeof message!=='object'||!('type' in message))return;
-        const result=message as {type:string;finalText?:unknown;interimText?:unknown};
+        const result=normalizeAsrWorkerEvent(message);
+        if(!result)return;
         if(result.type==='ready'){
           session.ready=true;session.accepting=true;settle({ok:true,sessionId:id});
         }else if(result.type==='drained'){
           session.pendingChunks=Math.max(0,session.pendingChunks-1);
         }else if(result.type==='result'&&session.ready&&!owner.isDestroyed()){
           // Do not send arbitrary worker data: bound strings only.
-          const finalText=typeof result.finalText==='string'?result.finalText.slice(0,8000):'';
-          const interimText=typeof result.interimText==='string'?result.interimText.slice(0,1000):'';
+          const {finalText,interimText}=result;
           session.lastText=finalText || session.lastText;
           owner.send('voxnelo:asr:result',{sessionId:id,finalText,interimText});
         }else if(result.type==='failure'){
