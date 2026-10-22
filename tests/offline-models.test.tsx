@@ -31,7 +31,7 @@ describe('Dedicated offline ASR model management',()=>{
     const engines=vi.fn(async()=>({zipformer:true,moonshineMedium:false}));
     vi.stubGlobal('voxneloDesktop',{platform:'linux',asr:{capabilities,engines,installMoonshine}});
     render(<ModelHarness/>);
-    const button=await screen.findByRole('button',{name:'安装 Moonshine 离线识别模型'});
+    const button=await screen.findByRole('button',{name:'安装或修复 Moonshine 离线模型'});
     expect(installMoonshine).not.toHaveBeenCalled();
     fireEvent.click(button);
     await waitFor(()=>expect(installMoonshine).toHaveBeenCalledOnce());
@@ -108,8 +108,8 @@ describe('Dedicated offline ASR model management',()=>{
     vi.stubGlobal('SpeechRecognition',FakeLocalSpeech);
     render(<ModelHarness/>);
     await waitFor(()=>expect(screen.getByText(/Moonshine 尚未安装或未通过校验/)).toBeTruthy());
-    expect(screen.queryByRole('button',{name:'安装 Moonshine 离线识别模型'})).toBeNull();
-    expect(screen.getByText(/发行授权和兼容性审核尚未完成/)).toBeTruthy();
+    expect(screen.queryByRole('button',{name:'安装或修复 Moonshine 离线模型'})).toBeNull();
+    expect(screen.getByText(/原生依赖授权与更多设备兼容性仍待审查/)).toBeTruthy();
     expect(FakeLocalSpeech.available).not.toHaveBeenCalled();
     expect(FakeLocalSpeech.install).not.toHaveBeenCalled();
     await act(async()=>{fireEvent.click(screen.getByRole('button',{name:'重新检测'}));});
