@@ -1,5 +1,7 @@
 # Moonshine Linux default — installed-runtime integration
 
+> **适用于 v0.1.5/v0.1.6 Linux x64。** v0.1.6 同时公开 Windows/macOS 安装包，但这些平台暂不提供本指南所述的本地 Moonshine Python 运行时。模型首次安装始终由用户明确点击触发；安装器并不自带模型。
+
 Voxnelo's Linux desktop uses **Moonshine Voice Medium Streaming** as the default
 offline English recognizer. There is no automatic Zipformer fallback.
 

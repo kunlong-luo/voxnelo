@@ -10,7 +10,7 @@
   </developer>
   <description>
     <p>Practice short English sentences with reference pronunciation, microphone recording and private learning history. Voxnelo is designed for focused daily speaking practice.</p>
-    <p>Offline speech recognition is an optional local pilot and is not included in standard public installers.</p>
+    <p>On Linux, Moonshine speech recognition is the default after an optional, user-approved model and Python runtime installation. Windows and macOS use platform-specific capabilities.</p>
   </description>
   <icon type="stock">voxnelo</icon>
   <launchable type="desktop-id">app.voxnelo.desktop.desktop</launchable>
@@ -20,6 +20,6 @@
     <category>Education</category>
   </categories>
   <releases>
-    <release version="0.1.5" date="2026-10-18"/>
+    <release version="0.1.6" date="2026-10-22"/>
   </releases>
 </component>
