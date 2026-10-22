@@ -8,7 +8,7 @@ offline English recognizer. There is no automatic Zipformer fallback.
 ## Personal model installation
 
 In the Linux desktop application, open **离线模型管理 / Offline Models** and
-choose **安装 Moonshine 离线识别模型 / Install Moonshine offline recognition**.
+choose **安装或修复 Moonshine 离线模型 / Install or repair Moonshine offline recognition**.
 Installation happens only after this explicit click. It downloads the pinned
 `moonshine-voice==0.0.65` Python SDK from PyPI and the model via the official
 Moonshine SDK, then checks the eight fixed model-file SHA-256 hashes before the
@@ -23,6 +23,8 @@ For an explicitly opted-in development installation from a checked-out repo:
 
 ```sh
 pnpm asr:moonshine:install --accept-experimental-runtime
+# Only if an existing Voxnelo-owned model is broken and repair is intended:
+pnpm asr:moonshine:install --accept-experimental-runtime --repair
 ```
 
 The installed files live in the user's Voxnelo configuration directory:
@@ -36,8 +38,14 @@ model directory, or arbitrary command is accepted through IPC.
 
 If installation or checksum verification fails, the app reports an error, does
 not mark the model ready, and does not silently switch to Zipformer. The
-installer never overwrites existing Moonshine data. Do not delete a personal
-model directory while dictation is active.
+new installer can **repair an invalid existing installation only after an
+explicit user action**. It builds a replacement in a private staging directory,
+checks the eight pinned model hashes and Python SDK version, then swaps it into
+place. Failed downloads leave prior files unchanged, and failed promotions
+restore the previous installation. Unknown personal files, symlinks, recovery
+backups, and competing installers block destructive replacement. Do not
+manually delete personal model data or recovery backups while dictation is
+active; contact support if an interrupted operation left a recovery backup.
 
 ## Release validation
 
