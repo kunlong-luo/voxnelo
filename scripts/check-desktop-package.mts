@@ -51,7 +51,7 @@ for(const filename of ['moonshine-stream-pilot.py','benchmark-moonshine-voice.py
 // Exercise the *actual packaged* installer's opt-in guard without downloading
 // anything. This catches ASAR path and ELECTRON_RUN_AS_NODE integration failures.
 if(platform==='linux'){
-  const installer=path.join(resources,'app.asar','dist-electron','moonshineInstaller.mjs');
+  const installer=path.join(resources,'app.asar','dist-electron','moonshineInstaller.cjs');
   const result=spawnSync(executable,[installer,'--help'],{
     encoding:'utf8',timeout:20000,maxBuffer:4096,
     env:{...process.env,ELECTRON_RUN_AS_NODE:'1',NODE_OPTIONS:''},
