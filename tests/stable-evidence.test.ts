@@ -27,8 +27,8 @@ describe('Fail-closed Stable release approval gate',()=>{
   });
   it('rejects pending F004, missing model rights and repeated tester identities',()=>{
     const evidence=example();
-    evidence.features.F004.status='pending';
-    evidence.gates.offlineAsrLicenseAndQuality.status='pending';
+    evidence.features.F004!.status='pending';
+    evidence.gates.offlineAsrLicenseAndQuality!.status='pending';
     evidence.noviceTesters[1]!.anonymousId=evidence.noviceTesters[0]!.anonymousId;
     expect(stableBlockers(evidence,version,tag).join(' ')).toMatch(/F004: not approved/);
     expect(stableBlockers(evidence,version,tag).join(' ')).toMatch(/offlineAsrLicenseAndQuality: not approved/);
