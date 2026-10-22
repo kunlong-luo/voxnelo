@@ -9,6 +9,8 @@ on:
       - 'scripts/benchmark-moonshine-voice.py'
       - 'scripts/moonshine-stream-pilot.py'
       - 'scripts/check-moonshine-stream-pilot.py'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
       - 'scripts/install-moonshine-linux.mts'
       - 'scripts/moonshine-install-transaction.mts'
       - 'apps/desktop/moonshineIntegrity.ts'
