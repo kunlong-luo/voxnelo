@@ -41,6 +41,13 @@ for(const [label,filename,minBytes] of requiredFiles){
   const info=await stat(filename);
   assert.ok(info.isFile()&&info.size>minBytes,label+' missing/empty: '+filename);
 }
+// The installed Electron app must contain the exact local Python protocol
+// scripts; without these the verified personal Moonshine pack cannot start.
+for(const filename of ['moonshine-stream-pilot.py','benchmark-moonshine-voice.py']){
+  const script=path.join(resources,'moonshine','scripts',filename);
+  const info=await stat(script);
+  assert.ok(info.isFile()&&info.size>1000,'Packaged Moonshine runtime script missing: '+filename);
+}
 const png=await readFile(icon);
 assert.equal(png.subarray(0,8).toString('hex'),'89504e470d0a1a0a','Wrong branded PNG magic');
 if(platform==='darwin'){
