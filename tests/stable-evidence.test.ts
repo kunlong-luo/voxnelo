@@ -4,6 +4,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { FEATURES, GATES, stableArtifactBlockers, stableBlockers } from '../scripts/check-stable-evidence.mts';
+import { stableDraftBlockers } from '../scripts/check-stable-draft.mts';
 
 const tag='a'.repeat(40),version='0.1.7';
 const sum=(s:string)=>createHash('sha256').update(s).digest('hex');
@@ -54,6 +55,45 @@ describe('Fail-closed Stable release approval gate',()=>{
     expect(await stableArtifactBlockers(data,dir)).toEqual([]);
     writeFileSync(path.join(dir,files.win32[0]!),'tampered');
     expect((await stableArtifactBlockers(data,dir)).join(' ')).toMatch(/byte hash mismatch/);
+  });
+  it('accepts a private draft with an approved target SHA before GitHub creates its tag',()=>{
+    const evidence=example();
+    const assets=Object.values(evidence.artifacts).flat().map((item,index)=>({
+      id:index+1,name:item.name,size:1024,state:'uploaded',
+    }));
+    for(const [index,platform] of ['linux','win32','darwin'].entries())
+      assets.push({id:index+20,name:'SHA256SUMS-'+platform+'.txt',size:64,state:'uploaded'});
+    const draft={
+      id:12,tag_name:'v0.1.7',target_commitish:tag,draft:true,prerelease:true,assets,
+    };
+    expect(stableDraftBlockers([draft],evidence,version)).toEqual([]);
+    expect(stableDraftBlockers([{...draft,target_commitish:'b'.repeat(40)}],evidence,version))
+      .toContain('Draft target_commitish must equal the exact approved full source SHA');
+    expect(stableDraftBlockers([{...draft,draft:false}],evidence,version))
+      .toContain('Candidate must remain a private prerelease draft');
+    expect(stableDraftBlockers([draft,draft],evidence,version))
+      .toContain('Exactly one draft for the exact version is required');
+    expect(stableDraftBlockers([{...draft,assets:assets.slice(1)}],evidence,version).join(' '))
+      .toMatch(/Required approved draft attachment is missing/);
+  });
+  it('rejects executable attachments that were not approved for Stable',()=>{
+    const evidence=example();
+    const assets=Object.values(evidence.artifacts).flat().map((item,index)=>({
+      id:index+1,name:item.name,size:1024,state:'uploaded',
+    }));
+    for(const [index,platform] of ['linux','win32','darwin'].entries())
+      assets.push({id:index+20,name:'SHA256SUMS-'+platform+'.txt',size:64,state:'uploaded'});
+    assets.push({id:55,name:'Voxnelo-unreviewed.exe',size:8192,state:'uploaded'});
+    const draft={id:12,tag_name:'v0.1.7',target_commitish:tag,draft:true,prerelease:true,assets};
+    expect(stableDraftBlockers([draft],evidence,version).join(' ')).toMatch(/Unapproved executable attachment/);
+  });
+
+  it('uses release draft target_commitish rather than demanding a prepublication tag',()=>{
+    const yml=readFileSync('.github/workflows/stable-readiness.yml','utf8');
+    expect(yml).toContain('scripts/check-stable-draft.mts');
+    expect(yml).toContain('git merge-base --is-ancestor');
+    expect(yml).toContain('git ls-remote --exit-code --tags origin');
+    expect(yml).not.toContain('gh release view "v$RELEASE_VERSION" --json isDraft');
   });
   it('accepts a synthetic schema fixture but does not claim QA happened',()=>{
     expect(stableBlockers(example(),version,tag)).toEqual([]);
