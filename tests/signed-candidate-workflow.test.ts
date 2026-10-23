@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 
-const signedWorkflow = readFileSync('.github/workflows/signed-candidate.yml', 'utf8');
+const signedWorkflow = readFileSync('.github/workflows/signed-candidate.yml', 'utf8').replace(/\r\n/g, '\n');
 const appEntitlement = readFileSync('build/stable-entitlements.mac.plist', 'utf8');
 const helperEntitlement = readFileSync('build/stable-entitlements.mac.inherit.plist', 'utf8');
 

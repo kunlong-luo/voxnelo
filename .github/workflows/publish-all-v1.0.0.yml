@@ -1,7 +1,8 @@
 name: Publish Voxnelo v1.0.0 Official Unsigned (Linux Windows macOS)
 
 # Owner-requested one-time public v1.0.0 unsigned official release.
-# Runs ONLY when this brand new workflow file is first merged to main.
+# Runs only when this workflow file is added or updated on main.
+# A new version tag is always rejected if it already exists.
 # The release is NOT a code-signed/notarized/externally certified artifact.
 # Every build must pass full testing, SHA-256 and Linux apt install; no tag overwrite.
 on:
