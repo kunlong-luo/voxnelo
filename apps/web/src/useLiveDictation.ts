@@ -102,6 +102,7 @@ export function useLiveDictation(sentenceId: string) {
     }
   },[]);
   useEffect(()=>{void refreshLocal();},[refreshLocal]);
+  const invalidateRefresh=useCallback(()=>{++refreshGeneration.current;},[]);
   const endSession = useCallback((acceptFinalText:boolean) => {
     const generation=++requestId.current;
     const closeDesktop=desktopStop.current;
@@ -143,10 +144,10 @@ export function useLiveDictation(sentenceId: string) {
     disposed.current=false;
     return () => {
       disposed.current=true;
-      ++refreshGeneration.current;
+      invalidateRefresh();
       stop();
     };
-  },[stop]);
+  },[stop,invalidateRefresh]);
   useEffect(() => { clear(); },[sentenceId,clear]);
   const chooseCaptureProfile=useCallback((value:DesktopCaptureProfile)=>{
     if(status!=='idle'||!window.voxneloDesktop)return;
