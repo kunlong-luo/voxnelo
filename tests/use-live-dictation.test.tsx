@@ -114,6 +114,49 @@ describe('Local-first live dictation',()=>{
     expect(start).not.toHaveBeenCalled();
     expect(latest.status).toBe('idle');
   });
+  it('keeps explicit Linux engine selection after a model availability refresh',async()=>{
+    const engines=vi.fn(async()=>({zipformer:true,moonshineMedium:true}));
+    const capabilities=vi.fn(async()=>({available:true,reason:'ready' as const}));
+    vi.stubGlobal('voxneloDesktop',{platform:'linux',asr:{engines,capabilities}});
+    render(<Harness/>);
+    await act(async()=>{await Promise.resolve();await Promise.resolve();});
+    expect(latest.offlineEngine).toBe('moonshine-medium');
+    act(()=>latest.chooseOfflineEngine('zipformer'));
+    expect(latest.offlineEngine).toBe('zipformer');
+    await act(async()=>{await latest.refreshLocal()});
+    expect(latest.offlineEngine).toBe('zipformer');
+    expect(latest.engineAvailability).toEqual({zipformer:true,moonshineMedium:true});
+  });
+  it('ignores an older concurrent refresh that finishes after a newer one',async()=>{
+    let finishOld:((value:{zipformer:boolean;moonshineMedium:boolean})=>void)|undefined;
+    const older=new Promise<{zipformer:boolean;moonshineMedium:boolean}>(resolve=>{finishOld=resolve;});
+    const engines=vi.fn().mockResolvedValueOnce({zipformer:true,moonshineMedium:true})
+      .mockImplementationOnce(()=>older)
+      .mockResolvedValueOnce({zipformer:false,moonshineMedium:true});
+    const capabilities=vi.fn(async()=>({available:true,reason:'ready' as const}));
+    vi.stubGlobal('voxneloDesktop',{platform:'linux',asr:{engines,capabilities}});
+    render(<Harness/>);
+    await act(async()=>{await Promise.resolve();await Promise.resolve();});
+    expect(latest.engineAvailability).toEqual({zipformer:true,moonshineMedium:true});
+    let oldRefresh:Promise<void>|undefined;
+    await act(async()=>{oldRefresh=latest.refreshLocal();await Promise.resolve();});
+    await act(async()=>{await latest.refreshLocal();});
+    expect(latest.engineAvailability).toEqual({zipformer:false,moonshineMedium:true});
+    await act(async()=>{finishOld?.({zipformer:true,moonshineMedium:false});await oldRefresh;});
+    expect(latest.engineAvailability).toEqual({zipformer:false,moonshineMedium:true});
+  });
+  it('ignores a late model refresh after the dictation view unmounts',async()=>{
+    let finish:((value:{zipformer:boolean;moonshineMedium:boolean})=>void)|undefined;
+    const pending=new Promise<{zipformer:boolean;moonshineMedium:boolean}>(resolve=>{finish=resolve;});
+    const engines=vi.fn().mockImplementation(()=>pending);
+    const capabilities=vi.fn(async()=>({available:false,reason:'missing-model' as const}));
+    vi.stubGlobal('voxneloDesktop',{platform:'linux',asr:{engines,capabilities}});
+    const view=render(<Harness/>);
+    await act(async()=>{await Promise.resolve();});
+    view.unmount();
+    await act(async()=>{finish?.({zipformer:true,moonshineMedium:true});await Promise.resolve();});
+    expect(engines).toHaveBeenCalled();
+  });
   it('Electron never probes unsupported Chromium ASR when native ONNX assets are absent',async()=>{
     const capabilities=vi.fn(async()=>({available:false,reason:'missing-addon'}));
     vi.stubGlobal('voxneloDesktop',{platform:'linux',asr:{capabilities}});

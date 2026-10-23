@@ -43,6 +43,8 @@ export function useLiveDictation(sentenceId: string) {
   },[status,engineAvailability]);
   const requestId = useRef(0);
   const disposed = useRef(false);
+  // An earlier model refresh must not override a later explicit refresh.
+  const refreshGeneration = useRef(0);
   const active = status !== 'idle';
   // SpeechRecognition can use a vendor network service. The desktop app never
   // opts into that mode, even when the constructor happens to exist.
@@ -54,24 +56,24 @@ export function useLiveDictation(sentenceId: string) {
   // Centralize capability refresh for the dedicated model management page.
   // Browser installation is always a separate explicit user action.
   const refreshLocal=useCallback(async()=>{
+    const generation=++refreshGeneration.current;
+    const isCurrent=()=>!disposed.current&&generation===refreshGeneration.current;
     const bridge=window.voxneloDesktop?.asr;
     if(window.voxneloDesktop){
       try{
         const cap=await bridge?.capabilities();
+        if(!isCurrent())return;
         const engines=await bridge?.engines?.();
-        if(engines){
-          setEngineAvailability(engines);
-          // Preserve the Linux Moonshine default even when not installed.
-          // Never silently reselect Zipformer based on model availability.
-          if(window.voxneloDesktop?.platform==='linux')setOfflineEngine('moonshine-medium');
-        }
-        if(disposed.current)return;
+        if(!isCurrent())return;
+        // The mount-time initializer chooses the Linux default. Refreshing
+        // availability must never discard an explicit user engine selection.
+        if(engines)setEngineAvailability(engines);
         const ready=cap?.available===true;
         setDesktopAvailable(ready);
         setDesktopReason(cap?.reason??'not-configured');
         setLocalPack(ready?'available':'unavailable');
       }catch{
-        if(!disposed.current){
+        if(isCurrent()){
           setDesktopAvailable(false);
           setDesktopReason('not-configured');
           setLocalPack('unavailable');
@@ -81,18 +83,19 @@ export function useLiveDictation(sentenceId: string) {
     }
     const Ctor=browserRecognizerClass();
     if(!Ctor?.available){
+      if(!isCurrent())return;
       setBrowserLocalReady(false);
       setLocalPack('unavailable');
       return;
     }
     try{
       const value=await Ctor.available({langs:[BROWSER_SPEECH_LANGUAGE],processLocally:true});
-      if(disposed.current)return;
+      if(!isCurrent())return;
       setBrowserLocalReady(value==='available');
       setLocalPack(value==='available'?'available':
         value==='downloadable'?'downloadable':value==='downloading'?'downloading':'unavailable');
     }catch{
-      if(!disposed.current){
+      if(isCurrent()){
         setBrowserLocalReady(false);
         setLocalPack('unavailable');
       }
@@ -140,6 +143,7 @@ export function useLiveDictation(sentenceId: string) {
     disposed.current=false;
     return () => {
       disposed.current=true;
+      ++refreshGeneration.current;
       stop();
     };
   },[stop]);
