@@ -47,10 +47,29 @@ jobs:
             echo '::error::F001-F012 and external human evidence missing; Stable BLOCKED'
             exit 1
           }
-          gh release view "v$RELEASE_VERSION" --json isDraft,isPrerelease \
-            --jq '.isDraft and .isPrerelease' | grep -Fx true
-          git fetch origin "refs/tags/v$RELEASE_VERSION:refs/tags/v$RELEASE_VERSION"
-          echo "RELEASE_COMMIT=$(git rev-list -n 1 "v$RELEASE_VERSION")" >> "$GITHUB_ENV"
+          # GitHub Drafts may not create a real Git tag until publication.
+          # Query the authenticated release list (including drafts) instead.
+          gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" > "$RUNNER_TEMP/voxnelo-releases.json"
+          node --experimental-strip-types scripts/check-stable-draft.mts \
+            "$RUNNER_TEMP/voxnelo-releases.json" \
+            "docs/release/stable-approval/v$RELEASE_VERSION.json" \
+            "$RELEASE_VERSION"
+      - name: Require reviewed source commit in main and validate any existing tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          git cat-file -e "${RELEASE_COMMIT}^{commit}"
+          git merge-base --is-ancestor "$RELEASE_COMMIT" "$GITHUB_SHA" || {
+            echo '::error::Reviewed draft commit is not in main history'
+            exit 1
+          }
+          if git ls-remote --exit-code --tags origin "refs/tags/v$RELEASE_VERSION" >/dev/null; then
+            git fetch origin "refs/tags/v$RELEASE_VERSION:refs/tags/v$RELEASE_VERSION"
+            test "$(git rev-list -n 1 "v$RELEASE_VERSION")" = "$RELEASE_COMMIT" || {
+              echo '::error::Existing release tag differs from approved draft source'
+              exit 1
+            }
+          fi
       - name: Download all real final signed draft assets
         run: gh release download "v$RELEASE_VERSION" --dir verified-assets
       - name: Fail closed on missing reviewer, license, physical QA or digest
