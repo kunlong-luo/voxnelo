@@ -1,8 +1,8 @@
 {
   "name": "voxnelo",
   "private": true,
-  "version": "0.1.7",
-  "description": "Voxnelo - Local-first English speaking practice (Early Access)",
+  "version": "1.0.0",
+  "description": "Voxnelo - Local-first English speaking practice",
   "author": "Leo Luo",
   "type": "module",
   "main": "dist-electron/main.cjs",

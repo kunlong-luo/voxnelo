@@ -4,6 +4,15 @@
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-23
+
+### Official desktop distribution (unsigned; limitations disclosed)
+- 首个正式公开桌面发行（不是 Beta），但明确告知所有安装包未签名、macOS 未公证；不宣称硬件或第三方权利得到认证。
+- 使用最新 `main` 源码重建 Linux DEB/AppImage、Windows NSIS、macOS ARM64 DMG 及 SHA-256 清单，保留所有已有 Release。
+- 包含 #153 离线模型选择与旧请求刷新竞态修复、#154 一次性旧发行工作流退役，以及依赖安全更新。
+- Windows/macOS 原生 Moonshine 尚不承诺支持，Linux Moonshine 仍需要主动下载安装未打包的 SDK 与模型；F001–F012 等外部验收状态以仓库独立台账为准。
+
+
 ### Fixed
 
 - 修复录音权限等待期间取消后无法立即重新请求、旧授权晚到影响新请求锁的问题；权限取消可在主录音按钮完成，并清除上一句遗留的麦克风错误（F004/F005，#38）。

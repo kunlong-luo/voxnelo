@@ -34,7 +34,7 @@ describe('Current release README claims (English first, Chinese equivalent)', ()
     }
     // Linux now defaults to Moonshine, but its Python runtime and model are
     // installed separately by a user gesture, never bundled or auto-run.
-    expect(en).toContain('Linux Early Access uses Moonshine Medium Streaming');
+    expect(en).toContain('Linux desktop uses Moonshine Medium Streaming');
     expect(en).toContain('Standard installers do not bundle');
     expect(en).toContain('no automatic pronunciation scoring');
     expect(zh).toContain('Linux 默认使用 Moonshine Medium Streaming');
@@ -147,14 +147,14 @@ describe('Release approval and guarded Linux Early Access workflow', () => {
       expect(workflow).toMatch(/\bif: false\b/);
     }
   });
-  it('provides a version-specific candidate note and human-release approval guidance', () => {
+  it('provides a truthful unsigned official release note and provenance explanation', () => {
     const notes = read('docs/release-notes/v' + packageInfo.version + '.md');
     expect(notes).toContain(packageInfo.version);
     expect(notes).toContain('尚未');
     expect(notes).toContain('未完成');
     expect(notes).toContain('模型不随安装包内置');
     expect(notes).toContain('未签名');
-    expect(notes).toContain('Linux Early Access');
+    expect(notes).toContain('Linux x64');
     expect(read('docs/engineering/GITHUB-RELEASE-DRAFT.md')).toContain('Publish release');
   });
 });

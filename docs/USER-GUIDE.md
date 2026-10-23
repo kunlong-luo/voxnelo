@@ -1,12 +1,12 @@
-# Voxnelo 用户帮助（v0.1.6 Early Access）
+# Voxnelo 用户帮助（v1.0.0 正式免签名版）
 
-Voxnelo 是一款免费、本地优先的英语口语练习桌面应用，无需注册即可开始使用。**这是未签名公开预览版，不是完成所有平台验收的稳定版。** 维护者：Leo Luo。
+Voxnelo 是一款免费、本地优先的英语口语练习桌面应用，无需注册即可开始使用。**这是公开发行的免签名桌面版，系统安全限制和跨平台验证边界仍需注意。** 维护者：Leo Luo。
 
 ## 安装与升级
 
-到 [GitHub Releases v0.1.6](https://github.com/kunlong-luo/voxnelo/releases/tag/v0.1.6) 下载适合系统的安装包，优先检查发布页的 SHA-256 校验文件：
+到 [GitHub Releases v1.0.0](https://github.com/kunlong-luo/voxnelo/releases/tag/v1.0.0) 下载适合系统的安装包，优先检查发布页的 SHA-256 校验文件：
 
-- **Linux x64**：Debian、Ubuntu、Pop!_OS 推荐 `Voxnelo.deb`（与 `voxnelo_0.1.6_amd64.deb` 相同）；其他兼容系统可尝试 `.AppImage`。升级通常不需卸载旧版。DEB 会通过包管理器安装所需系统依赖。
+- **Linux x64**：Debian、Ubuntu、Pop!_OS 推荐 `Voxnelo.deb`（与 `voxnelo_1.0.0_amd64.deb` 相同）；其他兼容系统可尝试 `.AppImage`。升级通常不需卸载旧版。DEB 会通过包管理器安装所需系统依赖。
 - **Windows**：下载 NSIS `.exe` 并正常安装。安装包暂未进行数字签名；SmartScreen 警告要如实对待并先确认来源，不要将其当成经认证的稳定应用。
 - **macOS**：下载 `.dmg`，核对 DMG 架构兼容性，按系统流程安装。安装器未签名、未公证，Gatekeeper 可能阻止打开；若不愿接受此限制，请暂不安装预览版。
 
@@ -34,4 +34,4 @@ Linux x64 默认使用 Moonshine Voice Medium Streaming，**模型与 Python 运
 
 ## 隐私与边界
 
-无需账号、学习记录本地保存。录音在用户同意使用麦克风后才开始，本地 Moonshine 识别不需要向 Voxnelo 服务器上传录音；浏览器体验版如果使用系统 Web Speech 服务则可能受浏览器提供商不同的联网/隐私政策影响。课程文本、TTS 及第三方运行时授权和跨设备实测仍在持续审核。参见 [发行说明](release-notes/v0.1.6.md)。
+无需账号、学习记录本地保存。录音在用户同意使用麦克风后才开始，本地 Moonshine 识别不需要向 Voxnelo 服务器上传录音；浏览器体验版如果使用系统 Web Speech 服务则可能受浏览器提供商不同的联网/隐私政策影响。课程文本、TTS 及第三方运行时授权和跨设备实测仍在持续审核。参见 [发行说明](release-notes/v1.0.0.md)。
