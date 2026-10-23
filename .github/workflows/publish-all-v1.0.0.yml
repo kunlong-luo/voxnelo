@@ -16,7 +16,8 @@ permissions:
 
 concurrency:
   group: voxnelo-v1.0.0-public-official-unsigned
-  cancel-in-progress: false
+  # New attempts cancel old CI runs that already failed; final release/tag guard still rejects overwrites.
+  cancel-in-progress: true
 
 jobs:
   preflight:
