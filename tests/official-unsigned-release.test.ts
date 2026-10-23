@@ -49,6 +49,6 @@ describe('Owner-authorized official unsigned release is guarded and truthful',()
     expect(notes).toContain('尚未完成');
     expect(decision).toContain('不代表第三方审核');
     expect(decision).toContain('F001–F012');
-    expect(decision).toContain('不能');
+    expect(decision).toContain('不标记为已通过');
   });
 });
