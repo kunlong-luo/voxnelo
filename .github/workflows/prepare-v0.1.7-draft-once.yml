@@ -1,13 +1,12 @@
 name: Prepare Voxnelo v0.1.7 PRIVATE draft (one-time)
 
-# This new workflow runs only when THIS exact file is first added to main.
+# Historical one-time workflow: already produced the verified v0.1.7 private Draft.
 # It makes unsigned PRIVATE draft candidates. It never publishes Stable or public releases.
 # Existing tags/releases and an incorrect main version block this operation.
+# HISTORICAL WORKFLOW ARCHIVED: its version already exists.
+# No push trigger, and jobs are permanently disabled. Never republish.
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/prepare-v0.1.7-draft-once.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -18,6 +17,7 @@ concurrency:
 
 jobs:
   preflight:
+    if: false # retired after successful private v0.1.7 Draft creation
     name: Validate source and intent
     runs-on: ubuntu-latest
     steps:
