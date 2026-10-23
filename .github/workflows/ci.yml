@@ -82,7 +82,7 @@ jobs:
         run: VOXNELO_DPI_SCALE=1.5 xvfb-run -a -s "-screen 0 2400x1600x24" node --experimental-strip-types scripts/check-electron-window.mts
       - name: Upload Electron desktop evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: linux-electron-evidence
           path: desktop-evidence/
@@ -90,7 +90,7 @@ jobs:
           if-no-files-found: ignore
       - name: Upload responsive layout evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: browser-layout-evidence
           path: browser-layout/
@@ -161,7 +161,7 @@ jobs:
         run: node --experimental-strip-types scripts/write-candidate-manifest.mts
       - name: Upload Linux installers for CI review
         if: runner.os == 'Linux'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: voxnelo-linux-pr-installers
           path: |

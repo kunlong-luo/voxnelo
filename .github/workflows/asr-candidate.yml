@@ -58,7 +58,7 @@ jobs:
             sox -t wav - -r 16000 -c 1 -b 16 -e signed-integer "$RUNNER_TEMP/voxnelo-asr-reference.wav"
           soxi "$RUNNER_TEMP/voxnelo-asr-reference.wav"
       - name: Share reproducible, non-user audio reference with other OS jobs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: voxnelo-asr-generated-reference-wav
           path: ${{ runner.temp }}/voxnelo-asr-reference.wav
@@ -96,7 +96,7 @@ jobs:
           echo "A/B comparison is informational and uses one synthetic non-user sample; do not infer improved real microphone WER."
       - name: Upload non-personal inference evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: linux-real-asr-evidence
           path: |
@@ -134,7 +134,7 @@ jobs:
         run: xvfb-run -a -s "-screen 0 1600x1000x24" node --experimental-strip-types scripts/check-electron-packaged-asr.mts
       - name: Upload text-only bundled Electron ASR test evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: linux-packaged-electron-asr-evidence
           path: desktop-evidence/packaged-asr/report.json
@@ -174,7 +174,7 @@ jobs:
       - name: Build genuine desktop worker
         run: pnpm build:electron
       - name: Download shared non-user reference audio
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: voxnelo-asr-generated-reference-wav
           path: ${{ runner.temp }}
@@ -204,7 +204,7 @@ jobs:
       # rights, platform policy and human QA are formally signed off.
       - name: Preserve non-personal per-platform evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.os }}-real-asr-evidence
           path: ${{ runner.temp }}/voxnelo-asr-*-evidence.json
