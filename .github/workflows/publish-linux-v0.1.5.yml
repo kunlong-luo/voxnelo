@@ -1,13 +1,13 @@
 name: Publish Voxnelo v0.1.5 Linux Early Access (one-time)
 
-# This workflow is intentionally one-shot. It runs only when this exact
+# This historical one-shot already published v0.1.5. It no longer runs on push.
+# Originally it ran only when this exact
 # workflow file first lands on main; subsequent source pushes will not
 # republish the same version. Existing release/tag is never overwritten.
+# HISTORICAL WORKFLOW ARCHIVED: its version already exists.
+# No push trigger, and jobs are permanently disabled. Never republish.
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/publish-linux-v0.1.5.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -19,7 +19,7 @@ concurrency:
 jobs:
   publish-linux:
     name: Verify, package and publish unsigned Linux Early Access
-    if: github.repository == 'kunlong-luo/voxnelo' && github.ref == 'refs/heads/main'
+    if: false && github.repository == 'kunlong-luo/voxnelo' && github.ref == 'refs/heads/main' # permanently archived
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     permissions:

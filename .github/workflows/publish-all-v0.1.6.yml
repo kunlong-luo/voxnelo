@@ -1,15 +1,15 @@
 name: Publish Voxnelo v0.1.6 Early Access (Linux Windows macOS)
 
-# Explicit workflow-file-only release trigger. Initial publish was blocked
+# Historical one-time workflow: v0.1.6 is already publicly published.
+# Original explicit workflow-file-only release trigger. Initial publish was blocked
 # before publication by Windows CI's Unix-path test fixture; this change
 # retries only after a source fix passes protected main branch review.
 # No tag-triggered or ordinary source-push publishing. Preflight and publish
 # both refuse to replace an existing version tag or release.
+# HISTORICAL WORKFLOW ARCHIVED: its version already exists.
+# No push trigger, and jobs are permanently disabled. Never republish.
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/publish-all-v0.1.6.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -20,6 +20,7 @@ concurrency:
 
 jobs:
   preflight:
+    if: false # retired after successful public v0.1.6 Early Access release
     name: Verify release identity and intended audience
     runs-on: ubuntu-24.04
     steps:

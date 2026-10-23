@@ -40,3 +40,9 @@ v0.1.5 是只提供 Linux 下载的公开 Early Access。保持既有标签、�
 为避免重复要求维护者手动操作，新增 `.github/workflows/prepare-v0.1.7-draft-once.yml`，它**仅在该工作流文件首次合并进 main 时触发**，确认当前源码版本为 `0.1.7`，且没有同名 tag/Release 后，自动在 Linux、Windows、macOS 编译未签名安装包，执行严格 pnpm 审计、完整包及哈希校验和 Linux DEB 实装，再创建 **PRIVATE / prerelease Draft**。这一自动化不发布到公开下载页，也不代表证书、Apple 公证、真实麦克风、许可或 F001–F012 已通过。
 
 如果自动草稿构建失败，应修复根因并进行独立 PR；已有同名 Release 或 tag 时绝不覆盖。为正式 Stable 提供签名后的新候选需遵循 [Stable readiness](STABLE-RELEASE-READINESS.md) 流程，绝不能直接公开此次 unsigned Draft。
+
+## 已完成的一次性发行工作流（永久退役）
+
+2026-10-23 已验证 v0.1.5 / v0.1.6 Early Access 正式存在，v0.1.7 具有 11 个已构建附件的**私有** Release Draft。旧的 `publish-linux-v0.1.5.yml`、`publish-all-v0.1.6.yml`、`prepare-v0.1.7-draft-once.yml` 不应因 Dependabot 升级 workflow 中的 Action 版本而再次运行。
+
+因此三个文件保留作为历史构建证据，但移除 `push` 触发，并将历史发布作业明确设为永久不可执行（`if: false`）；人为重跑也不能重复发布或覆盖既有 tag/Release。新的发行版本必须使用单独经 CI 与人工授权的发行流程，而不是重新打开这些旧发布任务。原有 Stable 签名、公证与证据门禁不变。
