@@ -5,17 +5,20 @@ const workflow=readFileSync('.github/workflows/publish-all-v1.0.2.yml','utf8');
 const notes=readFileSync('docs/release-notes/v1.0.2.md','utf8');
 const app=JSON.parse(readFileSync('package.json','utf8')) as {version:string};
 
-describe('v1.0.2 one-time official unsigned release guards',()=>{
-  it('uses a distinct version and never allows overwriting old releases',()=>{
+describe('v1.0.2 permanently archived official unsigned release guards',()=>{
+  it('is archived after public release and never allows overwriting old releases',()=>{
     expect(app.version).toBe('1.0.2');
     expect(workflow).toContain('refs/heads/main');
     expect(workflow).toContain("github.repository == 'kunlong-luo/voxnelo'");
-    expect(workflow).toContain("'.github/workflows/publish-all-v1.0.2.yml'");
+    expect(workflow).toContain('workflow_dispatch:');
+    expect(workflow).not.toMatch(/^\\s+push:/m);
+    expect(workflow).not.toMatch(/^\\s+tags:/m);
+    expect(workflow).toContain('if: false # archived after successful v1.0.2 official release');
     expect(workflow).toContain('Refuse to overwrite an existing release or version tag');
     expect(workflow).toContain('refs/tags/v1.0.2');
     expect(workflow).not.toContain('gh release edit');
     expect(workflow).not.toContain('gh release upload');
-    expect(workflow).not.toContain('if: false # archived');
+    expect(workflow).not.toMatch(/gh release (?:edit|upload|publish)/);
   });
   it('tests all native installers with auditable checksums and strict dependencies',()=>{
     expect(workflow).toContain('pnpm audit --prod --audit-level high');
@@ -41,5 +44,15 @@ describe('v1.0.2 one-time official unsigned release guards',()=>{
       expect(notes).toContain(clause);
     }
     expect(notes).toContain('Leo Luo');
+  });
+  it('retains the verified public Release evidence after closing the one-shot publisher',()=>{
+    const operations=readFileSync('docs/engineering/RELEASE-OPERATIONS.md','utf8');
+    const security=readFileSync('SECURITY.md','utf8');
+    expect(operations).toContain('40103037891');
+    expect(operations).toContain('4926829094ea67b8a233bd3c41cb393719ee8aaf');
+    expect(operations).toContain('v1.0.2');
+    expect(operations).toContain('v1.0.1');
+    expect(security).toContain('当前 v1.0.2');
+    expect(security).toContain('未签名');
   });
 });
