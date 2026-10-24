@@ -24,6 +24,9 @@ export function useLiveDictation(sentenceId: string) {
   const [error,setError] = useState('');
   const current = useRef<BrowserRecognizer | null>(null);
   const desktopStop = useRef<(() => Promise<OfflineAsrStopResult>) | null>(null);
+  // Stop is asynchronous: the final worklet PCM + native inference must be
+  // drained before starting another session on the same ASR worker.
+  const desktopFinishing = useRef<Promise<OfflineAsrStopResult> | null>(null);
   const [desktopAvailable,setDesktopAvailable] = useState(false);
   const [browserLocalReady,setBrowserLocalReady] = useState(false);
   const [desktopReason,setDesktopReason] = useState<'ready'|'not-configured'|'missing-model'|'missing-addon'|'invalid-personal-pack'>('not-configured');
@@ -112,7 +115,9 @@ export function useLiveDictation(sentenceId: string) {
     const closeDesktop=desktopStop.current;
     desktopStop.current=null;
     if(closeDesktop){
-      void closeDesktop().then(result=>{
+      const finishing=closeDesktop();
+      desktopFinishing.current=finishing;
+      void finishing.then(result=>{
         if(!acceptFinalText||disposed.current||requestId.current!==generation)return;
         if(!result.completed){
           // An 8s timeout or crashed native worker can return the cached
@@ -127,6 +132,8 @@ export function useLiveDictation(sentenceId: string) {
           setFinalText('');
           setError(t('dictationIncomplete'));
         }
+      }).finally(()=>{
+        if(desktopFinishing.current===finishing)desktopFinishing.current=null;
       });
     }
     const recognizer=current.current;
@@ -180,6 +187,15 @@ export function useLiveDictation(sentenceId: string) {
       const id=++requestId.current;
       setStatus('checking');
       const isCurrent=()=>!disposed.current&&id===requestId.current;
+      // A UI Stop clears "listening" immediately, but worklet flush and the
+      // native final recognition can run for seconds. Reopening before that
+      // promise resolves causes an avoidable "busy" failure. Never run mic
+      // capture or open another worker until the previous session is gone.
+      const previousStop=desktopFinishing.current;
+      if(previousStop){
+        try{await previousStop;}catch{/* failed Stop still releases the worker */}
+        if(!isCurrent())return; // user cancelled this pending restart
+      }
       let available=false;
       let lastReason:'ready'|'not-configured'|'missing-addon'|'missing-model'|'invalid-personal-pack'='not-configured';
       try {

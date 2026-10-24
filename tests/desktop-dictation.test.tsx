@@ -207,6 +207,53 @@ describe('Electron real microphone to local ASR lifecycle',()=>{
     expect(live.finalText).toBe('hello final');
     expect(live.status).toBe('idle');
   });
+  it('waits for the previous native final flush before reopening on rapid Stop and Start',async()=>{
+    const {bridge,port,getUserMedia}=setupDesktop(true);
+    let releaseStop:((result:{finalText:string;completed:boolean})=>void)|undefined;
+    const finishing=new Promise<{finalText:string;completed:boolean}>(resolve=>{releaseStop=resolve;});
+    bridge.stop.mockImplementationOnce(async()=>await finishing);
+    port.postMessage=vi.fn(()=>queueMicrotask(()=>port.onmessage?.({data:{type:'flushed'}})));
+    render(<Harness/>);
+    await waitFor(()=>expect(live.supported).toBe(true));
+    await act(async()=>{await live.start();});
+    act(()=>live.stop());
+    await waitFor(()=>expect(bridge.stop).toHaveBeenCalledOnce());
+    expect(live.status).toBe('idle');
+    act(()=>{void live.start();});
+    await waitFor(()=>expect(live.status).toBe('checking'));
+    // Both microphone capture and native IPC must await the previous Stop.
+    expect(getUserMedia).toHaveBeenCalledTimes(1);
+    expect(bridge.start).toHaveBeenCalledTimes(1);
+    await act(async()=>{releaseStop?.({finalText:'old complete utterance',completed:true});});
+    await waitFor(()=>expect(live.status).toBe('listening'));
+    expect(getUserMedia).toHaveBeenCalledTimes(2);
+    expect(bridge.start).toHaveBeenCalledTimes(2);
+    expect(live.finalText).toBe(''); // old result must not leak into new session
+    await act(async()=>{live.stop();await Promise.resolve();});
+  });
+
+  it('can cancel a restart waiting for native Stop without opening a second microphone',async()=>{
+    const {bridge,port,getUserMedia}=setupDesktop(true);
+    let releaseStop:((result:{finalText:string;completed:boolean})=>void)|undefined;
+    const finishing=new Promise<{finalText:string;completed:boolean}>(resolve=>{releaseStop=resolve;});
+    bridge.stop.mockImplementationOnce(async()=>await finishing);
+    port.postMessage=vi.fn(()=>queueMicrotask(()=>port.onmessage?.({data:{type:'flushed'}})));
+    render(<Harness/>);
+    await waitFor(()=>expect(live.supported).toBe(true));
+    await act(async()=>{await live.start();});
+    act(()=>live.stop());
+    await waitFor(()=>expect(bridge.stop).toHaveBeenCalledOnce());
+    act(()=>{void live.start();});
+    expect(live.status).toBe('checking');
+    act(()=>live.stop());
+    expect(live.status).toBe('idle');
+    await act(async()=>{releaseStop?.({finalText:'stale complete speech',completed:true});});
+    expect(bridge.start).toHaveBeenCalledTimes(1);
+    expect(getUserMedia).toHaveBeenCalledTimes(1);
+    expect(live.finalText).toBe('');
+    expect(live.status).toBe('idle');
+  });
+
   it('clears the previous utterance before a new native microphone session',async()=>{
     const {bridge}=setupDesktop(true);
     render(<Harness/>);
