@@ -27,7 +27,7 @@ Voxnelo 是一款开源、本地优先的英语口语跟读桌面应用。听一
 
 ## 全平台下载与安装
 
-**正式公开的桌面安装包仍为免签名发行版，不表示经过发行者签名或 Apple 公证。** 从 [GitHub 最新正式版](https://github.com/kunlong-luo/voxnelo/releases/latest) 下载，提供 Linux、Windows、macOS 的真正安装文件和独立的 SHA-256 清单。
+**正式公开的桌面安装包仍为免签名发行版，不表示经过发行者签名或 Apple 公证。** 从 [GitHub Releases 最新正式版](https://github.com/kunlong-luo/voxnelo/releases/latest) 下载，提供 Linux、Windows、macOS 的真正安装文件和独立的 SHA-256 清单。
 
 | 平台 | 安装包 | 重要说明 |
 | --- | --- | --- |

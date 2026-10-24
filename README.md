@@ -27,7 +27,7 @@ The example voice is **system text-to-speech (TTS)**, not a professionally recor
 
 ## Download & installation
 
-**Official desktop editions are unsigned, not publisher-signed or Apple-notarized builds.** The [latest GitHub Release](https://github.com/kunlong-luo/voxnelo/releases/latest) provides installers and independent SHA-256 manifests for **Linux, Windows and macOS**. Only use installers from the official releases page; hashes detect mismatched files but do not replace digital signatures.
+**Official desktop editions are unsigned, not publisher-signed or Apple-notarized builds.** The [GitHub Releases (latest)](https://github.com/kunlong-luo/voxnelo/releases/latest) provides installers and independent SHA-256 manifests for **Linux, Windows and macOS**. Only use installers from the official releases page; hashes detect mismatched files but do not replace digital signatures.
 
 | Platform | Installer | Important limits |
 | --- | --- | --- |
