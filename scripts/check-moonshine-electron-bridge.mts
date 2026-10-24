@@ -60,8 +60,53 @@ async function verify(shouldReject:boolean){
     });
   });
 }
+// A child may close stdin before Voxnelo writes audio or Stop. Depending on
+// pipe scheduling the parent may receive an asynchronous EPIPE or only the
+// subprocess exit; both must cause a single sanitized failure, never an
+// unhandled Worker error, hang, or a leaked Python child.
+const closedPipeScript=path.join(root,'closed-pipe.py');
+writeFileSync(closedPipeScript,`import os,time
+os.close(0)
+print('{"type":"ready"}',flush=True)
+# Exit even when the platform has not emitted EPIPE for a buffered write.
+time.sleep(0.35)
+`);
+async function verifyClosedPipe(kind:'pcm'|'finish'){
+  const worker=new Worker(workerFile,{workerData:{
+    pythonPath:'/usr/bin/python3',scriptPath:closedPipeScript,modelDir,
+  }});
+  try{
+    await new Promise<void>((resolve,reject)=>{
+      let settled=false;
+      let sawReady=false;
+      const timeout=setTimeout(()=>settle(Error('No failure on closed Moonshine stdin')),5000);
+      function settle(error?:Error){
+        if(settled)return;
+        settled=true;
+        clearTimeout(timeout);
+        if(error)reject(error);else resolve();
+      }
+      worker.on('error',error=>settle(Error('Unhandled worker stream error: '+error.name)));
+      worker.on('exit',code=>settle(Error('Worker exited before sanitized failure: '+code)));
+      worker.on('message',(m:{type:string})=>{
+        if(m.type==='ready'){
+          sawReady=true;
+          worker.postMessage(kind==='pcm'
+            ?{type:'pcm',samples:new Float32Array(800)}
+            :{type:'finish'});
+        }else if(m.type==='failure'){
+          settle(sawReady?undefined:Error('Child failed before protocol ready'));
+        }else{
+          settle(Error('Unexpected event from closed input: '+m.type));
+        }
+      });
+    });
+  }finally{await worker.terminate();}
+}
 try{
   await verify(false);
   await verify(true);
-  console.log('Moonshine worker PCM, interim/final, and invalid-input checks passed');
+  await verifyClosedPipe('pcm');
+  await verifyClosedPipe('finish');
+  console.log('Moonshine worker PCM, final, invalid input, and closed pipe checks passed');
 }finally{rmSync(root,{recursive:true,force:true});}
