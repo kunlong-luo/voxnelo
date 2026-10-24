@@ -411,6 +411,78 @@ describe('Offline ASR explicit activation and deny-by-default IPC',()=>{
     engine.close();
   });
 
+
+  it('does not retain window destroyed listeners through repeated real dictation sessions',async()=>{
+    const dir=root();
+    const addon=path.join(dir,'native.cjs');
+    writeFileSync(addon,'fixture');
+    for(const file of ['encoder.onnx','decoder.onnx','joiner.onnx','tokens.txt'])
+      writeFileSync(path.join(dir,file),'fixture');
+    class StubWorker extends EventEmitter {
+      postMessage=vi.fn();
+      terminate=vi.fn(async()=>0);
+    }
+    class StubOwner extends EventEmitter {
+      isDestroyed=()=>false;
+      send=vi.fn();
+    }
+    const owner=new StubOwner();
+    const workers:StubWorker[]=[];
+    const engine=new OfflineAsr(dir,addon,()=>{
+      const worker=new StubWorker();
+      workers.push(worker);
+      queueMicrotask(()=>worker.emit('message',{type:'ready'}));
+      return worker as unknown as Worker;
+    });
+    // More than EventEmitter's default 10-listener warning threshold.
+    // Distinguish successful finish, native failure and explicit cancel.
+    for(let index=0;index<25;index++){
+      const started=await engine.open(owner as unknown as WebContents);
+      if(!started.ok)throw Error('Could not start test ASR');
+      expect(owner.listenerCount('destroyed')).toBe(1);
+      const worker=workers[index]!;
+      if(index%3===0){
+        const stop=engine.stop(owner as unknown as WebContents,started.sessionId);
+        worker.emit('message',{type:'result',finalText:'hello',interimText:''});
+        worker.emit('message',{type:'finished'});
+        expect(await stop).toEqual({finalText:'hello',completed:true});
+      }else if(index%3===1){
+        worker.emit('message',{type:'failure'});
+        expect(owner.send).toHaveBeenCalledWith('voxnelo:asr:error',{sessionId:started.sessionId});
+      }else{
+        engine.close();
+      }
+      expect(owner.listenerCount('destroyed')).toBe(0);
+      expect(worker.terminate).toHaveBeenCalledOnce();
+    }
+    expect(workers).toHaveLength(25);
+  });
+
+  it('removes the window listener when startup is cancelled by owner destruction',async()=>{
+    const dir=root();
+    const addon=path.join(dir,'native.cjs');
+    writeFileSync(addon,'fixture');
+    for(const file of ['encoder.onnx','decoder.onnx','joiner.onnx','tokens.txt'])
+      writeFileSync(path.join(dir,file),'fixture');
+    class StubWorker extends EventEmitter{
+      postMessage=vi.fn();
+      terminate=vi.fn(async()=>0);
+    }
+    class StubOwner extends EventEmitter {
+      isDestroyed=()=>false;
+      send=vi.fn();
+    }
+    const worker=new StubWorker();
+    const owner=new StubOwner();
+    const engine=new OfflineAsr(dir,addon,()=>worker as unknown as Worker);
+    const start=engine.open(owner as unknown as WebContents);
+    expect(owner.listenerCount('destroyed')).toBe(1);
+    owner.emit('destroyed');
+    expect(await start).toEqual({ok:false,reason:'failed'});
+    expect(owner.listenerCount('destroyed')).toBe(0);
+    expect(worker.terminate).toHaveBeenCalledOnce();
+  });
+
   it('does not trust missing/incomplete models or relative addon paths',()=>{
     const dir=root();
     const addon=path.join(dir,'fake-addon.js');
