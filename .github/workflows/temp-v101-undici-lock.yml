@@ -30,6 +30,7 @@ jobs:
       - name: Regenerate lockfile under pinned toolchain only
         run: |
           pnpm install --lockfile-only
+          git diff -- pnpm-lock.yaml | head -n 140
           pnpm install --frozen-lockfile
           pnpm audit --prod --audit-level high
           pnpm audit --audit-level high
