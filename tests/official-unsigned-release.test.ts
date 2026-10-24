@@ -58,8 +58,8 @@ describe('v1.0.1 already-published patch version is immutable',()=> {
   const notes101=readFileSync('docs/release-notes/v1.0.1.md','utf8');
   const ops=readFileSync('docs/engineering/RELEASE-OPERATIONS.md','utf8');
   it('permanently disables its one-shot publisher after successful public release',()=> {
-    expect(workflow101).not.toMatch(/^\\s+push:/m);
-    expect(workflow101).not.toMatch(/^\\s+tags:/m);
+    expect(workflow101).not.toMatch(/^\s+push:/m);
+    expect(workflow101).not.toMatch(/^\s+tags:/m);
     expect(workflow101).toContain('if: false # archived after successful v1.0.1 official release');
     expect(workflow101).toContain('workflow_dispatch:');
     expect(workflow101).toContain('Refuse to overwrite an existing release or version tag');
