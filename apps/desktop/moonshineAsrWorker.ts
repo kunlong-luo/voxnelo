@@ -26,6 +26,10 @@ try{
   const proc=child;
   // Drain stderr without forwarding native errors, private model paths or audio.
   proc.stderr.resume();
+  // EPIPE is emitted asynchronously by stdin when the Python recognizer
+  // exits or closes its input. A try/catch around write() cannot catch it;
+  // without this handler, an unhandled stream error crashes the Worker.
+  proc.stdin.on('error',fail);
   const lines=createInterface({input:proc.stdout,crlfDelay:Infinity});
   lines.on('line',(line)=>{
     try{
@@ -50,7 +54,7 @@ try{
       return;
     }
     if(data.type==='finish'){
-      proc.stdin.write('{"type":"finish"}\n');
+      try{proc.stdin.write('{"type":"finish"}\n');}catch{fail();}
       return;
     }
     if(data.type!=='pcm'||!(data.samples instanceof Float32Array)||data.samples.length<1||data.samples.length>3200)return fail();

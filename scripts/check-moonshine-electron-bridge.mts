@@ -60,8 +60,50 @@ async function verify(shouldReject:boolean){
     });
   });
 }
+// A child may reject audio because its stdin is closed while it remains alive.
+// This reproduces the EPIPE stream 'error' event rather than a synchronous
+// write exception. The worker must send the existing sanitized failure event
+// (not throw an unhandled error or expose a private path).
+const closedPipeScript=path.join(root,'closed-pipe.py');
+writeFileSync(closedPipeScript,`import sys,time
+sys.stdin.close()
+print('{"type":"ready"}',flush=True)
+time.sleep(10)
+`);
+async function verifyClosedPipe(kind:'pcm'|'finish'){
+  const worker=new Worker(workerFile,{workerData:{
+    pythonPath:'/usr/bin/python3',scriptPath:closedPipeScript,modelDir,
+  }});
+  try{
+    await new Promise<void>((resolve,reject)=>{
+      let settled=false;
+      const timeout=setTimeout(()=>settle(Error('No failure on closed Moonshine stdin')),5000);
+      function settle(error?:Error){
+        if(settled)return;
+        settled=true;
+        clearTimeout(timeout);
+        if(error)reject(error);else resolve();
+      }
+      worker.on('error',error=>settle(Error('Unhandled worker stream error: '+error.name)));
+      worker.on('exit',code=>settle(Error('Worker exited before sanitized failure: '+code)));
+      worker.on('message',(m:{type:string})=>{
+        if(m.type==='ready'){
+          worker.postMessage(kind==='pcm'
+            ?{type:'pcm',samples:new Float32Array(800)}
+            :{type:'finish'});
+        }else if(m.type==='failure'){
+          settle();
+        }else{
+          settle(Error('Unexpected event from closed input: '+m.type));
+        }
+      });
+    });
+  }finally{await worker.terminate();}
+}
 try{
   await verify(false);
   await verify(true);
-  console.log('Moonshine worker PCM, interim/final, and invalid-input checks passed');
+  await verifyClosedPipe('pcm');
+  await verifyClosedPipe('finish');
+  console.log('Moonshine worker PCM, final, invalid input, and closed pipe checks passed');
 }finally{rmSync(root,{recursive:true,force:true});}
