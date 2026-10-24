@@ -4,3 +4,10 @@ packages:
 allowBuilds:
   electron-winstaller: true
   esbuild: true
+
+# pnpm v12 reads overrides from the workspace manifest, NOT package.json.
+# Patched dev toolchain transitive vulnerabilities, without ignoring any GHSA.
+overrides:
+  'glob@10.4.5': '10.5.0'
+  '@electron/get>undici': '7.30.1'
+  'node-gyp>undici': '6.29.1'
