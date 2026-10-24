@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-24
+
+### Maintenance (official unsigned patch)
+- 将 v1.0.0 发布后已合并的录音资源清理修复（PR #159、#160）纳入正式安装包：`MediaRecorder.stop()` 同步异常、卸载晚到回调、麦克风 track 和 Blob URL 清理。
+- 应用版本、五个 workspace 模块版本、Linux AppStream 和版本一致性测试同步提升为 1.0.1；基础学习数据及个人离线模型路径保持不变。
+- 沿用 v1.0.0 的安全与发行边界：免签名/未公证，Linux Moonshine 需主动安装，Windows/macOS 不承诺相同离线实时听写；外部真机/内容验收仍未完整。
+
+
 ## [1.0.0] - 2026-10-23
 
 ### Official desktop distribution (unsigned; limitations disclosed)

@@ -28,7 +28,7 @@ describe('Voxnelo release identity',()=>{
     expect(packageInfo.build?.linux?.maintainer).toBe('Leo Luo <40263163+kunlong-luo@users.noreply.github.com>');
   });
 
-  it('uses the first official unsigned desktop release version',()=>{
-    expect(readVersion('package.json')).toBe('1.0.0');
+  it('uses the current official unsigned patch release version',()=>{
+    expect(readVersion('package.json')).toBe('1.0.1');
   });
 });

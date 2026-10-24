@@ -6,9 +6,9 @@
 
 Voxnelo is an open-source, local-first desktop app for practicing spoken English. Listen to a short sentence, say it yourself, and play back your recording. No account is required.
 
-**Source version:** `1.0.0` · **Release:** Official unsigned desktop edition (known limitations) · **Maintainer:** Leo Luo · **License:** [MIT](LICENSE)
+**Source version:** `1.0.1` · **Release:** Official unsigned desktop edition (known limitations) · **Maintainer:** Leo Luo · **License:** [MIT](LICENSE)
 
-## What works in 1.0.0
+## Core features
 
 - **40 English sentences** with Chinese translations, topics, difficulty levels, and optional IPA pronunciation guides.
 - **Listen and repeat:** play a sentence using your system's English text-to-speech voice; switch between normal and slow playback.
@@ -27,11 +27,11 @@ The example voice is **system text-to-speech (TTS)**, not a professionally recor
 
 ## Download & installation
 
-**v1.0.0 is the official unsigned desktop release, not a publisher-signed or Apple-notarized build.** The [GitHub Releases page](https://github.com/kunlong-luo/voxnelo/releases/tag/v1.0.0) provides installers and independent SHA-256 manifests for **Linux, Windows and macOS**. Only use installers from the official releases page; hashes detect mismatched files but do not replace digital signatures.
+**Official desktop editions are unsigned, not publisher-signed or Apple-notarized builds.** The [latest GitHub Release](https://github.com/kunlong-luo/voxnelo/releases/latest) provides installers and independent SHA-256 manifests for **Linux, Windows and macOS**. Only use installers from the official releases page; hashes detect mismatched files but do not replace digital signatures.
 
-| Platform | Installer in v1.0.0 | Important limits |
+| Platform | Installer | Important limits |
 | --- | --- | --- |
-| Linux x64 | `Voxnelo.deb` / `voxnelo_1.0.0_amd64.deb` (identical bytes); `Voxnelo-1.0.0.AppImage` | DEB for Debian/Ubuntu/Pop!_OS; AppImage requires suitable system libraries |
+| Linux x64 | `Voxnelo.deb` / `voxnelo_1.0.1_amd64.deb` (identical bytes); `Voxnelo-1.0.1.AppImage` | DEB for Debian/Ubuntu/Pop!_OS; AppImage requires suitable system libraries |
 | Windows | NSIS `.exe` | **Unsigned**, so SmartScreen may warn; native Moonshine dictation is not provided on Windows |
 | macOS | `.dmg` | **Unsigned and not notarized**; Gatekeeper may warn; check your Mac chip architecture and DMG compatibility |
 
@@ -40,10 +40,10 @@ Each platform also has a checksum file: `SHA256SUMS-linux.txt`, `SHA256SUMS-win3
 To upgrade on Debian-based Linux, download the new package, open `Voxnelo.deb` with your package manager or install the versioned file from its download directory:
 
 ```bash
-sudo apt install ./voxnelo_1.0.0_amd64.deb
+sudo apt install ./Voxnelo.deb
 ```
 
-Existing installations normally upgrade in place; you should not have to uninstall first. Windows/macOS installers are official **unsigned builds**, not evidence of device certification, publisher signing, Apple notarization or universal native ASR support. See the [user guide](docs/USER-GUIDE.md) and [release notes](docs/release-notes/v1.0.0.md).
+Existing installations normally upgrade in place; you should not have to uninstall first. Windows/macOS installers are official **unsigned builds**, not evidence of device certification, publisher signing, Apple notarization or universal native ASR support. See the [user guide](docs/USER-GUIDE.md) and [release notes](docs/release-notes/v1.0.1.md).
 
 ## Speech recognition and privacy
 
