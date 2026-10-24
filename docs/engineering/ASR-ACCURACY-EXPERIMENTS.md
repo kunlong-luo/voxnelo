@@ -90,6 +90,43 @@ The metric is **weighted** WER = (all substitutions + deletions + insertions) / 
 
 **Important interpretation:** The batch tool reports offline WAV inference performance. It does **not** measure first live subtitle time, final text after release, real-time microphone DSP, device disconnect or 10-minute stability; those need the separate real-device checklist. The `--report-only` path used for diagnostics is deliberately separate from the existing strict real-model CI quality gate. Batch reports cannot authorize Release publication or override the redistribution licensing review.
 
+## Moonshine-only private assessment: external-speaker accuracy (2026-10-24)
+
+Linux v1.0.1 defaults to Moonshine Medium Streaming; users **do not need to install Zipformer**
+to measure their personal Moonshine model. Issue #123 remains open until physical
+acoustic WER and wider platform evidence exist.
+
+1. With consent, record at least **20 known-reference English sentences** across
+   `quiet` (close mic), `external-playback` (the same English material played
+   by another device into the Voxnelo microphone), and `noise` (background noise).
+   Keep mic WAVs private; note speaker distance/volume, mic type, and whether
+   the **External playback** capture profile was used.
+2. Include `"scenario":"external-playback"` for second-device microphone
+   recordings in the private JSON manifest. Accepted alternatives remain
+   `quiet` and `noise`. WAVs must be 16 kHz mono PCM16 and consented.
+3. Reuse the already installed *personal* Moonshine runtime/model:
+
+   ```bash
+   export VOXNELO_MOONSHINE_PYTHON="${XDG_CONFIG_HOME:-$HOME/.config}/voxnelo/moonshine/venv/bin/python"
+   export VOXNELO_MOONSHINE_MODEL_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/voxnelo/moonshine/model"
+   pnpm asr:batch \
+     --manifest "$HOME/private-asr-tests/samples.json" \
+     --output-dir "$HOME/voxnelo-private-moonshine-evaluation-01" \
+     --moonshine-only
+   ```
+
+The `--moonshine-only` option runs **one real Medium Streaming inference per
+private WAV**, without legacy Sherpa native paths, automatic downloads, or
+changes to the application's default engine. You may use `--moonshine-size small`
+if that smaller model was already separately installed. The existing
+`--compare-moonshine` mode remains for optional matched-model comparisons.
+
+Reports contain only numeric weighted WER, S/D/I counts, RTF and non-sensitive
+sample IDs, grouped by scenario; they exclude audio, transcripts and full
+paths. Failed model attempts mark results INCOMPLETE; `releaseReady` remains
+false. This offline WAV test is **not** microphone-to-subtitle latency or real
+physical-device acceptance. Do not attach private recordings to GitHub.
+
 ## Stop-boundary PCM correctness (2026-10-19)
 
 A separate source-level review identified a potential source of short-word errors: the renderer had sent only complete 100 ms / 1600-sample AudioWorklet buffers, then disconnected the worklet immediately on Stop. This could discard up to 99.9 ms of the user's **last syllable**. The stop path now requests the worklet's partial audio tail, forwards it to the same native ASR session, waits for a FIFO `flushed` acknowledgement, and only then sends the native `finish` command. The user's real microphone track is stopped immediately; the extra worklet wait is capped at 350 ms in case a device is lost or the worklet is unresponsive.

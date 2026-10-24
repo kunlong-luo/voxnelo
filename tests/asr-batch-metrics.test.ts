@@ -53,6 +53,9 @@ describe('private local ASR word error scoring', () => {
     expect(selectedBatchDecoders(true,'small')).toEqual([
       'greedy_search','modified_beam_search','moonshine-small-streaming',
     ]);
+    expect(selectedBatchDecoders(false,'medium',true)).toEqual(['moonshine-medium-streaming']);
+    expect(selectedBatchDecoders(false,'small',true)).toEqual(['moonshine-small-streaming']);
+    expect(()=>selectedBatchDecoders(true,'medium',true)).toThrow(/only one/);
     const outcomes=summarizeAsrAttempts([
       trial('q',4,2,2),
       {...trial('q',4,1,2),decoder:'moonshine-medium-streaming' as const},
@@ -63,6 +66,19 @@ describe('private local ASR word error scoring', () => {
       ['quiet','moonshine-medium-streaming',0.25],
       ['noise','moonshine-medium-streaming',0],
     ]);
+  });
+  it('reports external-speaker playback WER separately, weighted by words',()=>{
+    const data=[
+      trial('q1',2,0,1),
+      {...trial('e1',2,1,1),scenario:'external-playback' as const},
+      {...trial('e2',8,1,4),scenario:'external-playback' as const},
+      {...trial('n1',2,2,1),scenario:'noise' as const},
+    ];
+    const groups=summarizeAsrAttempts(data);
+    expect(groups.map(g=>[g.scenario,g.sampleCount,g.wordErrorRate])).toEqual([
+      ['quiet',1,0],['external-playback',2,0.2],['noise',1,1],
+    ]);
+    expect(groups[1]?.referenceWords).toBe(10);
   });
   it('keeps quiet/noise and greedy/beam groups separate',()=>{
     const data=[trial('s1',2,1,1),{...trial('s1',2,0,1),decoder:'modified_beam_search' as const},
@@ -82,6 +98,8 @@ describe('local batch input validation and privacy',()=>{
   ]});
   it('validates scenario, unique ids, bounded manifest and English-only references',()=>{
     expect(parseBatchManifest(good()).samples).toHaveLength(2);
+    expect(parseBatchManifest({samples:[{...good().samples[0],scenario:'external-playback'}]})
+      .samples[0]?.scenario).toBe('external-playback');
     expect(()=>parseBatchManifest({samples:[]})).toThrow(/1–100/);
     expect(()=>parseBatchManifest({samples:Array.from({length:101},()=>good().samples[0])})).toThrow(/1–100/);
     expect(()=>parseBatchManifest({samples:[good().samples[0],good().samples[0]]})).toThrow(/unique/);

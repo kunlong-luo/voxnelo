@@ -8,9 +8,9 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { scoreTranscript, summarizeAsrAttempts, type AsrDecoderId, type MeasuredAsrAttempt } from './asr-batch-metrics.mts';
+import { scoreTranscript, summarizeAsrAttempts, type AsrDecoderId, type AsrScenario, type MeasuredAsrAttempt } from './asr-batch-metrics.mts';
 
-export type BatchSample = { id: string; scenario: 'quiet' | 'noise'; wav: string; reference: string };
+export type BatchSample = { id: string; scenario: AsrScenario; wav: string; reference: string };
 export type BatchManifest = { samples: BatchSample[] };
 
 export function parseBatchManifest(raw: unknown): BatchManifest {
@@ -26,7 +26,8 @@ export function parseBatchManifest(raw: unknown): BatchManifest {
     const id = item.id, wav = item.wav, reference = item.reference, scenario = item.scenario;
     if (typeof id !== 'string' || !/^[a-zA-Z0-9_-]{1,40}$/.test(id) || ids.has(id))
       throw Error('Sample ids must be unique and contain only letters, digits, hyphen or underscore');
-    if (scenario !== 'quiet' && scenario !== 'noise') throw Error('Scenario must be quiet or noise');
+    if (scenario !== 'quiet' && scenario !== 'noise' && scenario !== 'external-playback')
+      throw Error('Scenario must be quiet, external-playback, or noise');
     if (typeof wav !== 'string' || !wav.trim() || wav.length > 2048)
       throw Error('Each sample needs a local WAV path');
     if (typeof reference !== 'string' || reference.length > 300 || !/[a-z]/i.test(reference))
@@ -128,8 +129,14 @@ export function validatePcm16Wav(buffer: Buffer): number {
 }
 
 const sherpaDecoders:readonly AsrDecoderId[]=['greedy_search','modified_beam_search'];
-export function selectedBatchDecoders(compareMoonshine:boolean,moonshineSize:'small'|'medium'='medium'):readonly AsrDecoderId[]{
-  return compareMoonshine?[...sherpaDecoders,moonshineSize==='medium'?'moonshine-medium-streaming':'moonshine-small-streaming']:sherpaDecoders;
+export function selectedBatchDecoders(
+  compareMoonshine:boolean,moonshineSize:'small'|'medium'='medium',moonshineOnly=false,
+):readonly AsrDecoderId[]{
+  if(compareMoonshine&&moonshineOnly)throw Error('Choose only one Moonshine evaluation mode');
+  const candidate=moonshineSize==='medium'?'moonshine-medium-streaming':'moonshine-small-streaming';
+  // Evaluate an installed Moonshine without requiring legacy Zipformer.
+  if(moonshineOnly)return [candidate];
+  return compareMoonshine?[...sherpaDecoders,candidate]:sherpaDecoders;
 }
 function runOne(item: BatchSample, decoder: AsrDecoderId, manifestDir: string): MeasuredAsrAttempt {
   const wavPath = path.resolve(manifestDir, item.wav);
@@ -179,15 +186,19 @@ export function runBatch(): void {
   if (!manifestArg || !outputArg) throw Error('Usage: pnpm asr:batch --manifest /abs/private-samples.json --output-dir /abs/new-private-report-folder');
   if (!path.isAbsolute(manifestArg) || !path.isAbsolute(outputArg))
     throw Error('Manifest and output directory must both be absolute paths');
-  if (!process.env.VOXNELO_ASR_MODEL_DIR || !process.env.VOXNELO_ASR_ADDON_PATH)
-    throw Error('Set your local VOXNELO_ASR_MODEL_DIR and VOXNELO_ASR_ADDON_PATH; no auto-download occurs');
   const compareMoonshine=process.argv.includes('--compare-moonshine');
+  const moonshineOnly=process.argv.includes('--moonshine-only');
   const moonshineSize=arg('moonshine-size')??'medium';
   if(moonshineSize!=='small'&&moonshineSize!=='medium')throw Error('Moonshine size must be small or medium');
-  if(compareMoonshine&&(!process.env.VOXNELO_MOONSHINE_MODEL_DIR ||
+  const decoders=selectedBatchDecoders(compareMoonshine,moonshineSize,moonshineOnly);
+  if(!moonshineOnly&&(!process.env.VOXNELO_ASR_MODEL_DIR||!process.env.VOXNELO_ASR_ADDON_PATH))
+    throw Error('Set your local VOXNELO_ASR_MODEL_DIR and VOXNELO_ASR_ADDON_PATH; no auto-download occurs');
+  if((compareMoonshine||moonshineOnly)&&(!process.env.VOXNELO_MOONSHINE_MODEL_DIR||
       !path.isAbsolute(process.env.VOXNELO_MOONSHINE_MODEL_DIR)))
-    throw Error('Set absolute VOXNELO_MOONSHINE_MODEL_DIR for local Moonshine comparison; no downloads occur');
-  const decoders=selectedBatchDecoders(compareMoonshine,moonshineSize);
+    throw Error('Set absolute VOXNELO_MOONSHINE_MODEL_DIR for local Moonshine evaluation; no downloads occur');
+  if(moonshineOnly&&(!process.env.VOXNELO_MOONSHINE_PYTHON||
+      !path.isAbsolute(process.env.VOXNELO_MOONSHINE_PYTHON)))
+    throw Error('Set absolute VOXNELO_MOONSHINE_PYTHON for your installed local Moonshine runtime');
   const project = path.resolve('.');
   const output = path.resolve(outputArg);
   const relative = path.relative(project, output);
