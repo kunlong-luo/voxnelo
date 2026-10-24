@@ -2,9 +2,10 @@
 
 ## 支持的版本
 
-| 版本                  | 支持状态                 |
-| --------------------- | ------------------------ |
-| 0.1.x（Early Access） | 接受安全问题报告，无 SLA |
+| 版本 | 支持状态 |
+| --- | --- |
+| 1.0.x（当前正式免签名版） | 优先处理安全问题，无修复时间 SLA |
+| 0.1.x（历史 Early Access） | 历史下载保留，安全修复不保证回移植；建议升级当前发行版 |
 
 ## 架构假设（与实现一致）
 
@@ -19,8 +20,15 @@
 
 - **无自动更新**：安全补丁依赖用户手动下载新包（决策见
   `docs/ADR/ADR-0002-release-signing-update.md`）。请勿长期停留在旧版本。
-- **公开的 Early Access 构建仍未签名**：v0.1.6 在 GitHub Releases 提供 Linux DEB/AppImage、Windows NSIS EXE、macOS DMG，全部未签名且 macOS 未公证。它们是明确标识的公开预览件，不是已完成安全审计或正式数字签名的稳定发行包。请仅使用项目官方 Releases 并核对 SHA-256；摘要不能替代开发者身份签名。
+- **当前 v1.0.0 是正式公开但未签名的桌面发行版**：Linux DEB/AppImage、Windows NSIS EXE、macOS ARM64 DMG 均未签名，macOS 未公证。官方发布不代表取得外部安全认证或设备全面兼容认证；SmartScreen、Gatekeeper 等可能警告或阻止安装。请仅使用项目官方 [v1.0.0 Release](https://github.com/kunlong-luo/voxnelo/releases/tag/v1.0.0) 并核对 SHA-256；摘要不能替代发布者数字签名。v0.1.5/v0.1.6 属历史预览版，v0.1.7 仍是私有草稿。
 - 学习记录为本机明文存储，设备共享/丢失场景下无额外保护。
+
+## 录音设备异常清理
+
+录音默认保留在当前练习会话的临时 Blob URL 中。若麦克风在切句、
+权限异常或窗口卸载期间断开，程序应停止媒体音轨并丢弃过期的
+MediaRecorder 回调；不生成旧句录音或记为已完成。对应自动化用例：
+`tests/use-recorder.test.tsx`。这些测试不替代真实设备拔插与权限验收。
 
 ## 依赖安全审计
 

@@ -306,6 +306,33 @@ describe('useRecorder', () => {
     expect(newTrackStop).toHaveBeenCalled();
   });
 
+  it('卸载时 stop 同步抛错仍释放音轨、注销回调且不生成过期录音', async () => {
+    const trackStop = vi.fn();
+    mockDevices(() => Promise.resolve({
+      getTracks: () => [{ stop: trackStop }],
+    } as unknown as MediaStream));
+    const view = render(<Harness />);
+    await act(async () => { await latest.start(); });
+    const active = MockMediaRecorder.instances[0];
+    if (!active) throw new Error('expected recorder instance');
+    const staleData = active.ondataavailable;
+    const staleStop = active.onstop;
+    vi.spyOn(active, 'stop').mockImplementationOnce(() => {
+      throw new Error('InvalidStateError: hardware disconnected before cleanup');
+    });
+
+    expect(() => view.unmount()).not.toThrow();
+    expect(trackStop).toHaveBeenCalledTimes(1);
+    expect(active.ondataavailable).toBeNull();
+    expect(active.onstop).toBeNull();
+    expect(active.onerror).toBeNull();
+    act(() => {
+      staleData?.({ data: new Blob(['obsolete audio']) });
+      staleStop?.();
+    });
+    expect(URL.createObjectURL).not.toHaveBeenCalled();
+  });
+
   it('异步 onstop 在切句清理之后到达时不得恢复旧音频', async () => {
     MockMediaRecorder.deferStop = true;
     mockDevices(() => Promise.resolve(fakeStream()));
