@@ -40,6 +40,10 @@ export function useLiveDictation(sentenceId: string) {
   const chooseOfflineEngine=useCallback((engine:'zipformer'|'moonshine-medium')=>{
     if(status!=='idle'||!engineAvailability[engine==='zipformer'?'zipformer':'moonshineMedium'])return;
     setOfflineEngine(engine);
+    // Never reuse the previous engine's 'ready' state for the new selection.
+    setDesktopAvailable(false);
+    setDesktopReason('not-configured');
+    setLocalPack('unknown');
   },[status,engineAvailability]);
   const requestId = useRef(0);
   const disposed = useRef(false);
@@ -51,7 +55,7 @@ export function useLiveDictation(sentenceId: string) {
   const browserModeAvailable = !window.voxneloDesktop && Boolean(browserRecognizerClass());
   // A Web Speech constructor alone often supports only network recognition.
   // Local mode becomes actionable only after a real on-device availability probe.
-  const supported = window.voxneloDesktop ? (offlineEngine==='moonshine-medium'?engineAvailability.moonshineMedium:desktopAvailable)
+  const supported = window.voxneloDesktop ? desktopAvailable
     : mode==='browser' ? browserModeAvailable : browserLocalReady;
   // Centralize capability refresh for the dedicated model management page.
   // Browser installation is always a separate explicit user action.
@@ -61,7 +65,7 @@ export function useLiveDictation(sentenceId: string) {
     const bridge=window.voxneloDesktop?.asr;
     if(window.voxneloDesktop){
       try{
-        const cap=await bridge?.capabilities();
+        const cap=await bridge?.capabilities(offlineEngine);
         if(!isCurrent())return;
         const engines=await bridge?.engines?.();
         if(!isCurrent())return;
@@ -100,7 +104,7 @@ export function useLiveDictation(sentenceId: string) {
         setLocalPack('unavailable');
       }
     }
-  },[]);
+  },[offlineEngine]);
   useEffect(()=>{void refreshLocal();},[refreshLocal]);
   const invalidateRefresh=useCallback(()=>{++refreshGeneration.current;},[]);
   const endSession = useCallback((acceptFinalText:boolean) => {
@@ -179,7 +183,7 @@ export function useLiveDictation(sentenceId: string) {
       let available=false;
       let lastReason:'ready'|'not-configured'|'missing-addon'|'missing-model'|'invalid-personal-pack'='not-configured';
       try {
-        const cap=await bridge.capabilities();
+        const cap=await bridge.capabilities(offlineEngine);
         const engines=await bridge.engines?.();
         lastReason=cap.reason;
         if(!isCurrent())return;
@@ -189,9 +193,9 @@ export function useLiveDictation(sentenceId: string) {
         setDesktopAvailable(cap.available);
         setDesktopReason(cap.reason);
         setLocalPack(cap.available?'available':'unavailable');
-        available=offlineEngine==='moonshine-medium'
-          ?engines?.moonshineMedium===true
-          :cap.available;
+        // The selected engine's verified capability is authoritative. The
+        // engines list is discovery UI only, never a default/fallback probe.
+        available=cap.available;
       } catch {
         if(!isCurrent())return;
         setDesktopAvailable(false);
@@ -200,7 +204,9 @@ export function useLiveDictation(sentenceId: string) {
       if(!isCurrent())return;
       if(!available){
         setStatus('idle');
-        setError(t(lastReason==='invalid-personal-pack'?'dictationModelInvalid':'dictationLocalRequired'));
+        setError(t(lastReason==='invalid-personal-pack'?'dictationModelInvalid'
+          :lastReason==='missing-model'?'dictationModelMissing'
+          :lastReason==='missing-addon'?'dictationAddonMissing':'dictationLocalRequired'));
         return;
       }
       const started=await startDesktopDictationSession(bridge,{

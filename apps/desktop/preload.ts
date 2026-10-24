@@ -33,7 +33,7 @@ contextBridge.exposeInMainWorld('voxneloDesktop', {
       ipcRenderer.on('voxnelo:asr:moonshine-install-progress',listener);
       return ()=>ipcRenderer.removeListener('voxnelo:asr:moonshine-install-progress',listener);
     },
-    capabilities: () => ipcRenderer.invoke('voxnelo:asr:capabilities') as Promise<{available:boolean;reason:'ready'|'not-configured'|'missing-addon'|'missing-model'|'invalid-personal-pack'}>,
+    capabilities: (engine?:'zipformer'|'moonshine-medium') => ipcRenderer.invoke('voxnelo:asr:capabilities',engine) as Promise<{available:boolean;reason:'ready'|'not-configured'|'missing-addon'|'missing-model'|'invalid-personal-pack'}>,
     start: (engine?:'zipformer'|'moonshine-medium') => ipcRenderer.invoke('voxnelo:asr:start',engine) as Promise<{ok:true;sessionId:string}|{ok:false;reason:string}>,
     push: (id:string,samples:Float32Array) => ipcRenderer.send('voxnelo:asr:pcm',id,samples),
     stop: (id:string) => ipcRenderer.invoke('voxnelo:asr:stop',id) as Promise<{finalText:string;completed:boolean}>,

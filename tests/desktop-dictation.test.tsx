@@ -446,3 +446,44 @@ describe('Desktop session cancellation and resource cleanup',()=>{
     await waitFor(()=>expect(bridge.stop).toHaveBeenCalledWith('session-1'));
   });
 });
+
+describe('Selected desktop engine capability isolation',()=>{
+  it('allows only an explicit, verified legacy engine when default Linux Moonshine is missing',async()=>{
+    const {bridge}=setupDesktop(true);
+    bridge.capabilities.mockImplementation(async(engine?:string)=>engine==='moonshine-medium'
+      ?{available:false,reason:'missing-model'}:{available:true,reason:'ready'});
+    const engines=vi.fn(async()=>({zipformer:true,moonshineMedium:false}));
+    Object.assign(bridge,{engines});
+    render(<Harness/>);
+    await waitFor(()=>expect(live.engineAvailability.zipformer).toBe(true));
+    expect(live.offlineEngine).toBe('moonshine-medium');
+    expect(live.supported).toBe(false);
+    expect(bridge.start).not.toHaveBeenCalled();
+    act(()=>live.chooseOfflineEngine('zipformer'));
+    await waitFor(()=>expect(live.supported).toBe(true));
+    expect(bridge.capabilities).toHaveBeenCalledWith('zipformer');
+    await act(async()=>{await live.start();});
+    expect(bridge.start).toHaveBeenCalledWith('zipformer');
+    await act(async()=>{live.stop();await Promise.resolve();});
+  });
+
+  it('refuses stale engine discovery when selected model is no longer verified',async()=>{
+    const {bridge,getUserMedia}=setupDesktop(true);
+    // Discovery was true before the pack was removed. The more recent
+    // engine-specific verification must win; do not capture PCM or fallback.
+    bridge.capabilities.mockImplementation(async(engine?:string)=>engine==='zipformer'
+      ?{available:false,reason:'missing-model'}:{available:true,reason:'ready'});
+    Object.assign(bridge,{engines:vi.fn(async()=>({zipformer:true,moonshineMedium:true}))});
+    render(<Harness/>);
+    await waitFor(()=>expect(live.supported).toBe(true));
+    act(()=>live.chooseOfflineEngine('zipformer'));
+    await waitFor(()=>expect(bridge.capabilities).toHaveBeenCalledWith('zipformer'));
+    await waitFor(()=>expect(live.desktopReason).toBe('missing-model'));
+    expect(live.supported).toBe(false);
+    await act(async()=>{await live.start();});
+    expect(bridge.start).not.toHaveBeenCalled();
+    expect(getUserMedia).not.toHaveBeenCalled();
+    expect(live.error).toContain('模型');
+    expect(live.offlineEngine).toBe('zipformer');
+  });
+});
