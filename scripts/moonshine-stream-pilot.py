@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Experimental local-only Moonshine PCM streaming child-process protocol.
+"""Local-only, opt-in Linux Moonshine PCM streaming subprocess protocol.
 
-Not connected to Electron or shipped in an installer. Stdout is JSON events only.
+Used by the packaged Electron Linux app after a user installs the verified
+personal Moonshine runtime; models are never bundled. Stdout is JSONL events only.
 Input: one JSON object per line: {"type":"pcm","samples":[float,...]} or
 {"type":"finish"}. Each PCM packet is <=3200 mono float samples at 16 kHz.
 Use an isolated Python interpreter with moonshine-voice==0.0.65 installed.
@@ -11,11 +12,15 @@ import argparse
 import json
 import math
 from pathlib import Path
+from threading import Lock
 import sys
 
 MAX_PACKET = 3200
 MAX_FINAL = 8000
 MAX_INTERIM = 1000
+# SDK transcript callbacks may arrive from a different thread than stdin
+# PCM handling. Stdout TextIOWrapper is not a thread-safe JSONL transport.
+_EVENT_WRITE_LOCK = Lock()
 
 
 def packet_samples(message):
@@ -30,8 +35,13 @@ def packet_samples(message):
 
 
 def emit(event):
-    sys.stdout.write(json.dumps(event, ensure_ascii=True, separators=(",", ":")) + "\n")
-    sys.stdout.flush()
+    # Every event must be a whole line, including its flush. Interleaved
+    # partial JSON breaks the Electron native worker's strict protocol and
+    # stops dictation in the middle of speech.
+    payload = json.dumps(event, ensure_ascii=True, separators=(",", ":")) + "\n"
+    with _EVENT_WRITE_LOCK:
+        sys.stdout.write(payload)
+        sys.stdout.flush()
 
 
 def run(model_dir):
