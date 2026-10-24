@@ -20,7 +20,7 @@
 
 - **无自动更新**：安全补丁依赖用户手动下载新包（决策见
   `docs/ADR/ADR-0002-release-signing-update.md`）。请勿长期停留在旧版本。
-- **当前 v1.0.0 是正式公开但未签名的桌面发行版**：Linux DEB/AppImage、Windows NSIS EXE、macOS ARM64 DMG 均未签名，macOS 未公证。官方发布不代表取得外部安全认证或设备全面兼容认证；SmartScreen、Gatekeeper 等可能警告或阻止安装。请仅使用项目官方 [v1.0.0 Release](https://github.com/kunlong-luo/voxnelo/releases/tag/v1.0.0) 并核对 SHA-256；摘要不能替代发布者数字签名。v0.1.5/v0.1.6 属历史预览版，v0.1.7 仍是私有草稿。
+- **当前 v1.0.1 是正式公开但未签名的桌面发行版**：Linux DEB/AppImage、Windows NSIS EXE、macOS ARM64 DMG 均未签名，macOS 未公证。官方发布不代表取得外部安全认证或设备全面兼容认证；SmartScreen、Gatekeeper 等可能警告或阻止安装。请仅使用项目官方 [v1.0.1 Release](https://github.com/kunlong-luo/voxnelo/releases/tag/v1.0.1) 并核对 SHA-256；摘要不能替代发布者数字签名。v1.0.0 已作为历史正式版本保留；v0.1.5/v0.1.6 属历史预览版，v0.1.7 仍是私有草稿。
 - 学习记录为本机明文存储，设备共享/丢失场景下无额外保护。
 
 ## 录音设备异常清理
