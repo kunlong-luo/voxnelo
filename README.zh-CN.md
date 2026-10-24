@@ -6,7 +6,7 @@
 
 Voxnelo 是一款开源、本地优先的英语口语跟读桌面应用。听一句、自己读一句，再回听录音；不需要注册账号。
 
-**源码版本：** `1.0.1` · **发行状态：** 正式免签名桌面发行版（已知限制详见下文） · **开发者：** Leo Luo · **许可证：** [MIT](LICENSE)
+**源码版本：** `1.0.2` · **发行状态：** 正式免签名桌面发行版（已知限制详见下文） · **开发者：** Leo Luo · **许可证：** [MIT](LICENSE)
 
 ## 已实现的基础功能
 
@@ -31,7 +31,7 @@ Voxnelo 是一款开源、本地优先的英语口语跟读桌面应用。听一
 
 | 平台 | 安装包 | 重要说明 |
 | --- | --- | --- |
-| Linux x64 | `Voxnelo.deb` / `voxnelo_1.0.1_amd64.deb`（内容相同）、`Voxnelo-1.0.1.AppImage` | Debian/Ubuntu/Pop!_OS 优先使用 DEB，AppImage 需相应的系统依赖 |
+| Linux x64 | `Voxnelo.deb` / `voxnelo_1.0.2_amd64.deb`（内容相同）、`Voxnelo-1.0.2.AppImage` | Debian/Ubuntu/Pop!_OS 优先使用 DEB，AppImage 需相应的系统依赖 |
 | Windows | NSIS `.exe` | **未数字签名**，SmartScreen 可能弹出警告；不代表原生 Moonshine 听写已在 Windows 支持 |
 | macOS | `.dmg` | **未签名、未通过苹果公证**，Gatekeeper 可能阻止启动；确认 DMG 与 Mac 芯片架构兼容 |
 
@@ -43,7 +43,7 @@ Linux 已安装用户可正常升级，无需先卸载或清空学习记录：
 sudo apt install ./Voxnelo.deb
 ```
 
-更多操作步骤及 Windows/macOS 已知限制见 [用户帮助](docs/USER-GUIDE.md) 与 [1.0.1 发行说明](docs/release-notes/v1.0.1.md)。
+更多操作步骤及 Windows/macOS 已知限制见 [用户帮助](docs/USER-GUIDE.md) 与 [1.0.2 发行说明](docs/release-notes/v1.0.2.md)。
 
 ## 实时听写与隐私
 
