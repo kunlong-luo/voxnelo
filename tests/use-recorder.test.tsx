@@ -260,9 +260,10 @@ describe('useRecorder', () => {
   it('stop 同步抛错时释放麦克风、忽略旧回调，且允许重新录音', async () => {
     const oldTrackStop=vi.fn(), newTrackStop=vi.fn();
     let session=0;
-    mockDevices(() => Promise.resolve({
-      getTracks: () => [{stop:++session===1?oldTrackStop:newTrackStop}],
-    } as unknown as MediaStream));
+    mockDevices(() => {
+      const stop=++session===1?oldTrackStop:newTrackStop;
+      return Promise.resolve({getTracks:()=>[{stop}]} as unknown as MediaStream);
+    });
     render(<Harness />);
     await act(async () => {await latest.start();});
     const first=MockMediaRecorder.instances[0];
