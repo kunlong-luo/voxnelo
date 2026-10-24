@@ -1,15 +1,11 @@
 name: Publish Voxnelo v1.0.2 Official Unsigned (Linux Windows macOS)
 
-# Single-use official release. Only the merging PR that adds this exact workflow
-# triggers publication; after the verified Release, archive its trigger/gate.
-# Never overwrite tags, artifacts or any earlier official release.
+# Historical one-time release: v1.0.2 publicly shipped on 2026-10-24.
+# Permanently archived after the verified public Release. No push retriggers.
+# Original tag and 8 published artifacts are immutable, never overwrite them.
 # The release is NOT a code-signed/notarized/externally certified artifact.
 # Every build must pass full testing, SHA-256 and Linux apt install; no tag overwrite.
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/publish-all-v1.0.2.yml'
   workflow_dispatch:
 
 permissions:
@@ -22,6 +18,7 @@ concurrency:
 
 jobs:
   preflight:
+    if: false # archived after successful v1.0.2 official release
     name: Verify release identity and intended audience
     runs-on: ubuntu-24.04
     steps:
