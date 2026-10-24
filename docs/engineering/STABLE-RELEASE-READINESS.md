@@ -1,6 +1,8 @@
-# Voxnelo 正式稳定版门禁（默认 BLOCKED）
+# Voxnelo 可选签名/认证级发布门禁（默认 BLOCKED）
 
-当前 v0.1.7 代码已通过 CI；公开安装包仍是 v0.1.6 unsigned Early Access。不能只去掉 prerelease 标记就宣称正式版。
+**当前最新公开版是 [v1.0.0 免签名正式版](https://github.com/kunlong-luo/voxnelo/releases/tag/v1.0.0)**（2026-10-23 已公开，`draft=false` / `prerelease=false`）。安装包未签名、macOS 未公证；这是维护者明确授权的官方免签名发行决定，**不是**经过数字签名、外部安全认证、教学审校或所有真实硬件验收的发行版。详见 [发行者决定](../release/UNSIGNED-V1-OWNER-DECISION.md)。
+
+以下 `stable-readiness.yml` 是未来**选择实施受信任签名与公证、并有完整真实审批证据时**额外使用的认证级门禁；不会倒推否认已经真实发布的 unsigned v1.0.0。其自身签名/验收要求继续严格 fail closed，不得伪造任何人工审校结果。
 
 ## 两层必须独立满足的条件
 
@@ -16,4 +18,4 @@
 - 为 Issue #38、#45、#55、#123、#141 补充脱敏证据并逐条完成验收。原始冻结 PRD 不被修改。
 - 发布前由维护者再审核这一批真实证据，单独批准公开 Stable 发布。测试脚本的合成通过 fixture 不构成实际验收。
 
-现阶段 Stable 审批证据缺失；任何人工状态不应伪造为 pass。
+现阶段签名及认证级 Stable 审批证据缺失；任何人工状态不应伪造为 pass。它不等于已公开免签名 v1.0.0 尚未发行。

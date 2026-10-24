@@ -1,23 +1,23 @@
-# Voxnelo GitHub 发布流程：草稿、公开预览与稳定版
+# Voxnelo GitHub 发行版与历史草稿
 
-**当前公开版本：v0.1.6 Early Access（Linux / Windows / macOS，全部安装包未签名，macOS 未公证）。** 请查看 [最新 Release](https://github.com/kunlong-luo/voxnelo/releases/tag/v0.1.6) 和 [当前 Release 运维说明](RELEASE-OPERATIONS.md)。此前 v0.1.5 只公开了 Linux 安装包，其标签和历史附件保持不变。
+## 当前官方发行版（核对日期 2026-10-24）
 
-## 自动发布 Early Access
+- **[v1.0.0 官方免签名正式版](https://github.com/kunlong-luo/voxnelo/releases/tag/v1.0.0)**：公开、非 prerelease（`draft=false` / `prerelease=false`），Linux x64 DEB/AppImage、Windows x64 EXE、macOS ARM64 DMG 和三个 SHA-256 摘要清单共八个附件。2026-10-23 发布，安装包**未签名**、macOS **未公证**，不能推断已通过真机/教学/版权/发行者身份认证。
+- **v0.1.7**：包含 11 个附件的**未公开历史 Draft**，不是当前下载版本，也不应重新执行草稿或把其旧附件改为 v1.0.0。
+- v0.1.5/v0.1.6：历史公开 Early Access，仍保留原标签与安装包。
 
-一次性的 `.github/workflows/publish-all-v0.1.6.yml` 只有当该工作流文件首次合并到 `main` 时才会触发，不监听常规 tag 或源码提交。它分别在 Ubuntu、Windows、macOS 生成安装包、校验身份/版本/真实文件大小及三个 SHA-256 清单，并在 Ubuntu 通过 apt 实际安装。所有 job 通过、复核公开发布说明且确认没有同名 tag 或 Release 后，才执行公开 `--prerelease`。已存在的发行版或标签不得覆盖。
+## 已完成的一次性发布（全部退役）
 
-## 仅供内部审核的手动草稿
+历史的 `publish-linux-v0.1.5.yml`、`publish-all-v0.1.6.yml`、`prepare-v0.1.7-draft-once.yml` 及 `publish-all-v1.0.0.yml` 均已完成各自任务。它们保留审计用脚本，但**不再监听任何 push**，其前置作业永久 `if: false`。不允许 Dependabot 修改触发重跑，也不可重建或覆盖已有标签、Release 或二进制附件。
 
-`.github/workflows/release-draft.yml` 仍然保留 **Actions → Prepare GitHub release draft → Run workflow** 的 `workflow_dispatch` 流程。它使用 `version` 和 `PREPARE_DRAFT_ONLY` 明确表示**只生成 Draft**，自动安装包不会因此公开。草稿本身可能创建同名 tag，所以已有正式公开版本（例如 v0.1.6）绝不可重复用此流程覆盖；若需要更新版本，先更新源码版本、AppStream、发行说明和验收门槛后再触发。
+v1.0.0 公开发行真实 [Actions 运行](https://github.com/kunlong-luo/voxnelo/actions/runs/39974884072) 成功，三平台安装包、Linux apt 实装、版本与 SHA-256 等自动门禁通过；但不会自动形成五名用户、F001–F012、第三方模型权利或各设备麦克风测试的真实证据。
 
-**Publish release** 是明确的维护者公开发布动作，不能用 CI 绿灯自动声称完成 F001–F012、内容授权、真实麦克风及 Windows/macOS 实机验收。
+## 后续新版本、草稿和额外的签名通道
 
-## 下载和安全告知
+新版本应先以 PR 更新源码版本、锁文件、发行说明并通过 CI，再为**未使用的新版本号**建立独立的发布流程。`.github/workflows/release-draft.yml` 可通过 **Actions → Prepare GitHub release draft → Run workflow** 使用 `version` 及 `PREPARE_DRAFT_ONLY` 创建内部草稿；**已有 Draft/Release/tag 不允许覆盖**，草稿不会公开。
 
-v0.1.6 发布页的 Linux `.deb` / `.AppImage`、Windows NSIS `.exe`、macOS `.dmg` 必须全部来自同一个 `main` 合并 SHA，所有文件与 `SHA256SUMS-linux.txt` / `-win32.txt` / `-darwin.txt` 匹配。该构建是 unsigned candidate 的公开 Early Access 分发，尚无 Apple 公证或受信任的数字签名。**SHA-256 完整性不能证明代码签名或受法律认证。** Mac/Windows 离线 Moonshine 原生支持尚不能据此宣称可用。
+以后若维护者自愿采用 Authenticode 签名、Developer ID 公证和更严格的独立人工验收，可选用 [签名候选流程](SIGNED-CANDIDATE-SETUP.md) 与 [认证级门禁](STABLE-RELEASE-READINESS.md)。它们仍严格 fail closed，但不是已公开、明确披露 unsigned 风险的 v1.0.0 的先决条件。
 
-详见 [发布运维细则](RELEASE-OPERATIONS.md)、[V0.1 验收矩阵](V0.1-ACCEPTANCE-MATRIX.md)、[用户指南](../USER-GUIDE.md)。
+**Publish release** 必须由授权维护者核对最终安装包、SHA-256、支持的系统与发行限制后明确操作。不能因 CI 绿灯就声称版权、独立审校、真实麦克风或所有 F001–F012 已通过。SHA-256 校验完整性，不能证明开发者身份或 Apple 公证。
 
-## v0.1.7 候选
-
-源码 0.1.7 版本准备 PR 不会创建 tag 或公开 Release。PR 合并且所有检查通过后，在 `main` 手动运行 `Prepare GitHub release draft`，指定 `0.1.7` 和 `PREPARE_DRAFT_ONLY`；生成的候选 Draft 仍需三平台验证及人工发布审批。公开下载仍是 v0.1.6。
+详见 [发布运维](RELEASE-OPERATIONS.md)、[原始 PRD 验收矩阵](V0.1-ACCEPTANCE-MATRIX.md)、[用户指南](../USER-GUIDE.md)、[v1.0.0 发行说明](../release-notes/v1.0.0.md)。

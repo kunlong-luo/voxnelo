@@ -7,12 +7,12 @@ const decision=readFileSync('docs/release/UNSIGNED-V1-OWNER-DECISION.md','utf8')
 const pkg=JSON.parse(readFileSync('package.json','utf8')) as {version:string};
 
 describe('Owner-authorized official unsigned release is guarded and truthful',()=>{
-  it('only triggers from merging its own new workflow file onto main',()=>{
+  it('permanently archives the completed one-time official publisher',()=>{
     expect(pkg.version).toBe('1.0.0');
-    expect(workflow).toContain('branches: [main]');
-    expect(workflow).toContain("'.github/workflows/publish-all-v1.0.0.yml'");
+    expect(workflow).not.toMatch(/^\s+push:/m);
+    expect(workflow).toContain('if: false # archived');
     expect(workflow).not.toMatch(/^\s+tags:/m);
-    expect(workflow).not.toContain('workflow_dispatch:');
+    expect(workflow).toContain('workflow_dispatch:');
     expect(workflow).toContain('refs/heads/main');
     expect(workflow).toContain("github.repository == 'kunlong-luo/voxnelo'");
     expect(workflow).toContain('Refuse to overwrite an existing release or version tag');
