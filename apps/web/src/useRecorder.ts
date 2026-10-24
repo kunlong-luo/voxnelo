@@ -24,10 +24,31 @@ export function useRecorder() {
     // Explicit Stop must never be mistaken for an unplugged microphone.
     detachTrackEndedRef.current?.();
     detachTrackEndedRef.current = null;
-    if (recorder.current?.state === 'recording') recorder.current.stop();
-    stream.current?.getTracks().forEach((track) => track.stop());
-    stream.current = null;
-  }, []);
+    const activeRecorder = recorder.current;
+    try {
+      // MediaRecorder.stop() can throw when the device disappears between the
+      // state check and the stop call. Never strand the UI in "recording".
+      if (activeRecorder?.state === 'recording') activeRecorder.stop();
+    } catch {
+      // Discard every delayed ondataavailable/onstop from the failed session.
+      // Do not construct a Blob, count a practice, or disturb a later session.
+      generationRef.current += 1;
+      pendingRequestGenerationRef.current = null;
+      if (recorder.current === activeRecorder) recorder.current = null;
+      if (activeRecorder) {
+        activeRecorder.ondataavailable = null;
+        activeRecorder.onstop = null;
+        activeRecorder.onerror = null;
+      }
+      if (!disposedRef.current) {
+        setStatus('idle');
+        setError(t('recorderInterrupted'));
+      }
+    } finally {
+      stream.current?.getTracks().forEach((track) => track.stop());
+      stream.current = null;
+    }
+  }, [t]);
 
   const clearAudio = useCallback(() => {
     // A sentence change must invalidate callbacks and physically release any
