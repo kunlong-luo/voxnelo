@@ -179,10 +179,25 @@ export function useRecorder() {
         pendingRequestGenerationRef.current = null;
         detachTrackEndedRef.current?.();
         detachTrackEndedRef.current = null;
-        if (recorder.current) recorder.current.onstop = null;
-        if (recorder.current?.state === 'recording') recorder.current.stop();
+        // Unmount must release all resources even if a device is unplugged
+        // between MediaRecorder.state and stop(). Do not leak the exception
+        // into React cleanup, skip track shutdown or surface stale callbacks.
+        const currentRecorder = recorder.current;
+        recorder.current = null;
+        if (currentRecorder) {
+          currentRecorder.onstop = null;
+          currentRecorder.ondataavailable = null;
+          currentRecorder.onerror = null;
+          try {
+            if (currentRecorder.state === 'recording') currentRecorder.stop();
+          } catch {
+            // Invalidate and discard a recorder whose native state changed.
+          }
+        }
         stream.current?.getTracks().forEach((track) => track.stop());
+        stream.current = null;
         if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+        urlRef.current = null;
       };
     },
     [],
