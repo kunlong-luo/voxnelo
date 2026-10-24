@@ -10,7 +10,7 @@ import { allowsAudioPermissionCheck, allowsAudioPermissionRequest, APP_HOST, isA
 import { LinuxEnglishSpeech } from './linuxSpeech';
 import { LINUX_DESKTOP_FILENAME, resolveLinuxIconPath } from './linuxAppIdentity';
 import { OfflineAsr } from './offlineAsr';
-import { defaultDesktopAsrEngine, resolveDesktopAsrEngine } from './asrDefault';
+import { resolveDesktopAsrEngine } from './asrDefault';
 import { verifyPinnedMoonshineMediumModel } from './moonshineIntegrity';
 import {parseMoonshineInstallStage,type MoonshineInstallStage} from './moonshineInstallProgress';
 import { resolveMoonshinePaths, verifyMoonshinePythonRuntime } from './moonshinePaths';
@@ -167,29 +167,40 @@ function registerOfflineAsr():void{
     }catch{return {ok:false,reason:'failed'};}
     finally{installingMoonshine=false;}
   });
-  ipcMain.handle('voxnelo:asr:capabilities',async(event)=>{
-    if(!authorizedWindow(event))return {available:false,reason:'not-configured'};
-    // A personal offline model can be installed while Voxnelo is open.
-    // Re-resolve ONLY fully verified main-process assets; never accept a path
-    // from renderer IPC or replace a currently active microphone session.
+  // Each capability query describes the requested engine, NOT the platform's
+  // default. Otherwise a missing Linux Moonshine model could mask a verified
+  // *explicitly selected* Zipformer pack (or claim that it is ready).
+  const capabilityForEngine=async(requested:unknown)=>{
+    const selected=resolveDesktopAsrEngine(process.platform,requested);
+    if(!selected)return {available:false,reason:'not-configured' as const};
+    if(selected==='moonshine-medium'){
+      // No native Moonshine on Windows/macOS. Never fall back to Zipformer.
+      if(process.platform!=='linux'||!moonshinePilot)
+        return {available:false,reason:'not-configured' as const};
+      return moonshineModelVerified?moonshinePilot.capabilities()
+        :{available:false,reason:'missing-model' as const};
+    }
+    // Verified personal native assets can arrive while Electron remains open.
+    // RefreshableAsrEngine refuses to swap workers during active sessions.
     try{
-      if(defaultDesktopAsrEngine(process.platform)==='moonshine-medium'){
-        // Linux reports only the selected default's readiness. Existing
-        // Zipformer packs must not disguise an absent Moonshine installation.
-        return moonshinePilot
-          ?moonshineModelVerified?moonshinePilot.capabilities():{available:false,reason:'missing-model'}
-          :{available:false,reason:'not-configured'};
-      }
       const engine=(await offlineAsr.refreshIfUnavailable()).capabilities();
       return !engine.available&&invalidPersonalAsr
-        ? {available:false,reason:'invalid-personal-pack'}
+        ? {available:false,reason:'invalid-personal-pack' as const}
         : engine;
-    }catch{return {available:false,reason:'not-configured'};}
+    }catch{return {available:false,reason:'not-configured' as const};}
+  };
+  ipcMain.handle('voxnelo:asr:capabilities',async(event,requested:unknown)=>{
+    if(!authorizedWindow(event))return {available:false,reason:'not-configured'};
+    return capabilityForEngine(requested);
   });
-  ipcMain.handle('voxnelo:asr:engines',(event)=>{
+  ipcMain.handle('voxnelo:asr:engines',async(event)=>{
     if(!authorizedWindow(event))return null;
-    return {zipformer:offlineAsr.current().capabilities().available,
-      moonshineMedium:moonshineModelVerified&&moonshinePilot?.capabilities().available===true};
+    // Reload verified Zipformer assets before advertising an explicitly
+    // selectable legacy engine. Linux still defaults ONLY to Moonshine.
+    const [zipformer,moonshine]=await Promise.all([
+      capabilityForEngine('zipformer'),capabilityForEngine('moonshine-medium'),
+    ]);
+    return {zipformer:zipformer.available,moonshineMedium:moonshine.available};
   });
   ipcMain.handle('voxnelo:asr:start',async(event,requested:unknown)=>{
     const window=authorizedWindow(event);
