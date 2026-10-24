@@ -60,15 +60,16 @@ async function verify(shouldReject:boolean){
     });
   });
 }
-// A child may reject audio because its stdin is closed while it remains alive.
-// This reproduces the EPIPE stream 'error' event rather than a synchronous
-// write exception. The worker must send the existing sanitized failure event
-// (not throw an unhandled error or expose a private path).
+// A child may close stdin before Voxnelo writes audio or Stop. Depending on
+// pipe scheduling the parent may receive an asynchronous EPIPE or only the
+// subprocess exit; both must cause a single sanitized failure, never an
+// unhandled Worker error, hang, or a leaked Python child.
 const closedPipeScript=path.join(root,'closed-pipe.py');
-writeFileSync(closedPipeScript,`import sys,time
-sys.stdin.close()
+writeFileSync(closedPipeScript,`import os,time
+os.close(0)
 print('{"type":"ready"}',flush=True)
-time.sleep(10)
+# Exit even when the platform has not emitted EPIPE for a buffered write.
+time.sleep(0.35)
 `);
 async function verifyClosedPipe(kind:'pcm'|'finish'){
   const worker=new Worker(workerFile,{workerData:{
@@ -77,6 +78,7 @@ async function verifyClosedPipe(kind:'pcm'|'finish'){
   try{
     await new Promise<void>((resolve,reject)=>{
       let settled=false;
+      let sawReady=false;
       const timeout=setTimeout(()=>settle(Error('No failure on closed Moonshine stdin')),5000);
       function settle(error?:Error){
         if(settled)return;
@@ -88,11 +90,12 @@ async function verifyClosedPipe(kind:'pcm'|'finish'){
       worker.on('exit',code=>settle(Error('Worker exited before sanitized failure: '+code)));
       worker.on('message',(m:{type:string})=>{
         if(m.type==='ready'){
+          sawReady=true;
           worker.postMessage(kind==='pcm'
             ?{type:'pcm',samples:new Float32Array(800)}
             :{type:'finish'});
         }else if(m.type==='failure'){
-          settle();
+          settle(sawReady?undefined:Error('Child failed before protocol ready'));
         }else{
           settle(Error('Unexpected event from closed input: '+m.type));
         }
