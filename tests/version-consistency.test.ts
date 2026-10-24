@@ -29,6 +29,6 @@ describe('Voxnelo release identity',()=>{
   });
 
   it('uses the current official unsigned patch release version',()=>{
-    expect(readVersion('package.json')).toBe('1.0.1');
+    expect(readVersion('package.json')).toBe('1.0.2');
   });
 });

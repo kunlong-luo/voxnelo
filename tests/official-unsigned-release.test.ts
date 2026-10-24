@@ -8,7 +8,7 @@ const pkg=JSON.parse(readFileSync('package.json','utf8')) as {version:string};
 
 describe('Owner-authorized official unsigned release is guarded and truthful',()=>{
   it('permanently archives the completed one-time official publisher',()=>{
-    expect(pkg.version).toBe('1.0.1');
+    expect(pkg.version).toBe('1.0.2');
     expect(workflow).not.toMatch(/^\s+push:/m);
     expect(workflow).toContain('if: false # archived');
     expect(workflow).not.toMatch(/^\s+tags:/m);

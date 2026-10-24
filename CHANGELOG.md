@@ -4,6 +4,22 @@
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-10-24
+
+### Maintenance (official unsigned desktop patch)
+- 修复桌面原生离线引擎状态判断（PR #163）：按实际所选引擎验证能力，Linux 仍默认 Moonshine Medium，显式旧模型选择和缺失/损坏的诊断互不混淆。
+- 增强本地识别质量取证工具（PR #164）：已安装 Moonshine 可单独运行私人 WAV 批量 WER，不必同时安装 Zipformer；`external-playback`（另设备外放）与安静近讲和噪声分别统计词数加权 WER/RTF。**并未因此声称实际 WER 提升。**
+- 清理所有听写会话的 Electron 窗口生命周期监听器（PR #165），避免连续多轮使用时遗留闭包、Worker 引用；新增 25 轮资源清理回归测试。
+- Moonshine Python SDK 回调与 PCM 确认现在原子化输出完整 JSONL 事件（PR #166），并测试 240 条并发协议消息。
+- 子进程 stdin 出错（EPIPE/提前关闭）会受控失败，不再因未处理写入错误崩溃（PR #167）；增加真实 Python 断管/退出的 PCM 与 finish 回归测试。
+- 保留个人 Moonshine 配置/安装目录及本地学习记录，不强制卸载旧版本，不捆绑模型，不进行音频云上传。Linux 首次下载仍需用户明确点击。
+
+### Known limitations
+- 免签名正式维护版，**Windows/macOS 未签名且 macOS 未公证**。系统 SmartScreen / Gatekeeper 可能拦截；SHA-256 仅校验文件完整性。
+- Windows/macOS 尚不提供和 Linux 完全一致的原生 Moonshine 实时听写。Linux 模型需单独下载安装。
+- 真实麦克风 20+ 已知参考句的口音、噪声、外放 WER/CPU/延迟；F001–F012、内容许可与五位初学者外部测试仍须独立取证，不能从绿色 CI 推断全部合格。
+
+
 ## [1.0.1] - 2026-10-24
 
 ### Maintenance (official unsigned patch)
