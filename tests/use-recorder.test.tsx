@@ -257,6 +257,55 @@ describe('useRecorder', () => {
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:mock');
   });
 
+  it('stop 同步抛错时释放麦克风、忽略旧回调，且允许重新录音', async () => {
+    const oldTrackStop=vi.fn(), newTrackStop=vi.fn();
+    let session=0;
+    mockDevices(() => {
+      const stop=++session===1?oldTrackStop:newTrackStop;
+      return Promise.resolve({getTracks:()=>[{stop}]} as unknown as MediaStream);
+    });
+    render(<Harness />);
+    await act(async () => {await latest.start();});
+    const first=MockMediaRecorder.instances[0];
+    if(!first)throw Error('expected recorder');
+    const onLateData=first.ondataavailable;
+    const onLateStop=first.onstop;
+    vi.spyOn(first,'stop').mockImplementationOnce(()=>{
+      throw new Error('InvalidStateError: microphone unplugged');
+    });
+    act(()=>latest.stop());
+    expect(latest.status).toBe('idle');
+    expect(latest.error).toBe('录音中断，请重新尝试。');
+    expect(latest.recordingUrl).toBeNull();
+    expect(oldTrackStop).toHaveBeenCalledOnce();
+    expect(first.onstop).toBeNull();
+    expect(first.ondataavailable).toBeNull();
+    act(()=>{
+      onLateData?.({data:new Blob(['stale voice'])});
+      onLateStop?.();
+    });
+    expect(latest.status).toBe('idle');
+    expect(URL.createObjectURL).not.toHaveBeenCalled();
+
+    await act(async()=>{await latest.start();});
+    expect(latest.status).toBe('recording');
+    const replacement=MockMediaRecorder.instances[1];
+    if(!replacement)throw Error('expected replacement recorder');
+    act(()=>{
+      onLateData?.({data:new Blob(['old sentence'])});
+      onLateStop?.();
+    });
+    expect(latest.status).toBe('recording');
+    act(()=>{
+      replacement.ondataavailable?.({data:new Blob(['new sentence'])});
+      latest.stop();
+    });
+    expect(latest.status).toBe('ready');
+    expect(latest.error).toBeNull();
+    expect(URL.createObjectURL).toHaveBeenCalledOnce();
+    expect(newTrackStop).toHaveBeenCalled();
+  });
+
   it('异步 onstop 在切句清理之后到达时不得恢复旧音频', async () => {
     MockMediaRecorder.deferStop = true;
     mockDevices(() => Promise.resolve(fakeStream()));

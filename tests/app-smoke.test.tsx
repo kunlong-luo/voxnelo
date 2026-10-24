@@ -175,6 +175,45 @@ describe('App smoke', () => {
     }
   });
 
+  it('F004/F005: synchronous stop failure releases microphone and does not count phantom practice or block navigation',async()=>{
+    const oldMedia=Object.getOwnPropertyDescriptor(navigator,'mediaDevices');
+    const stopTrack=vi.fn();
+    Object.defineProperty(navigator,'mediaDevices',{configurable:true,value:{
+      getUserMedia:vi.fn(async()=>({getTracks:()=>[{stop:stopTrack}]})),
+    }});
+    class BrokenStopRecorder {
+      static isTypeSupported(){return true;}
+      state:RecordingState='inactive';
+      mimeType='audio/webm';
+      onstop:(()=>void)|null=null;
+      ondataavailable:((event:{data:Blob})=>void)|null=null;
+      onerror:(()=>void)|null=null;
+      start(){this.state='recording';}
+      stop():void{throw Error('device disconnected');}
+    }
+    vi.stubGlobal('MediaRecorder',BrokenStopRecorder);
+    try{
+      const view=render(<App/>);
+      await screen.findByText(FIRST_SENTENCE.english);
+      fireEvent.click(screen.getByRole('button',{name:'开口跟读'}));
+      await screen.findByRole('button',{name:'结束录音'});
+      fireEvent.click(screen.getByRole('button',{name:'结束录音'}));
+      await waitFor(()=>expect(screen.getByRole('button',{name:'开口跟读'})).toBeTruthy());
+      expect(stopTrack).toHaveBeenCalled();
+      expect((await database.states.toArray()).every(x=>x.practicedCount===0)).toBe(true);
+      fireEvent.click(screen.getByRole('button',{name:'换一句'}));
+      await waitFor(()=>expect(view.container.querySelector('h1.sentenceText')?.textContent)
+        .not.toBe(FIRST_SENTENCE.english));
+      const states=await database.states.toArray();
+      expect(states.every(x=>x.practicedCount===0)).toBe(true);
+      expect(document.querySelector('audio[src^="blob:"]')).toBeNull();
+    }finally{
+      vi.unstubAllGlobals();
+      if(oldMedia)Object.defineProperty(navigator,'mediaDevices',oldMedia);
+      else Reflect.deleteProperty(navigator,'mediaDevices');
+    }
+  });
+
   it('F004/F005: a late recorder callback cannot attribute the previous sentence to the next', async () => {
     const oldMedia = Object.getOwnPropertyDescriptor(navigator, 'mediaDevices');
     const oldCreate = Object.getOwnPropertyDescriptor(URL, 'createObjectURL');
