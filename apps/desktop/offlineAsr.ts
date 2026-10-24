@@ -15,6 +15,7 @@ interface Session {
   lastText:string;finishPromise:Promise<AsrStopResult>|null;
   resolveFinish:((result:AsrStopResult)=>void)|null;
   resolveOpen:((result:AsrOpenResult)=>void)|null;
+  onOwnerDestroyed:(()=>void)|null;
 }
 /** 40 x 50-ms capture packets ≈ 2s of audio: reject overload, never lose speech silently. */
 const MAX_PENDING_PCM_CHUNKS=40;
@@ -55,7 +56,7 @@ export class OfflineAsr {
     }catch{
       return {ok:false,reason:'failed'};
     }
-    const session:Session={id,owner,worker,ready:false,accepting:false,pendingChunks:0,stopTimer:null,lastText:'',finishPromise:null,resolveFinish:null,resolveOpen:null};
+    const session:Session={id,owner,worker,ready:false,accepting:false,pendingChunks:0,stopTimer:null,lastText:'',finishPromise:null,resolveFinish:null,resolveOpen:null,onOwnerDestroyed:null};
     this.session=session;
     return new Promise(resolve=>{
       let settled=false;
@@ -96,6 +97,7 @@ export class OfflineAsr {
       };
       worker.on('error',workerFailed);
       worker.on('exit',workerFailed);
+      session.onOwnerDestroyed=dispose;
       owner.once('destroyed',dispose);
     });
   }
@@ -135,6 +137,15 @@ export class OfflineAsr {
     if(this.session!==s)return;
     this.session=null;
     if(s.stopTimer)clearTimeout(s.stopTimer);
+    // Electron windows outlive many short dictation sessions. A once()
+    // listener only unregisters itself when 'destroyed' actually fires;
+    // completed, failed, cancelled and overloaded sessions MUST remove it.
+    // Otherwise each session retains its Worker and PCM state until the
+    // window closes, eventually triggering MaxListenersExceededWarning.
+    if(s.onOwnerDestroyed){
+      s.owner.removeListener?.('destroyed',s.onOwnerDestroyed);
+      s.onOwnerDestroyed=null;
+    }
     // Window closure or explicit shutdown can interrupt the startup handshake.
     // Settle immediately rather than hanging until the 12-second timeout.
     s.resolveOpen?.({ok:false,reason:'failed'});
