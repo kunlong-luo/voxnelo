@@ -30,3 +30,7 @@ V0.1 打包配置（`package.json` 的 `build` 段）此前无图标、无签名
 v0.1.5 已作为公开 Linux Early Access 提供未签名安装件。v0.1.6 进一步在项目 GitHub Releases 明确以 **公开预览版（Early Access / prerelease）** 分发 Linux、Windows 和 macOS 未签名安装包，macOS 也未公证。以上均在下载页/发行说明中明示风险，附 SHA-256 校验清单，并不声称开发者身份经签名认证，也不属于已通过所有 F001–F012 验收的稳定发行版。此前“未签名包仅内部验证”的约束继续适用于**稳定/受认证发行**，对已经明确披露风险的自愿 Early Access 进行例外管理。
 
 稳定公开版仍以 Windows 代码签名、Apple 签名/公证、系统权限实测、隐私与依赖许可复核为上线要求；没有证书或人工验收记录时不得宣传已达成。
+
+## 2026-10-23 决策增补：免签名公开正式版
+
+上文关于未来稳定发行一律必须签名的早期要求，现由维护者明确记录的 [v1.0.0 免签名发行决定](../release/UNSIGNED-V1-OWNER-DECISION.md) 更新：公开 [v1.0.0](https://github.com/kunlong-luo/voxnelo/releases/tag/v1.0.0) 是非 prerelease 的正式桌面版，但**未签名**，macOS 未公证。它不是数字身份受认证或已通过全部人工质量/教学许可验收的版本。受信任签名与 Apple 公证转为后续可选增强通道，不应错误描述为该已公开版从未发行。

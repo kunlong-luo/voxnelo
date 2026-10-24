@@ -1,15 +1,12 @@
 name: Publish Voxnelo v1.0.0 Official Unsigned (Linux Windows macOS)
 
-# Owner-requested one-time public v1.0.0 unsigned official release.
-# Runs only when this workflow file is added or updated on main.
+# Historical one-time release: v1.0.0 was publicly shipped on 2026-10-23.
+# Permanently archived. No automatic retrigger after Dependabot Actions edits.
 # A new version tag is always rejected if it already exists.
 # The release is NOT a code-signed/notarized/externally certified artifact.
 # Every build must pass full testing, SHA-256 and Linux apt install; no tag overwrite.
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/publish-all-v1.0.0.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -21,7 +18,7 @@ concurrency:
 
 jobs:
   preflight:
-    if: github.repository == 'kunlong-luo/voxnelo' && github.ref == 'refs/heads/main'
+    if: false # archived after successful v1.0.0 official release
     name: Verify release identity and intended audience
     runs-on: ubuntu-24.04
     steps:
