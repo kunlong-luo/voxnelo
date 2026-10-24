@@ -23,7 +23,7 @@ describe('v1.0.2 one-time official unsigned release guards',()=>{
     expect(workflow).toContain('pnpm typecheck && pnpm test && pnpm build');
     expect(workflow).toContain('pnpm asr:verify-real');
     expect(workflow).toContain('check-desktop-package.mts');
-    expect(workflow).toContain('sudo apt-get install -y ./release/voxnelo_1.0.2_amd64.deb');
+    expect(workflow).toContain('sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y ./release/voxnelo_1.0.2_amd64.deb');
     expect(workflow).toContain('sha256sum -c');
     expect(workflow).toContain('cmp -s release-assets/Voxnelo.deb');
     expect(workflow).toContain('windows-latest');
