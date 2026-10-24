@@ -52,3 +52,27 @@ describe('Owner-authorized official unsigned release is guarded and truthful',()
     expect(decision).toContain('不标记为已通过');
   });
 });
+
+describe('v1.0.1 already-published patch version is immutable',()=> {
+  const workflow101=readFileSync('.github/workflows/publish-all-v1.0.1.yml','utf8');
+  const notes101=readFileSync('docs/release-notes/v1.0.1.md','utf8');
+  const ops=readFileSync('docs/engineering/RELEASE-OPERATIONS.md','utf8');
+  it('permanently disables its one-shot publisher after successful public release',()=> {
+    expect(workflow101).not.toMatch(/^\\s+push:/m);
+    expect(workflow101).not.toMatch(/^\\s+tags:/m);
+    expect(workflow101).toContain('if: false # archived after successful v1.0.1 official release');
+    expect(workflow101).toContain('workflow_dispatch:');
+    expect(workflow101).toContain('Refuse to overwrite an existing release or version tag');
+    expect(workflow101).not.toMatch(/gh release (?:edit|upload|publish)/);
+  });
+  it('preserves the original three-platform security and checksum evidence',()=> {
+    expect(workflow101).toContain('pnpm audit --audit-level high');
+    expect(workflow101).toContain('sha256sum -c');
+    expect(workflow101).toContain('cmp -s release-assets/Voxnelo.deb');
+    expect(workflow101).toContain('gh release create v1.0.1');
+    expect(notes101).toContain('模型不随安装包内置');
+    expect(notes101).toContain('未签名');
+    expect(ops).toContain('v1.0.1');
+    expect(ops).toContain('40071198560');
+  });
+});
