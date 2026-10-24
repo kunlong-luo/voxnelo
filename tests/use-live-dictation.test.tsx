@@ -168,7 +168,9 @@ describe('Local-first live dictation',()=>{
     expect(FakeRecognizer.available).not.toHaveBeenCalled();
     expect(FakeRecognizer.instances).toHaveLength(0);
     expect(latest.status).toBe('idle');
-    expect(latest.error).toContain('本地英语识别');
+    // The selected-engine query now distinguishes a missing native addon
+    // from a generic offline availability error.
+    expect(latest.error).toContain('离线识别组件尚不可用');
     await act(async()=>{await latest.installLocal()});
     expect(FakeRecognizer.install).not.toHaveBeenCalled();
   });
