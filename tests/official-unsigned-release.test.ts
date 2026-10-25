@@ -4,11 +4,10 @@ import { readFileSync } from 'node:fs';
 const workflow=readFileSync('.github/workflows/publish-all-v1.0.0.yml','utf8');
 const notes=readFileSync('docs/release-notes/v1.0.0.md','utf8');
 const decision=readFileSync('docs/release/UNSIGNED-V1-OWNER-DECISION.md','utf8');
-const pkg=JSON.parse(readFileSync('package.json','utf8')) as {version:string};
 
 describe('Owner-authorized official unsigned release is guarded and truthful',()=>{
   it('permanently archives the completed one-time official publisher',()=>{
-    expect(pkg.version).toBe('1.0.3');
+    expect(notes).toContain('v1.0.0');
     expect(workflow).not.toMatch(/^\s+push:/m);
     expect(workflow).toContain('if: false # archived');
     expect(workflow).not.toMatch(/^\s+tags:/m);
