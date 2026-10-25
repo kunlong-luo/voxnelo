@@ -7,7 +7,7 @@ const app=JSON.parse(readFileSync('package.json','utf8')) as {version:string};
 
 describe('v1.0.2 permanently archived official unsigned release guards',()=>{
   it('is archived after public release and never allows overwriting old releases',()=>{
-    expect(app.version).toBe('1.0.2');
+    expect(app.version).toBe('1.0.3');
     expect(workflow).toContain('refs/heads/main');
     expect(workflow).toContain("github.repository == 'kunlong-luo/voxnelo'");
     expect(workflow).toContain('workflow_dispatch:');

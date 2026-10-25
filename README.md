@@ -6,7 +6,7 @@
 
 Voxnelo is an open-source, local-first desktop app for practicing spoken English. Listen to a short sentence, say it yourself, and play back your recording. No account is required.
 
-**Source version:** `1.0.2` · **Release:** Official unsigned desktop edition (known limitations) · **Maintainer:** Leo Luo · **License:** [MIT](LICENSE)
+**Source version:** `1.0.3` · **Release:** Official unsigned desktop edition (known limitations) · **Maintainer:** Leo Luo · **License:** [MIT](LICENSE)
 
 ## Core features
 
@@ -31,7 +31,7 @@ The example voice is **system text-to-speech (TTS)**, not a professionally recor
 
 | Platform | Installer | Important limits |
 | --- | --- | --- |
-| Linux x64 | `Voxnelo.deb` / `voxnelo_1.0.2_amd64.deb` (identical bytes); `Voxnelo-1.0.2.AppImage` | DEB for Debian/Ubuntu/Pop!_OS; AppImage requires suitable system libraries |
+| Linux x64 | `Voxnelo.deb` / `voxnelo_1.0.3_amd64.deb` (identical bytes); `Voxnelo-1.0.3.AppImage` | DEB for Debian/Ubuntu/Pop!_OS; AppImage requires suitable system libraries |
 | Windows | NSIS `.exe` | **Unsigned**, so SmartScreen may warn; native Moonshine dictation is not provided on Windows |
 | macOS | `.dmg` | **Unsigned and not notarized**; Gatekeeper may warn; check your Mac chip architecture and DMG compatibility |
 
@@ -43,7 +43,7 @@ To upgrade on Debian-based Linux, download the new package, open `Voxnelo.deb` w
 sudo apt install ./Voxnelo.deb
 ```
 
-Existing installations normally upgrade in place; you should not have to uninstall first. Windows/macOS installers are official **unsigned builds**, not evidence of device certification, publisher signing, Apple notarization or universal native ASR support. See the [user guide](docs/USER-GUIDE.md) and [release notes](docs/release-notes/v1.0.2.md).
+Existing installations normally upgrade in place; you should not have to uninstall first. Windows/macOS installers are official **unsigned builds**, not evidence of device certification, publisher signing, Apple notarization or universal native ASR support. See the [user guide](docs/USER-GUIDE.md) and [release notes](docs/release-notes/v1.0.3.md).
 
 ## Speech recognition and privacy
 

@@ -1,7 +1,7 @@
 {
   "name": "voxnelo",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Voxnelo - Local-first English speaking practice",
   "author": "Leo Luo",
   "type": "module",
