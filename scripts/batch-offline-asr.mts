@@ -5,7 +5,7 @@
  * Not a release quality gate and never stages/bundles native ASR models.
  */
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { scoreTranscript, summarizeAsrAttempts, type AsrDecoderId, type AsrScenario, type MeasuredAsrAttempt } from './asr-batch-metrics.mts';
@@ -209,6 +209,48 @@ function arg(name: string): string | undefined {
   const at = process.argv.indexOf('--' + name);
   return at < 0 ? undefined : process.argv[at + 1];
 }
+/**
+ * Reject output that resolves inside the checkout, including an OUTSIDE-looking
+ * parent symlink that points back into the repository. Caller chooses a new
+ * report directory; only its existing parent needs canonicalization.
+ */
+export function assertPrivateBatchOutputLocation(output: string, checkout: string): void {
+  const canonicalCheckout = realpathSync(checkout);
+  const canonicalParent = realpathSync(path.dirname(output));
+  const target = path.join(canonicalParent, path.basename(output));
+  const relative = path.relative(canonicalCheckout, target);
+  if (!relative || (relative !== '..' && !relative.startsWith('..' + path.sep) && !path.isAbsolute(relative)))
+    throw Error('Keep private evaluation reports outside the Git checkout');
+}
+
+/** Only fixed, authored validation messages are allowed in CLI logs. Native
+ * errors, fs ENOENTs and JSON syntax errors may include private paths/text. */
+const SAFE_BATCH_MESSAGES = new Set([
+  'Expected samples array in local batch manifest',
+  'Local batch must include 1–100 samples',
+  'Invalid ASR sample',
+  'Sample ids must be unique and contain only letters, digits, hyphen or underscore',
+  'Scenario must be quiet, external-playback, or noise',
+  'Each sample needs a local WAV path',
+  'Each sample needs a short English reference sentence',
+  'ASR reference must contain English words',
+  'Manifest and output directory must both be absolute paths',
+  'Moonshine size must be small or medium',
+  'Choose only one Moonshine evaluation mode',
+  'Keep private evaluation reports outside the Git checkout',
+  'Choose a new private output folder to prevent overwriting old evidence',
+  'Set your local VOXNELO_ASR_MODEL_DIR and VOXNELO_ASR_ADDON_PATH; no auto-download occurs',
+  'Set absolute VOXNELO_MOONSHINE_MODEL_DIR for local Moonshine evaluation; no downloads occur',
+  'Set absolute VOXNELO_MOONSHINE_PYTHON for your installed local Moonshine runtime',
+  'Usage: pnpm asr:batch --manifest /abs/private-samples.json --output-dir /abs/new-private-report-folder',
+]);
+export function describeBatchFailure(error: unknown): string {
+  const message = error instanceof Error ? error.message : '';
+  return SAFE_BATCH_MESSAGES.has(message)
+    ? message
+    : 'Could not read, parse or write local ASR batch input/output (private details withheld)';
+}
+
 export function runBatch(): void {
   const manifestArg = arg('manifest'), outputArg = arg('output-dir');
   if (!manifestArg || !outputArg) throw Error('Usage: pnpm asr:batch --manifest /abs/private-samples.json --output-dir /abs/new-private-report-folder');
@@ -229,9 +271,7 @@ export function runBatch(): void {
     throw Error('Set absolute VOXNELO_MOONSHINE_PYTHON for your installed local Moonshine runtime');
   const project = path.resolve('.');
   const output = path.resolve(outputArg);
-  const relative = path.relative(project, output);
-  if (!relative || (!relative.startsWith('..' + path.sep) && relative !== '..' && !path.isAbsolute(relative)))
-    throw Error('Keep private evaluation reports outside the Git checkout');
+  assertPrivateBatchOutputLocation(output, project);
   if (existsSync(output)) throw Error('Choose a new private output folder to prevent overwriting old evidence');
   const manifest = parseBatchManifest(JSON.parse(readFileSync(manifestArg, 'utf8')) as unknown);
   mkdirSync(output, { mode: 0o700 });
@@ -257,7 +297,7 @@ export function runBatch(): void {
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
   try { runBatch(); }
   catch (error) {
-    console.error('ASR batch validation failed:', error instanceof Error ? error.message : 'unknown error');
+    console.error('ASR batch validation failed:', describeBatchFailure(error));
     process.exitCode = 1;
   }
 }

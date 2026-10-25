@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { scoreTranscript, summarizeAsrAttempts, tokenizeAsr, type MeasuredAsrAttempt } from '../scripts/asr-batch-metrics.mts';
-import { buildBatchReport, formatBatchMarkdown, parseBatchManifest, selectedBatchDecoders, validatePcm16Wav, extractTimingEvidence } from '../scripts/batch-offline-asr.mts';
+import { buildBatchReport, formatBatchMarkdown, parseBatchManifest, selectedBatchDecoders, validatePcm16Wav, extractTimingEvidence, assertPrivateBatchOutputLocation, describeBatchFailure } from '../scripts/batch-offline-asr.mts';
 import { requireRealAsrQuality } from '../apps/desktop/asrAcceptance';
 
 describe('private local ASR word error scoring', () => {
@@ -190,6 +192,36 @@ describe('local batch input validation and privacy',()=>{
       expect(serialized).not.toContain(secret);
     expect(report.releaseReady).toBe(false);
     expect(report.status).toBe('complete');
+  });
+  it('blocks symlink-alias output folders inside the checkout and accepts a separate private directory',()=>{
+    const root=mkdtempSync(path.join(tmpdir(),'voxnelo-asr-output-'));
+    try {
+      const checkout=path.join(root,'checkout');
+      const privateDir=path.join(root,'private');
+      mkdirSync(checkout);
+      mkdirSync(privateDir);
+      expect(()=>assertPrivateBatchOutputLocation(path.join(checkout,'report'),checkout))
+        .toThrow(/outside the Git checkout/);
+      expect(()=>assertPrivateBatchOutputLocation(path.join(privateDir,'report'),checkout))
+        .not.toThrow();
+      if(process.platform!=='win32'){
+        const alias=path.join(root,'outside-looking-alias');
+        symlinkSync(checkout,alias,'dir');
+        expect(()=>assertPrivateBatchOutputLocation(path.join(alias,'report'),checkout))
+          .toThrow(/outside the Git checkout/);
+      }
+    } finally {
+      rmSync(root,{recursive:true,force:true});
+    }
+  });
+  it('redacts filesystem paths and private transcript fragments from CLI errors',()=>{
+    const leaked='/home/learner/private/voice.wav';
+    expect(describeBatchFailure(new Error("ENOENT: no such file or directory, open '"+leaked+"'")))
+      .not.toContain(leaked);
+    expect(describeBatchFailure(new SyntaxError('Bad JSON near personal speech transcript')))
+      .not.toContain('personal speech transcript');
+    expect(describeBatchFailure(new Error('Scenario must be quiet, external-playback, or noise')))
+      .toContain('Scenario must be');
   });
   it('does not relax the real-model CI quality gate when running batch diagnostics',()=>{
     const script=readFileSync('scripts/benchmark-offline-asr.mts','utf8');
