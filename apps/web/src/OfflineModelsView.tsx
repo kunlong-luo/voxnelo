@@ -53,8 +53,10 @@ export function OfflineModelsView({dictation,onBack}:OfflineModelsViewProps){
       // Desktop installation is an explicit consented action: never install
       // models or execute downloaded code during mount/status refresh.
       const installer=window.voxneloDesktop?.asr?.installMoonshine;
-      if(window.voxneloDesktop?.platform!=='linux'||
-         dictation.offlineEngine!=='moonshine-medium'||!installer)return;
+      const platform=window.voxneloDesktop?.platform;
+      const supported=dictation.engineAvailability.moonshineInstallable===
+        true||(platform==='linux'&&dictation.engineAvailability.moonshineInstallable===undefined);
+      if(!supported||dictation.offlineEngine!=='moonshine-medium'||!installer)return;
       setInstallError('');
       setInstallStage('environment');
       setInstalling(true);
@@ -89,7 +91,10 @@ export function OfflineModelsView({dictation,onBack}:OfflineModelsViewProps){
     :!desktop&&dictation.localPack==='downloading'?'modelStateDownloading'
     :!desktop&&dictation.localPack==='downloadable'?'modelStateDownloadable':'modelStateUnavailable';
   const canInstall=desktop
-    ?window.voxneloDesktop?.platform==='linux'&&dictation.offlineEngine==='moonshine-medium'&&
+    ?(dictation.engineAvailability.moonshineInstallable===true||
+        (window.voxneloDesktop?.platform==='linux'&&
+         dictation.engineAvailability.moonshineInstallable===undefined))&&
+      dictation.offlineEngine==='moonshine-medium'&&
       !ready&&!refreshing&&!installing&&!dictation.active&&
       typeof window.voxneloDesktop.asr?.installMoonshine==='function'
     :dictation.localPack==='downloadable'&&!refreshing&&!installing;

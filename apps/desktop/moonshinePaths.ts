@@ -2,6 +2,8 @@ import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {lstat} from 'node:fs/promises';
 import path from 'node:path';
+import {release as osRelease} from 'node:os';
+import {supportedMoonshineHost} from './moonshinePlatform';
 
 /** Fixed Electron resource and per-user install locations.
  * Never accept model/runtime paths from renderer IPC.
@@ -15,19 +17,25 @@ export interface MoonshinePaths {
 export function resolveMoonshinePaths(options:{
   isPackaged:boolean;platform:string;resourcesPath:string;bundleDir:string;
   personalDataDir:string;developerPython?:string|undefined;developerModelDir?:string|undefined;
+  arch?:string;systemRelease?:string;
 }):MoonshinePaths|null{
-  if(options.platform!=='linux')return null;
+  if(!supportedMoonshineHost(options.platform,options.arch??process.arch,
+    options.systemRelease??osRelease()))return null;
+  // This resolver must be testable on Linux for Windows path syntax.
+  const p=options.platform==='win32'?path.win32:path.posix;
   const scriptFolder=options.isPackaged
-    ?path.join(options.resourcesPath,'moonshine','scripts')
-    :path.join(options.bundleDir,'..','scripts');
+    ?p.join(options.resourcesPath,'moonshine','scripts')
+    :p.join(options.bundleDir,'..','scripts');
+  const root=p.join(options.personalDataDir,'moonshine');
   const modelDir=options.isPackaged
-    ?path.join(options.personalDataDir,'moonshine','model')
-    :options.developerModelDir??path.join(options.personalDataDir,'moonshine','model');
+    ?p.join(root,'model'):options.developerModelDir??p.join(root,'model');
+  const installedPython=options.platform==='win32'
+    ?p.join(root,'venv','Scripts','python.exe')
+    :p.join(root,'venv','bin','python');
   const pythonPath=options.isPackaged
-    ?path.join(options.personalDataDir,'moonshine','venv','bin','python')
-    :options.developerPython??path.join(options.personalDataDir,'moonshine','venv','bin','python');
-  return {scriptPath:path.join(scriptFolder,'moonshine-stream-pilot.py'),
-    validationScriptPath:path.join(scriptFolder,'benchmark-moonshine-voice.py'),
+    ?installedPython:options.developerPython??installedPython;
+  return {scriptPath:p.join(scriptFolder,'moonshine-stream-pilot.py'),
+    validationScriptPath:p.join(scriptFolder,'benchmark-moonshine-voice.py'),
     modelDir,pythonPath};
 }
 

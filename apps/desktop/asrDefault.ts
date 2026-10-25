@@ -1,14 +1,12 @@
-/**
- * The user-facing Linux default is Moonshine Medium Streaming. An absent or
- * broken model is a setup error, never permission to silently run Zipformer.
- *
- * Windows/macOS still use their existing packaged recognizer pending a native
- * Moonshine distribution; this policy deliberately does not claim otherwise.
+/** Moonshine is the user-facing default on the three supported desktop
+ * platform families. Unsupported machines fail closed; no Zipformer fallback.
+ * The native runtime must be installed and verified separately by the owner.
  */
 export type DesktopAsrEngine = 'moonshine-medium' | 'zipformer';
 
 export function defaultDesktopAsrEngine(platform: string): DesktopAsrEngine {
-  return platform === 'linux' ? 'moonshine-medium' : 'zipformer';
+  return platform === 'linux' || platform === 'win32' || platform === 'darwin'
+    ? 'moonshine-medium' : 'zipformer';
 }
 
 export function resolveDesktopAsrEngine(
