@@ -51,6 +51,8 @@ Existing installations normally upgrade in place; you should not have to uninsta
 
 Practice progress and favorites are stored on the device; there is no Voxnelo account or cross-device sync. Microphone recording requires your permission. Recordings are temporary for playback in the current sentence and are not uploaded by Voxnelo. If you try speech recognition in a web browser, browser-provided services can have different privacy and network behavior.
 
+For the not-yet-released Windows x64 / macOS 15+ ARM64 native Moonshine pilot, see [cross-platform details](docs/engineering/MOONSHINE-CROSS-PLATFORM-PILOT.md). The published v1.0.3 installers do not contain this work.
+
 ## Development and support
 
 Voxnelo uses Electron, React, TypeScript, Rsbuild, and local IndexedDB storage. For setup, testing, and packaging commands, see the [development guide](docs/DEVELOPMENT.md).
