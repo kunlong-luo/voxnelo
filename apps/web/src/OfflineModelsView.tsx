@@ -96,7 +96,7 @@ export function OfflineModelsView({dictation,onBack}:OfflineModelsViewProps){
          dictation.engineAvailability.moonshineInstallable===undefined))&&
       dictation.offlineEngine==='moonshine-medium'&&
       !ready&&!refreshing&&!installing&&!dictation.active&&
-      typeof window.voxneloDesktop.asr?.installMoonshine==='function'
+      typeof window.voxneloDesktop?.asr?.installMoonshine==='function'
     :dictation.localPack==='downloadable'&&!refreshing&&!installing;
   return <div className="offlineModelsPage mx-auto flex w-full max-w-210 flex-col gap-5 pb-8 animate-view-enter">
     <header className="relative overflow-hidden rounded-[28px] border border-glass-edge bg-glass-surface px-5 py-6 shadow-glass backdrop-blur-[var(--glass-blur)] sm:px-8">
