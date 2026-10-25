@@ -6,13 +6,16 @@ const workflow=read('.github/workflows/publish-all-v1.0.3.yml');
 const notes=read('docs/release-notes/v1.0.3.md');
 const qa=read('docs/engineering/MANUAL-QA-OWNER-2026-10-25.md');
 
-describe('v1.0.3 owner-confirmed unsigned release gate',()=>{
-  it('publishes a distinct 1.0.3 only through a protected main one-time workflow',()=>{
+describe('v1.0.3 archived owner-confirmed unsigned release gate',()=>{
+  it('archives the protected official release with no retrigger or tag overwrite',()=>{
     expect(JSON.parse(read('package.json')).version).toBe('1.0.3');
-    expect(workflow).toContain("'.github/workflows/publish-all-v1.0.3.yml'");
+    expect(workflow).toContain('workflow_dispatch:');
+    expect(workflow).not.toMatch(/^\s+push:/m);
+    expect(workflow).not.toMatch(/^\s+tags:/m);
+    expect(workflow).toContain('if: false # archived after successful v1.0.3 official release');
     expect(workflow).toContain('refs/heads/main');
     expect(workflow).toContain("github.repository == 'kunlong-luo/voxnelo'");
-    expect(workflow).not.toContain('if: false # archived');
+    expect(workflow).not.toMatch(/gh release (?:edit|upload|publish)/);
     expect(workflow).toContain('refs/tags/v1.0.3');
     expect(workflow).toContain('Refuse to overwrite an existing release or version tag');
     expect(workflow).not.toMatch(/gh release (?:edit|upload|publish)/);
@@ -37,5 +40,8 @@ describe('v1.0.3 owner-confirmed unsigned release gate',()=>{
     expect(qa).toContain('需要人工测试的已经测试通过了');
     expect(qa).toContain('不能');
     expect(notes).toContain('Leo Luo');
+    expect(read('docs/engineering/RELEASE-OPERATIONS.md')).toContain('40146532392');
+    expect(read('docs/engineering/RELEASE-OPERATIONS.md')).toContain('06d60289988ea8b0dd9bf06067726d7d15b47fca');
+    expect(read('SECURITY.md')).toContain('当前 v1.0.3');
   });
 });

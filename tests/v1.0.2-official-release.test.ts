@@ -52,7 +52,7 @@ describe('v1.0.2 permanently archived official unsigned release guards',()=>{
     expect(operations).toContain('4926829094ea67b8a233bd3c41cb393719ee8aaf');
     expect(operations).toContain('v1.0.2');
     expect(operations).toContain('v1.0.1');
-    expect(security).toContain('当前 v1.0.2');
+    expect(security).toContain('当前 v1.0.3');
     expect(security).toContain('未签名');
   });
 });
