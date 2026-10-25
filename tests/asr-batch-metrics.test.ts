@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { scoreTranscript, summarizeAsrAttempts, tokenizeAsr, type MeasuredAsrAttempt } from '../scripts/asr-batch-metrics.mts';
-import { buildBatchReport, formatBatchMarkdown, parseBatchManifest, selectedBatchDecoders, validatePcm16Wav } from '../scripts/batch-offline-asr.mts';
+import { buildBatchReport, formatBatchMarkdown, parseBatchManifest, selectedBatchDecoders, validatePcm16Wav, extractTimingEvidence } from '../scripts/batch-offline-asr.mts';
 import { requireRealAsrQuality } from '../apps/desktop/asrAcceptance';
 
 describe('private local ASR word error scoring', () => {
@@ -149,6 +149,39 @@ describe('local batch input validation and privacy',()=>{
     expect(formatBatchMarkdown(report)).toContain('Weighted WER');
     expect(formatBatchMarkdown(report)).toContain('\n## Weighted results');
     expect(()=>buildBatchReport([example],[],2)).toThrow(/Missing/);
+  });
+  it('retains real fast-fed interim and model initialization timings without inventing latency',()=>{
+    const moonshine=extractTimingEvidence({
+      firstInterimAudioSeconds:0.85,firstInterimWallMs:178.5,modelLoadMs:1210.3,
+    },true);
+    expect(moonshine).toEqual({
+      firstInterimAudioSeconds:0.85,firstInterimProcessingMs:178.5,modelLoadMs:1210.3,
+    });
+    expect(extractTimingEvidence({
+      firstInterimAudioSeconds:1.1,firstInterimProcessingMs:350.15,
+    },false)).toEqual({
+      firstInterimAudioSeconds:1.1,firstInterimProcessingMs:350.15,modelLoadMs:null,
+    });
+    const noInterim=extractTimingEvidence({
+      firstInterimAudioSeconds:null,firstInterimWallMs:null,
+    },true);
+    expect(noInterim.firstInterimAudioSeconds).toBeNull();
+    expect(noInterim.firstInterimProcessingMs).toBeNull();
+    const report=buildBatchReport([{...example,...moonshine}],[],1);
+    expect(report.attempts[0]).toMatchObject(moonshine);
+    const markdown=formatBatchMarkdown(report);
+    expect(markdown).toContain('NOT live microphone-to-screen latency');
+    expect(markdown).toContain('0.85 | 178.5 | 1210.3');
+    expect(JSON.stringify(report)).not.toContain('private voice');
+  });
+  it('rejects corrupt timing evidence and treats missing interim as unknown, not zero',()=>{
+    for(const bad of [Number.NaN,-1,Infinity,'100ms']){
+      expect(()=>extractTimingEvidence({firstInterimWallMs:bad},true))
+        .toThrow('invalid-model-result');
+    }
+    expect(extractTimingEvidence({},true)).toEqual({
+      firstInterimAudioSeconds:null,firstInterimProcessingMs:null,modelLoadMs:null,
+    });
   });
   it('excludes raw samples/transcripts/paths from locally written reports',()=>{
     const report=buildBatchReport([example],[],1);

@@ -161,3 +161,16 @@ A later main-process inspection found that the 8-second finish grace, native Wor
 - A verified measurement set, rather than a single generated WAV or an anecdote.
 - Legal model/native-runtime redistribution review, per-platform packaging/ABI checks, Windows/macOS/Linux tests and signing.
 - Honest status: publicly distributed packages still do not include the personal native engine/model.
+
+
+## 私有批量评测补充：首个中间字幕与模型加载数据（2026-10-25）
+
+`pnpm asr:batch` 的个人本地报告除分场景加权 WER、RTF 外，现在也保留引擎**真正返回的数值型** `firstInterimAudioSeconds`、`firstInterimProcessingMs` 与 `modelLoadMs`。其中 Moonshine 的 `firstInterimWallMs` 映射到统一的 `firstInterimProcessingMs` 字段；Zipformer 使用其现有同名指标。旧引擎没有提供的模型加载时间或未产生任何中间字幕时写 `null` / `N/A`，**绝不能当作 0 ms**。
+
+三个数的语义必须分开：
+
+- **First interim audio (s)**：首个中间字幕生成时已经向模型提交的录音音频时长；不是麦克风开机后首次显示字幕的真实秒数。
+- **First interim processing (ms)**：离线 WAV 按高于实时的速度输送时，从识别进程计时起，到首次非空中间回调之间的墙钟时间；可用于同一试验条件下的模型对照，不代表真实麦克风到屏幕的交互延迟。
+- **Model load (ms)**：模型构造初始化耗时（仅引擎实际报告时存在）；不包含用户初次下载 Python SDK 和离线权重的网络耗时。
+
+报告继续排除原始 WAV、语音全文、参考句、绝对路径；程序会拒绝非数值、负数、无穷或 NaN 等失真的指标。**没有新的真人数据时，不得凭此计算或宣称实际 WER 提升，也不能推导真实设备的 0.5 秒字幕延迟。** 原有通过的人工体验验收无需再次执行，本地数值报告只为 #123 的独立可复算证据提供结构。
