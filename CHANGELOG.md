@@ -4,6 +4,14 @@
 
 ## [Unreleased]
 
+### v1.0.4 candidate (NOT PUBLISHED)
+- Windows x64 与 macOS 15+ Apple Silicon 新增本机 Moonshine Voice 0.0.65 离线推理 SDK/模型主动安装与 OS/CPU 守卫（PR #174/#175）；Linux x64 保留当前默认引擎。
+- 三平台已在真实原生 CI Runner 使用私有模型/Worker 及打包后 Electron + ASAR/PCM 验证（PR #176），模型权重与 SDK 不内置进公开安装包。
+- 本地私有 WER/RTF 报告现保存真实首个中间回调、模型加载耗时（PR #177）；输出目录符号链接与错误文本增强防泄漏（PR #178）。
+- 私有 Release Draft 必须等待三平台真实 Moonshine 原生 Worker CI 和平台安装包 CI 通过（PR #179）。
+- **尚未公开 v1.0.4**。人工测试旧轮次已由维护者确认；三平台新版真人麦克风 WER、精确端到端延迟、依赖许可/权利审批仍单独记录，不从 CI 推导。
+
+
 ## [1.0.3] - 2026-10-25
 
 ### Fixed

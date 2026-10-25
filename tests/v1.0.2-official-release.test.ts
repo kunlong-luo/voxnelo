@@ -3,11 +3,10 @@ import {describe,it,expect} from 'vitest';
 
 const workflow=readFileSync('.github/workflows/publish-all-v1.0.2.yml','utf8');
 const notes=readFileSync('docs/release-notes/v1.0.2.md','utf8');
-const app=JSON.parse(readFileSync('package.json','utf8')) as {version:string};
 
 describe('v1.0.2 permanently archived official unsigned release guards',()=>{
   it('is archived after public release and never allows overwriting old releases',()=>{
-    expect(app.version).toBe('1.0.3');
+    expect(notes).toContain('v1.0.2');
     expect(workflow).toContain('refs/heads/main');
     expect(workflow).toContain("github.repository == 'kunlong-luo/voxnelo'");
     expect(workflow).toContain('workflow_dispatch:');

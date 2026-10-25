@@ -8,7 +8,7 @@ const qa=read('docs/engineering/MANUAL-QA-OWNER-2026-10-25.md');
 
 describe('v1.0.3 archived owner-confirmed unsigned release gate',()=>{
   it('archives the protected official release with no retrigger or tag overwrite',()=>{
-    expect(JSON.parse(read('package.json')).version).toBe('1.0.3');
+    expect(notes).toContain('v1.0.3');
     expect(workflow).toContain('workflow_dispatch:');
     expect(workflow).not.toMatch(/^\s+push:/m);
     expect(workflow).not.toMatch(/^\s+tags:/m);
