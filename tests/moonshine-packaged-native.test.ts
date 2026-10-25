@@ -10,7 +10,7 @@ describe('Moonshine production packaged runtime proof',()=>{
     }
     expect(workflow).toContain('pnpm exec electron-builder --dir --publish never');
     expect(workflow).toContain('scripts/check-packaged-moonshine-native.mts');
-    expect(smoke).toContain('dist-electron\',\'moonshineAsrWorker.cjs');
+    expect(smoke).toContain("path.join(asar,'dist-electron','moonshineAsrWorker.cjs')");
     expect(smoke).toContain("ELECTRON_RUN_AS_NODE:'1'");
     expect(smoke).toContain('verifyPinnedMoonshineMediumModel');
     expect(smoke).toContain('verifyMoonshinePythonRuntime');
