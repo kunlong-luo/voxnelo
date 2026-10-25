@@ -43,7 +43,32 @@ export function parseBatchManifest(raw: unknown): BatchManifest {
 type ModelResult = {
   realModel: boolean; decodingMethod: string; transcript: string;
   durationSeconds: number; elapsedSeconds: number; realTimeFactor: number;
+  firstInterimAudioSeconds?:number|null;
+  firstInterimProcessingMs?:number|null;
+  firstInterimWallMs?:number|null;
+  modelLoadMs?:number|null;
 };
+/** Reject malformed or forged timing evidence rather than treating NaN,
+ * negative timings or strings as successful numeric benchmark results.
+ * Absence/null is valid: a recognizer can emit final text without an interim.
+ */
+export function extractTimingEvidence(
+  result:Record<string,unknown>,
+  moonshine:boolean,
+):Pick<MeasuredAsrAttempt,'firstInterimAudioSeconds'|'firstInterimProcessingMs'|'modelLoadMs'>{
+  const value=(key:string):number|null=>{
+    const raw=result[key];
+    if(raw===undefined||raw===null)return null;
+    if(typeof raw!=='number'||!Number.isFinite(raw)||raw<0)
+      throw Error('invalid-model-result');
+    return Number(raw.toFixed(3));
+  };
+  return {
+    firstInterimAudioSeconds:value('firstInterimAudioSeconds'),
+    firstInterimProcessingMs:value(moonshine?'firstInterimWallMs':'firstInterimProcessingMs'),
+    modelLoadMs:value('modelLoadMs'),
+  };
+}
 type AttemptFailure = {
   id: string; scenario: BatchSample['scenario'];
   decoder: MeasuredAsrAttempt['decoder']; reason: 'invalid-wav-or-inference' | 'invalid-model-result';
@@ -72,8 +97,9 @@ export function buildBatchReport(attempts: MeasuredAsrAttempt[], failures: Attem
 export function formatBatchMarkdown(report: BatchReport): string {
   const rows = report.groups.map(g =>
     `| ${g.scenario} | ${g.decoder} | ${g.sampleCount} | ${g.referenceWords} | ${g.substitutions}/${g.deletions}/${g.insertions} | ${g.wordErrorRate} | ${g.realTimeFactor} |`);
+  const numberOrNA=(value:number|null|undefined)=>value===null||value===undefined?'N/A':value;
   const bySample = report.attempts.map(a =>
-    `| ${a.id} | ${a.scenario} | ${a.decoder} | ${a.referenceWords} | ${a.substitutions}/${a.deletions}/${a.insertions} | ${a.wordErrorRate} | ${a.realTimeFactor} |`);
+    `| ${a.id} | ${a.scenario} | ${a.decoder} | ${a.referenceWords} | ${a.substitutions}/${a.deletions}/${a.insertions} | ${a.wordErrorRate} | ${a.realTimeFactor} | ${numberOrNA(a.firstInterimAudioSeconds)} | ${numberOrNA(a.firstInterimProcessingMs)} | ${numberOrNA(a.modelLoadMs)} |`);
   const incomplete = report.failures.length
     ? '\n**Incomplete:** failed attempts must be investigated; do not compare these partial totals as final results.\n' +
       report.failures.map(f => `- ${f.id} / ${f.decoder}: ${f.reason}`).join('\n') + '\n'
@@ -85,6 +111,7 @@ export function formatBatchMarkdown(report: BatchReport): string {
     '',
     '**Not a release approval.** No voice, full transcript, WAV path, or model location is included.',
     'Report only qualified consented local experiments. Real-device latency and endpoint behavior require separate observation.',
+    '**Interim timing below is fast-fed WAV processing, NOT live microphone-to-screen latency.** Null/N/A means no observed interim or unavailable timing; it is not zero latency.',
     '',
     '## Weighted results (sum errors / sum reference words; RTF = total elapsed / total audio duration)',
     '',
@@ -94,8 +121,8 @@ export function formatBatchMarkdown(report: BatchReport): string {
     '',
     '## Per-sample diagnostic counts (not recognized text)',
     '',
-    '| ID | Scenario | Decoder | Words | S/D/I | WER | RTF |',
-    '| --- | --- | --- | ---: | --- | ---: | ---: |',
+    '| ID | Scenario | Decoder | Words | S/D/I | WER | RTF | First interim audio (s) | First interim processing (ms) | Model load (ms) |',
+    '| --- | --- | --- | ---: | --- | ---: | ---: | ---: | ---: | ---: |',
     ...bySample,
     '',
     incomplete,
@@ -169,8 +196,9 @@ function runOne(item: BatchSample, decoder: AsrDecoderId, manifestDir: string): 
     !Number.isFinite(parsed.realTimeFactor) || parsed.realTimeFactor <= 0)
     throw Error('invalid-model-result');
   const scores = scoreTranscript(item.reference, parsed.transcript);
+  const timings=extractTimingEvidence(parsed as unknown as Record<string,unknown>,moonshine);
   return {
-    id: item.id, scenario: item.scenario, decoder, ...scores,
+    id: item.id, scenario: item.scenario, decoder, ...scores,...timings,
     durationSeconds: parsed.durationSeconds,
     elapsedSeconds: parsed.elapsedSeconds,
     realTimeFactor: parsed.realTimeFactor,

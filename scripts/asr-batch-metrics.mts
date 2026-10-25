@@ -18,6 +18,12 @@ export interface MeasuredAsrAttempt extends WordCounts {
   durationSeconds: number;
   elapsedSeconds: number;
   realTimeFactor: number;
+  /** Input speech duration submitted when the first nonempty interim appeared. */
+  firstInterimAudioSeconds?: number|null;
+  /** Offline fast-fed inference callback processing delay, NOT mic/UI latency. */
+  firstInterimProcessingMs?: number|null;
+  /** SDK constructor time where reported; absent for legacy engines. */
+  modelLoadMs?: number|null;
 }
 export function tokenizeAsr(text: string): string[] {
   return text.toLowerCase().match(/[a-z0-9]+(?:'[a-z0-9]+)*/g) ?? [];
