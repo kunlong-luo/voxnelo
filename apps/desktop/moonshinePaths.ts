@@ -3,7 +3,7 @@ import {promisify} from 'node:util';
 import {lstat} from 'node:fs/promises';
 import path from 'node:path';
 import {release as osRelease} from 'node:os';
-import {supportedMoonshineHost} from './moonshinePlatform';
+import {supportedMoonshineHost} from './moonshinePlatform.ts';
 
 /** Fixed Electron resource and per-user install locations.
  * Never accept model/runtime paths from renderer IPC.
