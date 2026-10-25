@@ -47,7 +47,7 @@ sudo apt install ./Voxnelo.deb
 
 ## 实时听写与隐私
 
-**Linux 默认使用 Moonshine Medium Streaming 进行本地实时英语听写。** Windows 和 macOS 目前只保证基础学习、录音回听及相应打包检查；**不承诺**这两个平台已接入 Moonshine 本机推理。 标准安装包不内置第三方模型或原生推理 SDK。首次使用请在应用「离线模型管理」页主动点击「安装 Moonshine 离线识别模型」，由应用下载安装固定版本的本机 SDK/模型并校验 SHA-256。首次安装需要网络、Python 3 + venv、足够磁盘空间和 Linux x64 环境；之后在本机识别，不自动切换回 Zipformer。真实设备的不同口音、背景噪声、精确延迟仍需更多验收。当前**没有自动发音评分或逐词纠音**。详见 [Moonshine 安装说明](docs/engineering/MOONSHINE-LINUX-INSTALLATION.md)。
+**Linux 默认使用 Moonshine Medium Streaming 进行本地实时英语听写。** Windows 和 macOS 目前只保证基础学习、录音回听及相应打包检查；**不承诺**这两个平台已接入 Moonshine 本机推理。 标准安装包不内置第三方模型或原生推理 SDK。首次使用请在应用「离线模型管理」页主动点击「安装 Moonshine 离线识别模型」，由应用下载安装固定版本的本机 SDK/模型并校验 SHA-256。首次安装需要网络、Python 3 + venv、足够磁盘空间和 Linux x64 环境；之后在本机识别，不自动切换回 Zipformer。维护者已于 2026-10-25 确认所需人工测试通过；不同口音、噪声条件下的可复算 WER 与精确延迟指标尚无完整公开证据，不能冒充量化验收。当前**没有自动发音评分或逐词纠音**。详见 [Moonshine 安装说明](docs/engineering/MOONSHINE-LINUX-INSTALLATION.md)。
 
 学习记录和收藏保存在当前设备上，没有 Voxnelo 账号及跨设备同步。只有在授权后才会使用麦克风；录音仅供当前句子临时回听，Voxnelo 不会上传跟读录音。如果在网页中尝试语音识别，浏览器提供的服务可能具有不同的联网和隐私行为。
 

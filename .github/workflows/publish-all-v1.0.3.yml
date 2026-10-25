@@ -1,15 +1,11 @@
 name: Publish Voxnelo v1.0.3 Official Unsigned (Linux Windows macOS)
 
-# Single-use official v1.0.3 release after merge into protected main.
-# Release requires real 3-OS native builds, strict audit, hashes and apt install.
-# Once public success is verified, archive this workflow in a follow-up PR.
+# Historical official release: v1.0.3 published on 2026-10-25.
+# Permanently archived after successful public Release (8 assets).
+# Original tag and installers stay immutable; no automatic or manual reruns.
 # The release is NOT a code-signed/notarized/externally certified artifact.
 # Every build must pass full testing, SHA-256 and Linux apt install; no tag overwrite.
 on:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/publish-all-v1.0.3.yml'
   workflow_dispatch:
 
 permissions:
@@ -22,6 +18,7 @@ concurrency:
 
 jobs:
   preflight:
+    if: false # archived after successful v1.0.3 official release
     name: Verify release identity and intended audience
     runs-on: ubuntu-24.04
     steps:
