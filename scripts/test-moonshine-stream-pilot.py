@@ -86,5 +86,95 @@ class TestEventTransport(unittest.TestCase):
         )
 
 
+class TestTranscriptState(unittest.TestCase):
+    def test_ordered_line_completion_and_terminal_finish(self):
+        messages = []
+        state = module.TranscriptState()
+        with patch.object(module, "emit", messages.append):
+            state.text_changed("hello wrld")
+            state.text_changed("hello world")
+            state.line_completed("hello world")
+            state.text_changed("next segment")
+            # Stop must use SDK-confirmed line completion, not the interim.
+            state.line_completed("next complete")
+            state.finish()
+            # SDK threads that return after stop must NOT publish late changes.
+            state.text_changed("late interim")
+            state.line_completed("late completion")
+            state.finish()
+
+        self.assertEqual(messages[-2:], [
+            {"type": "result", "finalText": "hello world next complete",
+             "interimText": ""},
+            {"type": "finished"},
+        ])
+        self.assertEqual(sum(m["type"] == "finished" for m in messages), 1)
+        self.assertEqual(messages[-1]["type"], "finished")
+        self.assertTrue(all(
+            len(m["finalText"]) <= module.MAX_FINAL
+            for m in messages if m["type"] == "result"
+        ))
+
+    def test_empty_completed_segment_clears_stale_partial_not_finalized(self):
+        messages = []
+        state = module.TranscriptState()
+        with patch.object(module, "emit", messages.append):
+            state.text_changed("unfinished guess")
+            state.line_completed("")
+            state.finish()
+        self.assertEqual(messages[-2]["finalText"], "")
+        self.assertEqual(messages[-2]["interimText"], "")
+        self.assertEqual(messages[-1]["type"], "finished")
+
+    def test_completed_transcripts_are_bounded_during_extended_dictation(self):
+        messages = []
+        state = module.TranscriptState()
+        with patch.object(module, "emit", messages.append):
+            for i in range(800):
+                state.line_completed("spoken-%04d %s" % (i, "word " * 10))
+            state.finish()
+        self.assertEqual(messages[-1]["type"], "finished")
+        self.assertLessEqual(len(messages[-2]["finalText"]), module.MAX_FINAL)
+        self.assertIn("spoken-0799", messages[-2]["finalText"])
+        self.assertNotIn("spoken-0000", messages[-2]["finalText"])
+
+    def test_concurrent_sdk_callback_events_are_serialized_before_finish(self):
+        messages = []
+        state = module.TranscriptState()
+        barrier = threading.Barrier(8)
+
+        def callback(worker):
+            barrier.wait()
+            for i in range(20):
+                state.text_changed("partial-%d-%d" % (worker, i))
+                state.line_completed("word-%d-%d" % (worker, i))
+
+        threads = [threading.Thread(target=callback, args=(i,))
+                   for i in range(8)]
+        with patch.object(module, "emit", messages.append):
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join(timeout=5)
+                self.assertFalse(thread.is_alive())
+            state.finish()
+            # Simulate callbacks still being queued when Python returns.
+            state.text_changed("should not leak")
+            state.line_completed("should not append")
+
+        result_events = [m for m in messages if m["type"] == "result"]
+        expected_tokens = {"word-%d-%d" % (worker, i)
+                           for worker in range(8) for i in range(20)}
+        final_tokens = set(messages[-2]["finalText"].split())
+        self.assertEqual(final_tokens, expected_tokens)
+        self.assertEqual(messages[-1]["type"], "finished")
+        self.assertEqual(len(messages[-2]["finalText"]), len(result_events[-1]["finalText"]))
+        self.assertTrue(all(
+            len(m["finalText"]) <= module.MAX_FINAL
+            and len(m["interimText"]) <= module.MAX_INTERIM
+            for m in result_events
+        ))
+
+
 if __name__ == "__main__":
     unittest.main()

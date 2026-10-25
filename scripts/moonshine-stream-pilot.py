@@ -44,6 +44,56 @@ def emit(event):
         sys.stdout.flush()
 
 
+class TranscriptState:
+    """Thread-safe ordered ASR subtitles with a bounded in-memory history.
+
+    Moonshine can deliver text callbacks outside the PCM/finish thread.
+    Locking ONLY stdout is insufficient: a callback could snapshot an old
+    partial line, pause, then emit AFTER a newer final result. All mutations
+    and their emitted events share one lock; 'finished' is terminal.
+    """
+
+    def __init__(self):
+        self._lock = Lock()
+        self._final = ""
+        self._partial = ""
+        self._finished = False
+
+    def text_changed(self, text):
+        value = (text or "").strip()[:MAX_INTERIM]
+        with self._lock:
+            if self._finished or value == self._partial:
+                return
+            self._partial = value
+            emit({"type": "result", "finalText": self._final,
+                  "interimText": value})
+
+    def line_completed(self, text):
+        value = (text or "").strip()
+        with self._lock:
+            if self._finished:
+                return
+            old_partial = self._partial
+            self._partial = ""
+            if value:
+                # Bound *retained* text as well as transport size. Long
+                # dictation sessions must not grow without limit.
+                self._final = (self._final + " " + value).strip()[-MAX_FINAL:]
+            if value or old_partial:
+                emit({"type": "result", "finalText": self._final,
+                      "interimText": ""})
+
+    def finish(self):
+        # SDK stop() first completes any active line; do not promote a
+        # provisional hypothesis to final or invent words on timeout.
+        with self._lock:
+            if self._finished:
+                return
+            self._finished = True
+            emit({"type": "result", "finalText": self._final, "interimText": ""})
+            emit({"type": "finished"})
+
+
 def run(model_dir):
     import numpy as np
     from moonshine_voice import ModelArch, Transcriber, TranscriptEventListener
@@ -55,46 +105,34 @@ def run(model_dir):
     spec.loader.exec_module(validator)
     validate_model = validator.validate_model
     validate_model(str(model_dir))
-    completed = []
-    partial = [""]
+    state = TranscriptState()
+
     class Listener(TranscriptEventListener):
         def on_line_text_changed(self, event):
-            value = (event.line.text or "").strip()[:MAX_INTERIM]
-            if value != partial[0]:
-                partial[0] = value
-                emit({"type":"result","finalText":" ".join(completed)[-MAX_FINAL:],
-                      "interimText":value})
+            state.text_changed(event.line.text)
+
         def on_line_completed(self, event):
-            value = (event.line.text or "").strip()
-            if value:
-                completed.append(value)
-                # Bound retained transcription, not just outbound events.
-                while len(" ".join(completed)) > MAX_FINAL and len(completed) > 1:
-                    completed.pop(0)
-                partial[0] = ""
-                emit({"type":"result","finalText":" ".join(completed)[-MAX_FINAL:],
-                      "interimText":""})
+            state.line_completed(event.line.text)
+
     engine = Transcriber(model_path=str(model_dir),
                          model_arch=ModelArch.MEDIUM_STREAMING, update_interval=0.25)
     engine.add_listener(Listener())
     engine.start()
     stopped = False
-    emit({"type":"ready"})
+    emit({"type": "ready"})
     try:
         for line in sys.stdin:
             message = json.loads(line)
             if isinstance(message, dict) and message.get("type") == "finish":
                 engine.stop()
                 stopped = True
-                emit({"type":"result","finalText":" ".join(completed)[-MAX_FINAL:],
-                      "interimText":""})
-                emit({"type":"finished"})
+                state.finish()
                 return
             values = packet_samples(message)
             engine.add_audio(np.asarray(values, dtype=np.float32), 16000)
-            emit({"type":"drained"})
+            emit({"type": "drained"})
         # EOF before finish is an interrupted session, not a successful final.
-        emit({"type":"failure"})
+        emit({"type": "failure"})
     finally:
         try:
             if not stopped:
