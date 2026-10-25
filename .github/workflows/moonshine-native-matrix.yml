@@ -13,6 +13,9 @@ on:
       - 'scripts/check-packaged-moonshine-native.mts'
       - '.github/workflows/moonshine-native-matrix.yml'
   workflow_dispatch:
+  # Reuse exactly the same verified three-OS packaged SDK/Worker test when
+  # preparing a PRIVATE draft; packaging checks alone cannot prove inference.
+  workflow_call:
 
 permissions:
   contents: read

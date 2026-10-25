@@ -42,6 +42,13 @@ jobs:
           test -f "docs/release-notes/v$RELEASE_VERSION.md" || { echo "::error::Version-specific release notes are missing"; exit 1; }
           echo "Preparing an unsigned, unpublished draft for v$RELEASE_VERSION on main."
 
+  native-moonshine:
+    name: Require real native Moonshine in all three packaged Electron apps
+    needs: preflight
+    permissions:
+      contents: read
+    uses: ./.github/workflows/moonshine-native-matrix.yml
+
   build:
     name: Build unsigned draft candidate (${{ matrix.os }})
     needs: preflight
@@ -118,7 +125,8 @@ jobs:
 
   draft:
     name: Create PRIVATE draft release (never publish)
-    needs: [preflight, build]
+    # Never assemble a candidate before the independent native SDK/model gate.
+    needs: [preflight, build, native-moonshine]
     runs-on: ubuntu-latest
     if: github.repository == 'kunlong-luo/voxnelo'
     permissions:
