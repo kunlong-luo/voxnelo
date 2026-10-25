@@ -4,6 +4,18 @@
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-10-25
+
+### Fixed
+- PR #170：点击“停止”后立即开始下一轮桌面离线听写时，先等待前一会话的 AudioWorklet 最后 PCM 分段和原生最终识别完成，避免无谓的 `busy` 错误；等待期间仍可取消，旧结果不能写入新会话。
+- PR #171：Moonshine Python 回调的中间字幕、已完成片段和终止事件采用统一互斥保护；确保 `finished` 是终止事件，迟到回调不会插入新字幕。长时间运行的历史字幕保留上限 8000 字符。
+- 新增停止/快速重启/取消等待、并发字幕及长期文本上限回归测试；保留 Linux 默认 Moonshine Medium Streaming、独立用户授权安装和本地隐私。
+
+### Verification and limits
+- 维护者于 2026-10-25 明确反馈“需要人工测试的已经测试通过了”，本项目按维护者报告记录为人工测试通过；没有收到/上传逐设备检查清单、真实用户录音或可复算的 WER/CPU/延迟数字，故不能把该声明扩展为独立第三方认证、五位初学者审核或者 Windows/macOS 已具备 Linux 原生 Moonshine 的证明。
+- 正式维护版仍以 Linux/Windows/macOS 实际构建、依赖高危审计、Linux DEB 实装和三平台 SHA-256 核验为发布硬门禁；无签名、无 macOS 公证，安装包不含模型。
+
+
 ## [1.0.2] - 2026-10-24
 
 ### Maintenance (official unsigned desktop patch)

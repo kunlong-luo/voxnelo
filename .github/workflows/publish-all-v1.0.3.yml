@@ -1,0 +1,206 @@
+name: Publish Voxnelo v1.0.3 Official Unsigned (Linux Windows macOS)
+
+# Single-use official v1.0.3 release after merge into protected main.
+# Release requires real 3-OS native builds, strict audit, hashes and apt install.
+# Once public success is verified, archive this workflow in a follow-up PR.
+# The release is NOT a code-signed/notarized/externally certified artifact.
+# Every build must pass full testing, SHA-256 and Linux apt install; no tag overwrite.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-all-v1.0.3.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: voxnelo-v1.0.3-public-official-unsigned
+  # Retries cancel an obsolete run; release/tag guards never allow overwrites.
+  cancel-in-progress: true
+
+jobs:
+  preflight:
+    name: Verify release identity and intended audience
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Require v1.0.3, truthful release notes, and no existing tag
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = 'refs/heads/main'
+          test "$(node -p 'require("./package.json").version')" = '1.0.3'
+          test -s docs/release-notes/v1.0.3.md
+          test -s docs/release/UNSIGNED-V1-OWNER-DECISION.md
+          grep -q '未签名' docs/release-notes/v1.0.3.md
+          grep -q '未公证' docs/release-notes/v1.0.3.md
+          grep -q 'Windows' docs/release-notes/v1.0.3.md
+          grep -q 'macOS' docs/release-notes/v1.0.3.md
+          grep -q 'Linux' docs/release-notes/v1.0.3.md
+          if gh release view v1.0.3 >/dev/null 2>&1; then
+            echo '::error::v1.0.3 Release exists; refusing to overwrite'
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags https://github.com/kunlong-luo/voxnelo.git refs/tags/v1.0.3 >/dev/null 2>&1; then
+            echo '::error::v1.0.3 tag exists; refusing overwrite'
+            exit 1
+          fi
+
+  build:
+    name: Build and verify unsigned ${{ matrix.target }} installers
+    needs: preflight
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: linux
+            args: --linux deb AppImage
+          - os: windows-latest
+            target: windows
+            args: --win nsis
+          - os: macos-latest
+            target: mac
+            args: --mac dmg
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          version: 12.11.2
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install pinned dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Security audit including developer dependencies
+        run: pnpm audit --prod --audit-level high && pnpm audit --audit-level high
+      - name: Typecheck, tests, renderer and Electron build
+        run: pnpm typecheck && pnpm test && pnpm build
+      - name: Verify optional locally staged ASR, never bundle unverified binaries
+        run: pnpm asr:verify-real
+      - name: Build unsigned OS-native installers
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: pnpm exec electron-builder ${{ matrix.args }} --publish never
+      - name: Embed Linux AppStream metadata and user-friendly DEB alias
+        if: runner.os == 'Linux'
+        run: node --experimental-strip-types scripts/brand-linux-installer.mts
+      - name: Validate real package content and installer file identities
+        env:
+          VOXNELO_REQUIRE_INSTALLERS: '1'
+        run: node --experimental-strip-types scripts/check-desktop-package.mts
+      - name: Generate SHA256SUMS and auditable candidate manifest
+        run: node --experimental-strip-types scripts/write-candidate-manifest.mts
+      - name: Actually install Linux DEB using apt
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 600s sudo apt-get update -qq
+          timeout 600s sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y ./release/voxnelo_1.0.3_amd64.deb
+          test "$(dpkg-query -W -f='${Version}' voxnelo)" = '1.0.3'
+          test "$(dpkg-query -W -f='${Status}' fonts-noto-cjk)" = 'install ok installed'
+          test "$(dpkg-query -W -f='${Status}' python3-venv)" = 'install ok installed'
+          dpkg -L voxnelo | grep -F '/usr/share/metainfo/app.voxnelo.desktop.metainfo.xml'
+      - name: Upload verified candidates to release assembly
+        uses: actions/upload-artifact@v7
+        with:
+          name: voxnelo-${{ matrix.target }}-v1.0.3-unsigned
+          path: |
+            release/*.deb
+            release/*.AppImage
+            release/*.exe
+            release/*.dmg
+            release/SHA256SUMS-*.txt
+            release/candidate-manifest-*.json
+          retention-days: 30
+          if-no-files-found: error
+
+  publish:
+    name: Publish verified v1.0.3 official unsigned desktop release
+    needs: [preflight, build]
+    runs-on: ubuntu-24.04
+    if: github.repository == 'kunlong-luo/voxnelo' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: voxnelo-*-v1.0.3-unsigned
+          path: release-assets
+          merge-multiple: true
+      - name: Validate all three platform SHA-256 inventories and asset counts
+        shell: bash
+        run: |
+          set -euo pipefail
+          for platform in linux win32 darwin; do
+            test -s "release-assets/SHA256SUMS-$platform.txt"
+            test -s "release-assets/candidate-manifest-$platform.json"
+            (cd release-assets && sha256sum -c "SHA256SUMS-$platform.txt")
+          done
+          test -s release-assets/Voxnelo.deb
+          test -s release-assets/voxnelo_1.0.3_amd64.deb
+          test -s release-assets/Voxnelo-1.0.3.AppImage
+          cmp -s release-assets/Voxnelo.deb release-assets/voxnelo_1.0.3_amd64.deb
+          test "$(find release-assets -maxdepth 1 -type f -name '*.exe' | wc -l)" -eq 1
+          test "$(find release-assets -maxdepth 1 -type f -name '*.dmg' | wc -l)" -eq 1
+          node --input-type=module <<'NODE'
+          import {readFileSync} from 'node:fs';
+          for(const platform of ['linux','win32','darwin']){
+            const m=JSON.parse(readFileSync('release-assets/candidate-manifest-'+platform+'.json','utf8'));
+            if(m.platform!==platform || !m.candidateOnly || !m.unsigned || m.publicReleaseApproved!==false)
+              throw Error('Not a valid unsigned candidate manifest for '+platform);
+            if(!Array.isArray(m.files)||m.files.length<1)throw Error('Missing '+platform+' asset inventory');
+            for(const asset of m.files){
+              if(!/^[a-f0-9]{64}$/.test(asset.sha256) || asset.sizeBytes<1024*1024)
+                throw Error('Invalid '+platform+' asset integrity metadata');
+            }
+          }
+          NODE
+          # Validate the actual payload list before publishing; the JSON
+          # manifests remain internal CI evidence, not public release claims.
+          find release-assets -maxdepth 1 -type f | LC_ALL=C sort
+      - name: Refuse to overwrite an existing release or version tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view v1.0.3 >/dev/null 2>&1; then
+            echo "::error::Release v1.0.3 already exists"
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags https://github.com/kunlong-luo/voxnelo.git refs/tags/v1.0.3 >/dev/null 2>&1; then
+            echo "::error::Tag v1.0.3 already exists"
+            exit 1
+          fi
+      - name: Publish verified OFFICIAL UNSIGNED installers with visible risk notice
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create v1.0.3 \
+            release-assets/*.deb \
+            release-assets/*.AppImage \
+            release-assets/*.exe \
+            release-assets/*.dmg \
+            release-assets/SHA256SUMS-*.txt \
+            --target "$GITHUB_SHA" \
+            --title "Voxnelo v1.0.3 — Official Desktop Release (Unsigned)" \
+            --notes-file docs/release-notes/v1.0.3.md \
+            --latest
+          gh release view v1.0.3 --json isDraft,isPrerelease,tagName --jq '. | select(.isDraft == false and .isPrerelease == false and .tagName == "v1.0.3") | .tagName' | grep -qx v1.0.3
+          test "$(gh release view v1.0.3 --json assets --jq '.assets | length')" -ge 7
