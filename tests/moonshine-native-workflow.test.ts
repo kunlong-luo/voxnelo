@@ -24,6 +24,6 @@ describe('future unsigned release draft must wait for native offline recognition
     expect(draft).toContain('scripts/check-desktop-package.mts');
     expect(draft).toContain('sha256sum -c');
     expect(draft).toContain('--draft --prerelease');
-    expect(draft).not.toMatch(/^\\s+push:/m);
+    expect(draft).not.toMatch(/^\s+push:/m);
   });
 });
