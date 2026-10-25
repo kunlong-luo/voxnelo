@@ -6,7 +6,7 @@
 
 Voxnelo is an open-source, local-first desktop app for practicing spoken English. Listen to a short sentence, say it yourself, and play back your recording. No account is required.
 
-**Source version:** `1.0.3` · **Release:** Official unsigned desktop edition (known limitations) · **Maintainer:** Leo Luo · **License:** [MIT](LICENSE)
+**Source version:** `1.0.4` (unpublished candidate) · **Latest public release:** `v1.0.3` (unsigned, known limitations) · **Maintainer:** Leo Luo · **License:** [MIT](LICENSE)
 
 ## Core features
 
@@ -47,7 +47,7 @@ Existing installations normally upgrade in place; you should not have to uninsta
 
 ## Speech recognition and privacy
 
-**Linux desktop uses Moonshine Medium Streaming as the default offline English dictation engine.** Standard installers do not bundle the third-party native runtime or model: on Linux, open **Offline Models** and explicitly choose **Install Moonshine**. On Windows and macOS, desktop practice and microphone recording are available, but the same native Moonshine engine is not included or promised to work. The app downloads the pinned SDK and model, checks model SHA-256 before use, then performs recognition locally. Initial setup requires internet, Python 3 with venv and Linux x64. There is no silent Zipformer fallback, no automatic pronunciation scoring, and no word-by-word correction. Real-device noise/accuracy acceptance remains ongoing; see the [Moonshine installation guide](docs/engineering/MOONSHINE-LINUX-INSTALLATION.md).
+**Linux desktop uses Moonshine Medium Streaming as the default offline English dictation engine.** Standard installers do not bundle the third-party native runtime or model: on Linux, open **Offline Models** and explicitly choose **Install Moonshine**. In the currently published v1.0.3, Windows and macOS provide desktop practice and microphone recording, but native Moonshine recognition is not supported. The upcoming v1.0.4 source adds explicitly user-installed offline Moonshine on Windows x64 and macOS 15+ Apple Silicon; model and SDK are never bundled. The app downloads the pinned SDK and model, checks model SHA-256 before use, then performs recognition locally. Initial setup requires internet, Python 3 with venv and Linux x64. There is no silent Zipformer fallback, no automatic pronunciation scoring, and no word-by-word correction. Real-device noise/accuracy acceptance remains ongoing; see the [Moonshine installation guide](docs/engineering/MOONSHINE-LINUX-INSTALLATION.md).
 
 Practice progress and favorites are stored on the device; there is no Voxnelo account or cross-device sync. Microphone recording requires your permission. Recordings are temporary for playback in the current sentence and are not uploaded by Voxnelo. If you try speech recognition in a web browser, browser-provided services can have different privacy and network behavior.
 
@@ -64,4 +64,4 @@ Voxnelo uses Electron, React, TypeScript, Rsbuild, and local IndexedDB storage. 
 
 Please remove personal information from public issue reports and do not upload private voice recordings.
 
-> **Release scope:** This is an official unsigned desktop distribution. Windows/macOS may display security warnings or block it. Offline speech recognition is opt-in on Linux only; the optional SDK and model are not bundled. Physical-device, content-rights and novice-user evidence remains incomplete in the repository; an official release does **not** assert external certification.
+> **Release scope:** This is an official unsigned desktop distribution. Windows/macOS may display security warnings or block it. In the public v1.0.3, offline speech recognition is opt-in on Linux only; the optional SDK and model are not bundled. Physical-device, content-rights and novice-user evidence remains incomplete in the repository; an official release does **not** assert external certification.
