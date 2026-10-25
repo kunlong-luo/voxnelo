@@ -2,6 +2,7 @@ import {parentPort,workerData} from 'node:worker_threads';
 import {spawn, type ChildProcessWithoutNullStreams} from 'node:child_process';
 import {createInterface} from 'node:readline';
 import {existsSync} from 'node:fs';
+import path from 'node:path';
 
 type Config={pythonPath:string;scriptPath:string;modelDir:string};
 type Event={type:string;finalText?:string;interimText?:string};
@@ -18,7 +19,7 @@ const fail=()=>{
   child?.kill();
 };
 try{
-  if(![cfg.pythonPath,cfg.scriptPath,cfg.modelDir].every(v=>typeof v==='string'&&v.startsWith('/')&&existsSync(v)))
+  if(![cfg.pythonPath,cfg.scriptPath,cfg.modelDir].every(v=>typeof v==='string'&&path.isAbsolute(v)&&existsSync(v)))
     throw Error('Missing verified local runtime');
   child=spawn(cfg.pythonPath,['-I',cfg.scriptPath,'--model-dir',cfg.modelDir],{
     stdio:['pipe','pipe','pipe'],env:{...process.env,PYTHONNOUSERSITE:'1'},shell:false,

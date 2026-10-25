@@ -52,7 +52,7 @@ const offlineAsr=new RefreshableAsrEngine(new OfflineAsr(null,null),async()=>{
   return new OfflineAsr(result.assets.modelDir,result.assets.addonPath);
 });
 
-// Installed Linux apps resolve only one fixed, personal, opt-in runtime path.
+// Installed supported desktop apps resolve only a fixed, personal, opt-in runtime path.
 // The app does not silently download native code or accept renderer paths.
 const moonshinePaths=resolveMoonshinePaths({
   isPackaged:app.isPackaged,platform:process.platform,
@@ -144,7 +144,7 @@ function registerOfflineAsr():void{
   // application startup, capability probing, or microphone sessions.
   ipcMain.handle('voxnelo:asr:install-moonshine',async(event)=>{
     const installWindow=authorizedWindow(event);
-    if(!installWindow||process.platform!=='linux'||!moonshinePilot||!moonshinePaths)
+    if(!installWindow||!moonshinePilot||!moonshinePaths)
       return {ok:false,reason:'unsupported'};
     if(installingMoonshine||openingAsr||activeAsr?.hasActiveSession())
       return {ok:false,reason:'busy'};
@@ -174,8 +174,8 @@ function registerOfflineAsr():void{
     const selected=resolveDesktopAsrEngine(process.platform,requested);
     if(!selected)return {available:false,reason:'not-configured' as const};
     if(selected==='moonshine-medium'){
-      // No native Moonshine on Windows/macOS. Never fall back to Zipformer.
-      if(process.platform!=='linux'||!moonshinePilot)
+      // Unsupported architectures/OS versions fail closed, no Zipformer fallback.
+      if(!moonshinePilot)
         return {available:false,reason:'not-configured' as const};
       return moonshineModelVerified?moonshinePilot.capabilities()
         :{available:false,reason:'missing-model' as const};
@@ -200,7 +200,8 @@ function registerOfflineAsr():void{
     const [zipformer,moonshine]=await Promise.all([
       capabilityForEngine('zipformer'),capabilityForEngine('moonshine-medium'),
     ]);
-    return {zipformer:zipformer.available,moonshineMedium:moonshine.available};
+    return {zipformer:zipformer.available,moonshineMedium:moonshine.available,
+      moonshineInstallable:!!moonshinePilot};
   });
   ipcMain.handle('voxnelo:asr:start',async(event,requested:unknown)=>{
     const window=authorizedWindow(event);

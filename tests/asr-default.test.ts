@@ -10,10 +10,13 @@ describe('default desktop ASR engine',()=>{
     expect(defaultEngineAvailable('linux',{moonshineMedium:false,zipformer:true})).toBe(false);
     expect(defaultEngineAvailable('linux',{moonshineMedium:true,zipformer:false})).toBe(true);
   });
-  it('does not unexpectedly change Windows or macOS before their runtimes are ported',()=>{
-    expect(defaultDesktopAsrEngine('win32')).toBe('zipformer');
-    expect(defaultDesktopAsrEngine('darwin')).toBe('zipformer');
-    expect(defaultEngineAvailable('darwin',{moonshineMedium:true,zipformer:false})).toBe(false);
+  it('defaults to opt-in Moonshine on Windows/macOS without silently using Zipformer',()=>{
+    for(const platform of ['win32','darwin']){
+      expect(defaultDesktopAsrEngine(platform)).toBe('moonshine-medium');
+      expect(defaultEngineAvailable(platform,{moonshineMedium:true,zipformer:false})).toBe(true);
+      expect(defaultEngineAvailable(platform,{moonshineMedium:false,zipformer:true})).toBe(false);
+    }
+    expect(defaultDesktopAsrEngine('freebsd')).toBe('zipformer');
   });
   it('rejects unknown IPC engine identifiers',()=>{
     expect(resolveDesktopAsrEngine('linux','external-code')).toBeNull();

@@ -70,6 +70,32 @@ describe('Dedicated offline ASR model management',()=>{
     expect(screen.queryByTestId('moonshine-install-stage')).toBeNull();
     expect(installMoonshine).toHaveBeenCalledOnce();
   });
+  it.each(['win32','darwin'])('offers explicit, truthful %s desktop Moonshine setup only on supported native target',async(platform)=>{
+    const installMoonshine=vi.fn(async()=>({ok:false,reason:'failed'}));
+    const asr={installMoonshine,
+      engines:vi.fn(async()=>({zipformer:false,moonshineMedium:false,moonshineInstallable:true})),
+      capabilities:vi.fn(async()=>({available:false,reason:'missing-model'}))};
+    vi.stubGlobal('voxneloDesktop',{platform,asr});
+    render(<ModelHarness/>);
+    const button=await screen.findByRole('button',{name:'安装或修复 Moonshine 离线模型'});
+    expect(installMoonshine).not.toHaveBeenCalled();
+    fireEvent.click(button);
+    await waitFor(()=>expect(installMoonshine).toHaveBeenCalledOnce());
+    expect(screen.getByTestId('model-status').textContent).toContain('不可用');
+  });
+  it('hides install on unsupported macOS hosts without triggering local setup',async()=>{
+    const installMoonshine=vi.fn(async()=>({ok:false,reason:'unsupported'}));
+    vi.stubGlobal('voxneloDesktop',{platform:'darwin',asr:{
+      installMoonshine,
+      engines:vi.fn(async()=>({zipformer:false,moonshineMedium:false,moonshineInstallable:false})),
+      capabilities:vi.fn(async()=>({available:false,reason:'not-configured'})),
+    }});
+    render(<ModelHarness/>);
+    await waitFor(()=>expect(screen.getByTestId('model-status').textContent).toContain('不可用'));
+    expect(screen.queryByRole('button',{name:'安装或修复 Moonshine 离线模型'})).toBeNull();
+    expect(installMoonshine).not.toHaveBeenCalled();
+  });
+
   it('downloads a browser language pack only after clicking within the manager',async()=>{
     vi.stubGlobal('voxneloDesktop',undefined);
     vi.stubGlobal('SpeechRecognition',FakeLocalSpeech);

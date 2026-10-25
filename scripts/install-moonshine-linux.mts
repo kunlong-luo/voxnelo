@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Explicit, fail-closed Linux personal Moonshine provisioning.
+/** Explicit, fail-closed desktop personal Moonshine provisioning.
  * Builds a complete verified runtime in a private staging directory.
  * --repair is permitted only after the user explicitly initiates setup;
  * existing unknown user files and symlinks are never deleted.
@@ -7,13 +7,14 @@
 import {spawnSync} from 'node:child_process';
 import {mkdir,rm,cp} from 'node:fs/promises';
 import {writeSync} from 'node:fs';
-import {homedir} from 'node:os';
+import {homedir,release as osRelease} from 'node:os';
 import path from 'node:path';
 import {PINNED_MOONSHINE_MEDIUM_FILES,verifyPinnedMoonshineMediumModel}
   from '../apps/desktop/moonshineIntegrity.ts';
 import {verifyMoonshinePythonRuntime} from '../apps/desktop/moonshinePaths.ts';
 import {provisionMoonshineDirectory} from './moonshine-install-transaction.mts';
 import {moonshineStageLine,type MoonshineInstallStage} from '../apps/desktop/moonshineInstallProgress.ts';
+import {supportedMoonshineHost} from '../apps/desktop/moonshinePlatform.ts';
 
 // A synchronous marker must leave the process before spawnSync blocks Node's event loop.
 function report(stage:MoonshineInstallStage):void{writeSync(1,moonshineStageLine(stage));}
@@ -32,20 +33,33 @@ async function main():Promise<void>{
   if(flags.length<1||flags.length>2||flags[0]!=='--accept-experimental-runtime'||
     (flags.length===2&&flags[1]!=='--repair'))
     throw Error('Explicit consent required; use --accept-experimental-runtime [--repair]');
-  if(process.platform!=='linux'||process.arch!=='x64')
-    throw Error('Personal Moonshine runtime currently supports Linux x64 only');
+  if(!supportedMoonshineHost(process.platform,process.arch,osRelease()))
+    throw Error('Moonshine requires Linux x64, Windows x64 or macOS 15+ ARM64');
   const repair=flags.includes('--repair');
-  const root=path.join(process.env.XDG_CONFIG_HOME??path.join(homedir(),'.config'),
-    'voxnelo','moonshine');
+  const personalData=process.platform==='win32'
+    ?process.env.APPDATA??path.join(homedir(),'AppData','Roaming')
+    :process.platform==='darwin'
+      ?path.join(homedir(),'Library','Application Support')
+      :process.env.XDG_CONFIG_HOME??path.join(homedir(),'.config');
+  const root=path.join(personalData,'voxnelo','moonshine');
+  const interpreter=(venv:string)=>process.platform==='win32'
+    ?path.join(venv,'Scripts','python.exe'):path.join(venv,'bin','python');
   const verify=async(dir:string)=>
     (await verifyPinnedMoonshineMediumModel(path.join(dir,'model')))&&
-    (await verifyMoonshinePythonRuntime(path.join(dir,'venv','bin','python')));
+    (await verifyMoonshinePythonRuntime(interpreter(path.join(dir,'venv'))));
 
   await provisionMoonshineDirectory(root,repair?'repair':'install',async(stage)=>{
     const venv=path.join(stage,'venv');
-    const python=path.join(venv,'bin','python');
+    const python=interpreter(venv);
     report('environment');
-    run('python3',['-m','venv',venv]);
+    if(process.platform==='win32'){
+      // Windows Python Launcher is optional: a standard python.exe on PATH
+      // works too. Never construct shell commands from renderer input.
+      const launcher=spawnSync('py',['-3','-m','venv',venv],{
+        encoding:'utf8',stdio:'ignore',timeout:180000,
+      });
+      if(launcher.status!==0)run('python',['-m','venv',venv]);
+    }else run('python3',['-m','venv',venv]);
     report('dependencies');
     run(python,['-m','pip','install','--isolated','--disable-pip-version-check',
       '--no-input','--only-binary=:all:','--index-url','https://pypi.org/simple',

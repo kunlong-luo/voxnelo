@@ -1,0 +1,56 @@
+name: Moonshine native Worker compatibility (Linux, Windows, macOS)
+
+on:
+  pull_request:
+    paths:
+      - 'apps/desktop/main.ts'
+      - 'apps/desktop/moonshine*.ts'
+      - 'apps/desktop/asrDefault.ts'
+      - 'apps/web/src/OfflineModelsView.tsx'
+      - 'scripts/install-moonshine-linux.mts'
+      - 'scripts/moonshine-stream-pilot.py'
+      - 'scripts/check-moonshine-native-worker.mts'
+      - '.github/workflows/moonshine-native-matrix.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: moonshine-native-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native:
+    name: Pinned real Moonshine Worker (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: ubuntu-24.04, target: linux-x64}
+          - {os: windows-latest, target: windows-x64}
+          - {os: macos-15-arm64, target: macos-arm64-15}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          version: 12.11.2
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install locked app dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build actual Node/Electron Moonshine Worker
+        run: pnpm build:electron
+      - name: Explicitly install pinned native SDK and fully SHA-256 validated model
+        run: node --experimental-strip-types scripts/install-moonshine-linux.mts --accept-experimental-runtime
+      - name: Verify actual platform-native SDK PCM and final event protocol
+        run: node --experimental-strip-types scripts/check-moonshine-native-worker.mts

@@ -33,13 +33,12 @@ export function useLiveDictation(sentenceId: string) {
   const [noiseReduction,setNoiseReduction] = useState<'unknown'|'enabled'|'unverified'|'not-requested'>('unknown');
   const [captureProfile,setCaptureProfile]=useState<DesktopCaptureProfile>('conversation');
   const [offlineEngine,setOfflineEngine]=useState<'zipformer'|'moonshine-medium'>(()=>{
-    // New Linux desktop builds expose engine discovery and use Moonshine as the
-    // sole user-facing default, including while its model is not yet installed.
+    // New supported desktop builds use the explicit opt-in Moonshine model.
     // Older preload builds without discovery retain their compatible path.
-    return window.voxneloDesktop?.platform==='linux'&&
-      typeof window.voxneloDesktop.asr?.engines==='function'?'moonshine-medium':'zipformer';
+    return ['linux','win32','darwin'].includes(window.voxneloDesktop?.platform??'')&&
+      typeof window.voxneloDesktop?.asr?.engines==='function'?'moonshine-medium':'zipformer';
   });
-  const [engineAvailability,setEngineAvailability]=useState<{zipformer:boolean;moonshineMedium:boolean}>({zipformer:false,moonshineMedium:false});
+  const [engineAvailability,setEngineAvailability]=useState<{zipformer:boolean;moonshineMedium:boolean;moonshineInstallable?:boolean}>({zipformer:false,moonshineMedium:false});
   const chooseOfflineEngine=useCallback((engine:'zipformer'|'moonshine-medium')=>{
     if(status!=='idle'||!engineAvailability[engine==='zipformer'?'zipformer':'moonshineMedium'])return;
     setOfflineEngine(engine);

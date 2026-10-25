@@ -51,6 +51,8 @@ sudo apt install ./Voxnelo.deb
 
 学习记录和收藏保存在当前设备上，没有 Voxnelo 账号及跨设备同步。只有在授权后才会使用麦克风；录音仅供当前句子临时回听，Voxnelo 不会上传跟读录音。如果在网页中尝试语音识别，浏览器提供的服务可能具有不同的联网和隐私行为。
 
+有关下一轮跨平台本地识别试验与设备要求，见 [Moonshine 多平台试验说明](docs/engineering/MOONSHINE-CROSS-PLATFORM-PILOT.md)；这不改变已发布的 v1.0.3 能力边界。
+
 ## 开发与反馈
 
 项目使用 Electron、React、TypeScript、Rsbuild 和 IndexedDB。源码运行、测试、打包请查看 [开发指南](docs/DEVELOPMENT.md)。
