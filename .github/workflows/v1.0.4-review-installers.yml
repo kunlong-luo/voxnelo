@@ -102,6 +102,8 @@ jobs:
           sudo apt-get install -y ./release/voxnelo_1.0.4_amd64.deb
           test "$(dpkg-query -W -f='${Version}' voxnelo)" = '1.0.4'
           dpkg -L voxnelo | grep -Fx '/usr/share/metainfo/app.voxnelo.desktop.metainfo.xml'
+      # electron-builder's Windows default is 'Voxnelo Setup 1.0.4.exe' (spaces),
+      # not the dotted historical v1.0.3 Release attachment alias.
       - name: Generate review-only per-platform SHA-256 and provenance manifest
         run: node --experimental-strip-types scripts/write-candidate-manifest.mts
       - name: Upload private CI assembly inputs (NOT Release attachments)

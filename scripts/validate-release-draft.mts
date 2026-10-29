@@ -31,7 +31,7 @@ interface CandidateManifest {
 const platforms=['linux','win32','darwin'] as const;
 const lowerHex=/^[0-9a-f]{64}$/;
 const sourceSha=/^[0-9a-f]{40}$/;
-const basenameOnly=/^[A-Za-z0-9._-]+$/;
+const basenameOnly=/^[A-Za-z0-9._ -]+$/;
 
 function exactNames(actual:readonly string[],expected:readonly string[],kind:string):void{
   assert.deepEqual([...actual].sort(),[...expected].sort(),kind+' differs from approved version-specific inventory');
@@ -39,7 +39,7 @@ function exactNames(actual:readonly string[],expected:readonly string[],kind:str
 function expectedInstallers(version:string):Record<(typeof platforms)[number],string[]>{
   return {
     linux:['Voxnelo.deb','Voxnelo-'+version+'.AppImage','voxnelo_'+version+'_amd64.deb'],
-    win32:['Voxnelo.Setup.'+version+'.exe'],
+    win32:['Voxnelo Setup '+version+'.exe'],
     darwin:['Voxnelo-'+version+'-arm64.dmg'],
   };
 }
@@ -66,7 +66,7 @@ function verifyChecksums(directory:string,platform:string,files:CandidateFile[])
   const lines=raw.trimEnd().split('\n');
   const sums=new Map<string,string>();
   for(const line of lines){
-    const match=/^([0-9a-f]{64}) {2}([A-Za-z0-9._-]+)$/.exec(line);
+    const match=/^([0-9a-f]{64}) {2}([A-Za-z0-9._ -]+)$/.exec(line);
     assert.ok(match,'Invalid '+platform+' SHA256SUMS record');
     assert.ok(!sums.has(match[2]!),'Duplicate '+platform+' SHA256SUMS entry');
     sums.set(match[2]!,match[1]!);

@@ -11,7 +11,7 @@ const identity={version,commit,workflowRun};
 const sha='a'.repeat(64);
 const filesByPlatform={
   linux:['Voxnelo.deb','Voxnelo-1.0.4.AppImage','voxnelo_1.0.4_amd64.deb'],
-  win32:['Voxnelo.Setup.1.0.4.exe'],
+  win32:['Voxnelo Setup 1.0.4.exe'],
   darwin:['Voxnelo-1.0.4-arm64.dmg'],
 } as const;
 const temporary:string[]=[];
@@ -62,9 +62,9 @@ describe('three-platform private draft inventory and provenance',()=>{
   });
   it('rejects wrong version or platform even with plausible SHA-256 values',()=>{
     const dir=fixture();
-    editManifest(dir,'win32',m=>{m.files[0]!.name='Voxnelo.Setup.1.0.3.exe'});
+    editManifest(dir,'win32',m=>{m.files[0]!.name='Voxnelo Setup 1.0.3.exe'});
     expect(()=>validateReleaseDraftInventory(dir,identity)).toThrow(/inventory/);
-    editManifest(dir,'win32',m=>{m.files[0]!.name='Voxnelo.Setup.1.0.4.exe';m.platform='linux'});
+    editManifest(dir,'win32',m=>{m.files[0]!.name='Voxnelo Setup 1.0.4.exe';m.platform='linux'});
     expect(()=>validateReleaseDraftInventory(dir,identity)).toThrow(/Incorrect manifest platform/);
   });
   it('refuses unapproved release state and missing evidence typing',()=>{
@@ -76,10 +76,10 @@ describe('three-platform private draft inventory and provenance',()=>{
   });
   it('rejects a forged checksums list or mismatched digest',()=>{
     const dir=fixture();
-    writeFileSync(path.join(dir,'SHA256SUMS-win32.txt'), 'f'.repeat(64)+'  Voxnelo.Setup.1.0.4.exe\n');
+    writeFileSync(path.join(dir,'SHA256SUMS-win32.txt'), 'f'.repeat(64)+'  Voxnelo Setup 1.0.4.exe\n');
     expect(()=>validateReleaseDraftInventory(dir,identity)).toThrow(/digest differs/);
     writeFileSync(path.join(dir,'SHA256SUMS-win32.txt'),
-      sha+'  Voxnelo.Setup.1.0.4.exe\n'+sha+'  Voxnelo.Setup.1.0.4.exe\n');
+      sha+'  Voxnelo Setup 1.0.4.exe\n'+sha+'  Voxnelo Setup 1.0.4.exe\n');
     expect(()=>validateReleaseDraftInventory(dir,identity)).toThrow(/Duplicate/);
   });
   it('rejects an additional unreviewed executable and renamed checksum inventory',()=>{
