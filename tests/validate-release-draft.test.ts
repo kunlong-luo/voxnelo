@@ -62,9 +62,9 @@ describe('three-platform private draft inventory and provenance',()=>{
   });
   it('rejects wrong version or platform even with plausible SHA-256 values',()=>{
     const dir=fixture();
-    editManifest(dir,'win32',m=>{m.files[0].name='Voxnelo.Setup.1.0.3.exe'});
+    editManifest(dir,'win32',m=>{m.files[0]!.name='Voxnelo.Setup.1.0.3.exe'});
     expect(()=>validateReleaseDraftInventory(dir,identity)).toThrow(/inventory/);
-    editManifest(dir,'win32',m=>{m.files[0].name='Voxnelo.Setup.1.0.4.exe';m.platform='linux'});
+    editManifest(dir,'win32',m=>{m.files[0]!.name='Voxnelo.Setup.1.0.4.exe';m.platform='linux'});
     expect(()=>validateReleaseDraftInventory(dir,identity)).toThrow(/Incorrect manifest platform/);
   });
   it('refuses unapproved release state and missing evidence typing',()=>{
@@ -92,9 +92,9 @@ describe('three-platform private draft inventory and provenance',()=>{
   });
   it('rejects a mismatched Linux alias and unsafe SHA256SUMS file names',()=>{
     const dir=fixture();
-    editManifest(dir,'linux',m=>{m.files[0].sha256='f'.repeat(64)});
+    editManifest(dir,'linux',m=>{m.files[0]!.sha256='f'.repeat(64)});
     expect(()=>validateReleaseDraftInventory(dir,identity)).toThrow(/digest differs/);
-    editManifest(dir,'linux',m=>{m.files[0].sha256=sha});
+    editManifest(dir,'linux',m=>{m.files[0]!.sha256=sha});
     writeFileSync(path.join(dir,'SHA256SUMS-linux.txt'),
       sha+'  ../../private.wav\n'+sha+'  voxnelo_1.0.4_amd64.deb\n');
     expect(()=>validateReleaseDraftInventory(dir,identity)).toThrow(/Invalid linux SHA256SUMS record/);
