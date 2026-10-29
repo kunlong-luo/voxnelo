@@ -46,8 +46,8 @@
     "asr:moonshine:install": "node --experimental-strip-types scripts/install-moonshine-linux.mts"
   },
   "dependencies": {
-    "dexie": "^4.2.0",
-    "lucide-react": "^1.59.0",
+    "dexie": "^4.4.7",
+    "lucide-react": "^1.61.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "@base-ui/react": "^1.9.0",
