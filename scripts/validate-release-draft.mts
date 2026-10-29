@@ -66,7 +66,7 @@ function verifyChecksums(directory:string,platform:string,files:CandidateFile[])
   const lines=raw.trimEnd().split('\n');
   const sums=new Map<string,string>();
   for(const line of lines){
-    const match=/^([0-9a-f]{64})  ([A-Za-z0-9._-]+)$/.exec(line);
+    const match=/^([0-9a-f]{64}) {2}([A-Za-z0-9._-]+)$/.exec(line);
     assert.ok(match,'Invalid '+platform+' SHA256SUMS record');
     assert.ok(!sums.has(match[2]!),'Duplicate '+platform+' SHA256SUMS entry');
     sums.set(match[2]!,match[1]!);
