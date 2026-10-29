@@ -1,0 +1,154 @@
+name: Build v1.0.4 unsigned installer review artifacts (NOT a Release)
+
+# One-time, strictly read-only review build after this workflow first lands
+# on main. No tag, GitHub Release, SDK/model bundle or public announcement.
+# Artifacts have limited retention and require maintainer review before the
+# separate manual release-draft workflow is invoked.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/v1.0.4-review-installers.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: voxnelo-v1.0.4-review-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    name: Require exact v1.0.4 main source
+    if: github.repository == 'kunlong-luo/voxnelo' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify version and unpublished notes
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(node -p 'require("./package.json").version')" = '1.0.4'
+          test -s docs/release-notes/v1.0.4.md
+          grep -q '尚未公开' docs/release-notes/v1.0.4.md
+          echo 'Preparing v1.0.4 review-only installers; no tag or Release will be created.'
+
+  native-moonshine:
+    name: Require real Moonshine SDK/model on all three supported native platforms
+    needs: preflight
+    permissions:
+      contents: read
+    uses: ./.github/workflows/moonshine-native-matrix.yml
+
+  build:
+    name: Build review-only unsigned installer (${{ matrix.target }})
+    needs: preflight
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux
+            args: --linux deb AppImage
+          - os: windows-latest
+            target: windows
+            args: --win nsis
+          - os: macos-latest
+            target: mac
+            args: --mac dmg
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          version: 12.11.2
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Reject High/Critical dependency advisories (prod and dev)
+        run: pnpm audit --prod --audit-level high && pnpm audit --audit-level high
+      - name: Typecheck and test
+        run: pnpm typecheck && pnpm test
+      - name: Build production renderer and Electron
+        run: pnpm build
+      - name: Assert no unverified native ASR model is bundled
+        run: pnpm asr:verify-real
+      - name: Build real OS-native unsigned installer (never publish)
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: pnpm exec electron-builder ${{ matrix.args }} --publish never
+      - name: Brand Linux AppStream and create identical Discover DEB alias
+        if: runner.os == 'Linux'
+        run: node --experimental-strip-types scripts/brand-linux-installer.mts
+      - name: Inspect the real packaged files, versions and architecture
+        env:
+          VOXNELO_REQUIRE_INSTALLERS: '1'
+        run: node --experimental-strip-types scripts/check-desktop-package.mts
+      - name: Test Linux DEB apt installation
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y ./release/voxnelo_1.0.4_amd64.deb
+          test "$(dpkg-query -W -f='${Version}' voxnelo)" = '1.0.4'
+          dpkg -L voxnelo | grep -Fx '/usr/share/metainfo/app.voxnelo.desktop.metainfo.xml'
+      - name: Generate review-only per-platform SHA-256 and provenance manifest
+        run: node --experimental-strip-types scripts/write-candidate-manifest.mts
+      - name: Upload private CI assembly inputs (NOT Release attachments)
+        uses: actions/upload-artifact@v7
+        with:
+          name: voxnelo-v1.0.4-${{ matrix.target }}-review-input
+          path: |
+            release/*.deb
+            release/*.AppImage
+            release/*.exe
+            release/*.dmg
+            release/SHA256SUMS-*.txt
+            release/candidate-manifest-*.json
+          retention-days: 14
+          if-no-files-found: error
+
+  review-bundle:
+    name: Verify and upload combined three-platform review ZIP (no release)
+    needs: [preflight, build, native-moonshine]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: voxnelo-v1.0.4-*-review-input
+          path: review-assets
+          merge-multiple: true
+      - name: Validate exact version, commit, workflow run, checksums and file inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --experimental-strip-types scripts/validate-release-draft.mts \
+            review-assets '1.0.4' "$GITHUB_SHA" "$GITHUB_RUN_ID"
+          for platform in linux win32 darwin; do
+            (cd review-assets && sha256sum -c "SHA256SUMS-$platform.txt")
+          done
+      - name: Archive verified user-facing unsigned installers for maintainer review
+        uses: actions/upload-artifact@v7
+        with:
+          name: voxnelo-v1.0.4-unsigned-three-platform-REVIEW-NOT-RELEASE
+          path: |
+            review-assets/*.deb
+            review-assets/*.AppImage
+            review-assets/*.exe
+            review-assets/*.dmg
+            review-assets/SHA256SUMS-*.txt
+          retention-days: 14
+          if-no-files-found: error
