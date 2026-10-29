@@ -145,6 +145,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # Reject cross-run, cross-commit, wrong-version or extra executable
+          # uploads before sha256sum reads the three checked inventories.
+          node --experimental-strip-types scripts/validate-release-draft.mts \
+            draft-assets "$RELEASE_VERSION" "$GITHUB_SHA" "$GITHUB_RUN_ID"
           for platform in linux win32 darwin; do
             test -f "draft-assets/SHA256SUMS-$platform.txt"
             test -f "draft-assets/candidate-manifest-$platform.json"
@@ -188,9 +192,16 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          gh release create "v$RELEASE_VERSION" draft-assets/* \
+          # Upload only user-facing installers and SHA-256 manifests. Internal
+          # candidate JSON evidence remains in the private Actions artifacts.
+          gh release create "v$RELEASE_VERSION" \
+            draft-assets/*.deb \
+            draft-assets/*.AppImage \
+            draft-assets/*.exe \
+            draft-assets/*.dmg \
+            draft-assets/SHA256SUMS-*.txt \
             --target "$GITHUB_SHA" \
-            --title "Voxnelo $RELEASE_VERSION (Early Access candidate)" \
+            --title "Voxnelo $RELEASE_VERSION (Unsigned private draft)" \
             --notes-file "docs/release-notes/v$RELEASE_VERSION.md" \
             --draft --prerelease
           echo "A private draft release is ready for manual product, platform, privacy and licensing review."
