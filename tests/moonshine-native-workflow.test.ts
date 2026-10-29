@@ -23,6 +23,9 @@ describe('future unsigned release draft must wait for native offline recognition
     expect(draft).toContain('needs: [preflight, build, native-moonshine]');
     expect(draft).toContain('scripts/check-desktop-package.mts');
     expect(draft).toContain('sha256sum -c');
+    expect(draft).toContain('scripts/validate-release-draft.mts');
+    expect(draft).toContain('draft-assets/SHA256SUMS-*.txt');
+    expect(draft).not.toContain('gh release create "v$RELEASE_VERSION" draft-assets/*');
     expect(draft).toContain('--draft --prerelease');
     expect(draft).not.toMatch(/^\s+push:/m);
   });
