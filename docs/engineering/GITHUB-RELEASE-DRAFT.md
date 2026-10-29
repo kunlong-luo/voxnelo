@@ -13,6 +13,15 @@
 
 v1.0.0 公开发行真实 [Actions 运行](https://github.com/kunlong-luo/voxnelo/actions/runs/39974884072) 成功，三平台安装包、Linux apt 实装、版本与 SHA-256 等自动门禁通过；但不会自动形成五名用户、F001–F012、第三方模型权利或各设备麦克风测试的真实证据。
 
+## v1.0.4 三平台免签名安装包的 Actions 验收产物（不是 Release）
+
+新增 [v1.0.4 Review Installers](../../.github/workflows/v1.0.4-review-installers.yml) 独立一次性验收构建：该 workflow 自身首次合并进 `main` 时自动触发，以后仅能通过手动 Actions 调度或再次修改该文件触发，不会在每次代码提交后反复打包。它不创建标签、草稿或正式 GitHub Release，工作流 token 也没有发布权限。
+
+- 三系统分别制作实际的 Linux x64 DEB/AppImage、Windows x64 NSIS EXE、macOS ARM64 DMG，生成 SHA-256；Linux DEB 做 apt 实装。
+- 必须等待真正的三平台 Moonshine 原生 SDK/模型 + 打包后的 Worker/PCM 检查通过；然后核对所有安装包都属于本次源码 commit 与运行编号、且版本为 `1.0.4`。
+- 成功后，在 [GitHub Actions 页面](https://github.com/kunlong-luo/voxnelo/actions) 找到 **Build v1.0.4 unsigned installer review artifacts (NOT a Release)** 运行记录，下载附件 `voxnelo-v1.0.4-unsigned-three-platform-REVIEW-NOT-RELEASE`（单个 ZIP，内含五个安装包及三个 SHA-256 清单，有效期 14 天）。工作流不上传模型或个人音频；中间证据 JSON 不属于用户安装包。
+- 文件仅用于维护者核对和针对新原生引擎的验收，**不代表 v1.0.4 已公开发布**，也不等于具有代码签名、Apple 公证、真人 WER/端到端延迟或完成所有第三方许可审核。只有单独通过 `release-draft.yml`、确认发行文案与必要证据后，才考虑人工发布。
+
 ## 后续新版本、草稿和额外的签名通道
 
 新版本应先以 PR 更新源码版本、锁文件、发行说明并通过 CI，再为**未使用的新版本号**建立独立的发布流程。`.github/workflows/release-draft.yml` 可通过 **Actions → Prepare GitHub release draft → Run workflow** 使用 `version` 及 `PREPARE_DRAFT_ONLY` 创建内部草稿；**已有 Draft/Release/tag 不允许覆盖**，草稿不会公开。
