@@ -31,9 +31,20 @@ function fixture():string{
   }
   return dir;
 }
-function editManifest(dir:string,platform:keyof typeof filesByPlatform,change:(manifest:any)=>void):void{
+interface FixtureManifest {
+  candidateOnly:boolean;
+  unsigned:boolean;
+  publicReleaseApproved:boolean;
+  offlineAsrValidated:boolean|string;
+  platform:string;
+  commit:string;
+  workflowRun:string;
+  files:{name:string;sizeBytes:number;sha256:string}[];
+}
+function editManifest(dir:string,platform:keyof typeof filesByPlatform,
+  change:(manifest:FixtureManifest)=>void):void{
   const pathname=path.join(dir,'candidate-manifest-'+platform+'.json');
-  const manifest=JSON.parse(readFileSync(pathname,'utf8'));
+  const manifest=JSON.parse(readFileSync(pathname,'utf8')) as FixtureManifest;
   change(manifest);
   writeFileSync(pathname,JSON.stringify(manifest));
 }
