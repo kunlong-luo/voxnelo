@@ -18,6 +18,8 @@ describe('cross-platform Moonshine native SDK CI',()=>{
 describe('future unsigned release draft must wait for native offline recognition',()=>{
   const draft=readFileSync('.github/workflows/release-draft.yml','utf8');
   it('reuses the same real Linux/Windows/macOS packaged Moonshine matrix before draft assembly',()=>{
+    expect(draft).toContain('workflow_call:');
+    expect(draft).toContain("PREPARE_DRAFT_ONLY");
     expect(draft).toContain('native-moonshine:');
     expect(draft).toContain('uses: ./.github/workflows/moonshine-native-matrix.yml');
     expect(draft).toContain('needs: [preflight, build, native-moonshine]');
@@ -28,5 +30,28 @@ describe('future unsigned release draft must wait for native offline recognition
     expect(draft).not.toContain('gh release create "v$RELEASE_VERSION" draft-assets/*');
     expect(draft).toContain('--draft --prerelease');
     expect(draft).not.toMatch(/^\s+push:/m);
+  });
+});
+
+describe('v1.0.4 one-time DRAFT bootstrap must NEVER publish publicly',()=>{
+  const bootstrap=readFileSync('.github/workflows/prepare-v1.0.4-private-draft-once.yml','utf8');
+  it('limits the push trigger to the new main-only bootstrap file',()=>{
+    expect(bootstrap).toContain('branches: [main]');
+    expect(bootstrap).toContain("- '.github/workflows/prepare-v1.0.4-private-draft-once.yml'");
+    expect(bootstrap).toContain("github.repository == 'kunlong-luo/voxnelo'");
+    expect(bootstrap).toContain("github.ref == 'refs/heads/main'");
+    expect(bootstrap).not.toMatch(/^\\s+tags:/m);
+    expect(bootstrap).not.toMatch(/^\\s+schedule:/m);
+  });
+  it('reuses the strictly gated draft-only workflow with exact version and consent',()=>{
+    expect(bootstrap).toContain('uses: ./.github/workflows/release-draft.yml');
+    expect(bootstrap).toContain("version: '1.0.4'");
+    expect(bootstrap).toContain("confirmation: 'PREPARE_DRAFT_ONLY'");
+    expect(bootstrap).toContain('contents: read');
+    expect(bootstrap).toContain('contents: write');
+    expect(bootstrap).not.toContain('gh release publish');
+    expect(bootstrap).not.toContain('gh release create');
+    expect(bootstrap).not.toContain('git tag');
+    expect(bootstrap).not.toContain('--latest');
   });
 });

@@ -22,6 +22,16 @@ v1.0.0 公开发行真实 [Actions 运行](https://github.com/kunlong-luo/voxnel
 - 成功后，在 [GitHub Actions 页面](https://github.com/kunlong-luo/voxnelo/actions) 找到 **Build v1.0.4 unsigned installer review artifacts (NOT a Release)** 运行记录，下载附件 `voxnelo-v1.0.4-unsigned-three-platform-REVIEW-NOT-RELEASE`（单个 ZIP，内含五个安装包及三个 SHA-256 清单，有效期 14 天）。工作流不上传模型或个人音频；中间证据 JSON 不属于用户安装包。
 - 文件仅用于维护者核对和针对新原生引擎的验收，**不代表 v1.0.4 已公开发布**，也不等于具有代码签名、Apple 公证、真人 WER/端到端延迟或完成所有第三方许可审核。只有单独通过 `release-draft.yml`、确认发行文案与必要证据后，才考虑人工发布。
 
+## v1.0.4 私有 Release Draft 一次性准备（**不公开**）
+
+为了减少反复要求维护者进入 Actions 手动填写参数，新增 [一次性私有草稿入口](../../.github/workflows/prepare-v1.0.4-private-draft-once.yml)。**首次经 PR 合并到 main 后**，仅因该文件的变更启动一次：复用原本经审查的 `release-draft.yml`，以固定 `version=1.0.4`、`confirmation=PREPARE_DRAFT_ONLY` 执行，不能发布公开版本；原有手动 `workflow_dispatch` 入口仍保留。
+
+- 在 `main` 同一提交上重新执行固定依赖审计、三平台原生 Moonshine SDK/模型/Worker 验证、真实 Windows NSIS / macOS ARM64 DMG / Linux DEB+AppImage 打包和 Linux DEB apt 安装。
+- 创建草稿之前还须核对三份清单：来源 SHA、workflow run 编号、精确文件名（Windows 是 `Voxnelo Setup 1.0.4.exe`）、安装包大小、SHA-256，以及未经批准的额外附件；遇到旧 tag/Release 必须拒绝覆盖。
+- 全部成功时自动创建 **draft=true、prerelease=true 的私有 v1.0.4 Release Draft**，并只附带五个免签名安装包与三份摘要清单；不使用 `gh release publish`、`--latest` 或自动公开事件。
+- 如果失败，先修复并再次通过 PR/CI；**不得修改旧版公开附件、跳过原生校验或用其他提交的 ZIP 冒充新提交候选**。若之后需要重新构建，手动启动原有工作流，且其拒绝覆盖已有 tag/Release。
+- 本动作仅授权创建内部草稿供检查，**不表示模型/SDK 许可已通过法律复核**，也不能把合成 PCM 结果当作真人麦克风 WER、录音权限/拔插实测或完整 F001–F012 证据。是否公开发布由维护者另行明确决定；免签名风险需持续披露。
+
 ## 后续新版本、草稿和额外的签名通道
 
 新版本应先以 PR 更新源码版本、锁文件、发行说明并通过 CI，再为**未使用的新版本号**建立独立的发布流程。`.github/workflows/release-draft.yml` 可通过 **Actions → Prepare GitHub release draft → Run workflow** 使用 `version` 及 `PREPARE_DRAFT_ONLY` 创建内部草稿；**已有 Draft/Release/tag 不允许覆盖**，草稿不会公开。
