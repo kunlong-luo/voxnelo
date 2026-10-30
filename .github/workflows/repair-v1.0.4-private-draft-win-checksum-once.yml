@@ -1,0 +1,99 @@
+name: Repair v1.0.4 PRIVATE draft Windows checksum once (never publish)
+
+# The already-created private v1.0.4 draft was built and verified from
+# commit 4aeb58e. GitHub renamed an EXE asset's spaces to dots on upload,
+# but kept the original SHA256SUMS-win32.txt bytes. Fix only that checksum
+# asset after independently verifying the existing EXE's digest.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/repair-v1.0.4-private-draft-win-checksum-once.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: repair-v1.0.4-private-draft-windows-sha
+  cancel-in-progress: false
+
+jobs:
+  repair:
+    name: Reconcile draft asset filename with SHA256SUMS (no publication)
+    if: github.repository == 'kunlong-luo/voxnelo' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: kunlong-luo/voxnelo
+    steps:
+      - name: Verify EXACT private draft and all existing eight assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api repos/kunlong-luo/voxnelo/releases/tags/v1.0.4 > "$RUNNER_TEMP/voxnelo-draft.json"
+          jq -e '
+            .id == 428750217 and
+            .tag_name == "v1.0.4" and
+            .draft == true and
+            .prerelease == true and
+            .published_at == null and
+            .target_commitish == "4aeb58e37840d2aec760fac3e348ab18b9ce1be1" and
+            ([.assets[].name] | sort) ==
+            ([
+              "SHA256SUMS-darwin.txt", "SHA256SUMS-linux.txt", "SHA256SUMS-win32.txt",
+              "Voxnelo-1.0.4-arm64.dmg", "Voxnelo-1.0.4.AppImage", "Voxnelo.deb",
+              "Voxnelo.Setup.1.0.4.exe", "voxnelo_1.0.4_amd64.deb"
+            ] | sort)
+          ' "$RUNNER_TEMP/voxnelo-draft.json"
+      - name: Download published draft EXE and original Windows checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/asset-original"
+          gh release download v1.0.4 --pattern 'Voxnelo.Setup.1.0.4.exe' --dir "$RUNNER_TEMP/asset-original"
+          gh release download v1.0.4 --pattern 'SHA256SUMS-win32.txt' --dir "$RUNNER_TEMP/asset-original"
+      - name: Verify binary hash and patch only the checksum filename
+        id: reconcile
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/asset-original"
+          test -f 'Voxnelo.Setup.1.0.4.exe'
+          test -f 'SHA256SUMS-win32.txt'
+          actual="$(sha256sum 'Voxnelo.Setup.1.0.4.exe' | cut -d ' ' -f 1)"
+          existing="$(cat SHA256SUMS-win32.txt)"
+          if [[ "$existing" == "$actual  Voxnelo.Setup.1.0.4.exe" ]]; then
+            echo 'Exact draft checksum already matches GitHub filename; no changes needed.'
+            echo 'repair_needed=false' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          [[ "$existing" == "$actual  Voxnelo Setup 1.0.4.exe" ]] || {
+            echo '::error::Original draft checksum does not match published EXE bytes'
+            exit 1
+          }
+          printf '%s  %s\n' "$actual" 'Voxnelo.Setup.1.0.4.exe' > SHA256SUMS-win32.txt
+          sha256sum -c SHA256SUMS-win32.txt
+          echo 'repair_needed=true' >> "$GITHUB_OUTPUT"
+      - name: Verify draft still private and replace checksum ONLY
+        if: steps.reconcile.outputs.repair_needed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Recheck for concurrent publication, changed release ID or retarget.
+          gh api repos/kunlong-luo/voxnelo/releases/tags/v1.0.4 |
+            jq -e '.id == 428750217 and .draft == true and .published_at == null and .target_commitish == "4aeb58e37840d2aec760fac3e348ab18b9ce1be1"'
+          gh release upload v1.0.4 "$RUNNER_TEMP/asset-original/SHA256SUMS-win32.txt" --clobber
+      - name: Verify repaired checksum is available from GitHub and draft remains private
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/asset-verify"
+          gh release download v1.0.4 --pattern 'SHA256SUMS-win32.txt' --dir "$RUNNER_TEMP/asset-verify"
+          cmp "$RUNNER_TEMP/asset-verify/SHA256SUMS-win32.txt" "$RUNNER_TEMP/asset-original/SHA256SUMS-win32.txt"
+          (cd "$RUNNER_TEMP/asset-original" && sha256sum -c SHA256SUMS-win32.txt)
+          gh api repos/kunlong-luo/voxnelo/releases/tags/v1.0.4 |
+            jq -e '.id == 428750217 and .draft == true and .prerelease == true and .published_at == null and ([.assets[].name] | length) == 8'
+          echo 'Private v1.0.4 draft Windows checksum matches the exact downloaded GitHub asset.'
