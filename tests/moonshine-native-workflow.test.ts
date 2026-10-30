@@ -27,6 +27,9 @@ describe('future unsigned release draft must wait for native offline recognition
     expect(draft).toContain('sha256sum -c');
     expect(draft).toContain('scripts/validate-release-draft.mts');
     expect(draft).toContain('draft-assets/SHA256SUMS-*.txt');
+    expect(draft).toContain('Normalize Windows Release asset filename and matching SHA-256 manifest');
+    expect(draft).toContain('mv -- "$original" "$published"');
+    expect(draft).toContain('sha256sum -c SHA256SUMS-win32.txt');
     expect(draft).not.toContain('gh release create "v$RELEASE_VERSION" draft-assets/*');
     expect(draft).toContain('--draft --prerelease');
     expect(draft).not.toMatch(/^\s+push:/m);
