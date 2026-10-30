@@ -39,7 +39,7 @@ v1.0.0 公开发行真实 [Actions 运行](https://github.com/kunlong-luo/voxnel
 GitHub Release 上传时把 Windows 安装包 `Voxnelo Setup 1.0.4.exe` 自动显示为 `Voxnelo.Setup.1.0.4.exe`，但不会同步修改原本的 `SHA256SUMS-win32.txt` 内容。为避免用户拿到无法按文件名校验的清单，修复流程分两部分：
 
 - 新版本私有草稿流程在上传前将 Windows 文件名规范化成与 GitHub 最终存储一致的点号，并从**已验证的原始字节**重新生成匹配的 Windows SHA-256 清单。
-- 对已经生成的 v1.0.4 私有草稿，新增 [一次性校验修复入口](../../.github/workflows/repair-v1.0.4-private-draft-win-checksum-once.yml)。只有核对 Release ID、源提交、仍为 Draft、全部 8 个预期附件且真实下载 EXE 的哈希与原始清单一致，才允许**只替换 `SHA256SUMS-win32.txt`**；不替换 EXE、不修改历史公开 Release，不创建/发布任何新版本。已修复时直接安全退出。工作流是否执行成功、更新后的清单是否通过验证，应以 Actions 与 GitHub Release API 的实际结果为准。
+- 对已经生成的 v1.0.4 私有草稿，新增 [一次性校验修复入口](../../.github/workflows/repair-v1.0.4-private-draft-win-checksum-once.yml)。首次尝试的 [Actions 41020523396](https://github.com/kunlong-luo/voxnelo/actions/runs/41020523396) 因为草稿**尚未有正式 Git tag**，通过 `releases/tags/v1.0.4` 查询返回 404，未触及任何附件。修正后的流程改用精确 Release ID `428750217` 读取草稿和各附件的 ID，再通过 GitHub Assets API 下载校验、临时上传新清单、替换原 Windows 清单；上传时只处理私有 Draft。只有核对 Release ID、源提交、仍为 Draft、全部 8 个预期附件且真实下载 EXE 的哈希与原始清单一致，才允许**只替换 `SHA256SUMS-win32.txt`**；不替换 EXE、不修改历史公开 Release，不创建/发布任何新版本。已修复时直接安全退出。工作流是否执行成功、更新后的清单是否通过验证，应以 Actions 与 GitHub Release API 的实际结果为准。
 
 ## 后续新版本、草稿和额外的签名通道
 
