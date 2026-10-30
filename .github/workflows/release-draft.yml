@@ -200,6 +200,20 @@ jobs:
             echo "::error::Version tag already exists; refusing to overwrite."
             exit 1
           fi
+      - name: Normalize Windows Release asset filename and matching SHA-256 manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          # GitHub normalizes spaces to dots on uploaded Release asset names.
+          # The original candidate and its checksum were verified above;
+          # rewrite only the *published filename*, not the installer bytes.
+          original="draft-assets/Voxnelo Setup ${RELEASE_VERSION}.exe"
+          published="draft-assets/Voxnelo.Setup.${RELEASE_VERSION}.exe"
+          test -f "$original"
+          test ! -e "$published"
+          mv -- "$original" "$published"
+          (cd draft-assets && sha256sum "Voxnelo.Setup.${RELEASE_VERSION}.exe" > SHA256SUMS-win32.txt)
+          (cd draft-assets && sha256sum -c SHA256SUMS-win32.txt)
       - name: Create unpublished draft with real installers
         shell: bash
         run: |

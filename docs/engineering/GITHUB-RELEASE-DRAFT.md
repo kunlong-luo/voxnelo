@@ -32,6 +32,15 @@ v1.0.0 公开发行真实 [Actions 运行](https://github.com/kunlong-luo/voxnel
 - 如果失败，先修复并再次通过 PR/CI；**不得修改旧版公开附件、跳过原生校验或用其他提交的 ZIP 冒充新提交候选**。若之后需要重新构建，手动启动原有工作流，且其拒绝覆盖已有 tag/Release。
 - 本动作仅授权创建内部草稿供检查，**不表示模型/SDK 许可已通过法律复核**，也不能把合成 PCM 结果当作真人麦克风 WER、录音权限/拔插实测或完整 F001–F012 证据。是否公开发布由维护者另行明确决定；免签名风险需持续披露。
 
+## v1.0.4 私有草稿已创建：修复 GitHub 附件文件名差异
+
+[Actions 41019525418](https://github.com/kunlong-luo/voxnelo/actions/runs/41019525418) 已在 2026-10-30 成功创建 v1.0.4 **未公开草稿**（Release ID `428750217`，8 个附件，来源 commit `4aeb58e`）。Linux/Windows/macOS 原生 Moonshine SDK/模型/Worker、三平台免签名安装包、Linux DEB apt 实装与候选字节 SHA-256 检查均通过。**这仍然不是公开发布批准**。
+
+GitHub Release 上传时把 Windows 安装包 `Voxnelo Setup 1.0.4.exe` 自动显示为 `Voxnelo.Setup.1.0.4.exe`，但不会同步修改原本的 `SHA256SUMS-win32.txt` 内容。为避免用户拿到无法按文件名校验的清单，修复流程分两部分：
+
+- 新版本私有草稿流程在上传前将 Windows 文件名规范化成与 GitHub 最终存储一致的点号，并从**已验证的原始字节**重新生成匹配的 Windows SHA-256 清单。
+- 对已经生成的 v1.0.4 私有草稿，新增 [一次性校验修复入口](../../.github/workflows/repair-v1.0.4-private-draft-win-checksum-once.yml)。只有核对 Release ID、源提交、仍为 Draft、全部 8 个预期附件且真实下载 EXE 的哈希与原始清单一致，才允许**只替换 `SHA256SUMS-win32.txt`**；不替换 EXE、不修改历史公开 Release，不创建/发布任何新版本。已修复时直接安全退出。工作流是否执行成功、更新后的清单是否通过验证，应以 Actions 与 GitHub Release API 的实际结果为准。
+
 ## 后续新版本、草稿和额外的签名通道
 
 新版本应先以 PR 更新源码版本、锁文件、发行说明并通过 CI，再为**未使用的新版本号**建立独立的发布流程。`.github/workflows/release-draft.yml` 可通过 **Actions → Prepare GitHub release draft → Run workflow** 使用 `version` 及 `PREPARE_DRAFT_ONLY` 创建内部草稿；**已有 Draft/Release/tag 不允许覆盖**，草稿不会公开。
