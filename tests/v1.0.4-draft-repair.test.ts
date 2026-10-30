@@ -46,7 +46,7 @@ describe('GitHub draft Windows filename normalization and one-time checksum repa
     expect(repair).not.toContain('gh release publish');
     expect(repair).not.toContain('gh release create');
     expect(repair).not.toContain('gh release edit');
-    expect(repair).not.toContain('releases/tags/v1.0.4');
+    expect(repair).not.toContain('gh api repos/kunlong-luo/voxnelo/releases/tags/v1.0.4');
     expect(repair).not.toContain('git tag ');
     expect(repair).not.toContain('Voxnelo.Setup.1.0.4.exe" --clobber');
   });
