@@ -14,6 +14,18 @@ on:
         description: 'Enter PREPARE_DRAFT_ONLY; this does not approve publishing'
         required: true
         type: string
+  # Only the explicitly version-pinned v1.0.4 private-draft bootstrap may
+  # reuse this existing audited workflow. This never publishes publicly.
+  workflow_call:
+    inputs:
+      version:
+        description: 'Exact package.json version to prepare as a private draft'
+        required: true
+        type: string
+      confirmation:
+        description: 'Must be PREPARE_DRAFT_ONLY; public approval is separate'
+        required: true
+        type: string
 
 permissions:
   contents: read
