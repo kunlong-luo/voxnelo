@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "concurrently --kill-others \"pnpm dev:renderer\" \"pnpm dev:desktop\"",
     "dev:renderer": "pnpm worklet:build && rsbuild dev --host 127.0.0.1 --port 3000",
-    "dev:desktop": "pnpm build:electron && wait-on http://127.0.0.1:3000 && cross-env VOXNELO_DEV_SERVER_URL=http://127.0.0.1:3000 electron . --disable-gpu-sandbox",
+    "dev:desktop": "pnpm build:electron && node --experimental-strip-types scripts/wait-for-local-dev-server.mts && cross-env VOXNELO_DEV_SERVER_URL=http://127.0.0.1:3000 electron . --disable-gpu-sandbox",
     "dev:web": "pnpm worklet:build && rsbuild dev --host 127.0.0.1 --port 3000",
     "build": "pnpm build:renderer && pnpm build:electron",
     "build:renderer": "pnpm worklet:build && rsbuild build",
@@ -81,8 +81,7 @@
     "tailwindcss": "^4.1.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.72.0",
-    "vitest": "^4.1.11",
-    "wait-on": "^9.5.1"
+    "vitest": "^4.1.11"
   },
   "build": {
     "appId": "app.voxnelo.desktop",
