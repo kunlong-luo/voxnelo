@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { CONNECTED_SPEECH_GUIDES, getConnectedSpeechGuide, SENTENCES, STARTER_SENTENCES } from '@voxnelo/content';
 import { PronunciationGuide } from '../apps/web/src/PronunciationGuide';
+import { LibraryView } from '../apps/web/src/LibraryView';
 import { I18nProvider } from '../apps/web/src/i18n';
 
 afterEach(cleanup);
@@ -86,4 +87,23 @@ describe('practice short-phrase pronunciation guide',()=>{
     expect(onSpeak).not.toHaveBeenCalled();
     expect(screen.getByRole('button',{name:'查看连读规则'}).hasAttribute('disabled')).toBe(false);
   });
+});
+
+describe('favorites and review list pronunciation preview',()=>{
+  const state={
+    sentenceId:'s022',seenCount:2,practicedCount:1,favorite:true,review:true,lastSeenAt:1000,
+  };
+  for(const view of ['favorites','review'] as const){
+    it(view+' previews only existing pronunciation evidence, then opens the full guide',()=>{
+      const onChoose=vi.fn();
+      const {container}=render(<LibraryView view={view} states={[state]} events={[]}
+        search="" notice="" onSearch={()=>undefined} onBackToPractice={()=>undefined}
+        onChoose={onChoose}/>);
+      const row=container.querySelector('.libraryItem');
+      expect(row?.textContent).toContain('/kæn juː hɛlp miː/');
+      expect(row?.textContent).toContain('[kən jə ˈhɛlp mi]');
+      fireEvent.click(row as HTMLElement);
+      expect(onChoose).toHaveBeenCalledWith(expect.objectContaining({id:'s022'}));
+    });
+  }
 });
