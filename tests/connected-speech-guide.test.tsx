@@ -55,7 +55,7 @@ describe('practice short-phrase pronunciation guide',()=>{
     const region=screen.getByRole('region',{name:'连读规则解析'});
     expect(region.textContent).toContain('弱读');
     expect(region.textContent).toContain('Can you');
-    expect(region.textContent).toContain('/j/');
+    expect(region.textContent).toContain('[jə]');
     expect(screen.getByRole('button',{name:'收起连读规则'}).getAttribute('aria-expanded')).toBe('true');
     fireEvent.click(screen.getByRole('button',{name:'播放短句发音'}));
     expect(onSpeak).toHaveBeenCalledOnce();
