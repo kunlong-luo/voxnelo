@@ -46,6 +46,8 @@ export const zh = {
   "connectedRuleLinking": "辅音接元音",
   "pronunciationGuide": "短句发音学习",
   "pronunciationPlay": "播放短句发音",
+  "pronunciationExpand": "展开发音解析",
+  "pronunciationCollapse": "收起发音解析",
   "pronunciationTtsNote": "系统朗读，并非真人审核音频；语速可在下方调整。",
   "practiceActions": "口语练习操作",
   "playExample": "播放标准朗读",
