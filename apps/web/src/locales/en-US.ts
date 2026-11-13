@@ -48,6 +48,8 @@ export const en = {
   "connectedRuleLinking": "Consonant-to-vowel linking",
   "pronunciationGuide": "Phrase pronunciation guide",
   "pronunciationPlay": "Play sentence pronunciation",
+  "pronunciationExpand": "Expand pronunciation details",
+  "pronunciationCollapse": "Collapse pronunciation details",
   "pronunciationTtsNote": "System-generated speech, not a reviewed human recording. Adjust speed below.",
   "practiceActions": "Speaking controls",
   "playExample": "Play example pronunciation",
