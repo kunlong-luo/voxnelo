@@ -23,6 +23,7 @@ export function PronunciationGuide({
 }) {
   const {t,locale}=useI18n();
   const [showRules,setShowRules]=useState(false);
+  const [compactOpen,setCompactOpen]=useState(false);
   const ruleRegionId=useId();
   const guide=getConnectedSpeechGuide(sentence);
 
@@ -43,7 +44,20 @@ export function PronunciationGuide({
         </Button>
       </div>
     </div>
-    {showIpa && <div className="mt-2 flex min-w-0 flex-col gap-2.5 border-t border-border/55 pt-2.5">
+    {showIpa && !compactOpen && <div className="hidden min-w-0 flex-wrap items-center gap-x-2 gap-y-1 border-t border-border/55 pt-1 [@media(max-height:700px)]:flex">
+      {sentence.ipa && <span className="ipa wrap-anywhere text-xs text-ipa-ink" lang="en">{sentence.ipa}</span>}
+      {guide && <span className="wrap-anywhere text-xs font-medium text-primary" lang="en">{guide.spokenIpa}</span>}
+      <Button variant="ghost" size="sm" onClick={()=>setCompactOpen(true)} aria-expanded={false}
+        className="h-7 rounded-lg px-2 text-[11px] text-primary">{t('pronunciationExpand')}</Button>
+    </div>}
+    {showIpa && <div className={cn(
+      'mt-2 flex min-w-0 flex-col gap-2.5 border-t border-border/55 pt-2.5',
+      !compactOpen && '[@media(max-height:700px)]:hidden',
+    )}>
+      {compactOpen && <Button variant="ghost" size="sm" onClick={()=>setCompactOpen(false)}
+        aria-expanded={true} className="hidden h-7 w-fit rounded-lg px-2 text-[11px] text-primary [@media(max-height:700px)]:inline-flex">
+        {t('pronunciationCollapse')}
+      </Button>}
       {sentence.ipa ? <div className="min-w-0">
         <p className="text-[11px] font-semibold tracking-wide text-muted-foreground">{t('ipaStandard')}</p>
         <p data-testid="standard-ipa" className="ipa mt-0.5 wrap-anywhere text-sm leading-6 text-ipa-ink" lang="en">{sentence.ipa}</p>
