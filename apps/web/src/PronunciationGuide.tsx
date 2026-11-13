@@ -46,7 +46,7 @@ export function PronunciationGuide({
     {showIpa && <div className="mt-2 flex min-w-0 flex-col gap-2.5 border-t border-border/55 pt-2.5">
       {sentence.ipa ? <div className="min-w-0">
         <p className="text-[11px] font-semibold tracking-wide text-muted-foreground">{t('ipaStandard')}</p>
-        <p data-testid="standard-ipa" className="mt-0.5 wrap-anywhere text-sm leading-6 text-ipa-ink" lang="en">{sentence.ipa}</p>
+        <p data-testid="standard-ipa" className="ipa mt-0.5 wrap-anywhere text-sm leading-6 text-ipa-ink" lang="en">{sentence.ipa}</p>
       </div> : <p className="text-xs text-muted-foreground">{t('ipaPending')}</p>}
       {guide ? <>
         <div className="min-w-0">
