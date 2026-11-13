@@ -1,8 +1,9 @@
 import { useAutoAnimate } from '@formkit/auto-animate/react';
-import { ArrowRight, Bookmark, BookOpen, ChevronLeft, CircleHelp, Heart } from 'lucide-react';
+import { ArrowRight, Bookmark, BookOpen, ChevronLeft, Heart } from 'lucide-react';
 import { SENTENCES, type Sentence } from '@voxnelo/learning';
 import type { PracticeViewProps } from './PracticeTypes';
 import { PracticeControlPanel } from './PracticeControlPanel';
+import { PronunciationGuide } from './PronunciationGuide';
 import { LiveDictationPanel } from './LiveDictationPanel';
 import { WaveformArt } from './WaveformArt';
 import { Tooltip } from './Tooltip';
@@ -64,8 +65,8 @@ export function PracticeCard({current,currentState,speed,showIpa,recorder,dictat
               <h1 key={current.id} className="sentenceText max-w-full min-w-0 wrap-anywhere text-balance text-[clamp(2rem,6.25cqi,3.375rem)] leading-[1.25] font-extrabold tracking-[-.045em] wrap-break-word text-sentence-ink drop-shadow-[0_1px_0_rgba(255,255,255,.45)] animate-sentence-enter">{current.english}</h1>
             </div>
             <div ref={translationMotionRef} className="flex min-w-0 max-w-full justify-center"><p key={current.id} className="translation max-w-full wrap-anywhere text-[17px] leading-7 font-medium text-translation-ink @min-[600px]/lesson:text-xl animate-sentence-enter [animation-delay:60ms]">{current.chinese}</p></div>
-            {showIpa && current.ipa && <p className="ipa max-w-full min-w-0 text-sm leading-6 wrap-anywhere text-ipa-ink">{current.ipa}</p>}
-            {current.ipa ? <Button variant="ghost" size="sm" className="subtleLink rounded-full text-xs text-primary" onClick={onToggleIpa} aria-expanded={showIpa}><CircleHelp size={14}/>{t(showIpa?'ipaHide':'ipaShow')}</Button> : <span className="text-xs text-muted-foreground">{t('ipaPending')}</span>}
+            <PronunciationGuide key={current.id} sentence={current} showIpa={showIpa}
+              recordingBusy={recordingBusy} onToggleIpa={onToggleIpa} onSpeak={onSpeak}/>
           </div>
           <div className="pointer-events-none hidden w-full max-w-145 opacity-95 @min-[700px]/workspace:block [@media(max-height:800px)]:hidden" aria-hidden="true"><WaveformArt/></div>
           <LiveDictationPanel dictation={dictation} blocked={recorder.status==='requesting'||recorder.status==='recording'} onStart={onStartDictation} onManageModels={onManageModels}/>
