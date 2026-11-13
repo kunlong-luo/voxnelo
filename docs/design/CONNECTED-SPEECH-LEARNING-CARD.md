@@ -15,6 +15,7 @@
 - The **listen** button reuses the existing device/browser system TTS pipeline, slow/normal playback control, disabled-while-recording guard and sentence-switch cancellation. It plays **the original written sentence**, not IPA as TTS text. Do **not** label it authentic human reference audio or assert that it perfectly matches the example connected IPA. Two distinct validated audio tracks do **not** exist yet, so do not fake a separate natural-speech playback mode.
 - A sentence with no base IPA shows its existing “awaiting review” state; one with IPA but without a curated connected example shows a truthful “pending” message. Never synthesize IPA from arbitrary sentence strings and never claim to provide a pronunciation score from ASR.
 - Expand/collapse rule details with keyboard-friendly branded buttons. Changing sentences remounts the panel so the former sentence's rule list cannot carry over.
+- In **favorites and review lists**, preview the same already-available standard and connected IPA alongside each saved phrase; selecting the row opens the main practice card with the actual playback and rule explanation. Do not nest a second playback button inside a list-row button.
 
 ## Release and quality constraints
 
