@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { ArrowRight, ArrowUpRight, BookOpenCheck, CalendarDays, ChevronLeft, ChevronRight, Clock3, Heart, ListRestart, Mic2, Search, Sparkles, type LucideIcon } from 'lucide-react';
-import { SENTENCES, type HistoryEvent, type LearningState, type Sentence } from '@voxnelo/learning';
+import { SENTENCES, getConnectedSpeechGuide, type HistoryEvent, type LearningState, type Sentence } from '@voxnelo/learning';
 import { useI18n, type TranslationKey } from './i18n';
 import { libraryEntries, libraryPage, historyTotals, type LibraryMode } from './libraryData';
 import { Button } from './components/ui/button';
@@ -102,6 +102,7 @@ export function LibraryView({view,states,events,search,notice,onSearch,onChoose,
             const currentDate=entry.at===undefined?'':dateLabel(entry.at);
             const previous=paginated.items[index-1];
             const showDate=view==='history' && (index===0||!previous||dateLabel(previous.at??0)!==currentDate);
+            const pronGuide=view==='favorites'||view==='review'?getConnectedSpeechGuide(entry.sentence):undefined;
             return <div key={entry.id} className="flex min-w-0 flex-col gap-2.5">
               {showDate&&<div className="flex items-center gap-2 px-1 pt-1 text-xs font-bold text-translation-ink"><CalendarDays size={14} className="text-primary" /><span>{currentDate}</span><span className="ml-2 h-px min-w-4 flex-1 bg-border/60"/></div>}
               <Button variant="ghost" onClick={()=>onChoose(entry.sentence)}
@@ -112,6 +113,12 @@ export function LibraryView({view,states,events,search,notice,onSearch,onChoose,
                 <span className="flex min-w-0 flex-1 flex-col items-start gap-1.5">
                   <strong className="line-clamp-2 max-w-full text-[15px] leading-5 font-bold break-words whitespace-normal text-foreground sm:text-base">{entry.sentence.english}</strong>
                   <span className="line-clamp-2 max-w-full text-[12px] leading-5 font-normal break-words whitespace-normal text-translation-ink">{entry.sentence.chinese}</span>
+                  {(view==='favorites'||view==='review')&&entry.sentence.ipa&&<span lang="en" className="w-full max-w-full break-words whitespace-normal text-[11px] leading-4 text-ipa-ink">
+                    <span className="font-semibold">{t('ipaStandard')}:</span> {entry.sentence.ipa}
+                  </span>}
+                  {pronGuide&&<span lang="en" className="w-full max-w-full break-words whitespace-normal text-[11px] leading-4 text-primary">
+                    <span className="font-semibold">{t('connectedIpa')}:</span> {pronGuide.spokenIpa}
+                  </span>}
                   <span className="flex flex-wrap items-center gap-2 text-[11px] font-medium text-muted-foreground">
                     <span>{t(topics[entry.sentence.topic])}</span>
                     {view==='history'&&entry.at!==undefined&&<>
