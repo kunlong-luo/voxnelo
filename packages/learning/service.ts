@@ -105,6 +105,40 @@ export async function speak(text: string, speed: 'normal' | 'slow' = 'normal'): 
   return speakEnglish(text, speed);
 }
 
+/**
+ * Truthful source contract for future careful/natural reference takes.
+ * None of the current connected-speech guides has linguist/audio approval, so
+ * requesting either recorded mode MUST keep the real source as system TTS.
+ * A separate approved-content + licensed-media PR must enable other modes.
+ */
+export type LessonReferenceSource = 'system-tts' | 'careful' | 'natural';
+
+export interface LessonReferenceResult extends SpeechResult {
+  playedSource: 'system-tts';
+  requestedSource: LessonReferenceSource;
+  unavailableReason?: 'review-pending';
+}
+
+export async function speakLessonReference(
+  sentence: Sentence, requestedSource: LessonReferenceSource = 'system-tts',
+  speed: 'normal' | 'slow' = 'normal',
+): Promise<LessonReferenceResult> {
+  // A caller may hold stale/edited curriculum data. Never read arbitrary text
+  // from an untrusted audio manifest or synthesize it as an approved lesson.
+  const known = SENTENCES.find(candidate => candidate.id === sentence.id);
+  if (!known || known.english !== sentence.english || known.ipa !== sentence.ipa) {
+    return {
+      ok: false, playedSource: 'system-tts', requestedSource,
+      message: '课程内容已更改，请重新加载后再播放参考语音。',
+    };
+  }
+  // No reviewed takes are available today; fallback remains explicitly TTS.
+  const result = await speak(known.english, speed);
+  return requestedSource === 'system-tts'
+    ? { ...result, playedSource: 'system-tts', requestedSource }
+    : { ...result, playedSource: 'system-tts', requestedSource, unavailableReason: 'review-pending' };
+}
+
 export function silence(): void {
   if (typeof window !== 'undefined') stopSpeech();
 }
