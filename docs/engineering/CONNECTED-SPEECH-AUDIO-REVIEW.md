@@ -35,6 +35,22 @@ This read-only, offline checker verifies every expected rule, unchanged editoria
 4. Include a playback test for that real asset: offline after install, no network call, no autoplay, cancellation on sentence change/recording, speed behavior (time-stretch should not be misrepresented as a second recorded take), missing-asset fallback, and Windows/macOS/Linux packaging. Inspect pronunciation and intelligibility with physical speakers/headphones.
 5. Only then propose an ADR that supersedes `docs/ADR/ADR-0001-reference-audio.md`; add the vetted asset manifest and explicit source selection. Until completed, keep current system-TTS source labels and do not introduce a second “natural reference audio” button.
 
+## Two-take WAV intake preflight (engineering only; no new playback yet)
+
+The repository now has `assets/audio/reviewed-manifest.json` with **zero pairs**. It has no recorded audio and does not add audio to Electron packages or public Pages. The manifest remains empty until human phonetics and legal review are independently documented.
+
+To inspect this empty, fail-closed baseline, run:
+
+```sh
+pnpm content:audio:verify
+```
+
+For future *separately recorded* careful and natural US-English takes, a maintainer should only propose a populated manifest after real review, permission and aligned recordings exist. Each pair must match the canonical sentence ID, English text, standard IPA and connected IPA. Provide a private linguistics review evidence reference, review date, and **two** distinct WAV PCM16 mono files under `assets/audio/reviewed/`. Every take needs its own immutable `assetId`, filename, SHA-256, sample rate, duration, performer evidence ID, license reference, redistribution-rights evidence reference, attribution and actual-audio-to-IPA alignment evidence ID. Naming is `s008-careful-v1.wav` / `s008-natural-v1.wav`, with corresponding asset IDs.
+
+The offline preflight rejects unsafe filenames, missing or symlinked files, reused SHA-256, malformed RIFF/PCM format, inconsistent duration/rate and incomplete metadata. It additionally **rejects any populated pair while the matching curriculum's review status is still `editorial-draft`**. A metadata entry is not permission to change that status. SHA-256 only proves that bytes match a claimed digest; it does not prove the speaker, correctness, recording independence, licence authenticity or redistribution right. Authenticity, license scope, phonetic alignment, physical audio listening tests and release readiness remain **human-maintainer gates**.
+
+The automated tests use temporary **synthetic test data**, never included in an installer or advertised as speech. The preflight alone never imports a review sheet, approves any asset, enables a natural-audio button, changes ADR-0001, modifies packaging or publishes a release. Once external sign-off exists, a separate PR must deliberately connect trusted assets, source selection, cancellation and platform delivery with a full human and CI review.
+
 ## CI boundary
 
 `tests/connected-speech-review.test.ts` verifies the export is complete, deterministic, spreadsheet-safe, and contains **no reviewer approvals or fabricated recording metadata**. `.github/workflows/ci.yml` also executes the actual native Node exporter. These checks prove software/data consistency—not linguistic, copyright or acoustic verification.
