@@ -51,6 +51,15 @@ The offline preflight rejects unsafe filenames, missing or symlinked files, reus
 
 The automated tests use temporary **synthetic test data**, never included in an installer or advertised as speech. The preflight alone never imports a review sheet, approves any asset, enables a natural-audio button, changes ADR-0001, modifies packaging or publishes a release. Once external sign-off exists, a separate PR must deliberately connect trusted assets, source selection, cancellation and platform delivery with a full human and CI review.
 
+
+## Offline reference playback groundwork (not yet a shipped second source)
+
+The `packages/audio/offlineWav.ts` module now contains a **local-bytes-only** audio player, not a URL fetcher, content-approval system or audio acquisition workflow. It independently verifies a bounded mono PCM16 RIFF/WAVE file and its real SHA-256 **before** creating an audio object URL. Playback is cancelled and its object URL revoked on stop, sentence changes, starting recording, starting dictation, another TTS request, or a different WAV. If a checksum is incorrect, the browser lacks Web Crypto, the WAV is malformed or the audio device fails, playback is refused and a real error is returned; no success is fabricated. The slow setting changes the same take's playback speed and **does not** constitute a separate careful recording.
+
+The `speakLessonReference` learning-service contract records both the requested source and the source actually played. Since every guide is still unreviewed and `assets/audio/reviewed-manifest.json` is empty, **all existing UI speaker buttons continue to request and label system TTS**, and requests for `careful` or `natural` return system TTS with `unavailableReason: 'review-pending'`. No real assets are discoverable or playable through that route. This is a truthful fallback, not a new natural-audio button.
+
+The low-level WAV helper accepts bytes handed to it by a caller; the checksum and PCM format alone **do not authenticate recording provenance, phonetics or copyright**. It must not be connected to a renderer/desktop asset loader until a separate, independent human sign-off has produced a rights-cleared curriculum+manifest and packaging validation for actual recordings. Do not allow a caller to claim `linguist-reviewed` by merely editing JSON. Existing ADR-0001 remains in force.
+
 ## CI boundary
 
 `tests/connected-speech-review.test.ts` verifies the export is complete, deterministic, spreadsheet-safe, and contains **no reviewer approvals or fabricated recording metadata**. `.github/workflows/ci.yml` also executes the actual native Node exporter. These checks prove software/data consistency—not linguistic, copyright or acoustic verification.
