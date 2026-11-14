@@ -25,7 +25,7 @@ describe('exportable connected-speech linguistic and recording review queue',()=
     for(const row of rows){
       expect(row).toHaveLength(header.length);
       const guide=CONNECTED_SPEECH_GUIDES[row[0]!];
-      expect(guide).toBeTruthy();
+      if(!guide)throw Error('Unexpected review row for sentence '+row[0]);
       expect(row[1]).toBe(guide.english);
       expect(row[2]).toBe(guide.standardIpa);
       expect(row[3]).toBe(guide.spokenIpa);
