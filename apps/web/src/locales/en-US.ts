@@ -50,6 +50,7 @@ export const en = {
   "connectedRuleFlapping": "American T-flapping",
   "connectedRuleLinking": "Consonant-to-vowel linking",
   "pronunciationGuide": "Phrase pronunciation guide",
+  "pronunciationVoiceSource": "System TTS",
   "pronunciationPlay": "Play sentence pronunciation",
   "pronunciationExpand": "Expand pronunciation details",
   "pronunciationCollapse": "Collapse pronunciation details",
