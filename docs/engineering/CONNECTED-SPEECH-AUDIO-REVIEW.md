@@ -52,6 +52,40 @@ The offline preflight rejects unsafe filenames, missing or symlinked files, reus
 The automated tests use temporary **synthetic test data**, never included in an installer or advertised as speech. The preflight alone never imports a review sheet, approves any asset, enables a natural-audio button, changes ADR-0001, modifies packaging or publishes a release. Once external sign-off exists, a separate PR must deliberately connect trusted assets, source selection, cancellation and platform delivery with a full human and CI review.
 
 
+## 20-take recording worksheet (private, entirely unapproved)
+
+The rule-by-rule pronunciation CSV contains **11 rule rows**, but making the
+two distinct recordings requires **20 audio takes** (two for each of the ten
+connected-speech phrases). Export the separate, deterministic recording
+handoff sheet entirely offline:
+
+```sh
+pnpm --silent content:audio:handoff:export > audio-handoff.csv
+```
+
+The worksheet names each sentence and its intended **careful** (standard IPA)
+and **natural** (illustrative connected IPA) version, plus proposed distinct
+asset IDs and WAV filenames. These are **suggested names only**, not proof
+that recordings exist. All human-review, performer, licence, redistribution
+permission, attribution, audio-to-IPA review, hash and correction-note fields
+are intentionally blank; all 20 decisions are `PENDING`. The connected IPA
+is still editorial draft: reviewers must first validate the intended pronunciation.
+
+Keep the completed `audio-handoff.csv` and linguistic review sheets in an
+approved **private** review channel. They may contain personal details,
+voice identities, contractual records and protected source material.
+`.gitignore` prevents ordinary accidental commits of these root-level CSVs
+and all `assets/audio/reviewed/` takes; force-adding any licensed recordings
+requires a deliberate, separately reviewed PR. Never force-add private
+permission records or performer contact information.
+
+An **empty** `reviewed-manifest.json` now rejects an unexpected WAV, an
+unlisted reviewer spreadsheet, a subdirectory, or a symlink appearing in
+`assets/audio/reviewed/`—even before any audio pairing is enabled.
+A populated manifest must list every installed direct-child file and still
+pass the existing independent rights/phonetic status gates. CI/preflight
+does not authenticate evidence or perform human sign-off.
+
 ## Offline reference playback groundwork (not yet a shipped second source)
 
 The `packages/audio/offlineWav.ts` module now contains a **local-bytes-only** audio player, not a URL fetcher, content-approval system or audio acquisition workflow. It independently verifies a bounded mono PCM16 RIFF/WAVE file and its real SHA-256 **before** creating an audio object URL. Playback is cancelled and its object URL revoked on stop, sentence changes, starting recording, starting dictation, another TTS request, or a different WAV. If a checksum is incorrect, the browser lacks Web Crypto, the WAV is malformed or the audio device fails, playback is refused and a real error is returned; no success is fabricated. The slow setting changes the same take's playback speed and **does not** constitute a separate careful recording.
