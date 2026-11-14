@@ -1,6 +1,6 @@
 import { useId, useState } from 'react';
 import { BookOpenText, ChevronDown, Volume2 } from 'lucide-react';
-import { getConnectedSpeechGuide, type ConnectedSpeechRuleKind, type Sentence } from '@voxnelo/learning';
+import { getConnectedSpeechGuide, splitConnectedSpeechSpan, type ConnectedSpeechRuleKind, type Sentence } from '@voxnelo/learning';
 import { useI18n, type TranslationKey } from './i18n';
 import { Button } from './components/ui/button';
 import { cn } from './lib/utils';
@@ -23,9 +23,12 @@ export function PronunciationGuide({
 }) {
   const {t,locale}=useI18n();
   const [showRules,setShowRules]=useState(false);
+  const [activeRuleIndex,setActiveRuleIndex]=useState(0);
   const [compactOpen,setCompactOpen]=useState(false);
   const ruleRegionId=useId();
   const guide=getConnectedSpeechGuide(sentence);
+  const activeRule=guide?.rules[activeRuleIndex]??guide?.rules[0];
+  const activeWords=guide&&activeRule ? splitConnectedSpeechSpan(guide.english,activeRule.span) : undefined;
 
   return <section aria-label={t('pronunciationGuide')}
     className="w-full max-w-155 min-w-0 rounded-2xl border border-border/65 bg-card/70 px-3 py-2.5 text-left shadow-sm backdrop-blur-sm sm:px-4">
@@ -75,18 +78,39 @@ export function PronunciationGuide({
             className={cn('transition-transform motion-reduce:transition-none',showRules&&'rotate-180')}/>
         </Button>
         {showRules && <div id={ruleRegionId} role="region" aria-label={t('connectedRulesTitle')}
-          className="min-w-0 space-y-2 rounded-xl border border-border/60 bg-background/60 p-2.5 sm:p-3">
-          {guide.rules.map(note=><div key={note.span} className="min-w-0">
+          className="min-w-0 space-y-2.5 rounded-xl border border-border/60 bg-background/60 p-2.5 sm:p-3">
+          {guide.rules.length>1 && <div role="group" aria-label={t('connectedChooseRule')}
+            className="flex min-w-0 flex-wrap items-center gap-1.5">
+            {guide.rules.map((note,index)=><Button key={note.span} size="sm"
+              variant={activeRuleIndex===index?'soft':'ghost'}
+              aria-pressed={activeRuleIndex===index}
+              onClick={()=>setActiveRuleIndex(index)}
+              className="h-auto min-h-8 max-w-full rounded-xl px-2.5 py-1.5 text-xs whitespace-normal">
+              {t(ruleLabels[note.kind])} · <span lang="en">{note.span}</span>
+            </Button>)}
+          </div>}
+          {activeRule && <div className="min-w-0">
+            {activeWords && <div className="mb-2 min-w-0">
+              <p className="mb-1 text-[11px] font-semibold text-muted-foreground">{t('connectedFocusSentence')}</p>
+              <p data-testid="connected-focus-sentence" lang="en"
+                className="min-w-0 wrap-anywhere text-sm font-medium leading-6 text-foreground">
+                {activeWords.before}
+                <span data-testid="connected-active-span"
+                  className="rounded-md bg-primary/15 px-0.5 font-bold text-primary">{activeWords.match}</span>
+                {activeWords.after}
+              </p>
+            </div>}
             <p className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5 text-xs">
-              <span className="font-bold text-primary">{t(ruleLabels[note.kind])}</span>
-              <span className="font-semibold text-foreground" lang="en">{note.span}</span>
-              <span className="wrap-anywhere text-ipa-ink" lang="en">{note.spokenIpa}</span>
+              <span className="font-bold text-primary">{t(ruleLabels[activeRule.kind])}</span>
+              <span className="font-semibold text-foreground" lang="en">{activeRule.span}</span>
+              <span className="wrap-anywhere text-ipa-ink" lang="en">{activeRule.spokenIpa}</span>
             </p>
             <p className="mt-1 text-xs leading-5 text-muted-foreground">
-              {locale==='zh-CN'?note.descriptionZh:note.descriptionEn}
+              {locale==='zh-CN'?activeRule.descriptionZh:activeRule.descriptionEn}
             </p>
-          </div>)}
+          </div>}
         </div>}
+        <p className="text-[10px] font-medium leading-4 text-muted-foreground">{t('connectedEditorialDraft')}</p>
         <p className="text-[10px] leading-4 text-muted-foreground">{t('connectedGuideNote')}</p>
       </> : <p className="text-[11px] leading-5 text-muted-foreground">{t('connectedGuidePending')}</p>}
       <p className="text-[10px] leading-4 text-muted-foreground">{t('pronunciationTtsNote')}</p>
