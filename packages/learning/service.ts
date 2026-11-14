@@ -1,4 +1,4 @@
-import { SCENE_LABELS, SENTENCES, TOPIC_LABELS, getConnectedSpeechGuide, type Sentence } from '@voxnelo/content';
+import { SCENE_LABELS, SENTENCES, TOPIC_LABELS, getConnectedSpeechGuide, splitConnectedSpeechSpan, type Sentence } from '@voxnelo/content';
 import { APP_VERSION, calculateStats, chooseNext, type LearningState } from '@voxnelo/core';
 import { speakEnglish, stopSpeech, type SpeechResult } from '@voxnelo/audio';
 import { loadLearningData, patchState, recordEvent, type HistoryEvent } from '@voxnelo/storage';
@@ -8,8 +8,8 @@ import { loadLearningData, patchState, recordEvent, type HistoryEvent } from '@v
  * 编排内容、推荐、朗读与持久化，把底层异常收口为可展示的 ServiceError 并记日志，
  * UI 层只做展示与导航，不再直连 storage/audio/core。
  */
-export { APP_VERSION, SCENE_LABELS, SENTENCES, TOPIC_LABELS, getConnectedSpeechGuide };
-export type { ConnectedSpeechGuide, ConnectedSpeechRuleKind } from '@voxnelo/content';
+export { APP_VERSION, SCENE_LABELS, SENTENCES, TOPIC_LABELS, getConnectedSpeechGuide, splitConnectedSpeechSpan };
+export type { ConnectedSpeechGuide, ConnectedSpeechSpanParts, ConnectedSpeechRuleKind } from '@voxnelo/content';
 export { FIRST_SENTENCE } from '@voxnelo/content';
 export { primeSpeechVoices } from '@voxnelo/audio';
 export type { HistoryEvent, LearningState, Sentence, SpeechResult };
