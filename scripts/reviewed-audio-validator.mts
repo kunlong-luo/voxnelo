@@ -8,6 +8,7 @@ import { createHash } from 'node:crypto';
 import { lstat, readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { CONNECTED_SPEECH_GUIDES } from '../packages/content/connected-speech.ts';
+import { validatePcm16MonoWav } from '../packages/audio/pcmWav.ts';
 
 type JsonRecord = Record<string, unknown>;
 
@@ -44,54 +45,7 @@ function validDate(value: string): boolean {
 export function inspectReviewPcmWav(
   data: Buffer, sampleRateHz: number, durationMs: number,
 ): string[] {
-  const errors: string[] = [];
-  if (data.length < 44 || data.toString('ascii', 0, 4) !== 'RIFF' ||
-      data.toString('ascii', 8, 12) !== 'WAVE' ||
-      data.readUInt32LE(4) !== data.length - 8) {
-    return ['WAV RIFF header/length is invalid'];
-  }
-  let offset = 12;
-  let fmtCount = 0;
-  let dataCount = 0;
-  let audioBytes = 0;
-  while (offset < data.length) {
-    if (offset + 8 > data.length) {
-      errors.push('WAV chunk header is truncated');
-      break;
-    }
-    const name = data.toString('ascii', offset, offset + 4);
-    const size = data.readUInt32LE(offset + 4);
-    const start = offset + 8;
-    const end = start + size;
-    if (end > data.length) {
-      errors.push('WAV chunk exceeds file length');
-      break;
-    }
-    if (name === 'fmt ') {
-      fmtCount++;
-      if (size < 16 || data.readUInt16LE(start) !== 1 ||
-          data.readUInt16LE(start + 2) !== 1 ||
-          data.readUInt32LE(start + 4) !== sampleRateHz ||
-          data.readUInt32LE(start + 8) !== sampleRateHz * 2 ||
-          data.readUInt16LE(start + 12) !== 2 ||
-          data.readUInt16LE(start + 14) !== 16) {
-        errors.push('WAV must be mono PCM16 with matching sample rate and byte alignment');
-      }
-    }
-    if (name === 'data') {
-      dataCount++;
-      audioBytes = size;
-    }
-    offset = end + (size % 2);
-  }
-  if (offset !== data.length) errors.push('WAV contains invalid trailing bytes');
-  if (fmtCount !== 1 || dataCount !== 1 || audioBytes === 0 || audioBytes % 2 !== 0) {
-    errors.push('WAV requires exactly one fmt chunk and one nonempty PCM data chunk');
-  } else {
-    const actualMs = (audioBytes / 2 / sampleRateHz) * 1000;
-    if (Math.abs(actualMs - durationMs) > 10) errors.push('WAV duration differs from metadata');
-  }
-  return errors;
+  return validatePcm16MonoWav(data, { sampleRateHz, durationMs });
 }
 
 /**
