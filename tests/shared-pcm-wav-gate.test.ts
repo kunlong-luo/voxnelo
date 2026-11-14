@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { validatePcm16MonoWav } from '../packages/audio/pcmWav.ts';
+import { validatePcm16MonoWav } from '@voxnelo/audio';
 import { inspectReviewPcmWav } from '../scripts/reviewed-audio-validator.mts';
 
 // Synthetic PCM silence is a format fixture only, not a speech recording.
