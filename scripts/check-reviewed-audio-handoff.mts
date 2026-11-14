@@ -26,8 +26,8 @@ if (args.length !== 1) {
     for (const error of audit.errors) process.stderr.write('ERROR: ' + error + '\n');
     if (audit.errors.length > 0) process.exitCode = 1;
   } catch (error) {
-    process.stderr.write('Cannot inspect local audio handoff CSV: ' +
-      (error instanceof Error ? error.message : 'unknown error') + '\n');
+    // Avoid leaking private local paths from fs error messages into logs.
+    process.stderr.write('Cannot inspect audio handoff: input is unreadable or invalid.\n');
     process.exitCode = 1;
   }
 }
