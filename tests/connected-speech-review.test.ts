@@ -15,7 +15,8 @@ describe('exportable connected-speech linguistic and recording review queue',()=
     const totalRules=guides.reduce((sum,[,guide])=>sum+guide.rules.length,0);
     expect(guides).toHaveLength(10);
     expect(rows).toHaveLength(totalRules);
-    expect(header).toHaveLength(19);
+    expect(header).toHaveLength(20);
+    expect(header).toContain('review_notes');
     expect(header).toContain('recording_rights_evidence');
     expect(header).toContain('recording_sha256');
     expect(header).toContain('recording_matches_ipa');
@@ -36,7 +37,7 @@ describe('exportable connected-speech linguistic and recording review queue',()=
       expect(row[9]).toBe(note?.descriptionZh);
       expect(row[10]).toBe(note?.descriptionEn);
       expect(row[13]).toBe('PENDING');
-      for(const index of [11,12,14,15,16,17,18]) expect(row[index]).toBe('');
+      for(const index of [11,12,14,15,16,17,18,19]) expect(row[index]).toBe('');
     }
   });
   it('quotes commas, line breaks and formulas in spreadsheet-bound content',()=>{
