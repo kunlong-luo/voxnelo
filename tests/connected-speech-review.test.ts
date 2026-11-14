@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CONNECTED_SPEECH_GUIDES } from '@voxnelo/content';
-import { connectedSpeechReviewCsv, reviewCsvCell } from '../packages/content/connected-speech-review.ts';
+import { CONNECTED_SPEECH_GUIDES, connectedSpeechReviewCsv, reviewCsvCell } from '@voxnelo/content';
 
 const columns=(line:string)=>[...line.matchAll(/"(?:[^"]|"")*"/gu)]
   .map(match=>match[0].slice(1,-1).replaceAll('""','"'));
