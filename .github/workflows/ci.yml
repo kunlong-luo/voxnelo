@@ -44,6 +44,8 @@ jobs:
         run: pnpm ui:check
       - name: Verify offline pronunciation review export
         run: node --experimental-strip-types scripts/export-connected-speech-review.mts | node --experimental-strip-types scripts/check-connected-speech-review.mts -
+      - name: Gate reviewed WAV manifest (empty until approved)
+        run: pnpm content:audio:verify
       - name: Unit tests and coverage
         run: pnpm test:coverage
       - name: Build
