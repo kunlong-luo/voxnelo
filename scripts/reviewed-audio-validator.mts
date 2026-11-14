@@ -176,7 +176,8 @@ export async function auditReviewedAudioManifest(
       if ([performer, licenseId, rightsEvidenceId, alignment].some(x => x.length < 6)) {
         errors.push(where + ': recording evidence references must be specific');
       }
-      if (!new RegExp('^' + id + '-' + variant + '-[a-z0-9-]+$', 'u').test(assetId) ||
+      if (!/^s\d{3}-(?:careful|natural)-[a-z0-9-]+$/u.test(assetId) ||
+          !assetId.startsWith(id + '-' + variant + '-') ||
           filename !== assetId + '.wav' || !/^[a-z0-9-]+\.wav$/u.test(filename)) {
         errors.push(where + ': unsafe filename or asset identifier');
         continue;
