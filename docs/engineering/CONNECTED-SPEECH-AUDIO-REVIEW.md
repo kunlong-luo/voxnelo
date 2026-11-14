@@ -12,10 +12,20 @@
 Run from the repository root:
 
 ```sh
-pnpm content:review:export > connected-speech-review.csv
+pnpm --silent content:review:export > connected-speech-review.csv
 ```
 
 The exporter runs **entirely offline**, creates no application state, and writes a UTF-8-BOM CSV for Chinese and IPA. It contains one row per rule with sentence ID, full text, existing reference IPA, illustrative connected IPA, rule kind/span, and Chinese and English explanations. `review_decision` is **PENDING** for every row; reviewer/date, pronunciation source, audio ID, redistribution rights, SHA-256, and alignment evidence are blank by design. These are placeholders, **not assertions of approval**. The CSV is a temporary review handoff, not an automatic app-import format. Do not commit recordings or filled sheets containing personal information without appropriate review.
+
+The export also includes blank `review_notes` for the reviewer's proposed changes. After a qualified expert fills the *external* sheet, the maintainer can run:
+
+```sh
+pnpm content:review:check connected-speech-review.csv
+# or, to self-check the clean exported template without saving it:
+pnpm --silent content:review:export | pnpm content:review:check -
+```
+
+This read-only, offline checker verifies every expected rule, unchanged editorial content, allowed decisions (`PENDING`, `ACCEPT`, `REVISE`, `REJECT`), review identity/date/reference fields for decisions, and the shape of any single-recording rights/hash/alignment evidence. It reports missing correction notes for revisions/rejections. It **never imports approvals, asserts reviewer identity, checks that a source is authoritative, verifies redistribution rights or authenticates audio**. Do not commit completed sheets with personal data. A syntactically valid `ACCEPT` is still an unverified external claim. The existing single-audio columns are not a two-take manifest; careful and natural recordings require their own independently reviewed asset records before playback can be shipped.
 
 ## Acceptance procedure
 

@@ -11,6 +11,7 @@ const HEADER=[
   'explanation_zh','explanation_en','linguistic_reviewer','review_date',
   'review_decision','supporting_sources','recording_asset_id',
   'recording_rights_evidence','recording_sha256','recording_matches_ipa',
+  'review_notes',
 ] as const;
 
 /** Prefix risky spreadsheet formula-like strings, then RFC 4180 quote. */
@@ -28,7 +29,7 @@ export function connectedSpeechReviewCsv():string {
         id,guide.english,guide.standardIpa,guide.spokenIpa,
         guide.reviewStatus,String(index+1),rule.kind,rule.span,rule.spokenIpa,
         rule.descriptionZh,rule.descriptionEn,
-        '', '', 'PENDING', '', '', '', '', '',
+        '', '', 'PENDING', '', '', '', '', '', '',
       ]);
     });
   }
