@@ -38,7 +38,7 @@ export function PronunciationGuide({
       </span>
       <div className="flex items-center gap-1">
         <Button variant="ghost" size="sm" onClick={onSpeak} disabled={recordingBusy} aria-label={t('pronunciationPlay')} className="h-8 rounded-lg px-2 text-xs text-primary">
-          <Volume2 size={15} aria-hidden="true"/>{t('playDemo')}
+          <Volume2 size={15} aria-hidden="true"/>{t('pronunciationVoiceSource')}
         </Button>
         <Button variant="ghost" size="sm" onClick={onToggleIpa} aria-expanded={showIpa}
           aria-label={t(showIpa?'ipaHide':'ipaShow')} className="h-8 rounded-lg px-2 text-xs text-primary">

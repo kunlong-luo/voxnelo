@@ -48,6 +48,7 @@ export const zh = {
   "connectedRuleFlapping": "美式闪音",
   "connectedRuleLinking": "辅音接元音",
   "pronunciationGuide": "短句发音学习",
+  "pronunciationVoiceSource": "系统语音",
   "pronunciationPlay": "播放短句发音",
   "pronunciationExpand": "展开发音解析",
   "pronunciationCollapse": "收起发音解析",

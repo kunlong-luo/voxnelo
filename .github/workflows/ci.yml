@@ -42,6 +42,8 @@ jobs:
         run: pnpm arch
       - name: UI architecture
         run: pnpm ui:check
+      - name: Verify offline pronunciation review export
+        run: pnpm content:review:export > /dev/null
       - name: Unit tests and coverage
         run: pnpm test:coverage
       - name: Build
