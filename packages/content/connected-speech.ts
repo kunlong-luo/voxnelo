@@ -25,6 +25,8 @@ export interface ConnectedSpeechGuide {
   standardIpa: string;
   /** One illustrative realization; never advertised as matching system TTS. */
   spokenIpa: string;
+  /** All annotations are editor-authored examples, not certified audio. */
+  reviewStatus: 'editorial-draft';
   rules: readonly ConnectedSpeechNote[];
 }
 
@@ -32,6 +34,7 @@ export const CONNECTED_SPEECH_GUIDES: Readonly<Record<string, ConnectedSpeechGui
   s008: {
     english: 'Nice to meet you.',
     standardIpa: '/naɪs tə miːt juː/',
+    reviewStatus: 'editorial-draft',
     spokenIpa: '[naɪs tə miːtʃu]',
     rules: [{
       span: 'meet you',
@@ -44,6 +47,7 @@ export const CONNECTED_SPEECH_GUIDES: Readonly<Record<string, ConnectedSpeechGui
   s022: {
     english: 'Can you help me?',
     standardIpa: '/kæn juː hɛlp miː/',
+    reviewStatus: 'editorial-draft',
     spokenIpa: '[kən jə ˈhɛlp mi]',
     rules: [{
       span: 'Can you',
@@ -56,6 +60,7 @@ export const CONNECTED_SPEECH_GUIDES: Readonly<Record<string, ConnectedSpeechGui
   s023: {
     english: 'Please wait a moment.',
     standardIpa: '/pliːz weɪt ə ˈmoʊmənt/',
+    reviewStatus: 'editorial-draft',
     spokenIpa: '[pliːz ˈweɪɾə ˈmoʊmənt]',
     rules: [{
       span: 'wait a',
@@ -68,6 +73,7 @@ export const CONNECTED_SPEECH_GUIDES: Readonly<Record<string, ConnectedSpeechGui
   s030: {
     english: 'How do you say this?',
     standardIpa: '/haʊ duː juː seɪ ðɪs/',
+    reviewStatus: 'editorial-draft',
     spokenIpa: '[haʊ də jə seɪ ðɪs]',
     rules: [{
       span: 'do you',
@@ -80,6 +86,7 @@ export const CONNECTED_SPEECH_GUIDES: Readonly<Record<string, ConnectedSpeechGui
   s009: {
     english: 'See you later.',
     standardIpa: '/siː juː ˈleɪtər/',
+    reviewStatus: 'editorial-draft',
     spokenIpa: '[si jə ˈleɪɾɚ]',
     rules: [
       {
@@ -101,6 +108,7 @@ export const CONNECTED_SPEECH_GUIDES: Readonly<Record<string, ConnectedSpeechGui
   s010: {
     english: 'Have a nice day.',
     standardIpa: '/hæv ə naɪs deɪ/',
+    reviewStatus: 'editorial-draft',
     spokenIpa: '[hævə naɪs deɪ]',
     rules: [{
       span: 'Have a',
@@ -113,6 +121,7 @@ export const CONNECTED_SPEECH_GUIDES: Readonly<Record<string, ConnectedSpeechGui
   s013: {
     english: 'I live in China.',
     standardIpa: '/aɪ lɪv ɪn ˈtʃaɪnə/',
+    reviewStatus: 'editorial-draft',
     spokenIpa: '[aɪ lɪvɪn ˈtʃaɪnə]',
     rules: [{
       span: 'live in',
@@ -125,6 +134,7 @@ export const CONNECTED_SPEECH_GUIDES: Readonly<Record<string, ConnectedSpeechGui
   s026: {
     english: 'Thank you very much.',
     standardIpa: '/θæŋk juː ˈvɛri mʌtʃ/',
+    reviewStatus: 'editorial-draft',
     spokenIpa: '[θæŋk jə ˈvɛɹi mʌtʃ]',
     rules: [{
       span: 'you',
@@ -137,6 +147,7 @@ export const CONNECTED_SPEECH_GUIDES: Readonly<Record<string, ConnectedSpeechGui
   s037: {
     english: 'Where is the bathroom?',
     standardIpa: '/wer ɪz ðə ˈbæθruːm/',
+    reviewStatus: 'editorial-draft',
     spokenIpa: '[wɛɹɪz ðə ˈbæθɹum]',
     rules: [{
       span: 'Where is',
@@ -149,6 +160,7 @@ export const CONNECTED_SPEECH_GUIDES: Readonly<Record<string, ConnectedSpeechGui
   s035: {
     english: 'What time is it?',
     standardIpa: '/wʌt taɪm ɪz ɪt/',
+    reviewStatus: 'editorial-draft',
     spokenIpa: '[wʌt ˈtaɪmɪzɪt]',
     rules: [{
       span: 'time is',
@@ -160,21 +172,33 @@ export const CONNECTED_SPEECH_GUIDES: Readonly<Record<string, ConnectedSpeechGui
   },
 } as const;
 
-/** Require whole-word, unique spans so a typo or partial word cannot display misleading rules. */
-function hasUniqueWordSpan(english:string,span:string):boolean {
-  if (!span.trim() || span!==span.trim()) return false;
-  const source=english.toLowerCase();
-  const target=span.toLowerCase();
-  let count=0,from=0;
+/** Exact source-text match for a complete, unique, contiguous word span. */
+export interface ConnectedSpeechSpanParts {
+  before: string;
+  match: string;
+  after: string;
+}
+
+export function splitConnectedSpeechSpan(english:string,span:string):ConnectedSpeechSpanParts | undefined {
+  if(!span.trim()||span!==span.trim())return undefined;
+  const source=english.toLowerCase(),target=span.toLowerCase();
+  let first=-1,count=0,from=0;
   while(true){
     const index=source.indexOf(target,from);
     if(index<0)break;
     const before=source[index-1]??'';
     const after=source[index+target.length]??'';
-    if(!/[a-z']/u.test(before)&&!/[a-z']/u.test(after))count++;
+    if(!/[a-z']/u.test(before)&&!/[a-z']/u.test(after)){
+      first=index;
+      count++;
+    }
     from=index+1;
   }
-  return count===1;
+  return count===1 ? {
+    before:english.slice(0,first),
+    match:english.slice(first,first+span.length),
+    after:english.slice(first+span.length),
+  } : undefined;
 }
 function phoneticBrackets(value:string):boolean {
   if(!value.startsWith('[')||!value.endsWith(']'))return false;
@@ -190,9 +214,10 @@ export function getConnectedSpeechGuide(
   const guide=CONNECTED_SPEECH_GUIDES[sentence.id];
   if (!guide || !sentence.ipa || sentence.reviewStatus==='needs-review' ||
       guide.english!==sentence.english || guide.standardIpa!==sentence.ipa ||
+      guide.reviewStatus!=='editorial-draft' ||
       !phoneticBrackets(guide.spokenIpa) || guide.rules.length===0) return undefined;
   if(!guide.rules.every(rule=>
-    hasUniqueWordSpan(guide.english,rule.span) && phoneticBrackets(rule.spokenIpa) &&
+    splitConnectedSpeechSpan(guide.english,rule.span)!==undefined && phoneticBrackets(rule.spokenIpa) &&
     rule.descriptionZh.trim().length>0 && rule.descriptionEn.trim().length>0
   ))return undefined;
   return guide;
