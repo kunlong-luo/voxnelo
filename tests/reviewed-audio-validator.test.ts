@@ -54,6 +54,7 @@ async function withSyntheticPair(
   const carefulWav = syntheticWav(100);
   const naturalWav = syntheticWav(200);
   const guide = CONNECTED_SPEECH_GUIDES.s008;
+  if (!guide) throw Error('Missing synthetic fixture lesson');
   const careful = metadata('careful', carefulWav);
   const natural = metadata('natural', naturalWav);
   const manifest: { schemaVersion: number; pairs: Array<Record<string, unknown>> } = {
