@@ -4,3 +4,4 @@ export { CONNECTED_SPEECH_GUIDES, getConnectedSpeechGuide, splitConnectedSpeechS
 export { connectedSpeechReviewCsv, reviewCsvCell } from './connected-speech-review';
 export { auditConnectedSpeechReviewCsv, parseConnectedSpeechReviewCsv, type ConnectedSpeechReviewAudit, type ReviewDecision } from './connected-speech-review-audit';
 export { connectedSpeechAudioHandoffCsv } from './connected-speech-audio-handoff';
+export { auditConnectedSpeechAudioHandoffCsv, type AudioHandoffAudit } from './connected-speech-audio-handoff-audit';
