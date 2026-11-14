@@ -1,3 +1,5 @@
+import { playOfflineWavBytes, stopOfflineWav } from './offlineWav';
+
 const TTS_RATE = { normal: 0.96, slow: 0.75 } as const;
 const TTS_PITCH = 1;
 const WAIT_FOR_VOICES_MS = 650;
@@ -74,6 +76,7 @@ export function stopSpeech(): void {
   if ('speechSynthesis' in window) window.speechSynthesis.cancel();
   nativeBridge()?.cancel();
   clearNativeAudio();
+  stopOfflineWav();
 }
 
 /**
@@ -151,6 +154,18 @@ export async function speakEnglish(text: string, speed: SpeechSpeed = 'normal'):
     if (cancelled) return { ok: false, cancelled: true };
     return { ok: false, message: '已生成英语语音，但无法播放。请检查 Pop!_OS 的默认输出设备与音量。' };
   }
+}
+
+/**
+ * Future-only intake for locally supplied, independently approved PCM audio.
+ * This deliberately has no URL/manifest resolver and is never called by the
+ * current editorial-draft lessons or UI. It does not approve rights or IPA.
+ */
+export async function playValidatedLocalWav(
+  bytes: Uint8Array, sha256: string, speed: SpeechSpeed = 'normal',
+): Promise<SpeechResult> {
+  stopSpeech();
+  return playOfflineWavBytes(bytes, sha256, speed);
 }
 
 let primed = false;
