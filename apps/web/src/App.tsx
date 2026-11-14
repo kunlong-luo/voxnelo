@@ -7,7 +7,7 @@ import {
   primeSpeechVoices,
   SENTENCES,
   silence,
-  speak,
+  speakLessonReference,
   summarize,
   type Sentence,
 } from '@voxnelo/learning';
@@ -181,7 +181,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
       setNotice(t('recordingPlay'));
       return;
     }
-    const result = await speak(current.english, speed);
+    const result = await speakLessonReference(current, 'system-tts', speed);
     if (result.cancelled) return;
     if (result.ok) { setNotice(''); return; }
     const message = result.message ?? '';
