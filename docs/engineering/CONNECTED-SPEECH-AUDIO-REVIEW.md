@@ -86,6 +86,39 @@ A populated manifest must list every installed direct-child file and still
 pass the existing independent rights/phonetic status gates. CI/preflight
 does not authenticate evidence or perform human sign-off.
 
+## Review the returned 20-take worksheet locally (read-only)
+
+After a qualified reviewer or recording supplier privately fills the exported
+`audio-handoff.csv`, validate its **structure and declared evidence
+completeness** without uploading it or importing it into Voxnelo:
+
+```sh
+pnpm content:audio:handoff:check audio-handoff.csv
+# Or keep contents in a pipe; both commands operate entirely offline:
+pnpm --silent content:audio:handoff:export | pnpm content:audio:handoff:check -
+```
+
+The checker requires all **20 rows**, each canonical sentence/take identifier,
+original English text, editorial IPA, unmodified editorial status, proposed
+asset ID and filename. It refuses unknown/duplicate rows, altered headers,
+malformed CSV, arbitrary status values, invalid/reused audio digests, and
+incomplete claimed ACCEPT records. A row marked `ACCEPT` must include a
+specific performer reference, recording source, redistribution licence
+reference, rights evidence, attribution, actual audio/IPA review reference and
+64-character SHA-256. `REVISE` or `REJECT` needs meaningful review notes.
+`PENDING` rows may contain work-in-progress notes and partial metadata
+without acquiring any privileges.
+
+The output describes **unverified decisions and pairs *claiming* two ACCEPTs**.
+A successful exit means only that a submitted CSV is structurally plausible:
+the tool cannot verify a person's qualifications or signature, a recording's
+content, recording independence, the licence's terms, or legal permission.
+It **never** creates/updates `reviewed-manifest.json`, changes
+`editorial-draft`, enables playback, or publishes audio. Store filled
+spreadsheets and underlying private rights/reviewer records outside the repo.
+Human validation of all 11 linguistic rules and the final 20 audio takes is
+still mandatory, followed by a separate rights-reviewed content PR.
+
 ## Offline reference playback groundwork (not yet a shipped second source)
 
 The `packages/audio/offlineWav.ts` module now contains a **local-bytes-only** audio player, not a URL fetcher, content-approval system or audio acquisition workflow. It independently verifies a bounded mono PCM16 RIFF/WAVE file and its real SHA-256 **before** creating an audio object URL. Playback is cancelled and its object URL revoked on stop, sentence changes, starting recording, starting dictation, another TTS request, or a different WAV. If a checksum is incorrect, the browser lacks Web Crypto, the WAV is malformed or the audio device fails, playback is refused and a real error is returned; no success is fabricated. The slow setting changes the same take's playback speed and **does not** constitute a separate careful recording.
