@@ -46,7 +46,8 @@
     "asr:moonshine:install": "node --experimental-strip-types scripts/install-moonshine-linux.mts",
     "content:review:export": "node --experimental-strip-types scripts/export-connected-speech-review.mts",
     "content:review:check": "node --experimental-strip-types scripts/check-connected-speech-review.mts",
-    "content:audio:verify": "node --experimental-strip-types scripts/verify-reviewed-audio.mts"
+    "content:audio:verify": "node --experimental-strip-types scripts/verify-reviewed-audio.mts",
+    "content:audio:handoff:export": "node --experimental-strip-types scripts/export-reviewed-audio-handoff.mts"
   },
   "dependencies": {
     "dexie": "^4.2.0",
