@@ -43,7 +43,7 @@ jobs:
       - name: UI architecture
         run: pnpm ui:check
       - name: Verify offline pronunciation review export
-        run: pnpm content:review:export > /dev/null
+        run: node --experimental-strip-types scripts/export-connected-speech-review.mts | node --experimental-strip-types scripts/check-connected-speech-review.mts -
       - name: Unit tests and coverage
         run: pnpm test:coverage
       - name: Build
