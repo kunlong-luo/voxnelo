@@ -93,3 +93,12 @@ docs/*.zip
 .opencode/
 .Muse/
 .cursor/
+
+# External language / performer review sheets can contain personal data.
+# Keep locally; share through approved private channels, not GitHub commits.
+/connected-speech-review*.csv
+/audio-handoff*.csv
+/reviewed-audio-handoff*.csv
+# No audio enters the repository by accident. Authorized assets require
+# an intentional maintainer-reviewed, force-added PR after rights clearance.
+/assets/audio/reviewed/
