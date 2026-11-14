@@ -177,7 +177,7 @@ function hasUniqueWordSpan(english:string,span:string):boolean {
   return count===1;
 }
 function phoneticBrackets(value:string):boolean {
-  return /^\\[[^\\[\\]\\r\\n]+\\]$/u.test(value);
+  return /^\[[^\[\]\r\n]+\]$/u.test(value);
 }
 
 /** Never infer connected IPA for unannotated, edited, malformed or unreviewed sentences. */
