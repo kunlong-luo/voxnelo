@@ -1,4 +1,4 @@
-import { CONNECTED_SPEECH_GUIDES } from './connected-speech';
+import { CONNECTED_SPEECH_GUIDES } from './connected-speech.ts';
 
 /**
  * Editorial handoff for trained pronunciation reviewers. This is NOT an
