@@ -1,3 +1,5 @@
+import { validatePcm16MonoWav } from './pcmWav';
+
 /**
  * Low-level playback for already-approved, locally supplied WAV bytes.
  *
@@ -34,49 +36,6 @@ export function stopOfflineWav(): void {
   releaseAudio();
 }
 
-function hasValidPcmHeader(bytes: Uint8Array): boolean {
-  if (bytes.byteLength < 44 || bytes.byteLength > 20_000_000) return false;
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  const ascii = (start: number, end: number) =>
-    String.fromCharCode(...bytes.subarray(start, end));
-  if (ascii(0, 4) !== 'RIFF' || ascii(8, 12) !== 'WAVE' ||
-      view.getUint32(4, true) !== bytes.byteLength - 8) return false;
-
-  let offset = 12;
-  let formatChunks = 0;
-  let dataChunks = 0;
-  let rate = 0;
-  let audioBytes = 0;
-  while (offset < bytes.byteLength) {
-    if (offset + 8 > bytes.byteLength) return false;
-    const type = ascii(offset, offset + 4);
-    const size = view.getUint32(offset + 4, true);
-    const start = offset + 8;
-    const end = start + size;
-    if (end > bytes.byteLength || end < start) return false;
-    if (type === 'fmt ') {
-      if (size < 16) return false;
-      formatChunks++;
-      rate = view.getUint32(start + 4, true);
-      if (view.getUint16(start, true) !== 1 ||
-          view.getUint16(start + 2, true) !== 1 ||
-          !Number.isInteger(rate) || rate < 16000 || rate > 48000 ||
-          view.getUint32(start + 8, true) !== rate * 2 ||
-          view.getUint16(start + 12, true) !== 2 ||
-          view.getUint16(start + 14, true) !== 16) return false;
-    }
-    if (type === 'data') {
-      dataChunks++;
-      audioBytes = size;
-    }
-    offset = end + size % 2;
-  }
-  if (offset !== bytes.byteLength || formatChunks !== 1 || dataChunks !== 1 ||
-      audioBytes === 0 || audioBytes % 2 !== 0) return false;
-  const durationMs = audioBytes / (rate * 2) * 1000;
-  return durationMs >= 150 && durationMs <= 15000;
-}
-
 /**
  * Hashes the actual bytes *before* creating the audio element. Caller must
  * supply a separately-reviewed asset; a valid digest does not prove rights.
@@ -94,7 +53,7 @@ export async function playOfflineWavBytes(
   // Defensive clone: an async digest must never validate different bytes
   // from the ones eventually passed to Blob/Audio.
   const bytes = Uint8Array.from(suppliedBytes);
-  if (!hasValidPcmHeader(bytes)) {
+  if (validatePcm16MonoWav(bytes).length > 0) {
     return { ok: false, message: '参考音频格式不正确，已拒绝播放。' };
   }
   let actualSha256: string;
