@@ -5,7 +5,7 @@
  * validator is not imported by the renderer and does not enable playback.
  */
 import { createHash } from 'node:crypto';
-import { lstat, readFile } from 'node:fs/promises';
+import { lstat, readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { CONNECTED_SPEECH_GUIDES } from '../packages/content/connected-speech.ts';
 
@@ -121,6 +121,7 @@ export async function auditReviewedAudioManifest(
   const seenSentences = new Set<string>();
   const seenAssets = new Set<string>();
   const seenHashes = new Set<string>();
+  const expectedFiles = new Set<string>();
   for (const [index, raw] of json.pairs.entries()) {
     const prefix = 'Pair ' + (index + 1);
     const pair = record(raw);
@@ -181,6 +182,7 @@ export async function auditReviewedAudioManifest(
         errors.push(where + ': unsafe filename or asset identifier');
         continue;
       }
+      expectedFiles.add(filename);
       if (seenAssets.has(assetId)) errors.push(where + ': duplicate asset identifier');
       seenAssets.add(assetId);
       if (!/^[a-f0-9]{64}$/iu.test(sha256)) {
@@ -220,6 +222,30 @@ export async function auditReviewedAudioManifest(
       }
     }
     if (takesSeen.length !== 2) errors.push(prefix + ': both take files must pass metadata validation');
+  }
+  // An empty manifest must never allow an untracked/unsigned recording into
+  // the local candidate directory. Check the directory even with zero pairs.
+  // No recursion and no symlink following: all assets must be direct children.
+  try {
+    const root = await lstat(audioRoot);
+    if (!root.isDirectory() || root.isSymbolicLink()) {
+      errors.push('Audio root must be a real directory, never a symlink');
+    } else {
+      const entries = await readdir(audioRoot, { withFileTypes: true });
+      if (entries.length > 80) errors.push('Too many files in reviewed audio directory');
+      for (const entry of entries) {
+        if (!entry.isFile() || entry.isSymbolicLink()) {
+          errors.push('Unexpected non-regular audio entry: ' + entry.name);
+        }
+        if (!expectedFiles.has(entry.name)) {
+          errors.push('Unlisted file in reviewed audio directory: ' + entry.name);
+        }
+      }
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT' || json.pairs.length > 0) {
+      errors.push('Audio root directory is absent or unreadable');
+    }
   }
   return { pairs: json.pairs.length, filesChecked, errors };
 }
