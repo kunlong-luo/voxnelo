@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { CONNECTED_SPEECH_GUIDES, getConnectedSpeechGuide, SENTENCES, STARTER_SENTENCES } from '@voxnelo/content';
+import { CONNECTED_SPEECH_GUIDES, getConnectedSpeechGuide, splitConnectedSpeechSpan, SENTENCES, STARTER_SENTENCES } from '@voxnelo/content';
 import { PronunciationGuide } from '../apps/web/src/PronunciationGuide';
 import { LibraryView } from '../apps/web/src/LibraryView';
 import { I18nProvider } from '../apps/web/src/i18n';
@@ -29,11 +29,13 @@ describe('curated connected-speech metadata',()=>{
       const s=SENTENCES.find(item=>item.id===id);
       expect(s?.english).toBe(guide.english);
       expect(s?.ipa).toBe(guide.standardIpa);
+      expect(guide.reviewStatus).toBe('editorial-draft');
       expect(getConnectedSpeechGuide(s!),id).toBe(guide);
       expect(guide.spokenIpa).toMatch(/^\[.+\]$/u);
       expect(guide.rules.length).toBeGreaterThan(0);
       for(const rule of guide.rules){
         expect(guide.english.toLowerCase()).toContain(rule.span.toLowerCase());
+        expect(splitConnectedSpeechSpan(guide.english,rule.span)?.match).toBe(rule.span);
         const start=guide.english.toLowerCase().indexOf(rule.span.toLowerCase());
         expect(start, id+' rule start').toBeGreaterThanOrEqual(0);
         expect(/[a-z']/iu.test(guide.english[start-1]??''),id+' span begins at word boundary').toBe(false);
@@ -47,6 +49,11 @@ describe('curated connected-speech metadata',()=>{
     expect(getConnectedSpeechGuide({...starter('s022'),ipa:'/changed standard phonemes/'})).toBeUndefined();
     expect(getConnectedSpeechGuide({...starter('s022'),reviewStatus:'needs-review'})).toBeUndefined();
     expect(getConnectedSpeechGuide(SENTENCES[40]!)).toBeUndefined();
+    expect(splitConnectedSpeechSpan('you and you','you')).toBeUndefined();
+    expect(splitConnectedSpeechSpan('learning','earn')).toBeUndefined();
+    expect(splitConnectedSpeechSpan('Please wait a moment.','wait a')).toEqual({
+      before:'Please ',match:'wait a',after:' moment.',
+    });
   });
 });
 
@@ -63,6 +70,8 @@ describe('practice short-phrase pronunciation guide',()=>{
     expect(region.textContent).toContain('弱读');
     expect(region.textContent).toContain('Can you');
     expect(region.textContent).toContain('[jə]');
+    expect(screen.getByTestId('connected-active-span').textContent).toBe('Can you');
+    expect(screen.getByText('教学示例 · 待语言学复核')).toBeTruthy();
     expect(screen.getByRole('button',{name:'收起连读规则'}).getAttribute('aria-expanded')).toBe('true');
     fireEvent.click(screen.getByRole('button',{name:'播放短句发音'}));
     expect(onSpeak).toHaveBeenCalledOnce();
@@ -76,6 +85,7 @@ describe('practice short-phrase pronunciation guide',()=>{
     expect(details.textContent).toContain('American T-flapping');
     expect(details.textContent).toContain('intervocalic');
     expect(screen.getByText(/not a transcript of the current system voice/)).toBeTruthy();
+    expect(screen.getByText(/Teaching example · linguist review pending/)).toBeTruthy();
   });
   it('does not fake connected IPA for a seed sentence without curated metadata',()=>{
     const {onSpeak}=renderGuide('s001');
@@ -93,8 +103,18 @@ describe('practice short-phrase pronunciation guide',()=>{
     const region=screen.getByRole('region',{name:'连读规则解析'});
     expect(region.textContent).toContain('弱读');
     expect(region.textContent).toContain('美式闪音');
-    expect(region.textContent).toContain('later');
+    expect(screen.getByTestId('connected-active-span').textContent).toBe('you');
+    const second=screen.getByRole('button',{name:/美式闪音.*later/});
+    expect(second.getAttribute('aria-pressed')).toBe('false');
+    fireEvent.click(second);
+    expect(second.getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByTestId('connected-active-span').textContent).toBe('later');
     expect(region.textContent).toContain('[ˈleɪɾɚ]');
+    expect(region.textContent).toContain('元音之间');
+    const first=screen.getByRole('button',{name:/弱读.*you/});
+    fireEvent.click(first);
+    expect(first.getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByTestId('connected-active-span').textContent).toBe('you');
   });
   it('keeps listening disabled during recording and allows keyboard-accessible rules',()=>{
     const {onSpeak}=renderGuide('s008','zh-CN',true);
