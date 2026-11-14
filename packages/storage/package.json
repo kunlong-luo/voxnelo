@@ -4,6 +4,6 @@
   "type": "module",
   "main": "index.ts",
   "dependencies": {
-    "dexie": "^4.2.0"
+    "dexie": "^4.4.7"
   }
 }
