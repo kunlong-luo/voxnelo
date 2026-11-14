@@ -21,6 +21,8 @@ export interface ConnectedSpeechNote {
 export interface ConnectedSpeechGuide {
   /** Text must match the current sentence to prevent stale ID annotations. */
   english: string;
+  /** Exact existing base IPA, so edits to an old lesson fail closed. */
+  standardIpa: string;
   /** One illustrative realization; never advertised as matching system TTS. */
   spokenIpa: string;
   rules: readonly ConnectedSpeechNote[];
@@ -29,6 +31,7 @@ export interface ConnectedSpeechGuide {
 export const CONNECTED_SPEECH_GUIDES: Readonly<Record<string, ConnectedSpeechGuide>> = {
   s008: {
     english: 'Nice to meet you.',
+    standardIpa: '/naɪs tə miːt juː/',
     spokenIpa: '[naɪs tə miːtʃu]',
     rules: [{
       span: 'meet you',
@@ -40,6 +43,7 @@ export const CONNECTED_SPEECH_GUIDES: Readonly<Record<string, ConnectedSpeechGui
   },
   s022: {
     english: 'Can you help me?',
+    standardIpa: '/kæn juː hɛlp miː/',
     spokenIpa: '[kən jə ˈhɛlp mi]',
     rules: [{
       span: 'Can you',
@@ -51,6 +55,7 @@ export const CONNECTED_SPEECH_GUIDES: Readonly<Record<string, ConnectedSpeechGui
   },
   s023: {
     english: 'Please wait a moment.',
+    standardIpa: '/pliːz weɪt ə ˈmoʊmənt/',
     spokenIpa: '[pliːz ˈweɪɾə ˈmoʊmənt]',
     rules: [{
       span: 'wait a',
@@ -62,6 +67,7 @@ export const CONNECTED_SPEECH_GUIDES: Readonly<Record<string, ConnectedSpeechGui
   },
   s030: {
     english: 'How do you say this?',
+    standardIpa: '/haʊ duː juː seɪ ðɪs/',
     spokenIpa: '[haʊ də jə seɪ ðɪs]',
     rules: [{
       span: 'do you',
@@ -71,8 +77,78 @@ export const CONNECTED_SPEECH_GUIDES: Readonly<Record<string, ConnectedSpeechGui
       descriptionEn: 'Unstressed do and you may reduce their vowels in flowing speech. Full forms are natural when emphasizing those words.',
     }],
   },
+  s009: {
+    english: 'See you later.',
+    standardIpa: '/siː juː ˈleɪtər/',
+    spokenIpa: '[si jə ˈleɪɾɚ]',
+    rules: [
+      {
+        span: 'you',
+        spokenIpa: '[jə]',
+        kind: 'weakForm',
+        descriptionZh: 'you 不强调时可以弱读为 [jə]；如果特别强调“你”，保留完整读法更自然。',
+        descriptionEn: 'Unstressed you can reduce to [jə]. Keep its full form when the listener is being emphasized.',
+      },
+      {
+        span: 'later',
+        spokenIpa: '[ˈleɪɾɚ]',
+        kind: 'flapping',
+        descriptionZh: '在常见美式发音中，later 的元音之间 /t/ 可以变为闪音 [ɾ]，听起来接近很短的 d。',
+        descriptionEn: 'In many US accents, the intervocalic /t/ in later is a quick flap [ɾ], similar to a very brief d.',
+      },
+    ],
+  },
+  s010: {
+    english: 'Have a nice day.',
+    standardIpa: '/hæv ə naɪs deɪ/',
+    spokenIpa: '[hævə naɪs deɪ]',
+    rules: [{
+      span: 'Have a',
+      spokenIpa: '[hævə]',
+      kind: 'linking',
+      descriptionZh: 'have 的词尾 /v/ 与 a 的元音 [ə] 直接衔接，中间无需停顿；这是连贯发音，而非省掉 a。',
+      descriptionEn: 'The final /v/ of have joins the vowel [ə] in a without a pause. The word a is still pronounced.',
+    }],
+  },
+  s013: {
+    english: 'I live in China.',
+    standardIpa: '/aɪ lɪv ɪn ˈtʃaɪnə/',
+    spokenIpa: '[aɪ lɪvɪn ˈtʃaɪnə]',
+    rules: [{
+      span: 'live in',
+      spokenIpa: '[lɪvɪn]',
+      kind: 'linking',
+      descriptionZh: 'live 词尾 /v/ 连接 in 开头的 /ɪ/，连续读出 [lɪvɪn]；两个单词的含义不变。',
+      descriptionEn: 'The final /v/ of live links to the initial /ɪ/ of in, giving a smooth [lɪvɪn]. Both words remain present.',
+    }],
+  },
+  s026: {
+    english: 'Thank you very much.',
+    standardIpa: '/θæŋk juː ˈvɛri mʌtʃ/',
+    spokenIpa: '[θæŋk jə ˈvɛɹi mʌtʃ]',
+    rules: [{
+      span: 'you',
+      spokenIpa: '[jə]',
+      kind: 'weakForm',
+      descriptionZh: '在日常感谢中，you 如果没有特别强调，可以从 /juː/ 弱读为 [jə]，把更明显的重音放在 very。',
+      descriptionEn: 'When you is unstressed in everyday thanks, /juː/ may reduce to [jə], with more prominence on very.',
+    }],
+  },
+  s037: {
+    english: 'Where is the bathroom?',
+    standardIpa: '/wer ɪz ðə ˈbæθruːm/',
+    spokenIpa: '[wɛɹɪz ðə ˈbæθɹum]',
+    rules: [{
+      span: 'Where is',
+      spokenIpa: '[wɛɹɪz]',
+      kind: 'linking',
+      descriptionZh: '美式英语中，where 的词尾 /ɹ/ 可以直接衔接 is 的 /ɪ/，形成连贯的 [wɛɹɪz]，不需要额外停顿。',
+      descriptionEn: 'In American English, final /ɹ/ in where links naturally to the initial /ɪ/ in is, without an extra pause.',
+    }],
+  },
   s035: {
     english: 'What time is it?',
+    standardIpa: '/wʌt taɪm ɪz ɪt/',
     spokenIpa: '[wʌt ˈtaɪmɪzɪt]',
     rules: [{
       span: 'time is',
@@ -84,11 +160,40 @@ export const CONNECTED_SPEECH_GUIDES: Readonly<Record<string, ConnectedSpeechGui
   },
 } as const;
 
-/** Never infer connected IPA for unannotated, edited or unreviewed sentences. */
+/** Require whole-word, unique spans so a typo or partial word cannot display misleading rules. */
+function hasUniqueWordSpan(english:string,span:string):boolean {
+  if (!span.trim() || span!==span.trim()) return false;
+  const source=english.toLowerCase();
+  const target=span.toLowerCase();
+  let count=0,from=0;
+  while(true){
+    const index=source.indexOf(target,from);
+    if(index<0)break;
+    const before=source[index-1]??'';
+    const after=source[index+target.length]??'';
+    if(!/[a-z']/u.test(before)&&!/[a-z']/u.test(after))count++;
+    from=index+1;
+  }
+  return count===1;
+}
+function phoneticBrackets(value:string):boolean {
+  if(!value.startsWith('[')||!value.endsWith(']'))return false;
+  const inside=value.slice(1,-1);
+  return inside.trim().length>0 && !inside.includes('[') &&
+    !inside.includes(']') && !inside.includes('\n') && !inside.includes('\r');
+}
+
+/** Never infer connected IPA for unannotated, edited, malformed or unreviewed sentences. */
 export function getConnectedSpeechGuide(
   sentence: Pick<Sentence, 'id' | 'english' | 'ipa' | 'reviewStatus'>,
 ): ConnectedSpeechGuide | undefined {
   const guide=CONNECTED_SPEECH_GUIDES[sentence.id];
-  return sentence.ipa && sentence.reviewStatus!=='needs-review' && guide?.english===sentence.english
-    ? guide : undefined;
+  if (!guide || !sentence.ipa || sentence.reviewStatus==='needs-review' ||
+      guide.english!==sentence.english || guide.standardIpa!==sentence.ipa ||
+      !phoneticBrackets(guide.spokenIpa) || guide.rules.length===0) return undefined;
+  if(!guide.rules.every(rule=>
+    hasUniqueWordSpan(guide.english,rule.span) && phoneticBrackets(rule.spokenIpa) &&
+    rule.descriptionZh.trim().length>0 && rule.descriptionEn.trim().length>0
+  ))return undefined;
+  return guide;
 }

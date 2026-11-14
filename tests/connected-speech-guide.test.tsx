@@ -24,21 +24,27 @@ const renderGuide=(id:string,locale:'zh-CN'|'en-US'='zh-CN',recordingBusy=false)
 
 describe('curated connected-speech metadata',()=>{
   it('is finite, sentence-bound and does not invent transcriptions for all expanded material',()=>{
-    expect(Object.keys(CONNECTED_SPEECH_GUIDES).length).toBeGreaterThanOrEqual(4);
+    expect(Object.keys(CONNECTED_SPEECH_GUIDES)).toHaveLength(10);
     for(const [id,guide] of Object.entries(CONNECTED_SPEECH_GUIDES)){
       const s=SENTENCES.find(item=>item.id===id);
       expect(s?.english).toBe(guide.english);
+      expect(s?.ipa).toBe(guide.standardIpa);
       expect(getConnectedSpeechGuide(s!),id).toBe(guide);
       expect(guide.spokenIpa).toMatch(/^\[.+\]$/u);
       expect(guide.rules.length).toBeGreaterThan(0);
       for(const rule of guide.rules){
         expect(guide.english.toLowerCase()).toContain(rule.span.toLowerCase());
+        const start=guide.english.toLowerCase().indexOf(rule.span.toLowerCase());
+        expect(start, id+' rule start').toBeGreaterThanOrEqual(0);
+        expect(/[a-z']/iu.test(guide.english[start-1]??''),id+' span begins at word boundary').toBe(false);
+        expect(/[a-z']/iu.test(guide.english[start+rule.span.length]??''),id+' span ends at word boundary').toBe(false);
         expect(rule.spokenIpa).toMatch(/^\[.+\]$/u);
         expect(rule.descriptionZh.length).toBeGreaterThan(12);
         expect(rule.descriptionEn.length).toBeGreaterThan(20);
       }
     }
     expect(getConnectedSpeechGuide({...starter('s022'),english:'Different wording'})).toBeUndefined();
+    expect(getConnectedSpeechGuide({...starter('s022'),ipa:'/changed standard phonemes/'})).toBeUndefined();
     expect(getConnectedSpeechGuide({...starter('s022'),reviewStatus:'needs-review'})).toBeUndefined();
     expect(getConnectedSpeechGuide(SENTENCES[40]!)).toBeUndefined();
   });
@@ -79,6 +85,16 @@ describe('practice short-phrase pronunciation guide',()=>{
     expect(screen.queryByRole('button',{name:'查看连读规则'})).toBeNull();
     fireEvent.click(screen.getByRole('button',{name:'播放短句发音'}));
     expect(onSpeak).toHaveBeenCalledOnce();
+  });
+  it('explains both weak forms and American flapping when a sentence has two rules',()=>{
+    renderGuide('s009','zh-CN');
+    expect(screen.getByTestId('connected-ipa').textContent).toBe('[si jə ˈleɪɾɚ]');
+    fireEvent.click(screen.getByRole('button',{name:'查看连读规则'}));
+    const region=screen.getByRole('region',{name:'连读规则解析'});
+    expect(region.textContent).toContain('弱读');
+    expect(region.textContent).toContain('美式闪音');
+    expect(region.textContent).toContain('later');
+    expect(region.textContent).toContain('[ˈleɪɾɚ]');
   });
   it('keeps listening disabled during recording and allows keyboard-accessible rules',()=>{
     const {onSpeak}=renderGuide('s008','zh-CN',true);

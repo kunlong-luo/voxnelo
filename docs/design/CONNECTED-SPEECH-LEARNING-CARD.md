@@ -19,12 +19,14 @@
 
 ## Release and quality constraints
 
-- Initial **five starter examples** are editorial **illustrations pending expert linguistic review**. The annotations are not a claim that a real recording or speech API matches them; accent, focus and speech rate can alter realization. Keep examples reviewable at sentence ID and exact English text; failure of the text match suppresses annotations.
+- Initial **ten starter examples** are editorial **illustrations pending expert linguistic review**. The annotations are not a claim that a real recording or speech API matches them; accent, focus and speech rate can alter realization. Keep examples reviewable at sentence ID and exact English text; failure of the text match suppresses annotations.
 - Existing 40 starter sentence IDs, 240 expansion IDs, IndexedDB history/favorites, F001–F012 practice loop and microphone consent are unchanged. No new permissions, network services, generated audio, third-party assets or storage migration.
+- Each example now records the **exact existing sentence text and standard IPA**, so editing either suppresses stale connected-speech hints. Rule spans must point to a unique complete word or contiguous words within the sentence, and both sentence-level and rule-level spoken forms must be enclosed in phonetic square brackets. Invalid data fails closed, never falls back to fabricated phonetics.
+- The next five editorial examples are **See you later.** (weak form and US flapping), **Have a nice day.** (linking), **I live in China.** (linking), **Thank you very much.** (weak form) and **Where is the bathroom?** (linking). They are possible casual US realizations, not a verified recording transcript.
 - Future expansions require language-expert checks for standard/connected IPA, translation, rule span alignment and any audio provenance; make the metadata optional and explicitly approved, not mass-created.
 - Manual checks required before a public build: desktop keyboard/focus, 125–150% scaling, long sentence wrapping, small window, voiced output/device unavailability and live recording guard. CI covers the rendered guide, localization, document semantics and packaging but is not real-device audio QA.
 
 ## Acceptance tests
 
-- `tests/connected-speech-guide.test.tsx` ensures data/ID/text alignment, accurate fallback, bilingual rule labels, expand/collapse, and disabled speech while recording.
+- `tests/connected-speech-guide.test.tsx` ensures data/ID/text/base-IPA alignment, complete-word rule spans, multi-rule rendering, accurate fallback, bilingual rule labels, expand/collapse, and disabled speech while recording.
 - Existing speech, i18n, data-integrity, history, desktop window and packaging checks must remain green.
