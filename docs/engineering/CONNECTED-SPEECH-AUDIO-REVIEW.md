@@ -94,6 +94,28 @@ The `speakLessonReference` learning-service contract records both the requested 
 
 The low-level WAV helper accepts bytes handed to it by a caller; the checksum and PCM format alone **do not authenticate recording provenance, phonetics or copyright**. It must not be connected to a renderer/desktop asset loader until a separate, independent human sign-off has produced a rights-cleared curriculum+manifest and packaging validation for actual recordings. Do not allow a caller to claim `linguist-reviewed` by merely editing JSON. Existing ADR-0001 remains in force.
 
+
+## One PCM/WAV format policy in browser and offline intake
+
+`packages/audio/pcmWav.ts` is the **single** shared pure-byte parser used by both
+`scripts/reviewed-audio-validator.mts` and the future local WAV player
+`packages/audio/offlineWav.ts`. Both accept only bounded RIFF/WAVE mono
+PCM16 audio at 16–48 kHz and 150–15000 ms, with exactly one valid `fmt `
+and one nonempty `data` chunk, valid chunk boundaries, and no disguised
+compressed/stereo data. WAV metadata chunks (including correctly padded odd
+sizes) can be present without altering the PCM acceptance policy.
+The manifest preflight additionally checks the declared sample rate and
+duration against the bytes, while actual playback always checks SHA-256
+before creating any audio object URL.
+
+`tests/shared-pcm-wav-gate.test.ts` compares the browser and Node entry
+points against the same synthetic byte fixtures; no genuine reference
+recordings are shipped as tests. This prevents future format-policy drift
+but is **not** proof of recording quality, IPA accuracy, performer identity,
+rights, or permission to expose the careful/natural playback controls.
+The reviewed manifest stays empty and the current app plays labeled system TTS.
+
+
 ## CI boundary
 
 `tests/connected-speech-review.test.ts` verifies the export is complete, deterministic, spreadsheet-safe, and contains **no reviewer approvals or fabricated recording metadata**. `.github/workflows/ci.yml` also executes the actual native Node exporter. These checks prove software/data consistency—not linguistic, copyright or acoustic verification.
