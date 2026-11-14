@@ -10,7 +10,6 @@ import path from 'node:path';
 import { CONNECTED_SPEECH_GUIDES } from '../packages/content/connected-speech.ts';
 
 type JsonRecord = Record<string, unknown>;
-type TakeKind = 'careful' | 'natural';
 
 export interface ReviewedAudioAudit {
   pairs: number;
