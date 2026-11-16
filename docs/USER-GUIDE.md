@@ -1,12 +1,12 @@
-# Voxnelo 用户帮助（v1.0.0 正式免签名版）
+# Voxnelo 用户帮助（公开版 v1.0.3；v1.0.4 尚未发布）
 
 Voxnelo 是一款免费、本地优先的英语口语练习桌面应用，无需注册即可开始使用。**这是公开发行的免签名桌面版，系统安全限制和跨平台验证边界仍需注意。** 维护者：Leo Luo。
 
 ## 安装与升级
 
-到 [GitHub Releases v1.0.0](https://github.com/kunlong-luo/voxnelo/releases/tag/v1.0.0) 下载适合系统的安装包，优先检查发布页的 SHA-256 校验文件：
+到 [GitHub Releases v1.0.3](https://github.com/kunlong-luo/voxnelo/releases/tag/v1.0.3) 下载适合系统的安装包，优先检查发布页的 SHA-256 校验文件：
 
-- **Linux x64**：Debian、Ubuntu、Pop!_OS 推荐 `Voxnelo.deb`（与 `voxnelo_1.0.0_amd64.deb` 相同）；其他兼容系统可尝试 `.AppImage`。升级通常不需卸载旧版。DEB 会通过包管理器安装所需系统依赖。
+- **Linux x64**：Debian、Ubuntu、Pop!_OS 推荐 `Voxnelo.deb`（与 `voxnelo_1.0.3_amd64.deb` 相同）；其他兼容系统可尝试 `.AppImage`。升级通常不需卸载旧版。DEB 会通过包管理器安装所需系统依赖。
 - **Windows**：下载 NSIS `.exe` 并正常安装。安装包暂未进行数字签名；SmartScreen 警告要如实对待并先确认来源，不要将其当成经认证的稳定应用。
 - **macOS**：下载 `.dmg`，核对 DMG 架构兼容性，按系统流程安装。安装器未签名、未公证，Gatekeeper 可能阻止打开；若不愿接受此限制，请暂不安装这一免签名正式版。
 
@@ -21,7 +21,7 @@ Voxnelo 是一款免费、本地优先的英语口语练习桌面应用，无需
 
 Linux x64 默认使用 Moonshine Voice Medium Streaming，**模型与 Python 运行时不会随安装包自动下载**。打开「离线模型管理」并点击「安装 Moonshine 离线识别模型」，在你主动同意后才下载官方 SDK 与模型。首次需要网络、Python 3 的 `venv` 支持和可用磁盘空间；校验 SDK 版本及模型文件哈希通过后才会启用本机推理，缺失时不会静默切回旧引擎。识别后如需断网使用，应先确保模型已完整安装。
 
-**Windows / macOS 不承诺与 Linux 相同的原生 Moonshine 离线听写可用性**，但仍能使用课程学习与麦克风录音回听。没有自动发音评分或音素级纠音。更完整的模型目录与安装说明见 [Moonshine Linux 指南](engineering/MOONSHINE-LINUX-INSTALLATION.md)。
+**当前公开 v1.0.3 的 Windows / macOS 不提供原生 Moonshine 离线听写。尚未发布的 v1.0.4 源码候选版增加 Windows x64 与 macOS 15+ Apple Silicon 的用户主动安装试点，但不能将其描述为公开版已有功能。**，但仍能使用课程学习与麦克风录音回听。没有自动发音评分或音素级纠音。更完整的模型目录与安装说明见 [Moonshine Linux 指南](engineering/MOONSHINE-LINUX-INSTALLATION.md)。
 
 ## 常见问题
 
@@ -34,4 +34,4 @@ Linux x64 默认使用 Moonshine Voice Medium Streaming，**模型与 Python 运
 
 ## 隐私与边界
 
-无需账号、学习记录本地保存。录音在用户同意使用麦克风后才开始，本地 Moonshine 识别不需要向 Voxnelo 服务器上传录音；浏览器体验版如果使用系统 Web Speech 服务则可能受浏览器提供商不同的联网/隐私政策影响。课程文本、TTS 及第三方运行时授权和跨设备实测仍在持续审核。参见 [发行说明](release-notes/v1.0.0.md)。
+无需账号、学习记录本地保存。录音在用户同意使用麦克风后才开始，本地 Moonshine 识别不需要向 Voxnelo 服务器上传录音；浏览器体验版如果使用系统 Web Speech 服务则可能受浏览器提供商不同的联网/隐私政策影响。课程文本、TTS 及第三方运行时授权和跨设备实测仍在持续审核。参见 [发行说明](release-notes/v1.0.3.md)。
