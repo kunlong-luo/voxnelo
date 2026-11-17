@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
 import { ArrowRight, ArrowUpRight, BookOpenCheck, CalendarDays, ChevronLeft, ChevronRight, Clock3, Heart, ListRestart, Mic2, Search, Sparkles, type LucideIcon } from 'lucide-react';
 import { SENTENCES, getConnectedSpeechGuide, type HistoryEvent, type LearningState, type Sentence } from '@voxnelo/learning';
 import { useI18n, type TranslationKey } from './i18n';
-import { libraryEntries, libraryPage, historyTotals, type LibraryMode } from './libraryData';
+import { libraryEntries, libraryPage, historyTotals, reviewTotals, type LibraryMode } from './libraryData';
 import { Button } from './components/ui/button';
 import { Card } from './components/ui/card';
 import { Badge } from './components/ui/badge';
@@ -14,6 +14,7 @@ interface LibraryViewProps {
   view: LibraryMode; states: LearningState[];
   events: HistoryEvent[]; search: string; notice: string;
   onSearch:(v:string)=>void; onChoose:(s:Sentence)=>void; onBackToPractice:()=>void;
+  onCompleteReview?:((id:string)=>void)|undefined;
 }
 const views:Record<LibraryMode,{title:TranslationKey;helper:TranslationKey;icon:LucideIcon}>={
   history:{title:'libHistoryTitle',helper:'libHistoryHelp',icon:Clock3},
@@ -24,17 +25,31 @@ const topics:Record<Sentence['topic'],TranslationKey>={
   greetings:'topicGreetings',personal:'topicPersonal',needs:'topicNeeds',learning:'topicLearning',daily:'topicDaily',
 };
 type HistoryFilter='all'|'view'|'practice';
+type ReviewFilter='all'|'due'|'upcoming';
 
-export function LibraryView({view,states,events,search,notice,onSearch,onChoose,onBackToPractice}:LibraryViewProps){
+export function LibraryView({view,states,events,search,notice,onSearch,onChoose,onBackToPractice,onCompleteReview}:LibraryViewProps){
   const {t,locale}=useI18n();
   const [page,setPage]=useState(1);
   const [historyFilter,setHistoryFilter]=useState<HistoryFilter>('all');
+  const [reviewFilter,setReviewFilter]=useState<ReviewFilter>('all');
+  const [asOf,setAsOf]=useState(()=>Date.now());
+  useEffect(()=>{
+    if(view!=='review')return;
+    const refresh=()=>setAsOf(Date.now());
+    window.addEventListener('focus',refresh);
+    const interval=window.setInterval(refresh,60_000);
+    return ()=>{window.removeEventListener('focus',refresh);window.clearInterval(interval);};
+  },[view]);
   const [animationParent]=useAutoAnimate<HTMLDivElement>();
-  const entries=useMemo(()=>libraryEntries(view,states,events,search),[view,states,events,search]);
-  const filtered=useMemo(()=>view==='history'&&historyFilter!=='all'
-    ?entries.filter(entry=>entry.type===historyFilter):entries,[view,entries,historyFilter]);
+  const entries=useMemo(()=>libraryEntries(view,states,events,search,asOf),[view,states,events,search,asOf]);
+  const filtered=useMemo(()=>{
+    if(view==='history'&&historyFilter!=='all')return entries.filter(entry=>entry.type===historyFilter);
+    if(view==='review'&&reviewFilter!=='all')return entries.filter(entry=>reviewFilter==='due'?entry.reviewDue:!entry.reviewDue);
+    return entries;
+  },[view,entries,historyFilter,reviewFilter]);
   const paginated=libraryPage(filtered,page);
   const totals=useMemo(()=>historyTotals(events),[events]);
+  const reviews=useMemo(()=>reviewTotals(states,asOf),[states,asOf]);
   const topicCounts=useMemo(()=>{
     const valid=new Map(SENTENCES.map(sentence=>[sentence.id,sentence.topic]));
     const counts=new Map<Sentence['topic'],number>();
@@ -48,6 +63,7 @@ export function LibraryView({view,states,events,search,notice,onSearch,onChoose,
   },[events]);
   const {title,helper,icon:Icon}=views[view];
   const selectFilter=(next:HistoryFilter)=>{setHistoryFilter(next);setPage(1);};
+  const selectReviewFilter=(next:ReviewFilter)=>{setReviewFilter(next);setPage(1);};
   const searchChanged=(next:string)=>{onSearch(next);setPage(1);};
   const dateLabel=(at:number)=>new Date(at).toLocaleDateString(locale,{year:'numeric',month:'long',day:'numeric'});
   return <div className="libraryPage mx-auto flex w-full max-w-310 flex-col gap-5 pb-5 motion-safe:animate-view-enter">
@@ -97,6 +113,20 @@ export function LibraryView({view,states,events,search,notice,onSearch,onChoose,
             className={cn('min-h-9 rounded-xl px-3 text-xs font-semibold',historyFilter===filter&&'bg-secondary text-primary shadow-sm')}
             onClick={()=>selectFilter(filter)} aria-pressed={historyFilter===filter}>{t(label)}</Button>)}
         </div>}
+        {view==='review'&&<div className="flex flex-wrap items-center gap-2 border-b border-border/55 px-4 py-3 sm:px-5"
+          role="group" aria-label={t('reviewFilterLabel')}>
+          {([
+            ['all','reviewFilterAll',reviews.total],
+            ['due','reviewFilterDue',reviews.due],
+            ['upcoming','reviewFilterUpcoming',reviews.upcoming],
+          ] as const).map(([filter,label,count])=><Button key={filter}
+            variant={reviewFilter===filter?'soft':'ghost'} size="sm"
+            className={cn('min-h-9 rounded-xl px-3 text-xs font-semibold',reviewFilter===filter&&'bg-secondary text-primary shadow-sm')}
+            aria-pressed={reviewFilter===filter} onClick={()=>selectReviewFilter(filter)}>
+            {t(label,{count})}
+          </Button>)}
+          <p className="w-full text-[11px] leading-5 text-muted-foreground">{t('reviewScheduleHint')}</p>
+        </div>}
         <div ref={animationParent} className="libraryList voxnelo-scroll flex min-w-0 flex-col gap-2.5 p-3.5 sm:max-h-[min(48dvh,500px)] sm:overflow-y-auto sm:overscroll-contain sm:p-5" data-testid="library-list">
           {paginated.items.length?paginated.items.map((entry,index)=>{
             const currentDate=entry.at===undefined?'':dateLabel(entry.at);
@@ -121,6 +151,13 @@ export function LibraryView({view,states,events,search,notice,onSearch,onChoose,
                   </span>}
                   <span className="flex flex-wrap items-center gap-2 text-[11px] font-medium text-muted-foreground">
                     <span>{t(topics[entry.sentence.topic])}</span>
+                    {view==='review'&&entry.reviewDue!==undefined&&<span className={entry.reviewDue?'font-semibold text-primary':'text-muted-foreground'}>
+                      {entry.reviewDue?t('reviewDueNow'):t('reviewDueOn')}
+                    </span>}
+                    {view==='review'&&!entry.reviewDue&&entry.reviewDueAt!==undefined&&entry.reviewDueAt>0&&
+                      <time dateTime={new Date(entry.reviewDueAt).toISOString()}>
+                        {new Date(entry.reviewDueAt).toLocaleDateString(locale,{year:'numeric',month:'short',day:'numeric'})}
+                      </time>}
                     {view==='history'&&entry.at!==undefined&&<>
                       <span aria-hidden="true">·</span>
                       <span>{t(entry.type==='practice'?'historyRecorded':'historyViewed')}</span>
@@ -131,11 +168,17 @@ export function LibraryView({view,states,events,search,notice,onSearch,onChoose,
                 </span>
                 <ArrowUpRight size={18} className="ml-1 shrink-0 text-primary opacity-75 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"/>
               </Button>
+              {view==='review'&&entry.reviewDue&&onCompleteReview&&<Button variant="soft" size="sm"
+                className="min-h-9 self-start rounded-xl px-3 text-xs"
+                aria-label={t('reviewCompleteFor',{sentence:entry.sentence.english})}
+                onClick={()=>onCompleteReview(entry.sentence.id)}>
+                <BookOpenCheck size={15} aria-hidden="true"/>{t('reviewComplete')}
+              </Button>}
             </div>;
           }):<div className="empty flex min-h-68 flex-col items-center justify-center gap-4 px-5 py-9 text-center">
             <span className="grid size-16 place-items-center rounded-3xl border border-border/50 bg-secondary text-primary shadow-sm"><Icon size={28}/></span>
             <strong className="text-lg font-bold text-foreground">{t('libraryEmptyTitle')}</strong>
-            <span className="max-w-67 text-[13px] leading-6 text-translation-ink">{t(search?'libraryEmptySearch':view==='history'&&historyFilter!=='all'?'historyFilterEmpty':'libraryEmptyHint')}</span>
+            <span className="max-w-67 text-[13px] leading-6 text-translation-ink">{t(search?'libraryEmptySearch':view==='review'&&reviewFilter==='due'?'reviewNoDue':view==='review'&&reviewFilter==='upcoming'?'reviewNoUpcoming':view==='history'&&historyFilter!=='all'?'historyFilterEmpty':'libraryEmptyHint')}</span>
             <Button className="min-h-10 rounded-xl" onClick={onBackToPractice}>{t('libraryStart')}<ArrowRight size={16}/></Button>
           </div>}
         </div>
