@@ -36,7 +36,7 @@ describe('documentation link and command validation', () => {
       fence,
     ].join('\n');
     expect(localMarkdownLinks(markdown)).toEqual([
-      'docs/guide.md#first', 'assets/logo.png', 'docs/check.md', 'https://example.com',
+      'docs/guide.md#first', 'assets/logo.png', 'https://example.com', 'docs/check.md',
     ]);
   });
 
