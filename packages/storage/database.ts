@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import type { LearningState } from '@voxnelo/core';
+import { nextReviewSchedule, type LearningState } from '@voxnelo/core';
 
 export interface HistoryEvent {
   id?: number;
@@ -41,6 +41,7 @@ export async function recordEvent(sentenceId: string, type: 'view' | 'practice')
     } else {
       state.practicedCount += 1;
       state.lastPracticedAt = now;
+      if (state.review) Object.assign(state, nextReviewSchedule(state, now));
     }
     await database.states.put(state);
     await database.events.add({ sentenceId, at: now, type });
@@ -58,7 +59,24 @@ export async function patchState(sentenceId: string, patch: Partial<Pick<Learnin
       review: false,
       lastSeenAt: Date.now(),
     };
-    await database.states.put({ ...state, ...patch });
+    const updated = { ...state, ...patch };
+    if (patch.review === true && !state.review) {
+      updated.reviewStep = 0;
+      updated.nextReviewAt = Date.now();
+    } else if (patch.review === false && state.review) {
+      delete updated.reviewStep;
+      delete updated.nextReviewAt;
+    }
+    await database.states.put(updated);
+  });
+}
+
+/** Mark a review as done without inventing a microphone recording/history event. */
+export async function completeReview(sentenceId: string): Promise<void> {
+  await database.transaction('rw', database.states, async () => {
+    const state = await database.states.get(sentenceId);
+    if (!state?.review) throw new Error('No active review plan for this sentence');
+    await database.states.put({ ...state, ...nextReviewSchedule(state) });
   });
 }
 

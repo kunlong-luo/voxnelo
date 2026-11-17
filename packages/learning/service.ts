@@ -1,7 +1,7 @@
 import { SCENE_LABELS, SENTENCES, TOPIC_LABELS, getConnectedSpeechGuide, splitConnectedSpeechSpan, practiceSegments, type Sentence } from '@voxnelo/content';
-import { APP_VERSION, calculateStats, chooseNext, type LearningState } from '@voxnelo/core';
+import { APP_VERSION, calculateStats, chooseNext, reviewSchedule, type LearningState } from '@voxnelo/core';
 import { speakEnglish, stopSpeech, type SpeechResult } from '@voxnelo/audio';
-import { loadLearningData, patchState, recordEvent, type HistoryEvent } from '@voxnelo/storage';
+import { loadLearningData, patchState, recordEvent, completeReview as saveCompletedReview, type HistoryEvent } from '@voxnelo/storage';
 
 /**
  * 学习应用服务：UI 唯一允许直连的包门面。
@@ -14,6 +14,7 @@ export { FIRST_SENTENCE } from '@voxnelo/content';
 export { primeSpeechVoices } from '@voxnelo/audio';
 export type { HistoryEvent, LearningState, Sentence, SpeechResult };
 export type LearningStats = ReturnType<typeof calculateStats>;
+export { reviewSchedule };
 
 export type ServiceError =
   { code: 'STORAGE_UNAVAILABLE'; message: string } | { code: 'SPEECH_UNAVAILABLE'; message: string };
@@ -73,6 +74,20 @@ export async function setFlag(
   } catch (err) {
     console.error('[learning] setFlag failed', err);
     return { ok: false, error: storageError('本次操作没有保存成功，请重试。') };
+  }
+}
+
+/** F104: explicit self-report, not a recording or pronunciation score. */
+export async function completeReview(sentenceId: string): Promise<ServiceResult<void>> {
+  try {
+    if (!SENTENCES.some(sentence => sentence.id === sentenceId)) {
+      return { ok: false, error: storageError('无法更新不存在的课程复习计划。') };
+    }
+    await saveCompletedReview(sentenceId);
+    return { ok: true, value: undefined };
+  } catch (err) {
+    console.error('[learning] completeReview failed', err);
+    return { ok: false, error: storageError('无法保存本次复习计划，请重试。') };
   }
 }
 

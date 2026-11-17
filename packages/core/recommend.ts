@@ -9,6 +9,9 @@ export interface LearningState {
   review: boolean;
   lastSeenAt: number;
   lastPracticedAt?: number;
+  /** Optional fields are compatible with pre-F104 IndexedDB rows. */
+  reviewStep?: number;
+  nextReviewAt?: number;
 }
 
 /**
