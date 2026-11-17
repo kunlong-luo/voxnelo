@@ -47,7 +47,8 @@ export function LearningBackupPanel({onRestored}: {onRestored?: (()=>Promise<voi
         try { anchor.click(); } finally { anchor.remove(); }
       }finally{
         // Let the browser finish resolving the download before releasing the URL.
-        window.setTimeout(()=>URL.revokeObjectURL(url),1000);
+        const revoke=URL.revokeObjectURL.bind(URL);
+        window.setTimeout(()=>revoke(url),1000);
       }
       setMessage({key:'backupDownloadStarted',error:false});
     }catch(error){showError(error);}
