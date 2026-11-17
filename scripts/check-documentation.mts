@@ -63,9 +63,18 @@ export function localMarkdownLinks(markdown: string): string[] {
 
 export function documentedPnpmCommands(markdown: string): string[] {
   const commands: string[] = [];
-  const pattern = /\b(?:corepack\s+)?pnpm\s+(?:(?:--[a-z][\w-]*)(?:=[^\s]+)?\s+)*(?:run\s+)?([a-z][\w:-]*)/g;
-  for (const match of markdown.matchAll(pattern)) {
-    if (match[1]) commands.push(match[1]);
+  // Only shell-like command lines and inline code are commands. Ordinary prose,
+  // such as "pnpm script names", must not be mistaken for an invocation.
+  const command = /(?:corepack\s+)?pnpm\s+(?:(?:--[a-z][\w-]*)(?:=[^\s]+)?\s+)*(?:run\s+)?([a-z][\w:-]*)/;
+  for (const line of markdown.split('\n')) {
+    if (!/^\s*(?:[-*]\s+)?(?:\$\s*)?(?:corepack\s+)?pnpm\s+/.test(line)) continue;
+    const match = command.exec(line);
+    if (match?.[1]) commands.push(match[1]);
+  }
+  for (const inline of markdown.matchAll(/\x60+([^\x60\n]+)\x60+/g)) {
+    const code = inline[1] ?? '';
+    const match = command.exec(code);
+    if (match?.[1]) commands.push(match[1]);
   }
   return commands;
 }
