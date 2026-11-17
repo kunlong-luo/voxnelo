@@ -80,7 +80,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
     setVisited([id]);
     setHistoryPosition(0);
   },[]);
-  const { states, events, setFlag } = useLearningData(
+  const { states, events, setFlag, completeReview } = useLearningData(
     notify, sentenceId, current.id, recorder.recordingUrl, restoreLastSentence,
   );
   const currentState = states.find((item) => item.sentenceId === current.id);
@@ -307,6 +307,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
               notice={notice}
               onSearch={setSearch}
               onChoose={chooseFromLibrary}
+              onCompleteReview={completeReview}
               onBackToPractice={() => nav('practice')}
             />
           )}
