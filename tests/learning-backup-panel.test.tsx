@@ -3,7 +3,7 @@ import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { database } from '@voxnelo/storage';
-import { BACKUP_FORMAT, BACKUP_VERSION } from '../packages/learning/backup';
+import { BACKUP_FORMAT, BACKUP_VERSION } from '@voxnelo/learning';
 import { LearningBackupPanel } from '../apps/web/src/LearningBackupPanel';
 import { SettingsView } from '../apps/web/src/SettingsView';
 import { I18nProvider } from '../apps/web/src/i18n';
