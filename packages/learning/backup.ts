@@ -47,7 +47,7 @@ function validatedState(value: unknown): LearningState {
     !finiteTimestamp(value.lastSeenAt) ||
     (value.lastPracticedAt !== undefined && !finiteTimestamp(value.lastPracticedAt)) ||
     (value.reviewStep !== undefined &&
-      (!Number.isSafeInteger(value.reviewStep) || typeof value.reviewStep !== 'number' ||
+      (typeof value.reviewStep !== 'number' || !Number.isSafeInteger(value.reviewStep) ||
        value.reviewStep < 0 || value.reviewStep > 5)) ||
     (value.nextReviewAt !== undefined && !finiteTimestamp(value.nextReviewAt)) ||
     (!value.review && (value.reviewStep !== undefined || value.nextReviewAt !== undefined))
