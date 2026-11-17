@@ -28,3 +28,9 @@
 5. 若选择未来发布真实签名、公证且完整审校的增强版本，再执行额外的 [认证级签名门禁](STABLE-RELEASE-READINESS.md)。这一**可选额外门禁不是 v1.0.x 免签名官方发布的历史先决条件**。
 
 完整安装/使用说明见 [用户指南](../USER-GUIDE.md)，操作历史和旧版本发布纪律见 [GitHub Release 指南](GITHUB-RELEASE-DRAFT.md)。
+
+## Temporary development-time QA profile (2026-11-17)
+
+To shorten ordinary PR feedback, CPU-heavy responsive Chromium screenshots, Electron native-window/restart/DPI checks and the renderer size-budget report were moved from the required `check` job to the **Optional deep UI and desktop QA** workflow (`.github/workflows/quality-deep.yml`), triggered via GitHub Actions → Run workflow. These checks are **deferred, not considered passing** when skipped. Before preparing or publishing a desktop Release, run this manual workflow against the intended commit and inspect its artifacts. A failed or unrun manual workflow does not constitute UI, hardware, accessibility or acoustic certification.
+
+The required `check` job still performs typechecking, lint, dependency architecture, UI architecture, content/audio safety gates, unit coverage, build and key offline worker/protocol checks. Windows/macOS desktop package integrity remains required by the main Ruleset. Do not disable security checks or alter release blockers merely to shorten PR time. Restoring automatic deep checks or revisiting the branch Ruleset requires an explicit repository-maintainer decision.
