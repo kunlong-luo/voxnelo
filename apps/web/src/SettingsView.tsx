@@ -1,5 +1,6 @@
 import { ArrowLeft, AudioLines, BookOpenText, Bug, Check, CircleHelp, ExternalLink, GitBranch, Info, Languages, Lightbulb, Palette, ShieldCheck, Settings2, HardDriveDownload } from 'lucide-react';
 import { APP_VERSION, SUPPORT_LINKS } from '@voxnelo/learning';
+import { LearningBackupPanel } from './LearningBackupPanel';
 import type { AppearanceTheme } from './appearance';
 import { useI18n, type LanguageSetting } from './i18n';
 import { Button, buttonVariants } from './components/ui/button';
@@ -14,6 +15,7 @@ interface SettingsViewProps {
   onChangeAppearance:(theme:AppearanceTheme)=>void;
   onChangeLanguage?:(locale:LanguageSetting)=>void;
   onToggleSpeed:()=>void;onToggleIpa:()=>void;onBackToPractice:()=>void;onManageModels?:()=>void;
+  onDataRestored?:(()=>Promise<void>)|undefined;
 }
 const themes:AppearanceTheme[]=['nordic','sunset'];
 const languageIds:LanguageSetting[]=['system','zh-CN','en-US'];
@@ -24,7 +26,7 @@ const helpActions = [
 ] as const;
 export function SettingsView({
   speed,showIpa,appearance,motionEnabled=true,onChangeMotion,languageSetting='system',onChangeAppearance,
-  onChangeLanguage,onToggleSpeed,onToggleIpa,onBackToPractice,onManageModels,
+  onChangeLanguage,onToggleSpeed,onToggleIpa,onBackToPractice,onManageModels,onDataRestored,
 }:SettingsViewProps) {
   const {t,locale}=useI18n();
   const section='flex flex-col gap-4 rounded-3xl border border-white/60 bg-card/80 p-5 shadow-[0_20px_50px_-35px_rgba(89,62,47,.25)] backdrop-blur-md animate-panel-enter sm:p-6';
@@ -86,6 +88,10 @@ export function SettingsView({
         <Button variant="outline" className="min-h-10 w-fit rounded-xl" onClick={onManageModels} disabled={!onManageModels}>
           <HardDriveDownload size={17}/>{t('modelOpenAction')}
         </Button>
+      </Card>
+      <Card className={cn(section,'backupSettings @min-[740px]/workspace:col-span-2')}>
+        <div className="settingsPanelHeading flex items-center gap-3 text-primary"><HardDriveDownload size={20}/><h2 className="text-sm font-extrabold text-foreground">{t('backupTitle')}</h2></div>
+        <LearningBackupPanel onRestored={onDataRestored}/>
       </Card>
       <Card className={cn(section,'aboutSettings @min-[740px]/workspace:col-span-2')}>
         <div className="settingsPanelHeading flex items-center gap-3 text-primary"><Info size={20}/><h2 className="text-sm font-extrabold text-foreground">{t('aboutTitle')}</h2></div>
