@@ -16,7 +16,7 @@ export type { HistoryEvent, LearningState, Sentence, SpeechResult };
 export type LearningStats = ReturnType<typeof calculateStats>;
 export { reviewSchedule };
 export { exportLearningBackup, parseLearningBackup, restoreLearningBackup, LearningBackupError,
-  MAX_BACKUP_BYTES, MAX_BACKUP_EVENTS, type LearningBackup, type BackupErrorCode } from './backup';
+  MAX_BACKUP_BYTES, MAX_BACKUP_EVENTS, BACKUP_FORMAT, BACKUP_VERSION, type LearningBackup, type BackupErrorCode } from './backup';
 
 export type ServiceError =
   { code: 'STORAGE_UNAVAILABLE'; message: string } | { code: 'SPEECH_UNAVAILABLE'; message: string };
