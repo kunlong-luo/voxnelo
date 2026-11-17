@@ -42,6 +42,8 @@
     "icon:linux:dev": "node --experimental-strip-types scripts/register-linux-dev-launcher.mts",
     "icon:linux:dev:remove": "node --experimental-strip-types scripts/register-linux-dev-launcher.mts --remove",
     "ui:check": "node --experimental-strip-types scripts/check-ui-style-architecture.mts",
+    "docs:check": "node --experimental-strip-types scripts/check-documentation.mts",
+    "docs:check:all": "node --experimental-strip-types scripts/check-documentation.mts --all",
     "diagnose:linux": "node --experimental-strip-types scripts/diagnose-linux-installer.mts",
     "asr:moonshine:install": "node --experimental-strip-types scripts/install-moonshine-linux.mts",
     "content:review:export": "node --experimental-strip-types scripts/export-connected-speech-review.mts",
