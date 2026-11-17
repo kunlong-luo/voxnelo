@@ -80,7 +80,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
     setVisited([id]);
     setHistoryPosition(0);
   },[]);
-  const { states, events, setFlag, completeReview } = useLearningData(
+  const { states, events, setFlag, completeReview, refresh } = useLearningData(
     notify, sentenceId, current.id, recorder.recordingUrl, restoreLastSentence,
   );
   const currentState = states.find((item) => item.sentenceId === current.id);
@@ -297,6 +297,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
               onToggleIpa={() => setShowIpa((value) => !value)}
               onBackToPractice={() => nav('practice')}
               onManageModels={() => nav('models')}
+              onDataRestored={refresh}
             />
           ) : (
             <LibraryView key={view}
