@@ -23,7 +23,7 @@ const topics:Record<Sentence['topic'],TranslationKey> = {
 
 /** Single glass surface, typographic hierarchy and persistent lesson controls. */
 export function PracticeCard({current,currentState,speed,showIpa,recorder,dictation,recordingBusy,canGoPrevious,onStartDictation,onManageModels,
-  onToggleIpa,onSpeak,onToggleSpeed,onRecord,onToggleFlag,onNext,onPrevious}:PracticeCardProps) {
+  onToggleIpa,onSpeak,onSpeakSegment,onToggleSpeed,onRecord,onToggleFlag,onNext,onPrevious}:PracticeCardProps) {
   const {t}=useI18n();
   // Stable parent + keyed child: each next sentence now triggers a real DOM transition.
   const [sentenceMotionRef]=useAutoAnimate<HTMLDivElement>({duration:540,easing:'ease-in-out'});
@@ -66,7 +66,7 @@ export function PracticeCard({current,currentState,speed,showIpa,recorder,dictat
             </div>
             <div ref={translationMotionRef} className="flex min-w-0 max-w-full justify-center"><p key={current.id} className="translation max-w-full wrap-anywhere text-[17px] leading-7 font-medium text-translation-ink @min-[600px]/lesson:text-xl animate-sentence-enter [animation-delay:60ms]">{current.chinese}</p></div>
             <PronunciationGuide key={current.id} sentence={current} showIpa={showIpa}
-              recordingBusy={recordingBusy} onToggleIpa={onToggleIpa} onSpeak={onSpeak}/>
+              recordingBusy={recordingBusy} onToggleIpa={onToggleIpa} onSpeak={onSpeak} onSpeakSegment={onSpeakSegment}/>
           </div>
           <div className="pointer-events-none hidden w-full max-w-145 opacity-95 @min-[700px]/workspace:block [@media(max-height:800px)]:hidden" aria-hidden="true"><WaveformArt/></div>
           <LiveDictationPanel dictation={dictation} blocked={recorder.status==='requesting'||recorder.status==='recording'} onStart={onStartDictation} onManageModels={onManageModels}/>
