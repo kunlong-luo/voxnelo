@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   loadSnapshot,
+  completeReview as saveCompletedReview,
   mostRecentSentenceId,
   recordPractice,
   recordView,
@@ -97,5 +98,12 @@ export function useLearningData(
     [refresh, notify],
   );
 
-  return { states, events, historyReady, refresh, setFlag };
+  const completeReview = useCallback(async (targetId:string) => {
+    const result=await saveCompletedReview(targetId);
+    if(!mountedRef.current)return;
+    if(!result.ok){notify(result.error.message);return;}
+    await refresh();
+  },[notify,refresh]);
+
+  return { states, events, historyReady, refresh, setFlag, completeReview };
 }
