@@ -64,44 +64,8 @@ jobs:
         run: node --experimental-strip-types --check scripts/write-candidate-manifest.mts
       - name: Validate static Pages assets
         run: node --experimental-strip-types scripts/check-pages-artifact.mts
-      - name: Renderer size budget
-        run: pnpm perf:budget
-      - name: Ensure CJK fonts for bilingual screenshot checks
-        run: |
-          if ! fc-match 'Noto Sans CJK SC' | grep -q 'NotoSansCJK'; then
-            sudo apt-get update -qq
-            sudo apt-get install -y -qq fonts-noto-cjk
-          fi
-      - name: Responsive Chromium screenshots
-        run: node --experimental-strip-types scripts/check-responsive-browser.mts
-      - name: Install X11 tools for native Electron smoke
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq xvfb xdotool openbox
-      - name: Native Linux Electron window smoke
-        run: xvfb-run -a -s "-screen 0 1600x1000x24" node --experimental-strip-types scripts/check-electron-window.mts
-      - name: Persist learning across an actual Electron process restart
-        run: xvfb-run -a -s "-screen 0 1600x1000x24" node --experimental-strip-types scripts/check-electron-persistence.mts
-      - name: Native Electron 125 percent DPI
-        run: VOXNELO_DPI_SCALE=1.25 xvfb-run -a -s "-screen 0 2400x1600x24" node --experimental-strip-types scripts/check-electron-window.mts
-      - name: Native Electron 150 percent DPI
-        run: VOXNELO_DPI_SCALE=1.5 xvfb-run -a -s "-screen 0 2400x1600x24" node --experimental-strip-types scripts/check-electron-window.mts
-      - name: Upload Electron desktop evidence
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: linux-electron-evidence
-          path: desktop-evidence/
-          retention-days: 14
-          if-no-files-found: ignore
-      - name: Upload responsive layout evidence
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: browser-layout-evidence
-          path: browser-layout/
-          retention-days: 14
-          if-no-files-found: ignore
+      # Expensive visual/native desktop regressions run on demand via quality-deep.yml.
+      # Keep typecheck, lint, tests, build, content safety and static-asset checks on every PR.
 
   desktop-package:
     name: Desktop package integrity (${{ matrix.os }})
