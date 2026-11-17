@@ -1,4 +1,4 @@
-import { SENTENCES, type HistoryEvent, type LearningState, type Sentence } from '@voxnelo/learning';
+import { SENTENCES, reviewSchedule, type HistoryEvent, type LearningState, type Sentence } from '@voxnelo/learning';
 
 export type LibraryMode = 'history'|'favorites'|'review';
 export interface LibraryEntry {
@@ -6,6 +6,8 @@ export interface LibraryEntry {
   sentence:Sentence;
   at?:number;
   type?:HistoryEvent['type'];
+  reviewDue?:boolean;
+  reviewDueAt?:number;
 }
 export const LIBRARY_PAGE_SIZE=5;
 
@@ -14,6 +16,7 @@ export function libraryEntries(
   states:readonly LearningState[],
   events:readonly HistoryEvent[],
   search:string,
+  asOf=Date.now(),
 ):LibraryEntry[] {
   const lookup=new Map(SENTENCES.map(sentence=>[sentence.id,sentence]));
   const query=search.trim().toLocaleLowerCase();
@@ -32,9 +35,20 @@ export function libraryEntries(
         }]:[];
       });
   }
-  const chosen=states.filter(state=>view==='favorites'?state.favorite:state.review)
-    .sort((a,b)=>b.lastSeenAt-a.lastSeenAt);
-  return chosen.flatMap(state=>{
+  const chosen=states.filter(state=>view==='favorites'?state.favorite:state.review);
+  if(view==='review') {
+    return chosen.flatMap(state=>{
+      const sentence=lookup.get(state.sentenceId);
+      const schedule=reviewSchedule(state,asOf);
+      return sentence&&matches(sentence)&&schedule?[{
+        id:state.sentenceId,sentence,at:state.lastSeenAt,
+        reviewDue:schedule.due,reviewDueAt:schedule.dueAt,
+      }]:[];
+    }).sort((a,b)=>Number(b.reviewDue)-Number(a.reviewDue) ||
+      (a.reviewDueAt??0)-(b.reviewDueAt??0) ||
+      a.id.localeCompare(b.id));
+  }
+  return chosen.sort((a,b)=>b.lastSeenAt-a.lastSeenAt).flatMap(state=>{
     const sentence=lookup.get(state.sentenceId);
     return sentence&&matches(sentence)?[{
       id:state.sentenceId,sentence,at:state.lastSeenAt,
@@ -55,4 +69,17 @@ export function historyTotals(events:readonly HistoryEvent[]){
   const valid=events.filter(e=>known.has(e.sentenceId));
   return {events:valid.length,unique:new Set(valid.map(e=>e.sentenceId)).size,
     practice:valid.filter(e=>e.type==='practice').length};
+}
+
+/** Count only known course IDs, not stale/deleted records. */
+export function reviewTotals(states:readonly LearningState[],asOf=Date.now()) {
+  const known=new Set(SENTENCES.map(sentence=>sentence.id));
+  let due=0,upcoming=0;
+  for(const state of states) {
+    if(!known.has(state.sentenceId))continue;
+    const schedule=reviewSchedule(state,asOf);
+    if(!schedule)continue;
+    if(schedule.due)due++;else upcoming++;
+  }
+  return {due,upcoming,total:due+upcoming};
 }
