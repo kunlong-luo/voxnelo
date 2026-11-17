@@ -8,6 +8,7 @@ import {
   SENTENCES,
   silence,
   speakLessonReference,
+  speakPracticeSegment,
   summarize,
   type Sentence,
 } from '@voxnelo/learning';
@@ -176,12 +177,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
     void setFlag(current.id, flag, !currentState?.[flag]);
   };
 
-  const playDemo = async () => {
-    if (recordingBusy) {
-      setNotice(t('recordingPlay'));
-      return;
-    }
-    const result = await speakLessonReference(current, 'system-tts', speed);
+  const reportSpeechResult = (result: {ok:boolean;cancelled?:boolean;message?:string}) => {
     if (result.cancelled) return;
     if (result.ok) { setNotice(''); return; }
     const message = result.message ?? '';
@@ -191,7 +187,23 @@ function AppScreen({languageSetting,onChangeLanguage}: {
       : message.includes('Linux 本地英语语音服务') ? 'speechSystemError'
       : message.includes('Linux 英语语音生成失败') ? 'speechSynthesisError'
       : 'speechFailed';
-    setNotice(t(issue));
+    setNotice(message.includes('练习片段已变更') ? t('segmentPracticeOutdated') : t(issue));
+  };
+
+  const playDemo = async () => {
+    if (recordingBusy) {
+      setNotice(t('recordingPlay'));
+      return;
+    }
+    reportSpeechResult(await speakLessonReference(current, 'system-tts', speed));
+  };
+
+  const playSegment = async (segment:string) => {
+    if (recordingBusy) {
+      setNotice(t('recordingPlay'));
+      return;
+    }
+    reportSpeechResult(await speakPracticeSegment(current, segment, speed));
   };
 
   const handleRecorder = () => {
@@ -255,6 +267,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
               canGoPrevious={historyPosition > 0 && !recordingBusy}
               onToggleIpa={() => setShowIpa((value) => !value)}
               onSpeak={playDemo}
+              onSpeakSegment={playSegment}
               onToggleSpeed={() => {
                 setSpeed((value) => (value === 'normal' ? 'slow' : 'normal'));
                 setNotice('');
