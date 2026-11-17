@@ -1,0 +1,19 @@
+# Offline ASR reproducible benchmark protocol
+
+This file defines measurement methodology only; no benchmark has been executed as part of this document change.
+
+## Test corpus
+
+Use licensed or consented English recordings with human-verified verbatim references. Keep private audio outside the repository. Record corpus version and checksum, sample rate, duration, speaker/accent distribution, speaking style, room noise, playback device and microphone. Include clean speech, background noise, connected speech, long utterances and interrupted sessions. Disclose any exclusion and never mix synthetic fixtures with real acoustic results.
+
+## Reproducibility
+
+Record app commit, OS version and architecture, Moonshine SDK/model versions and model checksum, CPU/RAM, audio path, input device, inference settings, warm-up policy and offline/network state. Run identical corpus for each model, with repeated runs for latency and memory.
+
+## Metrics
+
+WER = (substitutions + deletions + insertions) / reference word count; CER uses characters. Document normalization rules (case, punctuation, contractions, numbers) before scoring. Report median/p95 time-to-first-text, finalization latency, real-time factor, CPU and peak RSS, alongside failures and sample counts. Report distributions by noise/accent group and confidence intervals when justified. Keep empty results as NOT MEASURED.
+
+## Acceptance
+
+Publish thresholds only after product-owner approval and representative hardware testing. A green CI synthetic test is not a measured accuracy or performance claim. Refer to docs/engineering/ASR-ACCURACY-EXPERIMENTS.md for existing experiments.
