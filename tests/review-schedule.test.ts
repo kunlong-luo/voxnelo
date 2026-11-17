@@ -6,7 +6,6 @@ import { libraryEntries, reviewTotals } from '../apps/web/src/libraryData';
 
 const start = Date.UTC(2026, 10, 17, 12);
 const day = 86_400_000;
-const mockClock = vi.spyOn(Date, 'now');
 
 async function clearAll() {
   await database.transaction('rw', database.states, database.events, async () => {
@@ -15,10 +14,10 @@ async function clearAll() {
   });
 }
 beforeEach(async () => {
-  mockClock.mockReturnValue(start);
+  vi.spyOn(Date,'now').mockReturnValue(start);
   await clearAll();
 });
-afterEach(() => mockClock.mockRestore());
+afterEach(() => vi.restoreAllMocks());
 
 describe('F104 opt-in spaced review without fabricated learning grades', () => {
   it('keeps new user-marked items immediately due and ignores browsing', async () => {
@@ -46,11 +45,11 @@ describe('F104 opt-in spaced review without fabricated learning grades', () => {
   it('advances to 3 and 7 days on completed recordings, then resets after removing review', async () => {
     await patchState('s001', {review:true});
     await completeReview('s001');
-    mockClock.mockReturnValue(start+day);
+    vi.mocked(Date.now).mockReturnValue(start+day);
     await recordEvent('s001','practice');
     let state=(await loadLearningData()).states[0]!;
     expect(state).toMatchObject({reviewStep:2,nextReviewAt:start+4*day,practicedCount:1});
-    mockClock.mockReturnValue(start+4*day);
+    vi.mocked(Date.now).mockReturnValue(start+4*day);
     await recordEvent('s001','practice');
     state=(await loadLearningData()).states[0]!;
     expect(state).toMatchObject({reviewStep:3,nextReviewAt:start+11*day,practicedCount:2});
