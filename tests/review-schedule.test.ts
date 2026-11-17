@@ -69,7 +69,7 @@ describe('F104 opt-in spaced review without fabricated learning grades', () => {
       lastSeenAt:start,lastPracticedAt:start};
     expect(reviewSchedule(legacy,start+day-1)?.due).toBe(false);
     expect(reviewSchedule(legacy,start+day)?.due).toBe(true);
-    expect(reviewSchedule({...legacy,lastPracticedAt:undefined},start)?.due).toBe(true);
+    expect(reviewSchedule({review:true},start)?.due).toBe(true);
     expect(reviewSchedule({...legacy,nextReviewAt:Number.NaN},start)?.due).toBe(false);
     expect(nextReviewSchedule({reviewStep:200},start)).toEqual({reviewStep:5,nextReviewAt:start+30*day});
     expect(nextReviewSchedule({reviewStep:-1},start)).toEqual({reviewStep:1,nextReviewAt:start+day});
