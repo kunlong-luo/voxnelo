@@ -8,7 +8,7 @@ import { Button } from './components/ui/button';
 
 /** Composition only: keep practice, controls and side information independent. */
 export function PracticeView({current,currentState,stats,speed,showIpa,notice,recorder,dictation,recordingBusy,
-  canGoPrevious,onStartDictation,onManageModels,onToggleIpa,onSpeak,onToggleSpeed,onRecord,onToggleFlag,onNext,onPrevious,
+  canGoPrevious,onStartDictation,onManageModels,onToggleIpa,onSpeak,onSpeakSegment,onToggleSpeed,onRecord,onToggleFlag,onNext,onPrevious,
   onChooseRelated,onDismissNotice}:PracticeViewProps) {
   const {t}=useI18n();
   const layoutRef=useRef<HTMLDivElement>(null);
@@ -35,7 +35,7 @@ export function PracticeView({current,currentState,stats,speed,showIpa,notice,re
     <div className={`practiceColumn flex min-w-0 flex-col gap-5 ${alignFullHeight?'self-stretch':''}`}>
       <PracticeCard current={current} currentState={currentState} speed={speed} showIpa={showIpa}
         recorder={recorder} dictation={dictation} recordingBusy={recordingBusy} canGoPrevious={canGoPrevious} onStartDictation={onStartDictation} onManageModels={onManageModels}
-        onToggleIpa={onToggleIpa} onSpeak={onSpeak} onToggleSpeed={onToggleSpeed}
+        onToggleIpa={onToggleIpa} onSpeak={onSpeak} onSpeakSegment={onSpeakSegment} onToggleSpeed={onToggleSpeed}
         onRecord={onRecord} onToggleFlag={onToggleFlag} onNext={onNext} onPrevious={onPrevious}/>
       {notice && <div className="notice flex items-center justify-between gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-xs text-foreground shadow-sm" role="status">
         <span className="flex items-center gap-2"><VolumeX size={17}/>{notice}</span>

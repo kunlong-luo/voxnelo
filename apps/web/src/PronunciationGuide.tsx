@@ -1,6 +1,6 @@
 import { useId, useState } from 'react';
-import { BookOpenText, ChevronDown, Volume2 } from 'lucide-react';
-import { getConnectedSpeechGuide, splitConnectedSpeechSpan, type ConnectedSpeechRuleKind, type Sentence } from '@voxnelo/learning';
+import { BookOpenText, ChevronDown, Mic2, Volume2 } from 'lucide-react';
+import { getConnectedSpeechGuide, splitConnectedSpeechSpan, practiceSegments, type ConnectedSpeechRuleKind, type Sentence } from '@voxnelo/learning';
 import { useI18n, type TranslationKey } from './i18n';
 import { Button } from './components/ui/button';
 import { cn } from './lib/utils';
@@ -13,20 +13,26 @@ const ruleLabels:Record<ConnectedSpeechRuleKind,TranslationKey>={
 };
 
 export function PronunciationGuide({
-  sentence,showIpa,recordingBusy,onToggleIpa,onSpeak,
+  sentence,showIpa,recordingBusy,onToggleIpa,onSpeak,onSpeakSegment,
 }:{
   sentence:Sentence;
   showIpa:boolean;
   recordingBusy:boolean;
   onToggleIpa:()=>void;
   onSpeak:()=>void;
+  onSpeakSegment?:((segment:string)=>void)|undefined;
 }) {
   const {t,locale}=useI18n();
   const [showRules,setShowRules]=useState(false);
   const [activeRuleIndex,setActiveRuleIndex]=useState(0);
   const [compactOpen,setCompactOpen]=useState(false);
+  const [showSegments,setShowSegments]=useState(false);
+  const [selectedSegment,setSelectedSegment]=useState<string|null>(null);
+  const segmentsRegionId=useId();
   const ruleRegionId=useId();
   const guide=getConnectedSpeechGuide(sentence);
+  const segments=practiceSegments(sentence);
+  const activeSegment=segments.find(segment=>segment===selectedSegment)??segments[0];
   const activeRule=guide?.rules[activeRuleIndex]??guide?.rules[0];
   const activeWords=guide&&activeRule ? splitConnectedSpeechSpan(guide.english,activeRule.span) : undefined;
 
@@ -47,6 +53,34 @@ export function PronunciationGuide({
         </Button>
       </div>
     </div>
+    {segments.length>0 && <div className="mt-2 border-t border-border/55 pt-2">
+      <Button variant="soft" size="sm" onClick={()=>setShowSegments(value=>!value)}
+        aria-expanded={showSegments} aria-controls={segmentsRegionId}
+        className="h-8 max-w-full rounded-xl text-xs">
+        <Mic2 size={14} aria-hidden="true"/>{t('segmentPracticeToggle')}
+        <ChevronDown size={14} aria-hidden="true" className={cn('transition-transform motion-reduce:transition-none',showSegments&&'rotate-180')}/>
+      </Button>
+      {showSegments && <div id={segmentsRegionId} role="region" aria-label={t('segmentPracticeTitle')}
+        className="mt-2 space-y-2 rounded-xl border border-border/60 bg-background/60 p-2.5 sm:p-3">
+        <div role="group" aria-label={t('segmentPracticeChoose')} className="flex flex-wrap gap-1.5">
+          {segments.map(segment=><Button key={segment} variant={activeSegment===segment?'soft':'outline'} size="sm"
+            aria-pressed={activeSegment===segment}
+            onClick={()=>setSelectedSegment(segment)}
+            className="h-auto min-h-9 max-w-full whitespace-normal rounded-xl px-2.5 py-1.5 text-left text-xs"
+            lang="en">{segment}</Button>)}
+        </div>
+        <p className="wrap-anywhere text-xs font-semibold text-foreground" aria-live="polite">
+          {t('segmentPracticeSelected')} <span lang="en">{activeSegment}</span>
+        </p>
+        <Button variant="outline" size="sm" onClick={()=>{if(activeSegment)onSpeakSegment?.(activeSegment);}}
+          disabled={recordingBusy||!activeSegment||!onSpeakSegment}
+          aria-label={t('segmentPracticePlay')} className="h-9 max-w-full rounded-xl text-xs">
+          <Volume2 size={15} aria-hidden="true"/>{t('segmentPracticePlay')}
+        </Button>
+        <p className="text-[11px] leading-5 text-muted-foreground">{t('segmentPracticeRecordHint')}</p>
+        <p className="text-[10px] leading-4 text-muted-foreground">{t('segmentPracticeTtsNote')}</p>
+      </div>}
+    </div>}
     {showIpa && !compactOpen && <div className="hidden min-w-0 flex-wrap items-center gap-x-2 gap-y-1 border-t border-border/55 pt-1 [@media(max-height:900px)]:flex">
       {sentence.ipa && <span className="ipa wrap-anywhere text-xs text-ipa-ink" lang="en">{sentence.ipa}</span>}
       {guide && <span className="wrap-anywhere text-xs font-medium text-primary" lang="en">{guide.spokenIpa}</span>}
