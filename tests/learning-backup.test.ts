@@ -4,7 +4,7 @@ import { database, patchState, recordEvent } from '@voxnelo/storage';
 import {
   BACKUP_FORMAT, BACKUP_VERSION, MAX_BACKUP_BYTES, MAX_BACKUP_EVENTS,
   exportLearningBackup, parseLearningBackup, restoreLearningBackup, LearningBackupError,
-} from '../packages/learning/backup';
+} from '@voxnelo/learning';
 
 const all = async () => ({
   states: await database.states.toArray(),
