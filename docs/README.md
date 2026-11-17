@@ -28,3 +28,9 @@ The `V0.1-*`, `V0.1.5-*`, `V0.1.6-*`, dated pilots and release notes are histori
 ## Documentation maintenance policy
 
 When changing a user-visible feature, update the user guide, PRD traceability, release notes (if applicable), and associated tests in the same PR. When changing model support, explicitly distinguish CI packaging, installed runtime, and physical microphone acceptance. Keep private recordings, rights agreements, reviewer identities and local file paths out of public docs.
+
+## Offline documentation checks
+
+Run `pnpm docs:check` to validate repository-local Markdown links and package-script commands in maintained user/release/engineering entry points. CI runs the same check on every PR. `pnpm docs:check:all` additionally scans historical Markdown and is an investigative command, not a required passing release gate. This check does **not** test external URLs, heading fragments, translations, screenshots or factual release claims; those require separate review.
+
+The checker's implementation and regression tests live in `scripts/check-documentation.mts` and `tests/documentation-check.test.ts`. Before a new release, compare public/download wording with actual GitHub Releases and verify the real installers separately.
