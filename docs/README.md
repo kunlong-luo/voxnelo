@@ -14,7 +14,7 @@ Updated: 2026-11-16. This index is navigation, **not** a release approval.
 - [User guide](USER-GUIDE.md)
 - [Development](DEVELOPMENT.md)
 - [Privacy](PRIVACY.md)
-- [PRD traceability](release/PRD-TRACEABILITY.md)
+- [PRD traceability — 23 IDs with code/test paths and unmet requirements](release/PRD-TRACEABILITY.md)
 - [Release readiness](engineering/STABLE-RELEASE-READINESS.md)
 - [ASR evidence and benchmark](engineering/ASR-ACCURACY-EXPERIMENTS.md)
 - [Connected speech and licensed audio review](engineering/CONNECTED-SPEECH-AUDIO-REVIEW.md)
@@ -23,7 +23,7 @@ Updated: 2026-11-16. This index is navigation, **not** a release approval.
 
 ## Historical material
 
-The `V0.1-*`, `V0.1.5-*`, `V0.1.6-*`, dated pilots and release notes are historical evidence, **not** current installation instructions. See [historical V0.1 checklist](release/V0.1-PRD-CHECKLIST.md). The original product baseline describes intended future features, not verified shipped features.
+The [earlier PRD starter](release/PRD-TRACEABILITY-STARTER.md), `V0.1-*`, `V0.1.5-*`, `V0.1.6-*`, dated pilots and release notes are historical evidence, **not** current installation instructions. See [historical V0.1 checklist](release/V0.1-PRD-CHECKLIST.md). The original product baseline describes intended future features, not verified shipped features.
 
 ## Documentation maintenance policy
 

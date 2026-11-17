@@ -1,4 +1,6 @@
-# PRD → implementation → tests: evidence tracker (starter)
+# PRD → implementation → tests: historical starter (superseded)
+
+> **Historical:** Superseded by the [current 23-ID PRD → code → test matrix](PRD-TRACEABILITY.md). The earlier “not independently mapped” cells below were an initial audit snapshot, not the current repository assessment. Preserve for provenance; edit the current matrix instead.
 
 Baseline: docs/Voxnelo-Product-Docs-v1.0/docs/02-产品需求PRD.md. Original Word/PDF are frozen. This is a starter, not a completed code-symbol audit. Prior checklist: V0.1-PRD-CHECKLIST.md.
 

@@ -1,30 +1,54 @@
-# PRD → implementation → test traceability
+# 原始 PRD → 代码 → 测试追踪矩阵
 
-Snapshot: 2026-11-16; initial documentary cross-reference, **not** a source-level exhaustive verification or sign-off. Original frozen requirement: [PRD](../Voxnelo-Product-Docs-v1.0/docs/02-产品需求PRD.md). Historical evidence: [V0.1 checklist](V0.1-PRD-CHECKLIST.md). Status vocabulary: **documented implementation** = previously recorded in the historical checklist; **requires verification** = no fresh source/test mapping established in this audit; **external gate** = human or hardware proof outstanding. Do not convert a historical statement into new acceptance.
+**代码基线：** `main`（审查起点 `2b3b6453`，2026-11-17）。**需求基线：** [冻结 PRD](../Voxnelo-Product-Docs-v1.0/docs/02-产品需求PRD.md)，不可改写原始 DOCX/PDF。本文件是**源码与测试文件的可追踪索引**，并非自动化用例全部通过、真实设备验收、语言学审核或发布批准。
 
-| PRD ID | Requirement | Recorded implementation evidence | Test / acceptance evidence to collect | Status |
+## 状态释义
+
+- **代码证据已定位；待验收**：存在能对应基础流程的实现和相关测试文件；完整需求的真实设备/人工验收未凭本表关闭。
+- **部分实现；验收未闭合**：有相邻功能或子项，但原始要求至少有一部分缺失或证据不足。
+- **未找到完整实现**：在本次审阅的 UI、服务、内容、设置及测试入口中未找到符合需求的完整功能；不等于证明任意未扫描文件都不存在相关逻辑。
+- **语料未完成审核**：数量/结构可自动核对，不等于翻译、IPA、配音许可及教学准确性已获批准。
+
+**测试列仅表示存在直接或相邻的回归用例，不表示覆盖全部验收点。** 需要查看测试名称与断言；本表自身的校验测试仅保证 PRD ID、源码/测试文件路径和状态字段没有漂移。
+
+| PRD ID | 原始需求摘要 | 源码证据（实际路径） | 相关测试（实际路径） | 当前判定与缺口 |
 | --- | --- | --- | --- | --- |
-| F001 | Chinese-first entry, no login | Historical V0.1 checklist: React entry | Fresh install, locale and keyboard smoke | Documented; reverify |
-| F002 | Sentence card, translation, IPA | Historical checklist: 40 phrases | Long text, translation/IPA editorial review | External content gate |
-| F003 | Normal/slow reference audio | System TTS; see ADR-0001 and connected speech review | Offline playback, voice availability, audio provenance | External audio gate |
-| F004 | Permissioned record and replay | Historical checklist: MediaRecorder | Physical mic, deny/retry, device removal | Hardware gate |
-| F005 | Change sentence safely | Historical checklist: navigation and cancellation | No stale sound or old recording | Reverify |
-| F006 | History | Historical checklist: IndexedDB view/practice events | Restart and invalid-event recovery | Reverify |
-| F007 | Favorites | Historical checklist: Dexie | Restart persistence | Reverify |
-| F008 | Review markers | Historical checklist: manual flags | Distinguish manual review from pronunciation scoring | Reverify |
-| F009 | Local storage | Historical checklist: Dexie | Offline, schema migration, failed storage | Reverify |
-| F010 | 30–50 vetted phrases | Historical checklist: 40 phrases | Independent content and license audit | External content gate |
-| F011 | Permissions and security | Historical checklist: isolated Electron/preload | Platform privacy and permission checks | Reverify |
-| F012 | Accessibility | Historical checklist: keyboard/focus/reduced motion | Physical keyboard, zoom, screen reader | Hardware gate |
-| F101–F104 | Guidance, segment playback, help, spaced review | Original PRD v0.2 scope | Map each to current component and test | Requires verification |
-| F105–F108 | Recommendation, search, backup, 100–200 phrases | Original PRD v0.3 scope | Map each to current component and test | Requires verification |
-| S001 | SpeakFeed | Original v1.0 plan | Gesture tests and real trackpad/keyboard acceptance | Requires verification |
-| S002 | Speak Karaoke | Original v1.0 plan | Live word alignment, partial-utterance non-green tests | Requires verification |
-| S003 | Smart Prompt | Original v1.0 plan | Pause, disable, false-trigger and interruption tests | Requires verification |
+| F001 | 中文首屏、开始/继续、无需账号 | [`apps/web/src/App.tsx`](../../apps/web/src/App.tsx)、[`apps/web/src/i18n.tsx`](../../apps/web/src/i18n.tsx)、[`apps/web/src/AppNavigation.tsx`](../../apps/web/src/AppNavigation.tsx) | [`tests/i18n-and-tooltips.test.tsx`](../../tests/i18n-and-tooltips.test.tsx)、[`tests/app-smoke.test.tsx`](../../tests/app-smoke.test.tsx) | **代码证据已定位；待验收**。默认中文与显式语言切换已有测试；全新桌面安装和首屏易用性尚需实机 |
+| F002 | 短句、翻译、场景/难度、折叠 IPA | [`apps/web/src/PracticeCard.tsx`](../../apps/web/src/PracticeCard.tsx)、[`apps/web/src/PronunciationGuide.tsx`](../../apps/web/src/PronunciationGuide.tsx)、[`packages/content/sentences.ts`](../../packages/content/sentences.ts) | [`tests/views.test.tsx`](../../tests/views.test.tsx)、[`tests/connected-speech-guide.test.tsx`](../../tests/connected-speech-guide.test.tsx) | **代码证据已定位；待验收**。中英显示和 IPA UI 有测试；长句缩放、翻译/音标语言学准确性未完成外部验收 |
+| F003 | 参考发音、慢速与重播 | [`packages/audio/speech.ts`](../../packages/audio/speech.ts)、[`packages/learning/service.ts`](../../packages/learning/service.ts)、[`apps/web/src/PracticeControlPanel.tsx`](../../apps/web/src/PracticeControlPanel.tsx) | [`tests/speech.test.tsx`](../../tests/speech.test.tsx)、[`tests/reference-audio-playback.test.ts`](../../tests/reference-audio-playback.test.ts) | **代码证据已定位；待验收**。当前是系统 TTS/受限本机回退，不是获批真人专业录音；设备语音包与离线音质待验 |
+| F004 | 请求麦克风权限、开始停止、录音回听 | [`apps/web/src/useRecorder.ts`](../../apps/web/src/useRecorder.ts)、[`apps/web/src/RecordingPlayback.tsx`](../../apps/web/src/RecordingPlayback.tsx)、[`apps/web/src/PracticeControlPanel.tsx`](../../apps/web/src/PracticeControlPanel.tsx) | [`tests/use-recorder.test.tsx`](../../tests/use-recorder.test.tsx)、[`tests/recording-playback.test.tsx`](../../tests/recording-playback.test.tsx) | **代码证据已定位；待验收**。单测覆盖拒绝授权、晚到权限、音轨断开及 URL 清理；真实麦克风和三个 OS 安装包需验 |
+| F005 | 切句不残留旧音频与录音 | [`apps/web/src/App.tsx`](../../apps/web/src/App.tsx)、[`apps/web/src/useRecorder.ts`](../../apps/web/src/useRecorder.ts)、[`packages/learning/service.ts`](../../packages/learning/service.ts) | [`tests/app-smoke.test.tsx`](../../tests/app-smoke.test.tsx)、[`tests/use-recorder.test.tsx`](../../tests/use-recorder.test.tsx)、[`tests/speech.test.tsx`](../../tests/speech.test.tsx) | **代码证据已定位；待验收**。前后句与异步录音竞争有测试；实体设备连续播放与切句仍需验收 |
+| F006 | 看过与练过分开记录、重启恢复 | [`apps/web/src/useLearningData.ts`](../../apps/web/src/useLearningData.ts)、[`packages/storage/database.ts`](../../packages/storage/database.ts)、[`packages/learning/service.ts`](../../packages/learning/service.ts) | [`tests/storage.test.ts`](../../tests/storage.test.ts)、[`tests/learning-service.test.ts`](../../tests/learning-service.test.ts)、[`tests/app-smoke.test.tsx`](../../tests/app-smoke.test.tsx) | **代码证据已定位；待验收**。view/practice 分离、已知句子恢复有测试；三平台真实安装包持久化仍需确认 |
+| F007 | 收藏开关及收藏列表跳转 | [`apps/web/src/PracticeCard.tsx`](../../apps/web/src/PracticeCard.tsx)、[`apps/web/src/LibraryView.tsx`](../../apps/web/src/LibraryView.tsx)、[`packages/storage/database.ts`](../../packages/storage/database.ts) | [`tests/storage.test.ts`](../../tests/storage.test.ts)、[`tests/views.test.tsx`](../../tests/views.test.tsx)、[`tests/library-data.test.ts`](../../tests/library-data.test.ts) | **代码证据已定位；待验收**。收藏状态与列表导航已有测试；跨平台重启回归需验 |
+| F008 | 待复习自评标记、可返回列表 | [`apps/web/src/PracticeCard.tsx`](../../apps/web/src/PracticeCard.tsx)、[`apps/web/src/LibraryView.tsx`](../../apps/web/src/LibraryView.tsx)、[`packages/storage/database.ts`](../../packages/storage/database.ts) | [`tests/storage.test.ts`](../../tests/storage.test.ts)、[`tests/library-data.test.ts`](../../tests/library-data.test.ts) | **代码证据已定位；待验收**。手动 review 布尔状态有持久化测试，不是专业发音测评；文案理解待用户验收 |
+| F009 | IndexedDB 本地存储与离线持久化 | [`packages/storage/database.ts`](../../packages/storage/database.ts)、[`packages/learning/service.ts`](../../packages/learning/service.ts) | [`tests/storage.test.ts`](../../tests/storage.test.ts)、[`tests/learning-service.test.ts`](../../tests/learning-service.test.ts) | **代码证据已定位；待验收**。Dexie 数据表及事务已核对，fake-indexeddb 用例存在；迁移/异常存储与三平台断网重启待实测 |
+| F010 | 30–50 条经审核的入门句子 | [`packages/content/sentences.ts`](../../packages/content/sentences.ts)、[`packages/content/expanded.ts`](../../packages/content/expanded.ts) | [`tests/content-integrity.test.ts`](../../tests/content-integrity.test.ts)、[`tests/core.test.ts`](../../tests/core.test.ts) | **语料未完成审核**。初始 40 条具 IPA；机器校验仅能证明结构。翻译/IPA/参考音频/版权的人工作业未闭环 |
+| F011 | 安全 IPC、最小权限、录音不默认持久化 | [`apps/desktop/security.ts`](../../apps/desktop/security.ts)、[`apps/desktop/main.ts`](../../apps/desktop/main.ts)、[`apps/web/src/useRecorder.ts`](../../apps/web/src/useRecorder.ts) | [`tests/security.test.ts`](../../tests/security.test.ts)、[`tests/use-recorder.test.tsx`](../../tests/use-recorder.test.tsx) | **代码证据已定位；待验收**。可信来源和仅音频权限有单测；发行安装包动态审计、真实隐私行为尚需核验 |
+| F012 | 键盘、可见焦点、缩放 | [`apps/web/src/App.tsx`](../../apps/web/src/App.tsx)、[`apps/web/src/PracticeCard.tsx`](../../apps/web/src/PracticeCard.tsx)、[`apps/web/src/components/ui/button.tsx`](../../apps/web/src/components/ui/button.tsx) | [`tests/app-smoke.test.tsx`](../../tests/app-smoke.test.tsx)、[`tests/appearance.test.tsx`](../../tests/appearance.test.tsx)、[`tests/navigation-components.test.tsx`](../../tests/navigation-components.test.tsx) | **部分实现；验收未闭合**。存在方向键、语义按钮和减少动效实现；Narrator/VoiceOver/Orca、键盘完整路径、200% 缩放/对比度仍待实测 |
+| F101 | 简短中文引导（脚本/TTS） | [`apps/web/src/PracticeSidebarWidgets.tsx`](../../apps/web/src/PracticeSidebarWidgets.tsx)、[`apps/web/src/locales/zh-CN.ts`](../../apps/web/src/locales/zh-CN.ts) | [`tests/nordic-workspace.test.tsx`](../../tests/nordic-workspace.test.tsx) | **部分实现；验收未闭合**。当前有静态学习提示；未找到符合 PRD 的完整中文引导脚本与配套语音体验 |
+| F102 | 手动选段播放与跟读 | [`apps/web/src/PronunciationGuide.tsx`](../../apps/web/src/PronunciationGuide.tsx)、[`packages/content/connected-speech.ts`](../../packages/content/connected-speech.ts) | [`tests/connected-speech-guide.test.tsx`](../../tests/connected-speech-guide.test.tsx) | **部分实现；验收未闭合**。已支持词组音变高亮与规则切换；未找到独立的短语分段音频播放及分段录音流程 |
+| F103 | 按需当前词示范与发音求助 | [`apps/web/src/PronunciationGuide.tsx`](../../apps/web/src/PronunciationGuide.tsx)、[`apps/web/src/SettingsView.tsx`](../../apps/web/src/SettingsView.tsx) | [`tests/connected-speech-guide.test.tsx`](../../tests/connected-speech-guide.test.tsx) | **未找到完整实现**。页面有全句 TTS、规则讲解与通用帮助链接；未找到点选当前词即给出针对性词语示范的闭环 |
+| F104 | 基于练习日期与自评的间隔复习 | [`packages/storage/database.ts`](../../packages/storage/database.ts)、[`packages/core/recommend.ts`](../../packages/core/recommend.ts) | [`tests/core.test.ts`](../../tests/core.test.ts)、[`tests/storage.test.ts`](../../tests/storage.test.ts) | **未找到完整实现**。仅有手动 review 标记和权重选句；没有可核实的按日期调度/复习到期机制 |
+| F105 | 难度、主题、复习和新鲜度的规则推荐 | [`packages/core/recommend.ts`](../../packages/core/recommend.ts)、[`apps/web/src/PracticeSidebarWidgets.tsx`](../../apps/web/src/PracticeSidebarWidgets.tsx) | [`tests/core.test.ts`](../../tests/core.test.ts)、[`tests/nordic-workspace.test.tsx`](../../tests/nordic-workspace.test.tsx) | **部分实现；验收未闭合**。选择算法按新句/复习/最近访问加权；相关主题推荐存在，但未见完整难度偏好权重 |
+| F106 | 收藏、最近练习、复习、已熟悉搜索筛选 | [`apps/web/src/LibraryView.tsx`](../../apps/web/src/LibraryView.tsx)、[`apps/web/src/libraryData.ts`](../../apps/web/src/libraryData.ts)、[`apps/web/src/CatalogView.tsx`](../../apps/web/src/CatalogView.tsx) | [`tests/library-data.test.ts`](../../tests/library-data.test.ts)、[`tests/catalog-view.test.tsx`](../../tests/catalog-view.test.tsx) | **部分实现；验收未闭合**。历史/收藏/复习搜索和场景过滤存在；未找到独立“已熟悉”筛选维度 |
+| F107 | 音量/语速/音标设置及 JSON 导出恢复 | [`apps/web/src/SettingsView.tsx`](../../apps/web/src/SettingsView.tsx)、[`apps/web/src/App.tsx`](../../apps/web/src/App.tsx) | [`tests/appearance.test.tsx`](../../tests/appearance.test.tsx)、[`tests/settings-support.test.tsx`](../../tests/settings-support.test.tsx) | **部分实现；验收未闭合**。慢速/IPA/语言/动效已提供；未找到本地 JSON 学习数据导出恢复及独立音量调节 |
+| F108 | 100–200 条经审核的新增短句 | [`packages/content/expanded.ts`](../../packages/content/expanded.ts)、[`packages/content/sentences.ts`](../../packages/content/sentences.ts) | [`tests/content-integrity.test.ts`](../../tests/content-integrity.test.ts)、[`tests/catalog-view.test.tsx`](../../tests/catalog-view.test.tsx) | **语料未完成审核**。现有总量 280 条：初始 40 条加 240 条扩充。新增 240 条均明确 needs-review 且无 IPA；数量不能替代语料验收 |
+| S001 | SpeakFeed 上下滑短句流及防误翻页 | [`apps/web/src/App.tsx`](../../apps/web/src/App.tsx)、[`apps/web/src/PracticeCard.tsx`](../../apps/web/src/PracticeCard.tsx) | [`tests/app-smoke.test.tsx`](../../tests/app-smoke.test.tsx)、[`tests/nordic-workspace.test.tsx`](../../tests/nordic-workspace.test.tsx) | **部分实现；验收未闭合**。已有前后句按钮及左右方向键；未找到符合规格的触控板上下滑手势与防误触验收 |
+| S002 | Speak Karaoke 随口语可靠逐词点亮 | [`apps/web/src/LiveDictationPanel.tsx`](../../apps/web/src/LiveDictationPanel.tsx)、[`apps/web/src/useLiveDictation.ts`](../../apps/web/src/useLiveDictation.ts) | [`tests/use-live-dictation.test.tsx`](../../tests/use-live-dictation.test.tsx)、[`tests/dictation-transcript-display.test.ts`](../../tests/dictation-transcript-display.test.ts) | **部分实现；验收未闭合**。实时 ASR 中间/最终字幕已实现；未找到和目标短句逐词对齐、半句不误点亮的 Karaoke |
+| S003 | Smart Prompt 停顿自动接下一词，可配置 | [`apps/web/src/useLiveDictation.ts`](../../apps/web/src/useLiveDictation.ts)、[`apps/web/src/SettingsView.tsx`](../../apps/web/src/SettingsView.tsx) | [`tests/use-live-dictation.test.tsx`](../../tests/use-live-dictation.test.tsx) | **未找到完整实现**。未找到停顿计时触发的下一个词提示、等待时间/开关及防抢话机制；ASR 与手动 TTS 不能视为完成 |
 
-## Scope changes and gaps
+## 明确的交付差距与优先级
 
-- The original V0.1 excluded ASR. Subsequent Moonshine work is a scope addition; do not rewrite the frozen PRD to imply it was required in V0.1.
-- `package.json` version `1.0.4` is a source/package identifier, **not** proof of a published v1.0.4 Release.
-- Connected speech: 10 editorial phrases, 11 rules, 20 proposed independent takes. Expert review, rights, and actual audio acceptance remain pending: [Issue #201](https://github.com/kunlong-luo/voxnelo/issues/201).
-- Full traceability requires a subsequent source/test symbol inventory and manual hardware evidence. This table deliberately avoids invented test paths and sign-offs.
+1. **P0 · 教学内容与配音审查：** F010/F108 已有内容结构，但原始 40 句也不能仅凭 IPA 字段宣称语言学审批；新增 240 句标为 `needs-review`。所有涉及连读示例和 20 条独立录音的人工/授权门禁依 [Issue #201](https://github.com/kunlong-luo/voxnelo/issues/201) 处理。未审核录音不得当作已发布素材。
+2. **P0 · 真实可访问性验收：** F012 有键盘入口与部分控件语义，但完整键盘导航、焦点流、缩放、系统读屏和真实桌面环境缺独立验收。参见 [UI/无障碍检查清单](../engineering/UI-ACCESSIBILITY-AUDIT-2026-11-16.md)。
+3. **P1 · 有代码的功能缺口：** F102 分段播放、F104 日期驱动复习、F106 已熟悉筛选、F107 备份恢复/音量控制应拆分成独立工作项，不能和已有相关组件混淆。
+4. **P1 · V1.0 原规格：** S001 沉浸式上下滑、S002 目标词语对齐的 Karaoke、S003 可开关防打断的自动接话均未达到本次静态审查可确认的原始发布前提。不要把版本号 `1.0.4` 当作其已交付证明。
+5. **P1 · ASR 测量：** 可用 [ASR 基准协议](ASR-BENCHMARK-PROTOCOL.md) 在受许可的真实录音与设备上收集 WER/CER/RTF/延迟；没有真实实验就记为“未测量”。
+
+## 版本与证据边界
+
+原始 V0.1 明确不要求实时识别；后续 Moonshine 是增量范围，见 [发布就绪性](../engineering/STABLE-RELEASE-READINESS.md)。当前包版本 `1.0.4` 是**未公开候选源码**，最新已公开发布仍为 `v1.0.3`；GitHub Draft 不构成公开发行。历史 [V0.1 代码索引](../engineering/V0.1-CODE-EVIDENCE.md) 可供交叉核对，但其当时结论不会自动变成今天的人工验收。
+
+## 维护要求
+
+PR 改动某项需求时，同时修订该 ID 行的源文件、回归用例和未闭合项；只有具备明确证据才改变状态。`tests/prd-traceability.test.ts` 应在 CI 内自动检查 23 个 PRD ID、行唯一性与本地文件引用，不能代替人工功能复核。
