@@ -13,7 +13,7 @@ export function practiceSegments(
   const english = sentence.english;
   const words = [...english.matchAll(/\S+/gu)].map(match => ({
     text: match[0],
-    start: match.index,
+    start: match.index ?? 0,
   }));
   const result: string[] = [];
   if (words.length >= 4) {
