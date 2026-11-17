@@ -1,4 +1,4 @@
-import { SCENE_LABELS, SENTENCES, TOPIC_LABELS, getConnectedSpeechGuide, splitConnectedSpeechSpan, type Sentence } from '@voxnelo/content';
+import { SCENE_LABELS, SENTENCES, TOPIC_LABELS, getConnectedSpeechGuide, splitConnectedSpeechSpan, practiceSegments, type Sentence } from '@voxnelo/content';
 import { APP_VERSION, calculateStats, chooseNext, type LearningState } from '@voxnelo/core';
 import { speakEnglish, stopSpeech, type SpeechResult } from '@voxnelo/audio';
 import { loadLearningData, patchState, recordEvent, type HistoryEvent } from '@voxnelo/storage';
@@ -8,7 +8,7 @@ import { loadLearningData, patchState, recordEvent, type HistoryEvent } from '@v
  * 编排内容、推荐、朗读与持久化，把底层异常收口为可展示的 ServiceError 并记日志，
  * UI 层只做展示与导航，不再直连 storage/audio/core。
  */
-export { APP_VERSION, SCENE_LABELS, SENTENCES, TOPIC_LABELS, getConnectedSpeechGuide, splitConnectedSpeechSpan };
+export { APP_VERSION, SCENE_LABELS, SENTENCES, TOPIC_LABELS, getConnectedSpeechGuide, splitConnectedSpeechSpan, practiceSegments };
 export type { ConnectedSpeechGuide, ConnectedSpeechSpanParts, ConnectedSpeechRuleKind } from '@voxnelo/content';
 export { FIRST_SENTENCE } from '@voxnelo/content';
 export { primeSpeechVoices } from '@voxnelo/audio';
@@ -137,6 +137,23 @@ export async function speakLessonReference(
   return requestedSource === 'system-tts'
     ? { ...result, playedSource: 'system-tts', requestedSource }
     : { ...result, playedSource: 'system-tts', requestedSource, unavailableReason: 'review-pending' };
+}
+
+/**
+ * F102: play an exact, selectable chunk of a known course sentence.
+ * Never treat a connected-speech editorial note as approved audio:
+ * this is the ordinary system TTS voice, which may not reproduce that IPA.
+ */
+export async function speakPracticeSegment(
+  sentence: Sentence, segment: string, speed: 'normal' | 'slow' = 'normal',
+): Promise<SpeechResult> {
+  const known = SENTENCES.find(item => item.id === sentence.id);
+  if (!known || known.english !== sentence.english || known.ipa !== sentence.ipa ||
+      known.reviewStatus !== sentence.reviewStatus ||
+      !practiceSegments(known).includes(segment)) {
+    return { ok: false, message: '练习片段已变更，请重新打开当前短句。' };
+  }
+  return speak(segment, speed);
 }
 
 export function silence(): void {
