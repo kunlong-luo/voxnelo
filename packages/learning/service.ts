@@ -67,7 +67,7 @@ export async function recordPractice(sentenceId: string): Promise<ServiceResult<
 
 export async function setFlag(
   sentenceId: string,
-  flag: 'favorite' | 'review',
+  flag: 'favorite' | 'review' | 'familiar',
   value: boolean,
 ): Promise<ServiceResult<void>> {
   try {
