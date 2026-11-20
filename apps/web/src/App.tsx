@@ -173,7 +173,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
     display(item);
   };
 
-  const toggleFlag = (flag: 'favorite' | 'review') => {
+  const toggleFlag = (flag: 'favorite' | 'review' | 'familiar') => {
     void setFlag(current.id, flag, !currentState?.[flag]);
   };
 

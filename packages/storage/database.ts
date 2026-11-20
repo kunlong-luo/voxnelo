@@ -48,7 +48,7 @@ export async function recordEvent(sentenceId: string, type: 'view' | 'practice')
   });
 }
 
-export async function patchState(sentenceId: string, patch: Partial<Pick<LearningState, 'favorite' | 'review'>>) {
+export async function patchState(sentenceId: string, patch: Partial<Pick<LearningState, 'favorite' | 'review' | 'familiar'>>) {
   await database.transaction('rw', database.states, async () => {
     const original = await database.states.get(sentenceId);
     const state: LearningState = original ?? {
@@ -60,9 +60,18 @@ export async function patchState(sentenceId: string, patch: Partial<Pick<Learnin
       lastSeenAt: Date.now(),
     };
     const updated = { ...state, ...patch };
-    if (patch.review === true && !state.review) {
-      updated.reviewStep = 0;
-      updated.nextReviewAt = Date.now();
+    // Review and "familiar" are mutually exclusive learner decisions.
+    // Favorites and previous history remain independent of both labels.
+    if (patch.familiar === true) {
+      updated.review = false;
+      delete updated.reviewStep;
+      delete updated.nextReviewAt;
+    } else if (patch.review === true) {
+      updated.familiar = false;
+      if (!state.review) {
+        updated.reviewStep = 0;
+        updated.nextReviewAt = Date.now();
+      }
     } else if (patch.review === false && state.review) {
       delete updated.reviewStep;
       delete updated.nextReviewAt;

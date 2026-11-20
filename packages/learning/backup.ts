@@ -36,7 +36,7 @@ const exactKeys = (value: Record<string, unknown>, allowed: readonly string[]): 
 
 const STATE_KEYS = [
   'sentenceId', 'seenCount', 'practicedCount', 'favorite', 'review',
-  'lastSeenAt', 'lastPracticedAt', 'reviewStep', 'nextReviewAt',
+  'lastSeenAt', 'lastPracticedAt', 'reviewStep', 'nextReviewAt', 'familiar',
 ] as const;
 
 function validatedState(value: unknown): LearningState {
@@ -44,6 +44,8 @@ function validatedState(value: unknown): LearningState {
     typeof value.sentenceId !== 'string' || !validIds.has(value.sentenceId) ||
     !count(value.seenCount) || !count(value.practicedCount) ||
     typeof value.favorite !== 'boolean' || typeof value.review !== 'boolean' ||
+    (value.familiar !== undefined && typeof value.familiar !== 'boolean') ||
+    (value.familiar === true && value.review === true) ||
     !finiteTimestamp(value.lastSeenAt) ||
     (value.lastPracticedAt !== undefined && !finiteTimestamp(value.lastPracticedAt)) ||
     (value.reviewStep !== undefined &&
@@ -58,6 +60,7 @@ function validatedState(value: unknown): LearningState {
     practicedCount: value.practicedCount, favorite: value.favorite,
     review: value.review, lastSeenAt: value.lastSeenAt,
   };
+  if (typeof value.familiar === 'boolean') state.familiar = value.familiar;
   if (typeof value.lastPracticedAt === 'number') state.lastPracticedAt = value.lastPracticedAt;
   if (typeof value.reviewStep === 'number') state.reviewStep = value.reviewStep;
   if (typeof value.nextReviewAt === 'number') state.nextReviewAt = value.nextReviewAt;
