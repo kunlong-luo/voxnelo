@@ -3,7 +3,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { FIRST_SENTENCE, SENTENCES, type LearningState } from '@voxnelo/learning';
 import { LibraryView } from '../apps/web/src/LibraryView';
-import { PracticeCard } from '../apps/web/src/PracticeCard';
 import { I18nProvider } from '../apps/web/src/i18n';
 
 afterEach(()=>{cleanup();vi.restoreAllMocks();});
