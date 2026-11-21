@@ -11,7 +11,7 @@ const current=[
 
 describe('post-v1.0.0 official unsigned release continuity',()=>{
   it('cannot rerun the completed one-shot official release on a push',()=>{
-    const workflow=read('.github/workflows/publish-all-v1.0.0.yml');
+    const workflow=read('docs/archive/workflows/publish-all-v1.0.0.yml');
     expect(workflow).toContain('workflow_dispatch:');
     expect(workflow).not.toMatch(/^\s+push:/m);
     expect(workflow).toContain('if: false # archived');

@@ -2,7 +2,7 @@ import {readFileSync} from 'node:fs';
 import {describe,it,expect} from 'vitest';
 
 const read=(path:string)=>readFileSync(path,'utf8');
-const workflow=read('.github/workflows/publish-all-v1.0.3.yml');
+const workflow=read('docs/archive/workflows/publish-all-v1.0.3.yml');
 const notes=read('docs/release-notes/v1.0.3.md');
 const qa=read('docs/engineering/MANUAL-QA-OWNER-2026-10-25.md');
 

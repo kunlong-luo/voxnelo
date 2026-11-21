@@ -1,7 +1,7 @@
 import {readFileSync} from 'node:fs';
 import {describe,it,expect} from 'vitest';
 
-const workflow=readFileSync('.github/workflows/publish-all-v1.0.2.yml','utf8');
+const workflow=readFileSync('docs/archive/workflows/publish-all-v1.0.2.yml','utf8');
 const notes=readFileSync('docs/release-notes/v1.0.2.md','utf8');
 
 describe('v1.0.2 permanently archived official unsigned release guards',()=>{

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 
-const workflow=readFileSync('.github/workflows/publish-all-v1.0.0.yml','utf8');
+const workflow=readFileSync('docs/archive/workflows/publish-all-v1.0.0.yml','utf8');
 const notes=readFileSync('docs/release-notes/v1.0.0.md','utf8');
 const decision=readFileSync('docs/release/UNSIGNED-V1-OWNER-DECISION.md','utf8');
 
@@ -53,7 +53,7 @@ describe('Owner-authorized official unsigned release is guarded and truthful',()
 });
 
 describe('v1.0.1 already-published patch version is immutable',()=> {
-  const workflow101=readFileSync('.github/workflows/publish-all-v1.0.1.yml','utf8');
+  const workflow101=readFileSync('docs/archive/workflows/publish-all-v1.0.1.yml','utf8');
   const notes101=readFileSync('docs/release-notes/v1.0.1.md','utf8');
   const ops=readFileSync('docs/engineering/RELEASE-OPERATIONS.md','utf8');
   it('permanently disables its one-shot publisher after successful public release',()=> {

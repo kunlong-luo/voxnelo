@@ -23,9 +23,13 @@ Scope: `main` starting at `122080137b7dfe69d7581d6211f233588e8fb86a`, with GitHu
 ## Additional work that still needs evidence
 
 1. **Module-level unused exports/imports and CSS selectors:** run a full workspace import graph plus bundle/coverage-based inspection before deleting or refactoring TypeScript, React or CSS. This pass did not certify any runtime source file dead, so no live audio, IndexedDB, UI or ASR production logic was deleted.
-2. **Historical workflow source cleanup:** consider moving the already `if: false` published-version workflows out of executable Actions, but only alongside their release regression tests and cross-reference updates. Keep their original source/commit evidence.
+2. **Historical workflow source cleanup (completed later 2026-11-21):** Seven disabled published-version and v0.1.7 Draft workflows were moved byte-for-byte from executable Actions to [the archive](../archive/README.md); original blob SHA-1 values, release regression tests, source/commit references and active-entry absence are checked. Existing GitHub releases, draft assets and run history were not modified.
 3. **Documentation debt:** older dated audits intentionally describe their inspection date. Keep them as snapshots; maintain [current navigation](../release/DOCUMENT-INDEX.md) instead of rewriting historical findings. Continue checking external links and release asset identities independently.
 4. **Actual release gates:** this cleanup does not establish human microphone, accessibility, content-rights, signing or language-review approvals, and does **not** publish a new release.
+
+## Follow-up retirement — 2026-11-21
+
+The seven remaining version-specific publisher/Draft workflow files have been relocated from `.github/workflows/` to `docs/archive/workflows/`. Their first jobs were already disabled, but keeping historical writer code in Actions exposed redundant manual dispatch entrypoints. The original file bytes and old publication assertions are retained, and new regression tests verify exact historical Git blob IDs plus absence of executable counterparts. This change neither runs nor republishes any release, and does not validate human/physical-device acceptance. Source-level dead-code analysis remains open: only the workflow entrypoint cleanup is certified.
 
 ## Validation boundary
 
