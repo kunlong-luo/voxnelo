@@ -13,11 +13,14 @@ export const CURRENT_DOCUMENTS = [
   'README.zh-CN.md',
   'docs/README.md',
   'docs/DEVELOPMENT.md',
+  'docs/DEVELOPMENT.md',
   'docs/USER-GUIDE.md',
   'docs/release/PRD-TRACEABILITY.md',
   'docs/release/DOCUMENT-INDEX.md',
   'docs/release/ASR-BENCHMARK-PROTOCOL.md',
   'docs/engineering/RELEASE-OPERATIONS.md',
+  'docs/engineering/REPOSITORY-GOVERNANCE.md',
+  'docs/engineering/NODE26-LTS-MIGRATION.md',
   'docs/engineering/CONNECTED-SPEECH-AUDIO-REVIEW.md',
 ] as const;
 
