@@ -11,6 +11,7 @@ export type DocumentationIssue = {
 export const CURRENT_DOCUMENTS = [
   'README.md',
   'README.zh-CN.md',
+  'INSTALL-TO-LOCAL.md',
   'docs/README.md',
   'docs/DEVELOPMENT.md',
   'docs/DEVELOPMENT.md',
