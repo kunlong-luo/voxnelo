@@ -13,7 +13,6 @@ export const CURRENT_DOCUMENTS = [
   'README.zh-CN.md',
   'docs/README.md',
   'docs/DEVELOPMENT.md',
-  'docs/DEVELOPMENT.md',
   'docs/USER-GUIDE.md',
   'docs/release/PRD-TRACEABILITY.md',
   'docs/release/DOCUMENT-INDEX.md',
