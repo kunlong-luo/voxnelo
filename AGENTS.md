@@ -48,7 +48,7 @@
   pnpm build
   pnpm perf:budget
   ```
-- 现有 `.github/workflows/ci.yml` 还检查静态 Pages 资源、响应式截图、Linux Electron/DPI 冒烟以及 Windows/macOS 打包完整性；不得绕过失败检查来宣布可发布。
+- `.github/workflows/ci.yml` 持续检查静态 Pages 资源、Node/pnpm 版本一致性及 Windows/macOS/Linux 打包完整性；耗时的响应式截图和 Linux Electron/DPI 冒烟已移至按需运行的 `.github/workflows/quality-deep.yml`，未运行不能视为通过。不得绕过失败检查来宣布可发布。
 - 自动化绿色 **不等于** Windows/macOS/Linux 实机麦克风、权限、安装包、品牌与素材版权全部合格。
 
 ## 5. Git 与交付

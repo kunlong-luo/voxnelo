@@ -1,6 +1,6 @@
 # Voxnelo repository governance setup
 
-The repository is **private**. Do not change visibility in order to copy Pagevela settings.
+The repository is **public** (verified on GitHub, 2026-11-21). Ordinary dependency or CI work must not change its visibility; any future visibility change requires a separate maintainer decision.
 
 ## Manual GitHub settings (maintainer-only)
 
@@ -17,7 +17,7 @@ The repository is **private**. Do not change visibility in order to copy Pagevel
    - Require status checks matching actual Voxnelo CI job contexts after they have run: `check`, `Desktop package integrity (windows-latest)`, `Desktop package integrity (macos-latest)`. Verify exact displayed check names before adding.
    - Require branches to be up to date before merging; prefer linear history.
    - Do not grant automated actors blanket bypass.
-3. If GitHub reports that private-repo rulesets require an upgraded plan, do not expose the repository as a workaround. Record the restriction and use reviewed PRs as policy until eligible.
+3. If GitHub rejects a rule due to a plan or permission restriction, record the exact restriction and use reviewed PRs as policy until eligible. Do not change repository visibility as a workaround.
 
 ## Automation and release
 

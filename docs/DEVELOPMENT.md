@@ -6,8 +6,8 @@ These instructions apply to **Voxnelo 1.0.4 source (unpublished candidate)**. Th
 
 ## Requirements
 
-- Node.js 22 (supported LTS)
-- Corepack and the pnpm version pinned by the root `package.json`
+- Node.js 26 (Active LTS)
+- pnpm 12.22.0, pinned by the root `package.json` and `pnpm-lock.yaml`
 - For desktop audio testing: a graphical desktop, an output device, and an optional microphone
 
 ## Get started
@@ -15,12 +15,13 @@ These instructions apply to **Voxnelo 1.0.4 source (unpublished candidate)**. Th
 From your own checkout of the repository:
 
 ```bash
-corepack enable
-corepack pnpm install --frozen-lockfile
-corepack pnpm dev
+npm install --global pnpm@12.22.0
+pnpm --version             # Must report 12.22.0
+pnpm install --frozen-lockfile
+pnpm dev
 ```
 
-If Corepack has already activated the pinned version of pnpm, using `pnpm` directly is equivalent. Do not remove existing project files or personal learning data to update the app.
+**Node.js 26 no longer bundles Corepack.** The commands above bootstrap pnpm directly from the npm registry; they do not assume an installed `corepack` command. If you installed Corepack separately, you can use it with the same pinned pnpm release, but it is optional. The exact dependency and package-manager integrity records live in `pnpm-lock.yaml`. Do not remove existing project files or personal learning data to update the app.
 
 ## Common tasks
 
@@ -29,6 +30,7 @@ pnpm dev              # Web dev server + Electron
 pnpm dev:web          # Web preview only
 pnpm typecheck        # TypeScript
 pnpm lint             # ESLint
+pnpm check:toolchain  # Node/pnpm pins match CI, lockfile and this guide
 pnpm docs:check       # Current docs: offline local links and pnpm script names
 pnpm docs:check:all   # Historical Markdown too (investigative; may expose archival debt)
 pnpm test             # Vitest

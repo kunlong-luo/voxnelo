@@ -1,5 +1,5 @@
 # Site owner has confirmed the web experience can be publicly accessible.
-# Publish renderer-only static files; do NOT publish the private repository source.
+# Publish renderer-only static files, never desktop binaries, local models or user data.
 name: GitHub Pages public web demo
 
 on:

@@ -33,6 +33,8 @@ jobs:
           cache: pnpm
       - name: Reject prerelease dependencies
         run: node --experimental-strip-types scripts/check-stable-dependencies.mts
+      - name: Check maintained Node and pnpm pins against lockfile and development guide
+        run: node --experimental-strip-types scripts/check-toolchain-consistency.mts
       - name: Install lockfile
         run: pnpm install --frozen-lockfile
       - name: Typecheck

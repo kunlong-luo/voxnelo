@@ -83,6 +83,16 @@ describe('documentation link and command validation', () => {
     });
   });
 
+  it('does not treat prose about pnpm as a shell command, while retaining typo checks', () => {
+    const markdown = [
+      '- pnpm was updated to a stable version.',
+      '- pnpm is pinned in the lockfile.',
+      '- pnpm typechek',
+      'pnpm lint',
+    ].join('\n');
+    expect(documentedPnpmCommands(markdown)).toEqual(['typechek', 'lint']);
+  });
+
   it('distinguishes missing maintained files from a passing current documentation set', () => {
     withFixture(root => {
       const issues = checkDocumentation(root);
