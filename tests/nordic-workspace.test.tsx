@@ -140,6 +140,7 @@ describe('Nordic three-column learning workspace', () => {
     fireEvent.click(screen.getByRole('button', { name: /显示参考音标/ }));
     expect(onToggleSpeed).toHaveBeenCalledOnce();
     expect(onToggleIpa).toHaveBeenCalledOnce();
-    expect(screen.getByText(/语音和音标设置本次会话生效/)).toBeTruthy();
+    expect(screen.getByText(/音量、外观和语言选择保存在本机/)).toBeTruthy();
+    expect(screen.getByRole('group',{name:'播放音量'})).toBeTruthy();
   });
 });
