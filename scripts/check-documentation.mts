@@ -71,6 +71,9 @@ export function documentedPnpmCommands(markdown: string): string[] {
   const command = /(?:corepack\s+)?pnpm\s+(?:(?:--[a-z][\w-]*)(?:=[^\s]+)?\s+)*(?:run\s+)?([a-z][\w:-]*)/;
   for (const line of markdown.split('\n')) {
     if (!/^\s*(?:[-*]\s+)?(?:\$\s*)?(?:corepack\s+)?pnpm\s+/.test(line)) continue;
+    // An ordinary Markdown bullet such as "- pnpm was updated" is prose, not a CLI invocation.
+    // Keep checking actual bullet commands (including misspelled scripts).
+    if (/^\s*[-*]\s+pnpm\s+(?:is|was|were|are|has|had|will|would|should|can|could|may|might)\b/i.test(line)) continue;
     const match = command.exec(line);
     if (match?.[1]) commands.push(match[1]);
   }
