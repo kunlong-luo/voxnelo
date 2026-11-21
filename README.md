@@ -10,7 +10,7 @@ Voxnelo is an open-source, local-first desktop app for practicing spoken English
 
 ## Core features
 
-- **40 English sentences** with Chinese translations, topics, difficulty levels, and optional IPA pronunciation guides.
+- **40 starter sentences and 240 additional review-pending drafts** (280 entries total). Starter sentences include Chinese translations, topics, difficulty levels, and IPA teaching references. Expansion drafts include bilingual text but deliberately omit unreviewed IPA; they must not be described as linguistically or rights-approved.
 - **Listen and repeat:** play a sentence using your system's English text-to-speech voice; switch between normal and slow playback.
 - **Record and listen back:** grant microphone access, record your own attempt, stop, and replay it during the current practice session.
 - **Practice at your pace:** move between sentences or find one through the searchable, topic-filtered catalog.
