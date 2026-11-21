@@ -4,6 +4,7 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   auditMarkdown,
+  CURRENT_DOCUMENTS,
   checkDocumentation,
   documentedPnpmCommands,
   localMarkdownLinks,
@@ -24,6 +25,12 @@ function withFixture(run: (root: string) => void): void {
 }
 
 describe('documentation link and command validation', () => {
+  it('includes the root local installation guide in maintained documentation audits', () => {
+    expect(CURRENT_DOCUMENTS).toContain('INSTALL-TO-LOCAL.md');
+    expect(CURRENT_DOCUMENTS).toContain('docs/DEVELOPMENT.md');
+    expect(CURRENT_DOCUMENTS).toContain('docs/release/DOCUMENT-INDEX.md');
+  });
+
   it('recognizes relative links, images and reference definitions but not fenced examples', () => {
     const fence = '\x60'.repeat(3);
     const markdown = [
