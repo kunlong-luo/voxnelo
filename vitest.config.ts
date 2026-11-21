@@ -18,6 +18,7 @@ export default defineConfig({
   test: {
     include: ['tests/**/*.test.{ts,tsx}'],
     environment: 'node',
+    setupFiles: ['./tests/setup-jsdom-storage.ts'],
     coverage: {
       provider: 'v8',
       include: ['packages/**/*.ts', 'apps/**/*.ts', 'apps/**/*.tsx'],
