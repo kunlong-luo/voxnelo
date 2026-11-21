@@ -78,8 +78,8 @@ describe('Release approval and guarded Linux Early Access workflow', () => {
     expect(workflow).not.toContain('gh release edit');
   });
 
-  it('only publishes the versioned Linux Early Access after complete artifact validation', () => {
-    const workflow = read('.github/workflows/publish-linux-v0.1.5.yml');
+  it('preserves the archived Linux Early Access release validation evidence', () => {
+    const workflow = read('docs/archive/workflows/publish-linux-v0.1.5.yml');
     expect(workflow).toContain('workflow_dispatch:');
     expect(workflow).not.toMatch(/^\s+push:/m);
     expect(workflow).toContain('if: false && github.repository');
@@ -98,8 +98,8 @@ describe('Release approval and guarded Linux Early Access workflow', () => {
     expect(workflow).not.toContain('release/*.dmg');
   });
 
-  it('publishes all three OS installer formats as a versioned, unsigned Early Access only after integrity checks', () => {
-    const workflow = read('.github/workflows/publish-all-v0.1.6.yml');
+  it('preserves archived three-platform Early Access integrity checks', () => {
+    const workflow = read('docs/archive/workflows/publish-all-v0.1.6.yml');
     expect(workflow).toContain('workflow_dispatch:');
     expect(workflow).not.toMatch(/^\s+push:/m);
     expect(workflow).toContain('if: false # retired');
@@ -118,8 +118,8 @@ describe('Release approval and guarded Linux Early Access workflow', () => {
   });
 
 
-  it('creates v0.1.7 one-time PRIVATE unsigned QA draft with immutable source and checksum gates', () => {
-    const workflow = read('.github/workflows/prepare-v0.1.7-draft-once.yml');
+  it('preserves the retired v0.1.7 private draft gate as non-executable evidence', () => {
+    const workflow = read('docs/archive/workflows/prepare-v0.1.7-draft-once.yml');
     expect(workflow).toContain('workflow_dispatch:');
     expect(workflow).not.toMatch(/^\s+push:/m);
     expect(workflow).toContain('if: false # retired');
@@ -139,9 +139,9 @@ describe('Release approval and guarded Linux Early Access workflow', () => {
   });
   it('permanently retires historical one-shot release jobs after their exact versions exist', () => {
     for (const pathname of [
-      '.github/workflows/publish-linux-v0.1.5.yml',
-      '.github/workflows/publish-all-v0.1.6.yml',
-      '.github/workflows/prepare-v0.1.7-draft-once.yml',
+      'docs/archive/workflows/publish-linux-v0.1.5.yml',
+      'docs/archive/workflows/publish-all-v0.1.6.yml',
+      'docs/archive/workflows/prepare-v0.1.7-draft-once.yml',
     ]) {
       const workflow = read(pathname);
       expect(workflow).not.toMatch(/^\s+push:/m);

@@ -1,9 +1,16 @@
 # Retired one-time GitHub Actions workflows
 
-These YAML files are **historical source snapshots, not executable Actions**. They were moved out of `.github/workflows/` during the 2026-11-21 maintenance cleanup. Git history, earlier Actions runs, tags and release assets remain untouched.
+These YAML files are **historical source snapshots, not executable Actions**. Nine retired, version-specific workflows were moved out of `.github/workflows/` during 2026-11-21 cleanup (the two private v1.0.4 Draft writers first, then the seven completed v0.1.5–v1.0.3 publisher/Draft workflows). Source bytes, Git history, earlier Actions runs, tags and Release assets remain untouched. Automated regression tests check original Git blob IDs and absence of executable entries for the seven latter workflows.
 
 | Archived file | Purpose and disposition |
 | --- | --- |
+| [publish-linux-v0.1.5.yml](workflows/publish-linux-v0.1.5.yml) | Original disabled v0.1.5 Linux Early Access publisher; original script and integrity checks retained byte-for-byte |
+| [publish-all-v0.1.6.yml](workflows/publish-all-v0.1.6.yml) | Original disabled v0.1.6 three-platform Early Access publisher |
+| [prepare-v0.1.7-draft-once.yml](workflows/prepare-v0.1.7-draft-once.yml) | Original disabled, completed private v0.1.7 Draft generator |
+| [publish-all-v1.0.0.yml](workflows/publish-all-v1.0.0.yml) | Original disabled v1.0.0 unsigned official publisher |
+| [publish-all-v1.0.1.yml](workflows/publish-all-v1.0.1.yml) | Original disabled v1.0.1 unsigned official publisher |
+| [publish-all-v1.0.2.yml](workflows/publish-all-v1.0.2.yml) | Original disabled v1.0.2 unsigned official publisher |
+| [publish-all-v1.0.3.yml](workflows/publish-all-v1.0.3.yml) | Original disabled v1.0.3 unsigned official publisher |
 | [prepare-v1.0.4-private-draft-once.yml](workflows/prepare-v1.0.4-private-draft-once.yml) | Original path-filtered, write-capable bootstrap for the **unpublished** v1.0.4 draft; retired because the draft already exists |
 | [repair-v1.0.4-private-draft-win-checksum-once.yml](workflows/repair-v1.0.4-private-draft-win-checksum-once.yml) | Original path-filtered/manual write-capable checksum repair for a specific private Draft Release ID; retained as audit evidence, no longer executable |
 

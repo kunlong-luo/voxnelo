@@ -9,7 +9,7 @@
 
 ## 已完成的一次性发布（全部退役）
 
-历史的 `publish-linux-v0.1.5.yml`、`publish-all-v0.1.6.yml`、`prepare-v0.1.7-draft-once.yml` 、`publish-all-v1.0.0.yml`、`publish-all-v1.0.1.yml`、`publish-all-v1.0.2.yml` 和 `publish-all-v1.0.3.yml` 均已完成各自任务。它们保留审计用脚本，但**不再监听任何 push**，其前置作业永久 `if: false`。不允许 Dependabot 修改触发重跑，也不可重建或覆盖已有标签、Release 或二进制附件。
+历史的七份 v0.1.5–v1.0.3 发布/草稿工作流均已完成各自任务，2026-11-21 已从可执行 Actions 目录原样移至 [归档索引](../archive/README.md)。其原始版本曾没有 push 自动触发且前置作业已禁用；现在连手动 Actions 入口也已退役。完整历史源码与原有 CI/Release/标签/二进制附件保留，不允许重新执行或覆盖。
 
 v1.0.0 公开发行真实 [Actions 运行](https://github.com/kunlong-luo/voxnelo/actions/runs/39974884072) 成功，三平台安装包、Linux apt 实装、版本与 SHA-256 等自动门禁通过；但不会自动形成五名用户、F001–F012、第三方模型权利或各设备麦克风测试的真实证据。
 

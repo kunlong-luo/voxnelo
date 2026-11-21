@@ -12,7 +12,7 @@ Updated: 2026-11-21. This is an **index, not evidence of a public v1.0.4 release
 
 - **Frozen original requirement baseline:** [Product Docs v1.0](../Voxnelo-Product-Docs-v1.0/README.md), including original DOCX/PDF and checksums. Do not rewrite it during maintenance.
 - **Historical source/test audits:** [November documentation audit](../audits/2026-11-16-DOCUMENTATION-GAP-AUDIT.md), [initial PRD/release audit](../audits/2026-11-16-PRD-RELEASE-GAP-AUDIT.md), [superseded matrix starter](PRD-TRACEABILITY-STARTER.md), [historical V0.1 checklist](V0.1-PRD-CHECKLIST.md) and [technical-debt register](../engineering/TECH-DEBT-2026-11-16.md). Their assertions are dated; do not treat them as current code state.
-- **Retired executable workflow source:** [archive index](../archive/README.md), including v1.0.4 private draft creation and Windows checksum repair. These files are no longer registered under `.github/workflows/`.
+- **Retired executable workflow source:** [archive index](../archive/README.md), including all seven disabled historic v0.1.5–v1.0.3 release/Draft workflows and both v1.0.4 private Draft one-shot writers. These files are no longer registered under `.github/workflows/`.
 - **November 21 cleanup decision log:** [repository cleanup audit](../audits/2026-11-21-REPOSITORY-CLEANUP.md).
 
 ## Status and remaining gates
