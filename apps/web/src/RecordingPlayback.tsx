@@ -12,7 +12,7 @@ function clock(seconds:number):string {
   return Math.floor(total/60)+':'+String(total%60).padStart(2,'0');
 }
 /** Real audio element is semantic and hidden; all visible controls are designed. */
-export function RecordingPlayback({src}:{src:string|null}) {
+export function RecordingPlayback({src,volume=1}:{src:string|null;volume?:number|undefined}) {
   const {t}=useI18n();
   const ref=useRef<HTMLAudioElement>(null);
   const [playing,setPlaying]=useState(false),[elapsed,setElapsed]=useState(0);
@@ -20,6 +20,10 @@ export function RecordingPlayback({src}:{src:string|null}) {
   // Invalidate pending play() promises before changing sentences or unmounting.
   const playbackGeneration=useRef(0);
   const pendingPlay=useRef<number|null>(null);
+  // Apply user output volume to new recordings and already-playing clips.
+  useEffect(()=>{
+    if(ref.current)ref.current.volume=Number.isFinite(volume)?Math.max(0,Math.min(1,volume)):1;
+  },[src,volume]);
   useEffect(()=>{
     const audio=ref.current;
     return ()=>{

@@ -1,7 +1,8 @@
-import { ArrowLeft, AudioLines, BookOpenText, Bug, Check, CircleHelp, ExternalLink, GitBranch, Info, Languages, Lightbulb, Palette, ShieldCheck, Settings2, HardDriveDownload } from 'lucide-react';
+import { ArrowLeft, AudioLines, BookOpenText, Bug, Check, CircleHelp, ExternalLink, GitBranch, Info, Languages, Lightbulb, Palette, ShieldCheck, Settings2, HardDriveDownload, Volume2 } from 'lucide-react';
 import { APP_VERSION, SUPPORT_LINKS } from '@voxnelo/learning';
 import { LearningBackupPanel } from './LearningBackupPanel';
 import type { AppearanceTheme } from './appearance';
+import { VOLUME_LEVELS, type PlaybackVolume } from './audioPreferences';
 import { useI18n, type LanguageSetting } from './i18n';
 import { Button, buttonVariants } from './components/ui/button';
 import { Card } from './components/ui/card';
@@ -9,6 +10,7 @@ import { SettingToggle } from './components/settings/SettingToggle';
 import { cn } from './lib/utils';
 interface SettingsViewProps {
   speed:'normal'|'slow';showIpa:boolean;appearance:AppearanceTheme;
+  volume?:PlaybackVolume;onChangeVolume?:((volume:PlaybackVolume)=>void)|undefined;
   languageSetting?:LanguageSetting;
   motionEnabled?:boolean;
   onChangeMotion?:(enabled:boolean)=>void;
@@ -25,7 +27,7 @@ const helpActions = [
   { href: SUPPORT_LINKS.featureRequest, label: 'supportFeature', detail: 'supportFeatureHint', icon: Lightbulb },
 ] as const;
 export function SettingsView({
-  speed,showIpa,appearance,motionEnabled=true,onChangeMotion,languageSetting='system',onChangeAppearance,
+  speed,volume=1,onChangeVolume,showIpa,appearance,motionEnabled=true,onChangeMotion,languageSetting='system',onChangeAppearance,
   onChangeLanguage,onToggleSpeed,onToggleIpa,onBackToPractice,onManageModels,onDataRestored,
 }:SettingsViewProps) {
   const {t,locale}=useI18n();
@@ -76,6 +78,19 @@ export function SettingsView({
         <div className="settingsPanelHeading flex items-center gap-3 text-primary"><AudioLines size={20}/><h2 className="text-sm font-extrabold text-foreground">{t('voiceTitle')}</h2></div>
         <p className="text-xs leading-6 text-muted-foreground">{t('voiceDesc')}</p>
         <SettingToggle checked={speed==='slow'} onToggle={onToggleSpeed} label={t('slowMode')} description={t('slowModeHint')} />
+        <div className="flex flex-col gap-2 rounded-2xl border border-border/60 bg-background/55 p-3" role="group" aria-label={t('playbackVolumeLabel')}>
+          <div className="flex items-center justify-between gap-2">
+            <strong className="flex items-center gap-2 text-xs text-foreground"><Volume2 size={16} className="text-primary" aria-hidden="true"/>{t('playbackVolumeLabel')}</strong>
+            <span className="text-xs font-semibold tabular-nums text-primary">{Math.round(volume*100)}%</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {VOLUME_LEVELS.map(level=><Button key={level} variant={volume===level?'soft':'outline'} size="sm"
+              className="min-h-9 flex-1 rounded-xl px-2 text-xs tabular-nums" aria-pressed={volume===level}
+              disabled={!onChangeVolume} aria-label={t('playbackVolumeOption',{percent:Math.round(level*100)})}
+              onClick={()=>onChangeVolume?.(level)}>{Math.round(level*100)}%</Button>)}
+          </div>
+          <p className="text-[11px] leading-5 text-muted-foreground">{t('playbackVolumeHint')}</p>
+        </div>
       </Card>
       <Card className={section}>
         <div className="settingsPanelHeading flex items-center gap-3 text-primary"><Languages size={20}/><h2 className="text-sm font-extrabold text-foreground">{t('contentTitle')}</h2></div>

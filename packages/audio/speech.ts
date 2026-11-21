@@ -4,6 +4,10 @@ const TTS_RATE = { normal: 0.96, slow: 0.75 } as const;
 const TTS_PITCH = 1;
 const WAIT_FOR_VOICES_MS = 650;
 
+export function safePlaybackVolume(value: number): number {
+  return Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : 1;
+}
+
 export interface SpeechResult {
   ok: boolean;
   message?: string;
@@ -84,7 +88,7 @@ export function stopSpeech(): void {
  * through a tiny, strictly allowlisted main-process bridge if Chromium has
  * no English voices. Both engines use the same stopSpeech cancellation.
  */
-export async function speakEnglish(text: string, speed: SpeechSpeed = 'normal'): Promise<SpeechResult> {
+export async function speakEnglish(text: string, speed: SpeechSpeed = 'normal', volume = 1): Promise<SpeechResult> {
   if (typeof window === 'undefined') return { ok: false, message: '当前环境不支持语音朗读。' };
   stopSpeech();
   const request = generation;
@@ -104,6 +108,7 @@ export async function speakEnglish(text: string, speed: SpeechSpeed = 'normal'):
       utterance.lang = voice.lang;
       utterance.rate = speed === 'slow' ? TTS_RATE.slow : TTS_RATE.normal;
       utterance.pitch = TTS_PITCH;
+      utterance.volume = safePlaybackVolume(volume);
       synthesis.speak(utterance);
       return { ok: true };
     } catch {
@@ -140,6 +145,7 @@ export async function speakEnglish(text: string, speed: SpeechSpeed = 'normal'):
     nativeAudioUrl = URL.createObjectURL(blob);
     const audio = new Audio(nativeAudioUrl);
     playingNative = audio;
+    audio.volume = safePlaybackVolume(volume);
     audio.addEventListener('ended', () => {
       if (playingNative === audio) clearNativeAudio();
     }, { once: true });
@@ -162,10 +168,10 @@ export async function speakEnglish(text: string, speed: SpeechSpeed = 'normal'):
  * current editorial-draft lessons or UI. It does not approve rights or IPA.
  */
 export async function playValidatedLocalWav(
-  bytes: Uint8Array, sha256: string, speed: SpeechSpeed = 'normal',
+  bytes: Uint8Array, sha256: string, speed: SpeechSpeed = 'normal', volume = 1,
 ): Promise<SpeechResult> {
   stopSpeech();
-  return playOfflineWavBytes(bytes, sha256, speed);
+  return playOfflineWavBytes(bytes, sha256, speed, safePlaybackVolume(volume));
 }
 
 let primed = false;

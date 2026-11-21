@@ -115,11 +115,11 @@ export function summarize(states: LearningState[]): LearningStats {
   return calculateStats(states);
 }
 
-export async function speak(text: string, speed: 'normal' | 'slow' = 'normal'): Promise<SpeechResult> {
+export async function speak(text: string, speed: 'normal' | 'slow' = 'normal', volume = 1): Promise<SpeechResult> {
   if (typeof window === 'undefined') {
     return { ok: false, message: '当前环境不支持语音朗读。' };
   }
-  return speakEnglish(text, speed);
+  return speakEnglish(text, speed, volume);
 }
 
 /**
@@ -138,7 +138,7 @@ export interface LessonReferenceResult extends SpeechResult {
 
 export async function speakLessonReference(
   sentence: Sentence, requestedSource: LessonReferenceSource = 'system-tts',
-  speed: 'normal' | 'slow' = 'normal',
+  speed: 'normal' | 'slow' = 'normal', volume = 1,
 ): Promise<LessonReferenceResult> {
   // A caller may hold stale/edited curriculum data. Never read arbitrary text
   // from an untrusted audio manifest or synthesize it as an approved lesson.
@@ -150,7 +150,7 @@ export async function speakLessonReference(
     };
   }
   // No reviewed takes are available today; fallback remains explicitly TTS.
-  const result = await speak(known.english, speed);
+  const result = await speak(known.english, speed, volume);
   return requestedSource === 'system-tts'
     ? { ...result, playedSource: 'system-tts', requestedSource }
     : { ...result, playedSource: 'system-tts', requestedSource, unavailableReason: 'review-pending' };
@@ -162,7 +162,7 @@ export async function speakLessonReference(
  * this is the ordinary system TTS voice, which may not reproduce that IPA.
  */
 export async function speakPracticeSegment(
-  sentence: Sentence, segment: string, speed: 'normal' | 'slow' = 'normal',
+  sentence: Sentence, segment: string, speed: 'normal' | 'slow' = 'normal', volume = 1,
 ): Promise<SpeechResult> {
   const known = SENTENCES.find(item => item.id === sentence.id);
   if (!known || known.english !== sentence.english || known.ipa !== sentence.ipa ||
@@ -170,7 +170,7 @@ export async function speakPracticeSegment(
       !practiceSegments(known).includes(segment)) {
     return { ok: false, message: '练习片段已变更，请重新打开当前短句。' };
   }
-  return speak(segment, speed);
+  return speak(segment, speed, volume);
 }
 
 export function silence(): void {

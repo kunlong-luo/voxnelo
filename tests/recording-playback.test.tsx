@@ -63,6 +63,16 @@ describe('品牌化录音回听组件', () => {
     });
   });
 
+  it('applies output volume to a real recording and updates while already mounted',()=>{
+    const {container,rerender}=render(<RecordingPlayback src="blob:practice" volume={0.25}/>);
+    const audio=container.querySelector('audio')!;
+    expect(audio.volume).toBe(0.25);
+    rerender(<RecordingPlayback src="blob:practice" volume={0}/>);
+    expect(audio.volume).toBe(0);
+    rerender(<RecordingPlayback src="blob:practice" volume={0.75}/>);
+    expect(audio.volume).toBe(0.75);
+  });
+
   it('播放失败时明确提示，不能冒充成功', async () => {
     vi.spyOn(HTMLMediaElement.prototype, 'play').mockRejectedValue(new Error('unsupported'));
     render(<RecordingPlayback src="blob:practice" />);
