@@ -89,7 +89,7 @@ describe('documentation link and command validation', () => {
       '- pnpm is pinned in the lockfile.',
       '- pnpm typechek',
       'pnpm lint',
-    ].join('\\n');
+    ].join('\n');
     expect(documentedPnpmCommands(markdown)).toEqual(['typechek', 'lint']);
   });
 
