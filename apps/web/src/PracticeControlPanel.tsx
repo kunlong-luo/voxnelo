@@ -6,7 +6,7 @@ import { useI18n } from './i18n';
 import { Button } from './components/ui/button';
 import { cn } from './lib/utils';
 
-type ControlPanelProps = Pick<PracticeViewProps, 'recorder'|'recordingBusy'|'speed'|'onSpeak'|'onToggleSpeed'|'onRecord'>;
+type ControlPanelProps = Pick<PracticeViewProps, 'recorder'|'recordingBusy'|'speed'|'volume'|'onSpeak'|'onToggleSpeed'|'onRecord'>;
 
 const utilityButton = 'size-10 rounded-2xl border border-white/75 bg-card/80 text-foreground/80 shadow-[0_10px_25px_-17px_rgba(80,58,44,.35)] backdrop-blur-sm transition-[background-color,color,box-shadow] hover:bg-accent hover:text-primary hover:shadow-md hover:-translate-y-1 active:translate-y-0 @min-[440px]/workspace:size-11 @min-[700px]/workspace:size-12';
 const minorCaption = 'mt-2 [@media(max-height:800px)]:mt-1 max-w-full text-center text-[10px] font-semibold leading-4 text-muted-foreground @min-[560px]/workspace:text-[11px]';
@@ -21,7 +21,7 @@ function ActionSlot({children,label,detail,className}:{
 }
 
 /** Audio control visuals follow the real recorder status; no synthetic VAD state. */
-export function PracticeControlPanel({recorder,recordingBusy,speed,onSpeak,onToggleSpeed,onRecord}:ControlPanelProps) {
+export function PracticeControlPanel({recorder,recordingBusy,speed,volume,onSpeak,onToggleSpeed,onRecord}:ControlPanelProps) {
   const {t}=useI18n();
   const recording=recorder.status==='recording';
   const requesting=recorder.status==='requesting';
@@ -46,7 +46,7 @@ export function PracticeControlPanel({recorder,recordingBusy,speed,onSpeak,onTog
                 </Button>
               </div>
             </ActionSlot>
-            <RecordingPlayback key={recorder.recordingUrl??'no-recording'} src={recorder.recordingUrl}/>
+            <RecordingPlayback key={recorder.recordingUrl??'no-recording'} src={recorder.recordingUrl} volume={volume}/>
           </div>
           {recording?<p className="recordingStatus mt-5 flex items-center justify-center gap-2 text-center text-xs font-semibold text-primary" role="status"><span aria-hidden="true" className="size-2 rounded-full bg-mic-halo animate-status-breathe"/>{t('recordingStatus')}</p>
             :requesting?<p className="recordingStatus mt-5 text-center text-xs text-muted-foreground" role="status">{t('permissionHint')}</p>
