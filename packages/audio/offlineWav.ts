@@ -42,7 +42,7 @@ export function stopOfflineWav(): void {
  * Slower playback is time-stretch of the same take, never a second recording.
  */
 export async function playOfflineWavBytes(
-  suppliedBytes: Uint8Array, expectedSha256: string, speed: 'normal' | 'slow',
+  suppliedBytes: Uint8Array, expectedSha256: string, speed: 'normal' | 'slow', volume = 1,
 ): Promise<OfflineWavResult> {
   stopOfflineWav();
   const request = generation;
@@ -75,6 +75,7 @@ export async function playOfflineWavBytes(
     const player = new Audio(url);
     activeAudio = player;
     player.playbackRate = speed === 'slow' ? 0.75 : 1;
+    player.volume = Number.isFinite(volume) ? Math.max(0, Math.min(1, volume)) : 1;
     player.addEventListener('ended', () => {
       if (activeAudio === player) releaseAudio();
     }, { once: true });
