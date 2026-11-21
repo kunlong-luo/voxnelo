@@ -13,6 +13,7 @@ import {
   type Sentence,
 } from '@voxnelo/learning';
 import { useRecorder } from './useRecorder';
+import { readPlaybackVolume, savePlaybackVolume, type PlaybackVolume } from './audioPreferences';
 import { useLiveDictation } from './useLiveDictation';
 import { useLearningData } from './useLearningData';
 import { PracticeView } from './PracticeView';
@@ -64,6 +65,8 @@ function AppScreen({languageSetting,onChangeLanguage}: {
   const [visited, setVisited] = useState<string[]>([FIRST_SENTENCE.id]);
   const [historyPosition, setHistoryPosition] = useState(0);
   const [speed, setSpeed] = useState<'normal' | 'slow'>('normal');
+  const [volume,setVolume] = useState<PlaybackVolume>(readPlaybackVolume);
+  const changeVolume=(next:PlaybackVolume)=>{setVolume(next);savePlaybackVolume(next);};
   const [showIpa, setShowIpa] = useState(true);
   const [notice, setNotice] = useState('');
   const [search, setSearch] = useState('');
@@ -195,7 +198,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
       setNotice(t('recordingPlay'));
       return;
     }
-    reportSpeechResult(await speakLessonReference(current, 'system-tts', speed));
+    reportSpeechResult(await speakLessonReference(current, 'system-tts', speed, volume));
   };
 
   const playSegment = async (segment:string) => {
@@ -203,7 +206,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
       setNotice(t('recordingPlay'));
       return;
     }
-    reportSpeechResult(await speakPracticeSegment(current, segment, speed));
+    reportSpeechResult(await speakPracticeSegment(current, segment, speed, volume));
   };
 
   const handleRecorder = () => {
@@ -257,6 +260,7 @@ function AppScreen({languageSetting,onChangeLanguage}: {
               currentState={currentState}
               stats={stats}
               speed={speed}
+              volume={volume}
               showIpa={showIpa}
               notice={notice}
               recorder={recorder}
@@ -286,6 +290,8 @@ function AppScreen({languageSetting,onChangeLanguage}: {
           ) : view === 'settings' ? (
             <SettingsView
               speed={speed}
+              volume={volume}
+              onChangeVolume={changeVolume}
               showIpa={showIpa}
               appearance={appearance}
               motionEnabled={motionEnabled}
