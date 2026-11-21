@@ -22,16 +22,18 @@ describe('Current release README claims (English first, Chinese equivalent)', ()
     expect(en).toContain(packageInfo.version);
     expect(zh).toContain(packageInfo.version);
     for (const phrase of [
-      '40 English sentences', 'text-to-speech', 'microphone', 'record',
+      '40 starter sentences', '240 additional review-pending drafts', 'text-to-speech', 'microphone', 'record',
       'favorites', 'history', 'IndexedDB', 'Leo Luo',
     ]) expect(en.toLowerCase()).toContain(phrase.toLowerCase());
-    for (const phrase of ['40 条', '系统', '麦克风', '回听', '收藏', '历史', 'IndexedDB', 'Leo Luo'])
+    for (const phrase of ['40 条入门短句', '240 条待审校扩展草稿', '系统', '麦克风', '回听', '收藏', '历史', 'IndexedDB', 'Leo Luo'])
       expect(zh).toContain(phrase);
 
     for (const content of [en, zh]) {
       expect(content).not.toMatch(/SpeakFeed|Speak Karaoke|Smart Prompt|V1\.0|coming soon|敬请期待/);
       expect(content).toContain(packageInfo.version);
     }
+    expect(en).toContain('deliberately omit unreviewed IPA');
+    expect(zh).toContain('不应视为全部通过语言学或版权审核');
     // Linux now defaults to Moonshine, but its Python runtime and model are
     // installed separately by a user gesture, never bundled or auto-run.
     expect(en).toContain('Linux desktop uses Moonshine Medium Streaming');
