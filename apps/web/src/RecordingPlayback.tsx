@@ -12,7 +12,7 @@ function clock(seconds:number):string {
   return Math.floor(total/60)+':'+String(total%60).padStart(2,'0');
 }
 /** Real audio element is semantic and hidden; all visible controls are designed. */
-export function RecordingPlayback({src,volume=1}:{src:string|null;volume?:number}) {
+export function RecordingPlayback({src,volume=1}:{src:string|null;volume?:number|undefined}) {
   const {t}=useI18n();
   const ref=useRef<HTMLAudioElement>(null);
   const [playing,setPlaying]=useState(false),[elapsed,setElapsed]=useState(0);
