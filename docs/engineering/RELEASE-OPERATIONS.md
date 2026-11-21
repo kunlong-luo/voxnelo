@@ -19,6 +19,8 @@
 
 已完成的一次性 workflow `publish-linux-v0.1.5.yml`、`publish-all-v0.1.6.yml`、`prepare-v0.1.7-draft-once.yml`、`publish-all-v1.0.0.yml`、`publish-all-v1.0.1.yml`、`publish-all-v1.0.2.yml`、`publish-all-v1.0.3.yml` 均退役为仅保留代码的历史记录：没有 push 自动触发，首个实际作业永远禁用（`if: false`）。防止 GitHub Actions 依赖更新后重新触发旧版本、制造红色运行或越权覆盖发行附件。
 
+历史 v1.0.4 一次性草稿创建和 Windows 清单修复入口已于 2026-11-21 移出可执行 Actions 目录，源码保存在 [归档](../archive/README.md)；已存在的私有 Draft 和资产未更动。新修复须重新走独立审查，不再复用一次性写权限工作流。
+
 ## 未来发布需要做的验证
 
 1. 新版本号和发行说明经 PR 审核，固定源码提交，在 Linux/Windows/macOS Runner 构建，验证产品版本、实际安装器大小和 SHA-256。
