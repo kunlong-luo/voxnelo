@@ -74,14 +74,14 @@ export function checkToolchainConsistency(inputs: ToolchainInputs): string[] {
       issues.push(workflow.path + ': maintained workflow file is missing');
       continue;
     }
-    const nodeSteps = [...source.matchAll(/^\s*uses:\s*actions\/setup-node@/gm)].length;
+    const nodeSteps = [...source.matchAll(/^\s*(?:-\s*)?uses:\s*actions\/setup-node@/gm)].length;
     const nodePins = [...source.matchAll(/^\s*node-version:\s*([^\r\n#]+)/gm)]
       .map(match => (match[1] ?? '').trim().replace(/^['"]|['"]$/g, ''));
     if (nodeSteps === 0 || nodeSteps !== nodePins.length || nodePins.some(value => value !== nodeMajor)) {
       issues.push(workflow.path + ': setup-node version(s) must match @types/node major');
     }
 
-    const pnpmSteps = [...source.matchAll(/^\s*uses:\s*pnpm\/action-setup@/gm)].length;
+    const pnpmSteps = [...source.matchAll(/^\s*(?:-\s*)?uses:\s*pnpm\/action-setup@/gm)].length;
     const pnpmPins = [...source.matchAll(/^\s*version:\s*['"]?(\d+\.\d+\.\d+)['"]?\s*(?:#.*)?$/gm)]
       .map(match => match[1]);
     if (workflow.usesPnpm && (pnpmSteps === 0 || pnpmSteps !== pnpmPins.length || pnpmPins.some(value => value !== pnpmVersion))) {
