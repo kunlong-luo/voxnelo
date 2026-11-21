@@ -56,7 +56,7 @@ export function checkToolchainConsistency(inputs: ToolchainInputs): string[] {
     issues.push('package.json: @types/node must specify a stable major version');
   }
 
-  const managerLock = /^    packageManagerDependencies:\s*\r?\n      pnpm:\s*\r?\n        specifier:\s*['"]?(\d+\.\d+\.\d+)['"]?\s*\r?\n        version:\s*['"]?(\d+\.\d+\.\d+)['"]?\s*$/m.exec(inputs.lockfile);
+  const managerLock = /^ {4}packageManagerDependencies:\s*\r?\n {6}pnpm:\s*\r?\n {8}specifier:\s*['"]?(\d+\.\d+\.\d+)['"]?\s*\r?\n {8}version:\s*['"]?(\d+\.\d+\.\d+)['"]?\s*$/m.exec(inputs.lockfile);
   if (!managerLock || managerLock[1] !== pnpmVersion || managerLock[2] !== pnpmVersion) {
     issues.push('pnpm-lock.yaml: pinned pnpm specifier/version differ from package.json');
   }
