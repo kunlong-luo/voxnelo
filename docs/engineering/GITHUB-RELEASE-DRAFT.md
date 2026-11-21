@@ -22,9 +22,9 @@ v1.0.0 公开发行真实 [Actions 运行](https://github.com/kunlong-luo/voxnel
 - 成功后，在 [GitHub Actions 页面](https://github.com/kunlong-luo/voxnelo/actions) 找到 **Build v1.0.4 unsigned installer review artifacts (NOT a Release)** 运行记录，下载附件 `voxnelo-v1.0.4-unsigned-three-platform-REVIEW-NOT-RELEASE`（单个 ZIP，内含五个安装包及三个 SHA-256 清单，有效期 14 天）。工作流不上传模型或个人音频；中间证据 JSON 不属于用户安装包。
 - 文件仅用于维护者核对和针对新原生引擎的验收，**不代表 v1.0.4 已公开发布**，也不等于具有代码签名、Apple 公证、真人 WER/端到端延迟或完成所有第三方许可审核。只有单独通过 `release-draft.yml`、确认发行文案与必要证据后，才考虑人工发布。
 
-## v1.0.4 私有 Release Draft 一次性准备（**不公开**）
+## v1.0.4 私有 Release Draft 历史一次性准备（**不公开，工作流已退役**）
 
-为了减少反复要求维护者进入 Actions 手动填写参数，新增 [一次性私有草稿入口](../../.github/workflows/prepare-v1.0.4-private-draft-once.yml)。**首次经 PR 合并到 main 后**，仅因该文件的变更启动一次：复用原本经审查的 `release-draft.yml`，以固定 `version=1.0.4`、`confirmation=PREPARE_DRAFT_ONLY` 执行，不能发布公开版本；原有手动 `workflow_dispatch` 入口仍保留。
+当时为减少维护者反复在 Actions 手动填写参数，曾新增 [已归档的一次性私有草稿入口](../archive/workflows/prepare-v1.0.4-private-draft-once.yml)。**首次经 PR 合并到 main 后**，仅因该文件的变更启动一次：复用原本经审查的 `release-draft.yml`，以固定 `version=1.0.4`、`confirmation=PREPARE_DRAFT_ONLY` 执行，不能发布公开版本；原有手动 `workflow_dispatch` 入口仍保留。
 
 - 在 `main` 同一提交上重新执行固定依赖审计、三平台原生 Moonshine SDK/模型/Worker 验证、真实 Windows NSIS / macOS ARM64 DMG / Linux DEB+AppImage 打包和 Linux DEB apt 安装。
 - 创建草稿之前还须核对三份清单：来源 SHA、workflow run 编号、精确文件名（Windows 是 `Voxnelo Setup 1.0.4.exe`）、安装包大小、SHA-256，以及未经批准的额外附件；遇到旧 tag/Release 必须拒绝覆盖。
@@ -32,14 +32,16 @@ v1.0.0 公开发行真实 [Actions 运行](https://github.com/kunlong-luo/voxnel
 - 如果失败，先修复并再次通过 PR/CI；**不得修改旧版公开附件、跳过原生校验或用其他提交的 ZIP 冒充新提交候选**。若之后需要重新构建，手动启动原有工作流，且其拒绝覆盖已有 tag/Release。
 - 本动作仅授权创建内部草稿供检查，**不表示模型/SDK 许可已通过法律复核**，也不能把合成 PCM 结果当作真人麦克风 WER、录音权限/拔插实测或完整 F001–F012 证据。是否公开发布由维护者另行明确决定；免签名风险需持续披露。
 
-## v1.0.4 私有草稿已创建：修复 GitHub 附件文件名差异
+## v1.0.4 私有草稿已创建：历史校验修复记录（工作流已退役）
 
 [Actions 41019525418](https://github.com/kunlong-luo/voxnelo/actions/runs/41019525418) 已在 2026-10-30 成功创建 v1.0.4 **未公开草稿**（Release ID `428750217`，8 个附件，来源 commit `4aeb58e`）。Linux/Windows/macOS 原生 Moonshine SDK/模型/Worker、三平台免签名安装包、Linux DEB apt 实装与候选字节 SHA-256 检查均通过。**这仍然不是公开发布批准**。
 
 GitHub Release 上传时把 Windows 安装包 `Voxnelo Setup 1.0.4.exe` 自动显示为 `Voxnelo.Setup.1.0.4.exe`，但不会同步修改原本的 `SHA256SUMS-win32.txt` 内容。为避免用户拿到无法按文件名校验的清单，修复流程分两部分：
 
 - 新版本私有草稿流程在上传前将 Windows 文件名规范化成与 GitHub 最终存储一致的点号，并从**已验证的原始字节**重新生成匹配的 Windows SHA-256 清单。
-- 对已经生成的 v1.0.4 私有草稿，新增 [一次性校验修复入口](../../.github/workflows/repair-v1.0.4-private-draft-win-checksum-once.yml)。首次尝试的 [Actions 41020523396](https://github.com/kunlong-luo/voxnelo/actions/runs/41020523396) 因为草稿**尚未有正式 Git tag**，通过 `releases/tags/v1.0.4` 查询返回 404，未触及任何附件。修正后的流程改用精确 Release ID `428750217` 读取草稿和各附件的 ID，再通过 GitHub Assets API 下载校验、临时上传新清单、替换原 Windows 清单；上传时只处理私有 Draft。只有核对 Release ID、源提交、仍为 Draft、全部 8 个预期附件且真实下载 EXE 的哈希与原始清单一致，才允许**只替换 `SHA256SUMS-win32.txt`**；不替换 EXE、不修改历史公开 Release，不创建/发布任何新版本。已修复时直接安全退出。工作流是否执行成功、更新后的清单是否通过验证，应以 Actions 与 GitHub Release API 的实际结果为准。
+- 对已经生成的 v1.0.4 私有草稿，当时新增 [已归档的一次性校验修复入口](../archive/workflows/repair-v1.0.4-private-draft-win-checksum-once.yml)。首次尝试的 [Actions 41020523396](https://github.com/kunlong-luo/voxnelo/actions/runs/41020523396) 因为草稿**尚未有正式 Git tag**，通过 `releases/tags/v1.0.4` 查询返回 404，未触及任何附件。修正后的流程改用精确 Release ID `428750217` 读取草稿和各附件的 ID，再通过 GitHub Assets API 下载校验、临时上传新清单、替换原 Windows 清单；上传时只处理私有 Draft。只有核对 Release ID、源提交、仍为 Draft、全部 8 个预期附件且真实下载 EXE 的哈希与原始清单一致，才允许**只替换 `SHA256SUMS-win32.txt`**；不替换 EXE、不修改历史公开 Release，不创建/发布任何新版本。已修复时直接安全退出。工作流是否执行成功、更新后的清单是否通过验证，应以 Actions 与 GitHub Release API 的实际结果为准。
+
+**2026-11-21 清理说明：**上述两个一次性写权限 workflow 已移出 `.github/workflows/` 并原样保存在 [归档索引](../archive/README.md)，不能再经 GitHub Actions 手动执行或因改动文件而自动执行。Git 历史、现存 v1.0.4 私有草稿及其八项附件均保留；本次仅核对其草稿状态与资产清单，不冒称重新核验了所有 SHA-256 或执行了许可/人工验收。需要新的草稿修复请重新审核新流程，不能复活旧的一次性修复脚本。
 
 ## 后续新版本、草稿和额外的签名通道
 

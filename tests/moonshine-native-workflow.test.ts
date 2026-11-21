@@ -1,4 +1,4 @@
-import {readFileSync} from 'node:fs';
+import {existsSync,readFileSync} from 'node:fs';
 import {describe,expect,it} from 'vitest';
 
 describe('cross-platform Moonshine native SDK CI',()=>{
@@ -36,9 +36,10 @@ describe('future unsigned release draft must wait for native offline recognition
   });
 });
 
-describe('v1.0.4 one-time DRAFT bootstrap must NEVER publish publicly',()=>{
-  const bootstrap=readFileSync('.github/workflows/prepare-v1.0.4-private-draft-once.yml','utf8');
-  it('limits the push trigger to the new main-only bootstrap file',()=>{
+describe('archived v1.0.4 one-time DRAFT bootstrap must NEVER publish publicly',()=>{
+  const bootstrap=readFileSync('docs/archive/workflows/prepare-v1.0.4-private-draft-once.yml','utf8');
+  it('keeps the original trigger documented, but removes the live writer',()=>{
+    expect(existsSync('.github/workflows/prepare-v1.0.4-private-draft-once.yml')).toBe(false);
     expect(bootstrap).toContain('branches: [main]');
     expect(bootstrap).toContain("- '.github/workflows/prepare-v1.0.4-private-draft-once.yml'");
     expect(bootstrap).toContain("github.repository == 'kunlong-luo/voxnelo'");

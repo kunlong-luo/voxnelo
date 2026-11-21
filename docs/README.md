@@ -23,6 +23,8 @@ Updated: 2026-11-16. This index is navigation, **not** a release approval.
 
 ## Historical material
 
+The [retired one-time workflow archive](archive/README.md) contains previously write-capable v1.0.4 draft/bootstrap repair Actions snapshots, now removed from the executable workflow directory. The old root starter ZIP installation guide was removed; use [Development](DEVELOPMENT.md). Do not restore historical publishing workflows without a fresh review.
+
 The [earlier PRD starter](release/PRD-TRACEABILITY-STARTER.md), `V0.1-*`, `V0.1.5-*`, `V0.1.6-*`, dated pilots and release notes are historical evidence, **not** current installation instructions. See [historical V0.1 checklist](release/V0.1-PRD-CHECKLIST.md). The original product baseline describes intended future features, not verified shipped features.
 
 ## Documentation maintenance policy
