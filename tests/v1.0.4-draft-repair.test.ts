@@ -1,11 +1,16 @@
-import {readFileSync} from 'node:fs';
+import {existsSync,readFileSync} from 'node:fs';
 import {describe,it,expect} from 'vitest';
 
 const read=(path:string)=>readFileSync(path,'utf8');
 const future=read('.github/workflows/release-draft.yml');
-const repair=read('.github/workflows/repair-v1.0.4-private-draft-win-checksum-once.yml');
+const repair=read('docs/archive/workflows/repair-v1.0.4-private-draft-win-checksum-once.yml');
 
-describe('GitHub draft Windows filename normalization and one-time checksum repair',()=>{
+describe('GitHub draft Windows filename normalization and historical checksum repair',()=>{
+  it('retires historical write-capable one-time workflows without losing audited source',()=>{
+    expect(existsSync('.github/workflows/prepare-v1.0.4-private-draft-once.yml')).toBe(false);
+    expect(existsSync('.github/workflows/repair-v1.0.4-private-draft-win-checksum-once.yml')).toBe(false);
+    expect(read('docs/archive/workflows/prepare-v1.0.4-private-draft-once.yml')).toContain("confirmation: 'PREPARE_DRAFT_ONLY'");
+  });
   it('keeps the exact source/manifest checks before normalizing the download name',()=>{
     expect(future).toContain('scripts/validate-release-draft.mts');
     expect(future).toContain('mv -- "$original" "$published"');
@@ -18,7 +23,7 @@ describe('GitHub draft Windows filename normalization and one-time checksum repa
     expect(future).toContain('--draft --prerelease');
     expect(future).not.toContain('gh release publish');
   });
-  it('runs only when its own one-time workflow lands on main',()=>{
+  it('preserves historical trigger and scope in the non-executable archive',()=>{
     expect(repair).toContain('branches: [main]');
     expect(repair).toContain(
       "- '.github/workflows/repair-v1.0.4-private-draft-win-checksum-once.yml'");
@@ -27,7 +32,7 @@ describe('GitHub draft Windows filename normalization and one-time checksum repa
     expect(repair).not.toMatch(/^\s+tags:/m);
     expect(repair).not.toMatch(/^\s+schedule:/m);
   });
-  it('limits write access to the exact private v1.0.4 draft and its checksum',()=>{
+  it('records the original draft-only checks and checksum evidence',()=>{
     expect(repair).toContain('.id == 428750217');
     expect(repair).toContain('.draft == true');
     expect(repair).toContain('.published_at == null');
