@@ -17,8 +17,8 @@ Voxnelo uses Node.js as its build and test runtime; Electron embeds its own inde
 
 ## Remaining compatibility upgrades
 
-- `@types/node` in `package.json` remains on major **22** after the first CI-runtime migration. Dependabot's major-version ignore has now been removed so it can propose an `@types/node` **26** update with a generated `pnpm-lock.yaml`. Review the resulting TypeScript/API changes and re-run the normal CI before merging.
-- Electron was pinned to **45.3.4** in the lockfile at the time of this document; stable **45.4.1** was published on 2026-11-18. Upgrade using pnpm/Dependabot and validate packaging and ASR worker protocols.
+- `@types/node` is declared at major **26** (`^26.6.6`) and must track the supported Node 26 CI runtime; regenerate `pnpm-lock.yaml` through pnpm and review TypeScript/API changes for every future major upgrade.
+- Electron is declared at **45.4.1** with a pnpm-generated lockfile (the stable patch published 2026-11-18); future Electron upgrades require Windows/macOS/Linux packaging and ASR worker protocol verification.
 - pnpm was pinned to **12.11.2**. Check upstream stable pnpm 12 patches, regenerate Corepack integrity and lockfile with the package manager, and update all maintained Action setup steps in a dedicated PR. Do not silently replace the lockfile signature.
 - Optional manual workflows (deep UI QA, signed candidate, native Moonshine validation) remain real release gates where required; changing their `setup-node` value is **not** evidence they have run.
 - Historical version-specific workflows (for example `publish-all-v1.0.3.yml`, `prepare-v0.1.7-draft-once.yml`, `v1.0.4-review-installers.yml`) remain archived evidence and are not automatically regenerated.
