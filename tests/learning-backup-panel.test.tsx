@@ -49,7 +49,7 @@ describe('F107 explicit in-app restore workflow',()=>{
     fireEvent.click(restore);
     await waitFor(()=>expect(onRestored).toHaveBeenCalledOnce());
     expect((await database.states.toArray())[0]?.sentenceId).toBe('s002');
-    expect(screen.getByRole('status').textContent).toContain('恢复成功');
+    expect((await screen.findByRole('status')).textContent).toContain('恢复成功');
     expect(screen.queryByRole('region',{name:'恢复预览'})).toBeNull();
   });
 
@@ -73,7 +73,7 @@ describe('F107 explicit in-app restore workflow',()=>{
     fireEvent.click(screen.getByRole('button',{name:'导出学习数据'}));
     await waitFor(()=>expect(click).toHaveBeenCalledOnce());
     expect(createObjectURL).toHaveBeenCalledOnce();
-    expect(screen.getByRole('status').textContent).toContain('已请求浏览器下载');
+    expect((await screen.findByRole('status')).textContent).toContain('已请求浏览器下载');
     expect(screen.getByText(/不上传服务器/)).toBeTruthy();
   });
 
