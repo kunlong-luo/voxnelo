@@ -50,7 +50,7 @@ module.exports={OnlineRecognizer};
   let wake:(()=>void)|null=null;
   let workerError:Error|null=null;
   worker.on('message',(msg:WorkerMessage)=>{inbox.push(msg);wake?.();});
-  worker.on('error',e=>{workerError=e;wake?.();});
+  worker.on('error',e=>{workerError=e instanceof Error ? e : Error('Unknown offline ASR worker error');wake?.();});
   const next=async():Promise<WorkerMessage>=>{
     const deadline=Date.now()+5000;
     while(!inbox.length){
