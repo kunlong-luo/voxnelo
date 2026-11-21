@@ -9,11 +9,13 @@ class MockUtterance {
   lang = '';
   rate = 1;
   pitch = 1;
+  volume = 1;
   constructor(public text: string) { MockUtterance.instances.push(this); }
 }
 class MockAudio {
   static instances: MockAudio[] = [];
   static playImpl: () => Promise<void> = () => Promise.resolve();
+  volume = 1;
   play = vi.fn(() => MockAudio.playImpl());
   pause = vi.fn();
   load = vi.fn();
@@ -72,6 +74,24 @@ describe('speech', () => {
     expect(MockUtterance.instances[1]?.rate).toBe(0.75);
     expect(MockUtterance.instances[1]?.voice).toEqual({lang:'en-US'});
   });
+  it('applies browser TTS volume, including actual mute, and safely clamps invalid input', async () => {
+    mockSynthesis(['en-US']);
+    expect((await speakEnglish('Hello','normal',0)).ok).toBe(true);
+    expect(MockUtterance.instances[0]?.volume).toBe(0);
+    expect((await speakEnglish('Hello','normal',0.75)).ok).toBe(true);
+    expect(MockUtterance.instances[1]?.volume).toBe(0.75);
+    expect((await speakEnglish('Hello','normal',Number.NaN)).ok).toBe(true);
+    expect(MockUtterance.instances[2]?.volume).toBe(1);
+  });
+  it('applies the same output volume to Linux-generated WAV without changing synthesis rate', async () => {
+    mockSynthesis([]);
+    nativeSpeech();
+    const result=await speakEnglish('Hello','slow',0.25);
+    expect(result.ok).toBe(true);
+    expect(MockAudio.instances[0]?.volume).toBe(0.25);
+    expect(MockAudio.instances[0]?.play).toHaveBeenCalledOnce();
+  });
+
   it('Linux with empty voices uses offline WAV playback and cancels cleanly', async () => {
     mockSynthesis([]);
     const bridge = nativeSpeech();
