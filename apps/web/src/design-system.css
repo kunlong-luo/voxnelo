@@ -102,7 +102,6 @@
   --rhythm-start: #A6C5BA;
   --rhythm-end: #A6C5BA;
   --ambient-glow: #CFE2D6;
-  --surface-highlight: rgba(255,255,255,.72);
   font-family: Inter, 'Noto Sans CJK SC', 'Noto Sans SC', 'Source Han Sans SC', 'WenQuanYi Micro Hei', 'Microsoft YaHei', 'PingFang SC', ui-sans-serif, system-ui, sans-serif;
 }
 :root[data-theme="sunset"] {
@@ -146,7 +145,6 @@
   --rhythm-start: #DD6B20;
   --rhythm-end: #38B2AC;
   --ambient-glow: #F4B99A;
-  --surface-highlight: rgba(255,255,255,.6);
 }
 @layer base {
   * { box-sizing: border-box; border-color: var(--border); }
