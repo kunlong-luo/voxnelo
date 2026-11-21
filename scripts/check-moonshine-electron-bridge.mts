@@ -86,7 +86,7 @@ async function verifyClosedPipe(kind:'pcm'|'finish'){
         clearTimeout(timeout);
         if(error)reject(error);else resolve();
       }
-      worker.on('error',error=>settle(Error('Unhandled worker stream error: '+error.name)));
+      worker.on('error',error=>settle(Error('Unhandled worker stream error: '+(error instanceof Error ? error.name : 'unknown'))));
       worker.on('exit',code=>settle(Error('Worker exited before sanitized failure: '+code)));
       worker.on('message',(m:{type:string})=>{
         if(m.type==='ready'){
