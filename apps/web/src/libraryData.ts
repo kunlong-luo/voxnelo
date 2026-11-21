@@ -1,6 +1,6 @@
 import { SENTENCES, reviewSchedule, type HistoryEvent, type LearningState, type Sentence } from '@voxnelo/learning';
 
-export type LibraryMode = 'history'|'favorites'|'review';
+export type LibraryMode = 'history'|'favorites'|'review'|'familiar';
 export interface LibraryEntry {
   id:string;
   sentence:Sentence;
@@ -35,7 +35,7 @@ export function libraryEntries(
         }]:[];
       });
   }
-  const chosen=states.filter(state=>view==='favorites'?state.favorite:state.review);
+  const chosen=states.filter(state=>view==='favorites'?state.favorite:view==='familiar'?state.familiar===true:state.review);
   if(view==='review') {
     return chosen.flatMap(state=>{
       const sentence=lookup.get(state.sentenceId);

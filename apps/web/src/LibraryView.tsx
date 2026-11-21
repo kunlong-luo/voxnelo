@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAutoAnimate } from '@formkit/auto-animate/react';
-import { ArrowRight, ArrowUpRight, BookOpenCheck, CalendarDays, ChevronLeft, ChevronRight, Clock3, Heart, ListRestart, Mic2, Search, Sparkles, type LucideIcon } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, BookOpenCheck, CalendarDays, ChevronLeft, ChevronRight, Clock3, Heart, BadgeCheck, ListRestart, Mic2, Search, Sparkles, type LucideIcon } from 'lucide-react';
 import { SENTENCES, getConnectedSpeechGuide, type HistoryEvent, type LearningState, type Sentence } from '@voxnelo/learning';
 import { useI18n, type TranslationKey } from './i18n';
 import { libraryEntries, libraryPage, historyTotals, reviewTotals, type LibraryMode } from './libraryData';
@@ -19,6 +19,7 @@ interface LibraryViewProps {
 const views:Record<LibraryMode,{title:TranslationKey;helper:TranslationKey;icon:LucideIcon}>={
   history:{title:'libHistoryTitle',helper:'libHistoryHelp',icon:Clock3},
   favorites:{title:'libFavoritesTitle',helper:'libFavoritesHelp',icon:Heart},
+  familiar:{title:'libFamiliarTitle',helper:'libFamiliarHelp',icon:BadgeCheck},
   review:{title:'libReviewTitle',helper:'libReviewHelp',icon:ListRestart},
 };
 const topics:Record<Sentence['topic'],TranslationKey>={
@@ -30,6 +31,8 @@ type ReviewFilter='all'|'due'|'upcoming';
 export function LibraryView({view,states,events,search,notice,onSearch,onChoose,onBackToPractice,onCompleteReview}:LibraryViewProps){
   const {t,locale}=useI18n();
   const [page,setPage]=useState(1);
+  const [collection,setCollection]=useState<'favorites'|'familiar'>('favorites');
+  const mode:LibraryMode=view==='favorites'?collection:view;
   const [historyFilter,setHistoryFilter]=useState<HistoryFilter>('all');
   const [reviewFilter,setReviewFilter]=useState<ReviewFilter>('all');
   const [asOf,setAsOf]=useState(()=>Date.now());
@@ -41,7 +44,7 @@ export function LibraryView({view,states,events,search,notice,onSearch,onChoose,
     return ()=>{window.removeEventListener('focus',refresh);window.clearInterval(interval);};
   },[view]);
   const [animationParent]=useAutoAnimate<HTMLDivElement>();
-  const entries=useMemo(()=>libraryEntries(view,states,events,search,asOf),[view,states,events,search,asOf]);
+  const entries=useMemo(()=>libraryEntries(mode,states,events,search,asOf),[mode,states,events,search,asOf]);
   const filtered=useMemo(()=>{
     if(view==='history'&&historyFilter!=='all')return entries.filter(entry=>entry.type===historyFilter);
     if(view==='review'&&reviewFilter!=='all')return entries.filter(entry=>reviewFilter==='due'?entry.reviewDue:!entry.reviewDue);
@@ -61,7 +64,8 @@ export function LibraryView({view,states,events,search,notice,onSearch,onChoose,
       topic,count:counts.get(topic)??0,
     })).filter(item=>item.count>0).sort((a,b)=>b.count-a.count);
   },[events]);
-  const {title,helper,icon:Icon}=views[view];
+  const {title,helper,icon:Icon}=views[mode];
+  const changeCollection=(next:'favorites'|'familiar')=>{setCollection(next);setPage(1);};
   const selectFilter=(next:HistoryFilter)=>{setHistoryFilter(next);setPage(1);};
   const selectReviewFilter=(next:ReviewFilter)=>{setReviewFilter(next);setPage(1);};
   const searchChanged=(next:string)=>{onSearch(next);setPage(1);};
@@ -106,6 +110,15 @@ export function LibraryView({view,states,events,search,notice,onSearch,onChoose,
             <input className="h-10 min-w-0 flex-1 bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground" aria-label={t('searchAria')} placeholder={t('searchPlaceholder')} value={search} onChange={e=>searchChanged(e.target.value)}/>
           </label>
         </div>
+        {view==='favorites'&&<div className="flex flex-wrap items-center gap-2 border-b border-border/55 px-4 py-3 sm:px-5"
+          role="group" aria-label={t('familiarFilterGroup')}>
+          {(['favorites','familiar'] as const).map(tab=><Button key={tab} variant={collection===tab?'soft':'ghost'}
+            size="sm" className={cn('min-h-9 rounded-xl px-3 text-xs font-semibold',collection===tab&&'bg-secondary text-primary shadow-sm')}
+            onClick={()=>changeCollection(tab)} aria-pressed={collection===tab}>
+            {t(tab==='favorites'?'familiarFilterFavorites':'familiarFilterFamiliar')}
+          </Button>)}
+          <p className="w-full text-[11px] leading-5 text-muted-foreground">{t('familiarFilterHint')}</p>
+        </div>}
         {view==='history'&&<div className="flex flex-wrap items-center gap-2 border-b border-border/55 px-4 py-3 sm:px-5" role="group" aria-label={t('historyFilterLabel')}>
           {([
             ['all','historyFilterAll'],['view','historyFilterViews'],['practice','historyFilterPractices'],
@@ -132,18 +145,18 @@ export function LibraryView({view,states,events,search,notice,onSearch,onChoose,
             const currentDate=entry.at===undefined?'':dateLabel(entry.at);
             const previous=paginated.items[index-1];
             const showDate=view==='history' && (index===0||!previous||dateLabel(previous.at??0)!==currentDate);
-            const pronGuide=view==='favorites'||view==='review'?getConnectedSpeechGuide(entry.sentence):undefined;
+            const pronGuide=mode==='favorites'||mode==='familiar'||mode==='review'?getConnectedSpeechGuide(entry.sentence):undefined;
             return <div key={entry.id} className="flex min-w-0 flex-col gap-2.5">
               {showDate&&<div className="flex items-center gap-2 px-1 pt-1 text-xs font-bold text-translation-ink"><CalendarDays size={14} className="text-primary" /><span>{currentDate}</span><span className="ml-2 h-px min-w-4 flex-1 bg-border/60"/></div>}
               <Button variant="ghost" onClick={()=>onChoose(entry.sentence)}
                 className="libraryItem group relative h-auto min-h-23 w-full min-w-0 justify-start gap-3 overflow-hidden rounded-2xl border border-border/55 bg-muted/28 px-3.5 py-3.5 text-left shadow-[0_5px_15px_-15px_rgba(50,55,45,.8)] transition-[background-color,border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:border-primary/30 hover:bg-accent/55 hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary/35 sm:px-4">
                 <span aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-[14px] border border-primary/15 bg-secondary/65 text-primary sm:size-11">
-                  {entry.type==='practice'?<Mic2 size={20}/>:view==='history'?<Clock3 size={20}/>:view==='favorites'?<Heart size={20}/>:<ListRestart size={20}/>}
+                  {entry.type==='practice'?<Mic2 size={20}/>:view==='history'?<Clock3 size={20}/>:mode==='favorites'?<Heart size={20}/>:mode==='familiar'?<BadgeCheck size={20}/>:<ListRestart size={20}/>}
                 </span>
                 <span className="flex min-w-0 flex-1 flex-col items-start gap-1.5">
                   <strong className="line-clamp-2 max-w-full text-[15px] leading-5 font-bold break-words whitespace-normal text-foreground sm:text-base">{entry.sentence.english}</strong>
                   <span className="line-clamp-2 max-w-full text-[12px] leading-5 font-normal break-words whitespace-normal text-translation-ink">{entry.sentence.chinese}</span>
-                  {(view==='favorites'||view==='review')&&entry.sentence.ipa&&<span lang="en" className="w-full max-w-full break-words whitespace-normal text-[11px] leading-4 text-ipa-ink">
+                  {(mode==='favorites'||mode==='familiar'||mode==='review')&&entry.sentence.ipa&&<span lang="en" className="w-full max-w-full break-words whitespace-normal text-[11px] leading-4 text-ipa-ink">
                     <span className="font-semibold">{t('ipaStandard')}:</span> {entry.sentence.ipa}
                   </span>}
                   {pronGuide&&<span lang="en" className="w-full max-w-full break-words whitespace-normal text-[11px] leading-4 text-primary">
