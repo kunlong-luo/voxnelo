@@ -1,6 +1,6 @@
 # Voxnelo documentation index
 
-Updated: 2026-11-16. This index is navigation, **not** a release approval.
+Updated: 2026-11-21. This index is navigation, **not** a release approval.
 
 ## Source of truth and precedence
 
@@ -12,7 +12,7 @@ Updated: 2026-11-16. This index is navigation, **not** a release approval.
 ## Current guides
 
 - [User guide](USER-GUIDE.md)
-- [Development](DEVELOPMENT.md)
+- [Development](DEVELOPMENT.md) and [local source setup](../INSTALL-TO-LOCAL.md)
 - [Privacy](PRIVACY.md)
 - [PRD traceability — 23 IDs with code/test paths and unmet requirements](release/PRD-TRACEABILITY.md)
 - [Release readiness](engineering/STABLE-RELEASE-READINESS.md)
@@ -20,6 +20,7 @@ Updated: 2026-11-16. This index is navigation, **not** a release approval.
 - [Connected speech and licensed audio review](engineering/CONNECTED-SPEECH-AUDIO-REVIEW.md)
 - [UI and accessibility audit](engineering/UI-ACCESSIBILITY-AUDIT-2026-11-16.md)
 - [Audit findings and technical debt](engineering/TECH-DEBT-2026-11-16.md)
+- [Current repository hygiene audit](audits/2026-11-21-REPOSITORY-HYGIENE.md)
 
 ## Historical material
 
