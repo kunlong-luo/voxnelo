@@ -86,7 +86,7 @@ export function useLearningData(
   }, [recordingUrl, currentId, refresh, notify]);
 
   const setFlag = useCallback(
-    async (targetId: string, flag: 'favorite' | 'review', value: boolean) => {
+    async (targetId: string, flag: 'favorite' | 'review' | 'familiar', value: boolean) => {
       const result = await saveFlag(targetId, flag, value);
       if (!mountedRef.current) return;
       if (!result.ok) {

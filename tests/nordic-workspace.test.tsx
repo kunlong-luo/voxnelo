@@ -104,8 +104,8 @@ describe('Nordic three-column learning workspace', () => {
     expect(onNext).toHaveBeenCalledOnce();
 
     const pairedFlags = container.querySelector('.lessonHeaderActions .sentenceFlags');
-    expect(pairedFlags?.querySelectorAll('.flagButton')).toHaveLength(2);
-    expect(pairedFlags?.querySelectorAll('button[aria-pressed]')).toHaveLength(2);
+    expect(pairedFlags?.querySelectorAll('.flagButton')).toHaveLength(3);
+    expect(pairedFlags?.querySelectorAll('button[aria-pressed]')).toHaveLength(3);
     expect(pairedFlags?.querySelector('[title]')).toBeNull();
     const favorite = screen.getByRole('button', { name: '收藏' });
     fireEvent.click(favorite);
@@ -119,6 +119,11 @@ describe('Nordic three-column learning workspace', () => {
     expect(container.querySelector('.referenceFooter .reviewIconButton')).toBeNull();
     fireEvent.click(review);
     expect(onToggleFlag).toHaveBeenCalledWith('review');
+
+    const familiar = screen.getByRole('button', { name: '标记为已熟悉（自评）' });
+    expect(familiar.getAttribute('aria-pressed')).toBe('false');
+    fireEvent.click(familiar);
+    expect(onToggleFlag).toHaveBeenCalledWith('familiar');
 
     const rightRail = container.querySelector('.referenceInsights');
     expect(rightRail?.querySelectorAll(':scope > .insightCard')).toHaveLength(4);

@@ -246,6 +246,28 @@ describe('PracticeView', () => {
     expect((screen.getByRole('button', { name: '播放标准朗读' }) as HTMLButtonElement).disabled).toBe(true);
   });
 
+  it('F106 已熟悉标记来自明确点击，不是自动发音成绩', () => {
+    const onToggleFlag=vi.fn();
+    const state={
+      sentenceId: FIRST_SENTENCE.id,
+      seenCount: 1, practicedCount: 3, favorite: true,
+      review: false, familiar: true, lastSeenAt: 1,
+    };
+    const {rerender}=render(<PracticeView {...basePracticeProps}
+      currentState={state} onToggleFlag={onToggleFlag}/>);
+    const remove=screen.getByRole('button',{name:'取消已熟悉标记'});
+    expect(remove.getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(remove);
+    expect(onToggleFlag).toHaveBeenCalledWith('familiar');
+    rerender(<PracticeView {...basePracticeProps} currentState={{...state,familiar:false}}
+      onToggleFlag={onToggleFlag}/>);
+    const add=screen.getByRole('button',{name:'标记为已熟悉（自评）'});
+    expect(add.getAttribute('aria-pressed')).toBe('false');
+    fireEvent.click(add);
+    expect(onToggleFlag).toHaveBeenCalledTimes(2);
+    expect(onToggleFlag).toHaveBeenLastCalledWith('familiar');
+  });
+
   it('收藏按钮触发回调', () => {
     const onToggleFlag = vi.fn();
     render(<PracticeView {...basePracticeProps} onToggleFlag={onToggleFlag} />);

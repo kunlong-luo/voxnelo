@@ -1,5 +1,5 @@
 import { useAutoAnimate } from '@formkit/auto-animate/react';
-import { ArrowRight, Bookmark, BookOpen, ChevronLeft, Heart } from 'lucide-react';
+import { ArrowRight, Bookmark, BookOpen, ChevronLeft, Heart, BadgeCheck } from 'lucide-react';
 import { SENTENCES, type Sentence } from '@voxnelo/learning';
 import type { PracticeViewProps } from './PracticeTypes';
 import { PracticeControlPanel } from './PracticeControlPanel';
@@ -32,6 +32,7 @@ export function PracticeCard({current,currentState,speed,showIpa,recorder,dictat
   const index=position<0?1:position+1;
   const favorite=Boolean(currentState?.favorite);
   const review=Boolean(currentState?.review);
+  const familiar=Boolean(currentState?.familiar);
   return (
       <Card className="practiceCard referenceLesson relative isolate flex min-h-[min(700px,calc(100dvh-120px))] [@media(max-height:800px)]:min-h-[min(560px,calc(100dvh-180px))] min-w-0 flex-1 flex-col overflow-visible rounded-[34px] border border-glass-edge bg-glass-surface shadow-glass backdrop-blur-[var(--glass-blur)] ring-1 ring-white/25">
         <div aria-hidden="true" data-motion="lesson-breathe" className="pointer-events-none absolute inset-x-[16%] top-[12%] h-60 rounded-[50%] bg-brand-cream/85 blur-3xl animate-ambient-breathe [animation-delay:-1.7s]"/>
@@ -44,7 +45,7 @@ export function PracticeCard({current,currentState,speed,showIpa,recorder,dictat
           </div>
           <div className="lessonHeaderActions flex min-w-0 items-center gap-2">
             <Badge className="pill max-w-44 truncate max-[950px]:max-w-29"><BookOpen size={14}/>{t(topics[current.topic])}</Badge>
-            <div className="sentenceFlags inline-flex items-center gap-1 rounded-2xl border border-border/60 bg-muted/60 p-1" role="group" aria-label={t('navFavorites')+' / '+t('navReview')}>
+            <div className="sentenceFlags inline-flex items-center gap-1 rounded-2xl border border-border/60 bg-muted/60 p-1" role="group" aria-label={t('navFavorites')+' / '+t('navReview')+' / '+t('familiarLabel')}>
               <Tooltip text={t(favorite?'favoriteRemove':'favoriteAdd')} placement="bottom">
                 <Button variant="ghost" size="icon-sm" className={cn('lessonFavorite flagButton text-muted-foreground hover:text-primary',favorite&&'bg-secondary text-primary')} onClick={()=>onToggleFlag('favorite')} aria-label={t(favorite?'favoriteRemove':'favoriteAdd')} aria-pressed={favorite}>
                   <Heart key={favorite?'favorite-on':'favorite-off'} size={19} fill={favorite?'currentColor':'none'} className="animate-soft-pop"/>
@@ -53,6 +54,14 @@ export function PracticeCard({current,currentState,speed,showIpa,recorder,dictat
               <Tooltip text={t(review?'reviewRemove':'reviewAdd')} placement="bottom">
                 <Button variant="ghost" size="icon-sm" className={cn('reviewIconButton flagButton text-muted-foreground hover:text-primary',review&&'bg-secondary text-primary')} onClick={()=>onToggleFlag('review')} aria-label={t(review?'reviewRemove':'reviewAdd')} aria-pressed={review}>
                   <Bookmark key={review?'review-on':'review-off'} size={19} fill={review?'currentColor':'none'} className="animate-soft-pop"/>
+                </Button>
+              </Tooltip>
+              <Tooltip text={t(familiar?'familiarRemove':'familiarAdd')} placement="bottom">
+                <Button variant="ghost" size="icon-sm"
+                  className={cn('familiarFlag flagButton text-muted-foreground hover:text-primary',familiar&&'bg-secondary text-primary')}
+                  onClick={()=>onToggleFlag('familiar')}
+                  aria-label={t(familiar?'familiarRemove':'familiarAdd')} aria-pressed={familiar}>
+                  <BadgeCheck size={19} fill={familiar?'currentColor':'none'} className="animate-soft-pop"/>
                 </Button>
               </Tooltip>
             </div>

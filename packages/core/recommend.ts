@@ -7,6 +7,8 @@ export interface LearningState {
   practicedCount: number;
   favorite: boolean;
   review: boolean;
+  /** Explicit learner self-assessment, never inferred from recordings. */
+  familiar?: boolean;
   lastSeenAt: number;
   lastPracticedAt?: number;
   /** Optional fields are compatible with pre-F104 IndexedDB rows. */
