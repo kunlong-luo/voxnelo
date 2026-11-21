@@ -34,3 +34,13 @@ The seven remaining version-specific publisher/Draft workflow files have been re
 ## Validation boundary
 
 Changes are limited to retiring obsolete one-off GitHub Actions entrypoints, keeping historical source snapshots, and refreshing guidance/tests. Required PR CI (TypeScript, lint, docs, tests, build and Windows/macOS/Linux package gates) must pass before merge; GitHub Actions passing is not an independent audit of prior release assets or real-device behavior.
+
+## Source-reference follow-up — 2026-11-21
+
+This follow-up was made against main `7518ac2f1ad974b0dd3dced1cfdb63f5fdc08ec5` before creating the dedicated cleanup branch.
+
+- **CSS finding (confirmed, narrow scope):** both Nordic and Sunset theme declarations for `--surface-highlight` had no consumers in any of the 43 tracked TypeScript/TSX files under `apps/web/src/`. This was checked against the complete, untruncated GitHub tree. Neither declaration is used by another CSS rule; both were removed without changing named themes, `@theme inline`, animation keyframes or selectors. Build and UI checks must still pass before merge.
+- **React retained (references confirmed):** `App.tsx` imports `PracticeView`; `PracticeView` imports `PracticeCard` and `PracticeSidebarWidgets`; `PracticeCard` uses `PracticeControlPanel`, `LiveDictationPanel` and `WaveformArt`; `PracticeControlPanel` uses `RecordingPlayback`; `Tooltip` is used by active controls. Do not retire them as "old components" based on names alone.
+- **Animations retained (references confirmed):** `animate-panel-enter` in `SettingsView`/`PracticeSidebarWidgets`, `animate-success-glint` in `PracticeControlPanel`, and `animate-record-halo` in `LiveDictationPanel`. `--shadow-soft` and the sidebar scrollbar utility also have consumers.
+- **Historical ASR retained (runtime contracts confirmed):** `scripts/build-electron.mts` bundles both `apps/desktop/offlineAsrWorker.ts` and `apps/desktop/moonshineAsrWorker.ts` as standalone entrypoints; `apps/desktop/main.ts` and `apps/desktop/preload.ts` expose legacy `zipformer` selection via protected IPC. Package scripts also expose opt-in older model staging. Static imports alone cannot safely justify worker, IPC, or user model-data removal.
+- **Still unverified:** a complete TypeScript symbol/reference graph across tests and scripts, dynamically assembled Tailwind class names, packaged smoke behavior on real devices, and exhaustive unused CSS selectors. This audit is **not** certification that every unreferenced export or selector has been found.
