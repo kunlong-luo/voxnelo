@@ -11,11 +11,11 @@ Voxnelo uses Node.js as its build and test runtime; Electron embeds its own inde
 ## Toolchain policy
 
 1. Use supported **stable/LTS** Node.js, not Current, nightly, alpha, beta or RC.
-2. Pin pnpm with a reproducible `packageManager` version and integrity checksum; never alter the lockfile or that hash by hand.
+2. Pin a concrete pnpm version in `packageManager`; verify its package SHA-512 integrity in `pnpm-lock.yaml` (`packageManagerDependencies` and pnpm artifact resolution). The `packageManager` string itself need not carry a checksum. Never edit integrity values by hand.
 3. Use `pnpm install --frozen-lockfile` on CI, keep TypeScript/lint/unit tests/build/security audits and cross-platform package gates intact.
 4. Keep Electron's embedded Node version separate from the build-runtime version and validate native packages for Windows, macOS and Linux.
 
-## Remaining compatibility upgrades
+## Maintained versions and follow-up checks
 
 - `@types/node` is declared at major **26** (`^26.6.6`) and must track the supported Node 26 CI runtime; regenerate `pnpm-lock.yaml` through pnpm and review TypeScript/API changes for every future major upgrade.
 - Electron is declared at **45.4.1** with a pnpm-generated lockfile (the stable patch published 2026-11-18); future Electron upgrades require Windows/macOS/Linux packaging and ASR worker protocol verification.
@@ -27,6 +27,7 @@ Voxnelo uses Node.js as its build and test runtime; Electron embeds its own inde
 
 ```sh
 pnpm install --frozen-lockfile
+pnpm check:toolchain
 pnpm check:stable-deps
 pnpm typecheck
 pnpm lint
