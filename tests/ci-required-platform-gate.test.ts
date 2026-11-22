@@ -25,17 +25,17 @@ describe('Main branch required check gates all desktop platforms', () => {
     const required = jobSource('check');
     expect(required).toContain('name: check');
     expect(required).toContain('needs: [quality, desktop-package]');
-    expect(required).toContain('if: \${{ always() }}');
-    expect(required).toContain('QUALITY_RESULT: \${{ needs.quality.result }}');
-    expect(required).toContain('PACKAGE_RESULT: \${{ needs.desktop-package.result }}');
-    expect(required).toContain('test "\${QUALITY_RESULT}" = "success"');
-    expect(required).toContain('test "\${PACKAGE_RESULT}" = "success"');
+    expect(required).toContain('if: ${{ always() }}');
+    expect(required).toContain('QUALITY_RESULT: ${{ needs.quality.result }}');
+    expect(required).toContain('PACKAGE_RESULT: ${{ needs.desktop-package.result }}');
+    expect(required).toContain('test "${QUALITY_RESULT}" = "success"');
+    expect(required).toContain('test "${PACKAGE_RESULT}" = "success"');
   });
 
   it('keeps PR triggers, platform contexts and read-only token', () => {
     expect(source).toContain('pull_request:\n    branches: [main]');
     expect(source).toContain('contents: read');
-    expect(source).toContain('name: Desktop package integrity (\${{ matrix.os }})');
+    expect(source).toContain('name: Desktop package integrity (${{ matrix.os }})');
     expect(source).toContain('cancel-in-progress: true');
   });
 });
