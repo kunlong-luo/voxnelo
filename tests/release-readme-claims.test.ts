@@ -71,7 +71,9 @@ describe('Release approval and guarded Linux Early Access workflow', () => {
     expect(workflow).toContain('refs/heads/main');
     expect(workflow).toContain('package.json');
     expect(workflow).toContain('--draft --prerelease');
-    expect(workflow).toContain('Refuse to overwrite an existing release or version tag');
+    expect(workflow).toContain('Reject a version already used by a private Draft, published Release or tag');
+    expect(workflow).toContain('Recheck version collision immediately before creating a private Draft');
+    expect(workflow).toContain('scripts/assert-release-tag-vacant.mts');
     expect(workflow).toContain('sha256sum -c');
     expect(workflow).toContain('Voxnelo.deb');
     expect(workflow).toContain('if: github.repository ==');
