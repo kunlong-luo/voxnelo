@@ -23,7 +23,8 @@ describe('draft-only release version availability', () => {
     });
     await expect(assertReleaseTagVacant(repository, version, get))
       .rejects.toThrow(/already exists.*private Draft/);
-    expect(get).toHaveBeenCalledExactlyOnceWith(releasePath);
+    expect(get).toHaveBeenCalledTimes(1);
+    expect(get).toHaveBeenCalledWith(releasePath);
   });
 
   it('also rejects an existing published release', async () => {
