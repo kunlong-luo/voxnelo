@@ -1,6 +1,9 @@
 // @vitest-environment jsdom
+import 'fake-indexeddb/auto';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { FIRST_SENTENCE } from '@voxnelo/content';
+import { database } from '@voxnelo/storage';
 import { App } from '../apps/web/src/App';
 import { OfflineModelsView } from '../apps/web/src/OfflineModelsView';
 import { useLiveDictation } from '../apps/web/src/useLiveDictation';
@@ -17,6 +20,15 @@ function ModelHarness({onBack=()=>undefined}:{onBack?:()=>void}){
   const dictation=useLiveDictation('test-english');
   return <OfflineModelsView dictation={dictation} onBack={onBack}/>;
 }
+// Real in-memory IndexedDB transactions are required when the full App mounts.
+// The model manager itself never needs database access, but App restores the
+// previous lesson in the background. A missing IDB API would hide that failure.
+beforeEach(async()=>{
+  await database.transaction('rw',database.states,database.events,async()=>{
+    await database.states.clear();
+    await database.events.clear();
+  });
+});
 afterEach(()=>{
   cleanup();
   vi.unstubAllGlobals();
@@ -177,6 +189,10 @@ describe('Dedicated offline ASR model management',()=>{
     vi.stubGlobal('voxneloDesktop',undefined);
     vi.stubGlobal('SpeechRecognition',undefined);
     render(<App/>);
+    await waitFor(async()=>{
+      const visits=await database.events.where('sentenceId').equals(FIRST_SENTENCE.id).count();
+      expect(visits).toBeGreaterThan(0);
+    });
     fireEvent.click(screen.getByRole('button',{name:'设置'}));
     fireEvent.click(screen.getByRole('button',{name:'管理离线模型'}));
     expect(screen.getByRole('heading',{name:'离线模型管理'})).toBeTruthy();
