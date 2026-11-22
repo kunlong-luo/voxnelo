@@ -28,6 +28,7 @@ The repository is **public** (verified on GitHub, 2026-11-21). Ordinary dependen
 
 ## PR cost controls and branch protection — checked 2026-11-22
 
+- The read-only TypeScript module reachability inventory runs on demand via Actions and on changes to its audit/build-entry definitions; it is not part of ordinary PR blocking checks. It saves a short-lived JSON report for human investigation and never removes files. Details: [module audit](../audits/2026-11-22-MODULE-REACHABILITY.md).
 - The Moonshine-vs-Zipformer real-model comparison remains dispatchable and runs automatically on changes to its model/runtime scripts or ASR integrity logic. Generic `package.json` script edits or unrelated pnpm lockfile updates no longer start this expensive evaluation. Run it manually when accepting a new native inference candidate or preparing a relevant release.
 - Dependency security audit still runs on the weekly schedule, manual dispatch, lockfile changes and Moonshine installer changes. The required frozen-lockfile and toolchain CI checks reject dependency/manifest drift; script-only changes should not reinstall the full Python SDK unnecessarily.
 - All three heavy ASR/security workflows use PR-keyed concurrency with `cancel-in-progress: true` so a later push supersedes the prior run for the same PR; manual and scheduled invocations remain available.
