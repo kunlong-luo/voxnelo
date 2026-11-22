@@ -6,7 +6,7 @@ export interface Sentence {
   id: string;
   english: string;
   chinese: string;
-  /** Verified guide on seed sentences; expansion drafts have no fabricated IPA. */
+  /** Teaching IPA reference only; seed sentences still need independent linguistic review. Expansion drafts omit unreviewed IPA. */
   ipa?: string;
   topic: SentenceTopic;
   scene?: SentenceScene;
