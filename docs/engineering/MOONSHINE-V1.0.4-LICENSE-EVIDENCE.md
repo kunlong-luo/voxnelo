@@ -21,6 +21,22 @@
 
 Important distinction: the upstream **MIT** statement for the English ASR model is not a blanket license statement for all Python package dependencies, OS-native linked libraries, TTS components or user-provided content. The separate Moonshine Community License applies to *specified legacy non-English models*, not to the documented English Medium Streaming STT model.
 
+## 2026-11-22 registry-file checksum inventory (source-side only)
+
+The exact v0.0.65 files and **published PyPI digest values** below were read from [PyPI's fixed-version release file table](https://pypi.org/project/moonshine-voice/0.0.65/) on 2026-11-22:
+
+| Target | Distribution filename | PyPI SHA-256 |
+| --- | --- | --- |
+| Windows x64 | `moonshine_voice-0.0.65-py3-none-win_amd64.whl` | `657e16825ca8f4298fea2a9d9a28bb685d9cf6ad247e104656ed5b02b9ff886b` |
+| Linux x64 | `moonshine_voice-0.0.65-py3-none-manylinux_2_34_x86_64.whl` | `946e0a056dd3a13ee8cc28dec84c0f01676743a841bae5e6c52a87483b10241b` |
+| macOS 15+ ARM64 | `moonshine_voice-0.0.65-py3-none-macosx_15_0_arm64.whl` | `3e92fa8497bf4fc40b6241e4dc29fd4ac77832f7f3d8addc4fd467a6bf1cf605` |
+
+**Precisely what has been verified:** the publisher-facing package listing supplies these filenames, platform tags and digests and declares Moonshine SDK / English language models MIT. This review has **not downloaded and rehashed these wheels, unpacked their METADATA/LICENSE/third-party notices, scanned bundled native libraries, or traced every installed dependency**. PyPI's v0.0.65 release page explicitly reports **no provenance attestations** for its release files; a registry SHA is not a trusted build attestation or a legal opinion.
+
+**Confirmed implementation gap:** [`install-moonshine-linux.mts`](../../scripts/install-moonshine-linux.mts) installs `moonshine-voice==0.0.65` from PyPI with binary-only mode, but does **not** enforce the registry wheel hashes via `--require-hashes` or a per-platform hash-pinned requirements file. Its transitive Python dependencies are not individually locked by that command. The model's eight post-download hashes in `moonshineIntegrity.ts` are a different check and must not be represented as proof of SDK-wheel integrity, provenance or licensing. Keep the runtime opt-in while evaluating a platform-specific resolved, hash-pinned installation plan.
+
+**Next audit deliverables (not yet done):** download and rehash all **three** relevant platform wheels; inspect archive notices/METADATA and linked libraries; resolve the exact installed Python dependency inventory/license obligations on each target OS; generate a lockfile-based production Electron/npm license and notices inventory for the eventual shipped installer; match the eight quantized model digests to an **immutable upstream snapshot**, including the applicable asset license/attribution and CDN terms. Do not extrapolate from today's upstream `main` to the v0.0.65 binaries. See the [direct-human microphone evidence ledger](../release/V1.0.4-PHYSICAL-DEVICE-EVIDENCE.md), which is a separate release blocker.
+
 ## Release evidence still required
 
 1. **Pinned binary provenance.** Record the exact PyPI v0.0.65 Windows x64, Linux x64 and macOS ARM64 wheel filenames and SHA-256, inspect the wheel `METADATA`, `LICENSE`/notices, and confirm native libraries and any other redistributable parts against their respective permissions.
