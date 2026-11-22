@@ -60,5 +60,9 @@ describe('Read-only module reachability audit', () => {
     expect(report.reviewCandidates).not.toContain('apps/desktop/offlineAsrWorker.ts');
     expect(report.reviewCandidates).not.toContain('apps/desktop/moonshineAsrWorker.ts');
     expect(report.sourceModuleCount).toBeGreaterThan(50);
+    // This ambient CSS import declaration is consumed by TypeScript's program,
+    // not imported by a runtime module. It must never be a deletion suggestion.
+    expect(report.declarationFiles).toContain('apps/web/src/styles.d.ts');
+    expect(report.reviewCandidates).not.toContain('apps/web/src/styles.d.ts');
   });
 });

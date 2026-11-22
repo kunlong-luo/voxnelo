@@ -12,6 +12,7 @@ export const MAINTAINED_WORKFLOWS = [
   { path: '.github/workflows/pages-preview.yml', usesPnpm: true },
   { path: '.github/workflows/security-dependency-audit.yml', usesPnpm: true },
   { path: '.github/workflows/quality-deep.yml', usesPnpm: true },
+  { path: '.github/workflows/module-reachability-audit.yml', usesPnpm: true },
   { path: '.github/workflows/release.yml', usesPnpm: true },
   { path: '.github/workflows/release-draft.yml', usesPnpm: true },
   { path: '.github/workflows/stable-readiness.yml', usesPnpm: false },

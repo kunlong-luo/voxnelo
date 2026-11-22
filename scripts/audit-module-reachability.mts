@@ -90,6 +90,8 @@ export interface ModuleAuditReport {
   productionReachable: number;
   toolingOnly: string[];
   testsOnly: string[];
+  /** TypeScript declarations are compiled for typechecking, not bundled as runtime modules. */
+  declarationFiles: string[];
   reviewCandidates: string[];
   nonLiteralImportSources: string[];
   unresolvedRelativeImports: string[];
@@ -110,6 +112,10 @@ export function auditModuleReachability(root: string): ModuleAuditReport {
 
   const all = new Set(parsed.fileNames.map(file => path.resolve(file)));
   const internalSources = [...all].filter(file => /^(?:apps|packages)\//.test(path.relative(absoluteRoot, file).replaceAll('\\', '/')));
+  // Ambient declarations can be essential to typecheck CSS imports without
+  // having an import edge to them. Never classify *.d.ts as dead runtime code.
+  const declarationFiles = internalSources.filter(file => /\.d\.(?:ts|mts|cts)$/.test(file));
+  const runtimeSources = internalSources.filter(file => !/\.d\.(?:ts|mts|cts)$/.test(file));
   const productionEntrypoints = bundled.map(file => path.resolve(absoluteRoot, file));
   const invalid = productionEntrypoints.filter(file => !all.has(file));
   if (invalid.length) throw new Error('Bundle entries absent from tsconfig: ' + invalid.join(', '));
@@ -141,10 +147,11 @@ export function auditModuleReachability(root: string): ModuleAuditReport {
   return {
     productionEntrypoints: bundled,
     sourceModuleCount: internalSources.length,
-    productionReachable: internalSources.filter(file => runtime.has(file)).length,
-    toolingOnly: sorted(internalSources.filter(file => !runtime.has(file) && tools.has(file))),
-    testsOnly: sorted(internalSources.filter(file => !tools.has(file) && every.has(file))),
-    reviewCandidates: sorted(internalSources.filter(file => !every.has(file))),
+    productionReachable: runtimeSources.filter(file => runtime.has(file)).length,
+    toolingOnly: sorted(runtimeSources.filter(file => !runtime.has(file) && tools.has(file))),
+    testsOnly: sorted(runtimeSources.filter(file => !tools.has(file) && every.has(file))),
+    declarationFiles: sorted(declarationFiles),
+    reviewCandidates: sorted(runtimeSources.filter(file => !every.has(file))),
     nonLiteralImportSources: sorted([...nonLiteral].filter(file => every.has(file))),
     unresolvedRelativeImports: [...unresolved].sort(),
   };
@@ -160,7 +167,7 @@ if (calledDirectly) {
     } else {
       console.log('Module reachability (review only; never auto-delete):');
       console.log(report.productionReachable + '/' + report.sourceModuleCount + ' app/package modules reachable from ' + report.productionEntrypoints.length + ' bundle entrypoints.');
-      console.log(report.toolingOnly.length + ' tooling-only; ' + report.testsOnly.length + ' test-only; ' + report.reviewCandidates.length + ' unreferenced review candidate(s).');
+      console.log(report.toolingOnly.length + ' tooling-only; ' + report.testsOnly.length + ' test-only; ' + report.declarationFiles.length + ' type-declaration-only; ' + report.reviewCandidates.length + ' unreferenced runtime review candidate(s).');
       for (const file of report.reviewCandidates) console.log('  REVIEW ' + file);
       if (report.nonLiteralImportSources.length) console.log('Nonliteral import/require/glob requires manual review in: ' + report.nonLiteralImportSources.join(', '));
       if (report.unresolvedRelativeImports.length) console.log('Unresolved relative source imports (manual review): ' + report.unresolvedRelativeImports.join(', '));
