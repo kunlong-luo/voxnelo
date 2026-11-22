@@ -12,8 +12,8 @@ Record app commit, OS version and architecture, Moonshine SDK/model versions and
 
 ## Metrics
 
-WER = (substitutions + deletions + insertions) / reference word count; CER uses characters. Document normalization rules (case, punctuation, contractions, numbers) before scoring. Report median/p95 time-to-first-text, finalization latency, real-time factor, CPU and peak RSS, alongside failures and sample counts. Report distributions by noise/accent group and confidence intervals when justified. Keep empty results as NOT MEASURED.
+WER = (substitutions + deletions + insertions) / reference word count; CER uses characters. Document normalization rules (case, punctuation, contractions, numbers) before scoring. Report median/p95 time-to-first-text, finalization latency, real-time factor, CPU and peak RSS, alongside failures and sample counts. Report distributions by noise/accent group and confidence intervals when justified. Keep empty results as NOT MEASURED. For local WAV batches, the expected sample-ID/decoder plan must be fixed before inference; each planned pair must have exactly one success or explicit failure. Reject duplicated, missing, substituted or scenario-mismatched results even when the total result count looks correct. Reject nonfinite WER/RTF/duration, invalid reference/error counts and inconsistent WER arithmetic before grouping. An incomplete report is diagnostic evidence, never a release pass. Synthetic regression tests may exercise these rejection paths, but do not generate acoustic quality evidence.
 
 ## Acceptance
 
-Publish thresholds only after product-owner approval and representative hardware testing. A green CI synthetic test is not a measured accuracy or performance claim. Refer to docs/engineering/ASR-ACCURACY-EXPERIMENTS.md for existing experiments.
+Publish thresholds only after product-owner approval and representative hardware testing. A green CI synthetic test is not a measured accuracy or performance claim. Refer to [ASR accuracy experiments](../engineering/ASR-ACCURACY-EXPERIMENTS.md) for existing experiments.
