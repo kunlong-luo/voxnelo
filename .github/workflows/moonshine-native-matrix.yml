@@ -8,6 +8,8 @@ on:
       - 'apps/desktop/asrDefault.ts'
       - 'apps/web/src/OfflineModelsView.tsx'
       - 'scripts/install-moonshine-linux.mts'
+      - 'scripts/collect-moonshine-license-metadata.py'
+      - 'scripts/export-moonshine-license-inventory.mts'
       - 'scripts/moonshine-stream-pilot.py'
       - 'scripts/check-moonshine-native-worker.mts'
       - 'scripts/check-packaged-moonshine-native.mts'
@@ -58,6 +60,15 @@ jobs:
         run: node --experimental-strip-types scripts/install-moonshine-linux.mts --accept-experimental-runtime
       - name: Verify actual platform-native SDK PCM and final event protocol
         run: node --experimental-strip-types scripts/check-moonshine-native-worker.mts
+      - name: Export installed Python license, NOTICE and native-binary metadata (not approval)
+        run: node --experimental-strip-types scripts/export-moonshine-license-inventory.mts "${{ runner.temp }}/moonshine-license-${{ matrix.target }}.json"
+      - name: Retain per-platform sanitized license metadata for manual review
+        uses: actions/upload-artifact@v7
+        with:
+          name: moonshine-license-${{ matrix.target }}
+          path: ${{ runner.temp }}/moonshine-license-${{ matrix.target }}.json
+          retention-days: 14
+          if-no-files-found: error
       - name: Build real unpacked OS-native Electron application
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
