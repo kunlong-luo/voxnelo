@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 const source = readFileSync(path.resolve('.github/workflows/ci.yml'), 'utf8');
 const jobSource = (name: string): string =>
-  source.split('  '+name+':\n')[1]?.split(/\n  [a-z][a-z-]*:\n/)[0] ?? '';
+  source.split('  '+name+':\n')[1]?.split(/\n {2}[a-z][a-z-]*:\n/)[0] ?? '';
 
 describe('Main branch required check gates all desktop platforms', () => {
   it('keeps core quality and three OS package jobs parallel', () => {
