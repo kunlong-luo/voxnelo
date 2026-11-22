@@ -1,0 +1,82 @@
+# Read-only module inventory for selective cleanup decisions, not a deletion gate.
+name: Read-only TypeScript module reachability inventory
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/module-reachability-audit.yml'
+      - 'scripts/audit-module-reachability.mts'
+      - 'tsconfig.json'
+      - 'rsbuild.config.ts'
+      - 'scripts/build-electron.mts'
+      - 'scripts/build-audio-worklet.mts'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: module-audit-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  inventory:
+    name: Report module reachability (no deletion)
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Setup pnpm
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          version: 12.22.0
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 26
+          cache: pnpm
+      - name: Install locked TypeScript toolchain
+        run: pnpm install --frozen-lockfile
+      - name: Produce source graph inventory without removing anything
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --experimental-strip-types scripts/audit-module-reachability.mts --json > "$RUNNER_TEMP/module-report.json"
+          node --input-type=module -e '
+            import fs from "node:fs";
+            const report = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+            const categories = [
+              ["Bundled entries", report.productionEntrypoints.length],
+              ["App/package modules", report.sourceModuleCount],
+              ["Production reachable", report.productionReachable],
+              ["Tooling only", report.toolingOnly.length],
+              ["Tests only", report.testsOnly.length],
+              ["Review candidates (NOT approved for deletion)", report.reviewCandidates.length],
+              ["Nonliteral imports requiring review", report.nonLiteralImportSources.length],
+              ["Unresolved relative imports", report.unresolvedRelativeImports.length],
+            ];
+            const lines = [
+              "## Read-only TypeScript reachability inventory",
+              "| Classification | Files |",
+              "| --- | ---: |",
+              ...categories.map(([label, count]) => `| ${label} | ${count} |`),
+              "",
+              "### Unreferenced review candidates (not proof of unused code)",
+              ...(report.reviewCandidates.length ? report.reviewCandidates.map(file => `- \`${file}\``) : ["None found"]),
+              "",
+              "### Unresolved source imports",
+              ...(report.unresolvedRelativeImports.length ? report.unresolvedRelativeImports.map(item => `- \`${item}\``) : ["None found"]),
+              "",
+              "IPC, native packaged resources, reflections and CSS are outside this graph; no file may be deleted from this report alone.",
+            ];
+            const markdown = lines.join("\n") + "\n";
+            console.log(markdown);
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, markdown);
+          ' "$RUNNER_TEMP/module-report.json"
+      - name: Save read-only inventory for human review
+        uses: actions/upload-artifact@v7
+        with:
+          name: module-reachability-report
+          path: ${{ runner.temp }}/module-report.json
+          retention-days: 7
+          if-no-files-found: error
