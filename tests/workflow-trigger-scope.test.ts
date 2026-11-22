@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 const read = (filename: string) => readFileSync(path.resolve('.github/workflows', filename), 'utf8');
 function pullRequestPaths(yaml: string): string[] {
-  const section = yaml.split('  pull_request:\n    paths:\n')[1]?.split(/\n  [a-z][\w-]*:/)[0] ?? '';
+  const section = yaml.split('  pull_request:\n    paths:\n')[1]?.split(/\n {2}[a-z][\w-]*:/)[0] ?? '';
   return [...section.matchAll(/^\s+- '([^']+)'$/gm)].map(match => match[1]!);
 }
 
