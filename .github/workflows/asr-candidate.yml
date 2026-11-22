@@ -14,12 +14,16 @@ on:
       - 'scripts/prepare-asr-model.mts'
       - 'scripts/stage-asr-pilot.mts'
       - 'scripts/check-electron-packaged-asr.mts'
-      - 'scripts/check-platform-asr-candidate.mts'
       - 'scripts/check-asr-staging.mts'
       - 'scripts/check-asr-real-release.mts'
 
 permissions:
   contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 
 jobs:
   linux-real-inference:
