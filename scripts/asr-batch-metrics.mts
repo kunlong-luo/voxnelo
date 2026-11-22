@@ -68,6 +68,29 @@ export interface AsrGroupSummary extends WordCounts {
 export function summarizeAsrAttempts(attempts: readonly MeasuredAsrAttempt[]): AsrGroupSummary[] {
   const scenarios: readonly AsrScenario[] = ['quiet', 'external-playback', 'noise'];
   const decoders: readonly AsrDecoderId[] = ['greedy_search', 'modified_beam_search', 'moonshine-small-streaming', 'moonshine-medium-streaming'];
+  // A malformed native result must not enter a "complete" numeric report.
+  // In particular, NaN/null/negative timing or word counts may otherwise
+  // serialize as null and silently distort weighted WER or RTF.
+  for (const attempt of attempts) {
+    const validCount = (value: number): boolean => Number.isSafeInteger(value) && value >= 0;
+    const errorCount = attempt.substitutions + attempt.deletions + attempt.insertions;
+    const validTiming = (value: number | null | undefined): boolean =>
+      value === undefined || value === null || (Number.isFinite(value) && value >= 0);
+    if (!scenarios.includes(attempt.scenario) || !decoders.includes(attempt.decoder) ||
+      !validCount(attempt.referenceWords) || attempt.referenceWords === 0 ||
+      !validCount(attempt.substitutions) || !validCount(attempt.deletions) ||
+      !validCount(attempt.insertions) || !Number.isSafeInteger(errorCount) ||
+      !Number.isFinite(attempt.wordErrorRate) ||
+      Math.abs(attempt.wordErrorRate - errorCount / attempt.referenceWords) > 0.0001 ||
+      !Number.isFinite(attempt.durationSeconds) || attempt.durationSeconds <= 0 ||
+      !Number.isFinite(attempt.elapsedSeconds) || attempt.elapsedSeconds <= 0 ||
+      !Number.isFinite(attempt.realTimeFactor) || attempt.realTimeFactor <= 0 ||
+      !validTiming(attempt.firstInterimAudioSeconds) ||
+      !validTiming(attempt.firstInterimProcessingMs) ||
+      !validTiming(attempt.modelLoadMs)) {
+      throw Error('Invalid ASR batch attempt metrics');
+    }
+  }
   const output: AsrGroupSummary[] = [];
   for (const scenario of scenarios) for (const decoder of decoders) {
     const items = attempts.filter(a => a.scenario === scenario && a.decoder === decoder);
