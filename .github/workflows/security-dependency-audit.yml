@@ -2,13 +2,14 @@ name: Supply-chain dependency audit (Moonshine Python and pnpm)
 
 # Strict audit for the full JavaScript dependency tree, including test tools,
 # and the actual installed Python runtime. Audits do not verify wheel provenance.
+# Dependency changes must update pnpm-lock.yaml (frozen-install CI checks it);
+# changing a package.json script alone must not reinstall and scan Moonshine.
 on:
   pull_request:
     paths:
       - '.github/workflows/security-dependency-audit.yml'
       - 'scripts/install-moonshine-linux.mts'
       - 'scripts/moonshine-install-transaction.mts'
-      - 'package.json'
       - 'pnpm-lock.yaml'
   schedule:
     - cron: '17 8 * * 1'
