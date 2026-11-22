@@ -40,6 +40,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Setup pinned Node for draft-only preflight
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 26
       - name: Require main, exact version and draft-only confirmation
         shell: bash
         env:
@@ -53,6 +57,11 @@ jobs:
           test "$RELEASE_VERSION" = "$(node -p 'require("./package.json").version')" || { echo "::error::Input version differs from package.json"; exit 1; }
           test -f "docs/release-notes/v$RELEASE_VERSION.md" || { echo "::error::Version-specific release notes are missing"; exit 1; }
           echo "Preparing an unsigned, unpublished draft for v$RELEASE_VERSION on main."
+      - name: Reject a version already used by a private Draft, published Release or tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: node --experimental-strip-types scripts/assert-release-tag-vacant.mts "$RELEASE_VERSION"
 
   native-moonshine:
     name: Require real native Moonshine in all three packaged Electron apps
@@ -148,6 +157,10 @@ jobs:
       RELEASE_VERSION: ${{ inputs.version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Setup pinned Node for draft validation
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 26
       - uses: actions/download-artifact@v8
         with:
           pattern: voxnelo-*-draft
@@ -187,19 +200,8 @@ jobs:
           if (!notes.includes(process.env.RELEASE_VERSION) || !notes.includes('尚未'))
             throw Error('Draft notes must identify the version and unresolved QA');
           NODE
-      - name: Refuse to overwrite an existing release or version tag
-        shell: bash
-        run: |
-          set -euo pipefail
-          tag="v$RELEASE_VERSION"
-          if gh release view "$tag" >/dev/null 2>&1; then
-            echo "::error::GitHub Release already exists for $tag; refusing to overwrite."
-            exit 1
-          fi
-          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null; then
-            echo "::error::Version tag already exists; refusing to overwrite."
-            exit 1
-          fi
+      - name: Recheck version collision immediately before creating a private Draft
+        run: node --experimental-strip-types scripts/assert-release-tag-vacant.mts "$RELEASE_VERSION"
       - name: Normalize Windows Release asset filename and matching SHA-256 manifest
         shell: bash
         run: |

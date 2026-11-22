@@ -47,6 +47,8 @@ GitHub Release 上传时把 Windows 安装包 `Voxnelo Setup 1.0.4.exe` 自动�
 
 新版本应先以 PR 更新源码版本、锁文件、发行说明并通过 CI，再为**未使用的新版本号**建立独立的发布流程。`.github/workflows/release-draft.yml` 可通过 **Actions → Prepare GitHub release draft → Run workflow** 使用 `version` 及 `PREPARE_DRAFT_ONLY` 创建内部草稿；**已有 Draft/Release/tag 不允许覆盖**，草稿不会公开。
 
+**2026-11-22 发布安全收口：** 当前 v1.0.4 私有 Draft（ID `428750217`）确实存在，GitHub 的 `GET /releases/tags/v1.0.4` 与 Git tag 查询却可同时返回 404，因为私有 Draft 尚未有公开可查询的标签。因此单独使用 `gh release view` 或按标签 API 的 404 **不能**证明版本号空闲。工作流已在任何原生模型下载和三平台安装包构建前，以只读 `contents: read` 权限遍历认证的 Release 列表（包含私有 Draft），再查询 Git tag。已有任意同名项、API 权限不足、异常响应或枚举超出上限都按失败处理；最终发布写操作前再复查一次。检测到占用将提前停止，不删除/替换旧私有草稿或公开发行资产。已经存在的 v1.0.4 Draft 仍是旧源码候选，不能当成新 `main` 的测试产物。
+
 以后若维护者自愿采用 Authenticode 签名、Developer ID 公证和更严格的独立人工验收，可选用 [签名候选流程](SIGNED-CANDIDATE-SETUP.md) 与 [认证级门禁](STABLE-RELEASE-READINESS.md)。它们仍严格 fail closed，但不是已公开、明确披露 unsigned 风险的 v1.0.3（及历史 v1.0.0） 的先决条件。
 
 **Publish release** 必须由授权维护者核对最终安装包、SHA-256、支持的系统与发行限制后明确操作。不能因 CI 绿灯就声称版权、独立审校、真实麦克风或所有 F001–F012 已通过。SHA-256 校验完整性，不能证明开发者身份或 Apple 公证。
