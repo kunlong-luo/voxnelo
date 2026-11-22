@@ -2,6 +2,9 @@ name: Experimental Moonshine vs Zipformer (real Linux ASR)
 
 # Separate from release gates. Disposable internal candidate evaluation only.
 # Never uploads model bytes, native binaries, WAVs, or raw transcripts.
+# Ordinary package scripts/dependency bumps use core CI and the scheduled
+# supply-chain audit; real-model comparison is reserved for ASR source changes
+# or manual dispatch before release.
 on:
   pull_request:
     paths:
@@ -9,8 +12,6 @@ on:
       - 'scripts/benchmark-moonshine-voice.py'
       - 'scripts/moonshine-stream-pilot.py'
       - 'scripts/check-moonshine-stream-pilot.py'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
       - 'scripts/install-moonshine-linux.mts'
       - 'scripts/moonshine-install-transaction.mts'
       - 'apps/desktop/moonshineIntegrity.ts'
