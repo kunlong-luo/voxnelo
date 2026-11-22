@@ -9,6 +9,14 @@ function pullRequestPaths(yaml: string): string[] {
 }
 
 describe('Expensive native ASR / dependency workflow trigger scope', () => {
+  it('cancels superseded checks for the same pull request across all heavy workflows', () => {
+    for (const workflow of ['moonshine-candidate.yml', 'security-dependency-audit.yml', 'asr-candidate.yml']) {
+      const yaml = read(workflow);
+      expect(yaml).toContain('concurrency:');
+      expect(yaml).toContain('github.event.pull_request.number || github.ref');
+      expect(yaml).toContain('cancel-in-progress: true');
+    }
+  });
   it('runs real Moonshine comparison for changed model/runtime sources, not all pnpm script edits', () => {
     const yaml = read('moonshine-candidate.yml');
     const paths = pullRequestPaths(yaml);
