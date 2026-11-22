@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync } from 'node:
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { scoreTranscript, summarizeAsrAttempts, tokenizeAsr, type MeasuredAsrAttempt } from '../scripts/asr-batch-metrics.mts';
-import { buildBatchReport, formatBatchMarkdown, parseBatchManifest, selectedBatchDecoders, validatePcm16Wav, extractTimingEvidence, assertPrivateBatchOutputLocation, describeBatchFailure } from '../scripts/batch-offline-asr.mts';
+import { buildBatchReport, formatBatchMarkdown, parseBatchManifest, selectedBatchDecoders, validatePcm16Wav, verifyAsrTimingProvenance, extractTimingEvidence, assertPrivateBatchOutputLocation, describeBatchFailure } from '../scripts/batch-offline-asr.mts';
 import { requireRealAsrQuality } from '../apps/desktop/asrAcceptance';
 
 describe('private local ASR word error scoring', () => {
@@ -143,6 +143,73 @@ describe('local batch input validation and privacy',()=>{
     broken.writeUInt32LE(100000,40);
     expect(()=>validatePcm16Wav(broken)).toThrow(/Truncated/);
   });
+  it('rejects damaged RIFF length, ambiguous duplicate WAV chunks and inconsistent PCM headers',()=>{
+    const wav=Buffer.alloc(48);
+    wav.write('RIFF',0,'ascii');
+    wav.writeUInt32LE(40,4);
+    wav.write('WAVEfmt ',8,'ascii');
+    wav.writeUInt32LE(16,16);
+    wav.writeUInt16LE(1,20);
+    wav.writeUInt16LE(1,22);
+    wav.writeUInt32LE(16000,24);
+    wav.writeUInt32LE(32000,28);
+    wav.writeUInt16LE(2,32);
+    wav.writeUInt16LE(16,34);
+    wav.write('data',36,'ascii');
+    wav.writeUInt32LE(4,40);
+    expect(validatePcm16Wav(wav)).toBe(2);
+    const wrongRiffSize=Buffer.from(wav);
+    wrongRiffSize.writeUInt32LE(39,4);
+    expect(()=>validatePcm16Wav(wrongRiffSize)).toThrow(/RIFF length/);
+    const wrongByteRate=Buffer.from(wav);
+    wrongByteRate.writeUInt32LE(16000,28);
+    expect(()=>validatePcm16Wav(wrongByteRate)).toThrow(/PCM16/);
+    const wrongBlockAlign=Buffer.from(wav);
+    wrongBlockAlign.writeUInt16LE(1,32);
+    expect(()=>validatePcm16Wav(wrongBlockAlign)).toThrow(/PCM16/);
+    const appendChunk=(chunk:Buffer):Buffer=>{
+      const next=Buffer.concat([wav,chunk]);
+      next.writeUInt32LE(next.length-8,4);
+      return next;
+    };
+    expect(()=>validatePcm16Wav(appendChunk(wav.subarray(36,48))))
+      .toThrow(/Duplicate WAV data/);
+    expect(()=>validatePcm16Wav(appendChunk(wav.subarray(12,36))))
+      .toThrow(/Invalid WAV format chunk/);
+    // RIFF requires an even-byte padding slot after an odd-length chunk.
+    const unpadded=Buffer.alloc(9);
+    unpadded.write('LIST',0,'ascii');
+    unpadded.writeUInt32LE(1,4);
+    expect(()=>validatePcm16Wav(appendChunk(unpadded))).toThrow(/Truncated WAV chunk/);
+    const metadata=Buffer.alloc(10);
+    metadata.write('JUNK',0,'ascii');
+    metadata.writeUInt32LE(1,4);
+    expect(validatePcm16Wav(appendChunk(metadata))).toBe(2);
+  });
+
+  it('ties native WAV duration and reported RTF to actual frames, allowing only rounding precision',()=>{
+    expect(()=>verifyAsrTimingProvenance({
+      durationSeconds:1,elapsedSeconds:0.47,realTimeFactor:0.473,
+    },16000)).not.toThrow();
+    expect(()=>verifyAsrTimingProvenance({
+      durationSeconds:1.23,elapsedSeconds:0.1,realTimeFactor:0.081,
+    },19680)).not.toThrow();
+    for(const [result,frames] of [
+      [{durationSeconds:2,elapsedSeconds:0.5,realTimeFactor:0.25},16000],
+      [{durationSeconds:1,elapsedSeconds:0.5,realTimeFactor:1},16000],
+      [{durationSeconds:1,elapsedSeconds:0.5,realTimeFactor:Number.NaN},16000],
+      [{durationSeconds:1,elapsedSeconds:Number.POSITIVE_INFINITY,realTimeFactor:0.5},16000],
+      [{durationSeconds:1,elapsedSeconds:0.5,realTimeFactor:0.5},0],
+    ] as const) {
+      expect(()=>verifyAsrTimingProvenance(result,frames)).toThrow('invalid-model-result');
+    }
+    // RTF is derived from unrounded wall time, not the 2dp elapsed field:
+    // a genuine .006s elapsed rounds to .01, but still gives RTF .006.
+    expect(()=>verifyAsrTimingProvenance({
+      durationSeconds:1,elapsedSeconds:0.01,realTimeFactor:0.006,
+    },16000)).not.toThrow();
+  });
+
   it('makes partially failed evaluations explicit rather than declaring incomplete WER a pass',()=>{
     const failures=[{id:'q01',scenario:'quiet' as const,decoder:'modified_beam_search' as const,
       reason:'invalid-wav-or-inference' as const}];

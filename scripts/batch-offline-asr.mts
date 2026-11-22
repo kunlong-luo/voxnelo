@@ -158,26 +158,73 @@ export function formatBatchMarkdown(report: BatchReport): string {
 export function validatePcm16Wav(buffer: Buffer): number {
   if (buffer.length < 44 || buffer.toString('ascii', 0, 4) !== 'RIFF' ||
     buffer.toString('ascii', 8, 12) !== 'WAVE') throw Error('Invalid RIFF WAV');
+  // A RIFF file can contain non-audio metadata chunks, but its declared
+  // container size must cover the actual bytes: never score a truncated WAV
+  // or silently ignore trailing data that a native decoder may interpret.
+  if (buffer.readUInt32LE(4) + 8 !== buffer.length) throw Error('Invalid WAV RIFF length');
   let offset = 12;
   let encoding = 0, channels = 0, rate = 0, bits = 0, sampleBytes = 0;
-  while (offset + 8 <= buffer.length) {
+  let formatCount = 0, dataCount = 0;
+  while (offset < buffer.length) {
+    if (offset + 8 > buffer.length) throw Error('Truncated WAV chunk');
     const kind = buffer.toString('ascii', offset, offset + 4);
     const size = buffer.readUInt32LE(offset + 4);
     const start = offset + 8;
-    if (start + size > buffer.length) throw Error('Truncated WAV chunk');
-    if (kind === 'fmt ' && size >= 16) {
+    const next = start + size + size % 2;
+    if (next > buffer.length) throw Error('Truncated WAV chunk');
+    if (kind === 'fmt ') {
+      if (++formatCount !== 1 || size < 16) throw Error('Invalid WAV format chunk');
       encoding = buffer.readUInt16LE(start);
       channels = buffer.readUInt16LE(start + 2);
       rate = buffer.readUInt32LE(start + 4);
+      const byteRate = buffer.readUInt32LE(start + 8);
+      const blockAlign = buffer.readUInt16LE(start + 12);
       bits = buffer.readUInt16LE(start + 14);
+      if (byteRate !== 32000 || blockAlign !== 2)
+        throw Error('Expected 16 kHz mono PCM16 WAV, maximum 180 seconds');
     }
-    if (kind === 'data') sampleBytes = size;
-    offset = start + size + size % 2;
+    if (kind === 'data') {
+      if (++dataCount !== 1) throw Error('Duplicate WAV data chunk');
+      sampleBytes = size;
+    }
+    offset = next;
   }
-  if (encoding !== 1 || channels !== 1 || rate !== 16000 || bits !== 16 ||
+  if (formatCount !== 1 || dataCount !== 1 ||
+    encoding !== 1 || channels !== 1 || rate !== 16000 || bits !== 16 ||
     sampleBytes === 0 || sampleBytes % 2 !== 0 || sampleBytes > 16000 * 180 * 2)
     throw Error('Expected 16 kHz mono PCM16 WAV, maximum 180 seconds');
   return sampleBytes / 2;
+}
+
+/** Native benchmark runners round duration/elapsed to 2 decimal places and
+ * RTF to 3 decimal places. Validate against the exact WAV frame count, while
+ * allowing only the intervals introduced by that published rounding.
+ * This is fast-fed WAV evidence, never live microphone-to-screen latency.
+ */
+export function verifyAsrTimingProvenance(
+  result: Pick<ModelResult,'durationSeconds'|'elapsedSeconds'|'realTimeFactor'>,
+  wavSamples: number,
+): void {
+  const {durationSeconds, elapsedSeconds, realTimeFactor} = result;
+  if (!Number.isSafeInteger(wavSamples) || wavSamples <= 0 ||
+    !Number.isFinite(durationSeconds) || durationSeconds <= 0 ||
+    !Number.isFinite(elapsedSeconds) || elapsedSeconds <= 0 ||
+    !Number.isFinite(realTimeFactor) || realTimeFactor <= 0)
+    throw Error('invalid-model-result');
+  const exactDuration = wavSamples / 16000;
+  const roundedSecondTolerance = 0.005000001;
+  if (Math.abs(durationSeconds - exactDuration) > roundedSecondTolerance)
+    throw Error('invalid-model-result');
+  const durationMin = Math.max(Number.EPSILON, durationSeconds - roundedSecondTolerance);
+  const durationMax = durationSeconds + roundedSecondTolerance;
+  const elapsedMin = Math.max(0, elapsedSeconds - roundedSecondTolerance);
+  const elapsedMax = elapsedSeconds + roundedSecondTolerance;
+  const reportedRtfTolerance = 0.000500001;
+  const possibleMinRtf = elapsedMin / durationMax;
+  const possibleMaxRtf = elapsedMax / durationMin;
+  if (realTimeFactor < possibleMinRtf - reportedRtfTolerance ||
+    realTimeFactor > possibleMaxRtf + reportedRtfTolerance)
+    throw Error('invalid-model-result');
 }
 
 const sherpaDecoders:readonly AsrDecoderId[]=['greedy_search','modified_beam_search'];
@@ -196,7 +243,7 @@ function runOne(item: BatchSample, decoder: AsrDecoderId, manifestDir: string): 
   // process and never print its filename, full path, voice or transcript.
   const waveform = readFileSync(wavPath);
   if (waveform.length > 7_000_000) throw Error('invalid-wav-or-inference');
-  validatePcm16Wav(waveform);
+  const wavSamples = validatePcm16Wav(waveform);
   const moonshine=decoder.startsWith('moonshine-');
   const args=moonshine
     ? [path.resolve('scripts/benchmark-moonshine-voice.py'),
@@ -214,12 +261,14 @@ function runOne(item: BatchSample, decoder: AsrDecoderId, manifestDir: string): 
   let parsed: ModelResult;
   try { parsed = JSON.parse(result.stdout) as ModelResult; }
   catch { throw Error('invalid-model-result'); }
-  if (parsed.realModel !== true || parsed.decodingMethod !== decoder ||
+  if (!parsed || typeof parsed !== 'object' ||
+    parsed.realModel !== true || parsed.decodingMethod !== decoder ||
     typeof parsed.transcript !== 'string' ||
     !Number.isFinite(parsed.durationSeconds) || parsed.durationSeconds <= 0 ||
     !Number.isFinite(parsed.elapsedSeconds) || parsed.elapsedSeconds <= 0 ||
     !Number.isFinite(parsed.realTimeFactor) || parsed.realTimeFactor <= 0)
     throw Error('invalid-model-result');
+  verifyAsrTimingProvenance(parsed, wavSamples);
   const scores = scoreTranscript(item.reference, parsed.transcript);
   const timings=extractTimingEvidence(parsed as unknown as Record<string,unknown>,moonshine);
   return {
