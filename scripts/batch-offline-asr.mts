@@ -83,8 +83,33 @@ export type BatchReport = {
   failures: AttemptFailure[];
 };
 
-export function buildBatchReport(attempts: MeasuredAsrAttempt[], failures: AttemptFailure[], expectedCount: number): BatchReport {
-  if (attempts.length + failures.length !== expectedCount) throw Error('Missing ASR benchmark attempt');
+export type ExpectedAsrAttempt = Pick<MeasuredAsrAttempt, 'id' | 'scenario' | 'decoder'>;
+/** Ensure every manifest sample/decoder is represented EXACTLY once.
+ * Length checks alone can mask one missing evaluation with a duplicate record.
+ */
+export function buildBatchReport(
+  attempts: MeasuredAsrAttempt[], failures: AttemptFailure[], expectedPairs: readonly ExpectedAsrAttempt[],
+): BatchReport {
+  const expectedCount = expectedPairs.length;
+  if (expectedCount === 0 || attempts.length + failures.length !== expectedCount)
+    throw Error('Missing ASR benchmark attempt');
+  const key = (value: ExpectedAsrAttempt): string => value.id + ':' + value.decoder;
+  const planned = new Map<string, ExpectedAsrAttempt>();
+  for (const entry of expectedPairs) {
+    const identity = key(entry);
+    if (planned.has(identity)) throw Error('Duplicate ASR benchmark plan');
+    planned.set(identity, entry);
+  }
+  const observed = new Set<string>();
+  for (const outcome of [...attempts, ...failures]) {
+    const identity = key(outcome);
+    const expected = planned.get(identity);
+    if (!expected || expected.scenario !== outcome.scenario)
+      throw Error('Unmatched ASR benchmark attempt');
+    if (observed.has(identity)) throw Error('Duplicate ASR benchmark attempt');
+    observed.add(identity);
+  }
+  if (observed.size !== planned.size) throw Error('Missing ASR benchmark attempt');
   return {
     type: 'voxnelo-local-asr-diagnostic', releaseReady: false,
     status: failures.length ? 'incomplete' : 'complete',
@@ -288,7 +313,9 @@ export function runBatch(): void {
       console.warn('Local benchmark failed for', item.id, decoder, '(no private paths/audio logged)');
     }
   }
-  const report = buildBatchReport(attempts, failures, manifest.samples.length * decoders.length);
+  const expectedPairs = manifest.samples.flatMap(sample =>
+    decoders.map(decoder => ({ id: sample.id, scenario: sample.scenario, decoder })));
+  const report = buildBatchReport(attempts, failures, expectedPairs);
   writeFileSync(path.join(output, 'report.json'), JSON.stringify(report, null, 2) + '\n', { mode: 0o600, flag: 'wx' });
   writeFileSync(path.join(output, 'report.md'), formatBatchMarkdown(report), { mode: 0o600, flag: 'wx' });
   console.log('Local ASR evaluation:', report.status, report.succeeded, '/', report.attempted, '(reports saved only in your private folder)');
