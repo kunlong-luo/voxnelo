@@ -7,9 +7,9 @@ import type { VoxneloOfflineAsr, OfflineAsrFailureReason, OfflineAsrStopResult }
  * SpeechRecognition. The caller supplies a generation guard so permission
  * prompts, native worker startup and worklet loading can be cancelled safely.
  */
-export type DesktopDictationStop=()=>Promise<OfflineAsrStopResult>;
-export type DesktopStartError='permission'|'microphone'|'failed'|'engine'|'busy';
-export type DesktopStartResult={ok:true}|{ok:false;reason:'cancelled'|DesktopStartError};
+type DesktopDictationStop=()=>Promise<OfflineAsrStopResult>;
+type DesktopStartError='permission'|'microphone'|'failed'|'engine'|'busy';
+type DesktopStartResult={ok:true}|{ok:false;reason:'cancelled'|DesktopStartError};
 /**
  * Diagnostic profile for another device playing speech into this microphone.
  * Keep noise processing ON by default for normal conversational dictation.
@@ -28,7 +28,7 @@ export function getDesktopCaptureConstraints(profile:DesktopCaptureProfile){
   };
 }
 
-export interface DesktopDictationCallbacks {
+interface DesktopDictationCallbacks {
   isCurrent:()=>boolean;
   onStopReady:(stop:DesktopDictationStop)=>void;
   onNoiseReduction:(enabled:boolean)=>void;

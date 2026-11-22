@@ -7,7 +7,7 @@ import { validatePcm16MonoWav } from './pcmWav';
  * review phonetics, or make an editorial-draft phrase eligible for playback.
  * A separate trusted curriculum/media gate must approve every asset first.
  */
-export interface OfflineWavResult {
+interface OfflineWavResult {
   ok: boolean;
   cancelled?: boolean;
   message?: string;

@@ -1,10 +1,10 @@
 /** Browser SpeechRecognition adapter. Desktop Electron ASR must never use it.
  * Browser online recognition remains an explicit user choice; local is default.
  */
-export type BrowserDictationMode='local'|'browser';
-export type BrowserSpeechResult={isFinal:boolean;0?:{transcript:string}};
-export type BrowserSpeechEvent={resultIndex:number;results:ArrayLike<BrowserSpeechResult>};
-export type BrowserSpeechFailure={error:string};
+type BrowserDictationMode='local'|'browser';
+type BrowserSpeechResult={isFinal:boolean;0?:{transcript:string}};
+type BrowserSpeechEvent={resultIndex:number;results:ArrayLike<BrowserSpeechResult>};
+type BrowserSpeechFailure={error:string};
 export interface BrowserRecognizer {
   lang:string;
   continuous:boolean;
@@ -18,12 +18,12 @@ export interface BrowserRecognizer {
   stop():void;
   abort():void;
 }
-export interface BrowserRecognizerClass {
+interface BrowserRecognizerClass {
   new():BrowserRecognizer;
   available?:(options:{langs:string[];processLocally:boolean})=>Promise<string>;
   install?:(options:{langs:string[];processLocally:boolean})=>Promise<boolean>;
 }
-export type BrowserSpeechErrorKey='dictationPermission'|'dictationMicrophone'|'dictationServiceUnavailable'|'dictationLocalRequired'|'dictationFailed';
+type BrowserSpeechErrorKey='dictationPermission'|'dictationMicrophone'|'dictationServiceUnavailable'|'dictationLocalRequired'|'dictationFailed';
 
 export const BROWSER_SPEECH_LANGUAGE='en-US';
 export function browserRecognizerClass():BrowserRecognizerClass|undefined {

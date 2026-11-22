@@ -44,3 +44,15 @@ This follow-up was made against main `7518ac2f1ad974b0dd3dced1cfdb63f5fdc08ec5` 
 - **Animations retained (references confirmed):** `animate-panel-enter` in `SettingsView`/`PracticeSidebarWidgets`, `animate-success-glint` in `PracticeControlPanel`, and `animate-record-halo` in `LiveDictationPanel`. `--shadow-soft` and the sidebar scrollbar utility also have consumers.
 - **Historical ASR retained (runtime contracts confirmed):** `scripts/build-electron.mts` bundles both `apps/desktop/offlineAsrWorker.ts` and `apps/desktop/moonshineAsrWorker.ts` as standalone entrypoints; `apps/desktop/main.ts` and `apps/desktop/preload.ts` expose legacy `zipformer` selection via protected IPC. Package scripts also expose opt-in older model staging. Static imports alone cannot safely justify worker, IPC, or user model-data removal.
 - **Still unverified:** a complete TypeScript symbol/reference graph across tests and scripts, dynamically assembled Tailwind class names, packaged smoke behavior on real devices, and exhaustive unused CSS selectors. This audit is **not** certification that every unreferenced export or selector has been found.
+
+## Internal TypeScript export cleanup — 2026-11-22
+
+Base: `main` commit `0add553c02e9fcf00638162d141f1514a12d27e5`. A targeted full-tree symbol scan read **228** tracked TypeScript/TSX/MTS sources (43 renderer, 20 desktop, 24 workspace packages, 91 tests, 47 scripts, 3 root config files). All eleven candidate names had no references **outside their declaration modules**. This was a symbol-name scan, not a formal language-service proof of complete runtime reachability.
+
+The following implementation-only type declarations are now local instead of `export`ed (the declarations and all use sites remain intact):
+
+- `apps/web/src/dictation/browserRecognizer.ts`: `BrowserDictationMode`, `BrowserSpeechResult`, `BrowserSpeechEvent`, `BrowserSpeechFailure`, `BrowserRecognizerClass`, `BrowserSpeechErrorKey`.
+- `apps/web/src/dictation/desktopSession.ts`: `DesktopDictationStop`, `DesktopStartError`, `DesktopStartResult`, `DesktopDictationCallbacks`.
+- `packages/audio/offlineWav.ts`: `OfflineWavResult` (not exposed through the package's `index.ts` barrel).
+
+Only TypeScript `export` modifiers were removed; no emitted runtime JS behavior, IPC channels, component exports, worker entrypoints, CSS, storage schemas, ASR model paths, or package dependencies were changed. Types that have actual named consumers, including `BrowserRecognizer` and `DesktopCaptureProfile`, remain exported. Some local types still participate structurally in exported function signatures; their definitions were **not** removed. Required CI typecheck/lint/test/build and all three package-integrity jobs must pass before integration. This audit does not assert external API compatibility for unsupported deep imports, real microphone QA, or language/content approval.
