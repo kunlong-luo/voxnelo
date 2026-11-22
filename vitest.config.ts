@@ -1,8 +1,10 @@
 import path from 'node:path';
 import { defineConfig } from 'vitest/config';
 
-// 运行环境保持 node：现有用例均为纯逻辑与 Dexie 持久层（经 fake-indexeddb 垫片），
-// 暂无 DOM/组件测试；引入组件测试时再评估 jsdom/happy-dom。
+// 默认使用 node 运行纯逻辑测试；组件测试在文件头通过
+// @vitest-environment jsdom 显式启用 DOM。jsdom 的 Web Storage 在
+// setup-jsdom-storage.ts 中修正；涉及 IndexedDB 的组件测试还需要
+// fake-indexeddb/auto，避免把数据读写错误误当成通过的 UI 测试。
 const workspace = (name: string) => path.resolve(`packages/${name}/index.ts`);
 
 export default defineConfig({
