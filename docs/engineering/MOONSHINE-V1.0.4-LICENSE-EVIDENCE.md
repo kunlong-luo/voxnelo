@@ -43,6 +43,8 @@ The native compatibility workflow now proposes an extra **read-only evidence ste
 
 **Audit boundary:** these artifacts can start a per-platform legal/engineering review, not replace it. They list the *installed runtime after pip resolution*, not the exact source/notice contents of all original PyPI Wheel files, dynamic-library provenance, or model asset license/redistribution terms. A reviewer still must fetch original corresponding wheels, inspect native linked libraries, notices and dependency versions/hashes, and record approval or rejection for each exact candidate before a public v1.0.4 decision. Running this CI does not itself publish or alter a Release. Do **not** change any pending evidence entry to PASS solely because a JSON artifact was uploaded.
 
+See the [dated 2026-11-22 actual three-platform Python dependency and versioned upstream source-license inventory](MOONSHINE-DEPENDENCY-EVIDENCE-2026-11-22.md) for concrete, nonidentifying CI observations and remaining binary/notice review obligations. **This is partial evidence, not a license or publication approval.**
+
 ## Release evidence still required
 
 1. **Pinned binary provenance.** Record the exact PyPI v0.0.65 Windows x64, Linux x64 and macOS ARM64 wheel filenames and SHA-256, inspect the wheel `METADATA`, `LICENSE`/notices, and confirm native libraries and any other redistributable parts against their respective permissions.
