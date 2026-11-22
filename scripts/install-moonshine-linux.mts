@@ -14,7 +14,8 @@ import {PINNED_MOONSHINE_MEDIUM_FILES,verifyPinnedMoonshineMediumModel}
 import {verifyMoonshinePythonRuntime} from '../apps/desktop/moonshinePaths.ts';
 import {provisionMoonshineDirectory} from './moonshine-install-transaction.mts';
 import {moonshineStageLine,type MoonshineInstallStage} from '../apps/desktop/moonshineInstallProgress.ts';
-import {supportedMoonshineHost} from '../apps/desktop/moonshinePlatform.ts';
+import {pinnedMoonshineWheel,verifyPinnedMoonshineWheel}
+  from '../apps/desktop/moonshineWheelIntegrity.ts';
 
 // A synchronous marker must leave the process before spawnSync blocks Node's event loop.
 function report(stage:MoonshineInstallStage):void{writeSync(1,moonshineStageLine(stage));}
@@ -33,7 +34,8 @@ async function main():Promise<void>{
   if(flags.length<1||flags.length>2||flags[0]!=='--accept-experimental-runtime'||
     (flags.length===2&&flags[1]!=='--repair'))
     throw Error('Explicit consent required; use --accept-experimental-runtime [--repair]');
-  if(!supportedMoonshineHost(process.platform,process.arch,osRelease()))
+  const sdkWheel=pinnedMoonshineWheel(process.platform,process.arch,osRelease());
+  if(!sdkWheel)
     throw Error('Moonshine requires Linux x64, Windows x64 or macOS 15+ ARM64');
   const repair=flags.includes('--repair');
   const personalData=process.platform==='win32'
@@ -61,9 +63,21 @@ async function main():Promise<void>{
       if(launcher.status!==0)run('python',['-m','venv',venv]);
     }else run('python3',['-m','venv',venv]);
     report('dependencies');
+    // Download exactly one SDK wheel without dependencies and compare it to the
+    // pinned platform-specific PyPI checksum *before* pip can install native code.
+    // Dependent packages remain a separate license / lockfile review gate.
+    const sdkDownload=path.join(stage,'sdk-wheel');
+    await mkdir(sdkDownload,{mode:0o700});
+    run(python,['-m','pip','download','--isolated','--disable-pip-version-check',
+      '--no-input','--only-binary=:all:','--no-deps',
+      '--index-url','https://pypi.org/simple','--dest',sdkDownload,
+      'moonshine-voice==0.0.65']);
+    if(!await verifyPinnedMoonshineWheel(sdkDownload,sdkWheel))
+      throw Error('Moonshine SDK wheel integrity check failed; installation aborted');
     run(python,['-m','pip','install','--isolated','--disable-pip-version-check',
       '--no-input','--only-binary=:all:','--index-url','https://pypi.org/simple',
-      'moonshine-voice==0.0.65']);
+      path.join(sdkDownload,sdkWheel.filename)]);
+    await rm(sdkDownload,{recursive:true,force:true});
     const cache=path.join(stage,'download-cache');
     await mkdir(cache,{mode:0o700});
     report('model-download');
