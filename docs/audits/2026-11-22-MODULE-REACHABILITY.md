@@ -13,6 +13,10 @@ pnpm audit:modules -- --json
 
 The audit uses the repository's already-installed `typescript` dependency and `tsconfig.json`; no new package or network call is required. The first command prints a short inventory and `REVIEW` paths. The second prints machine-readable evidence. Candidate paths are **not authorized for deletion**.
 
+## On-demand CI report (no extra checks on ordinary PRs)
+
+Use GitHub Actions → **Read-only TypeScript module reachability inventory** → **Run workflow** to execute the scan against a chosen branch. The workflow also triggers when its own definition, source audit, TypeScript configuration or the three build-entry declarations change, **not** for unrelated PRs. It installs only the existing pinned Node/pnpm/TypeScript toolchain, prints a summary in the Actions run, and saves `module-reachability-report.json` as a seven-day Actions artifact. All permissions are read-only; no production source, model, user data, release or branch is modified. The audit report lists candidates for review; a candidate is not authorized for deletion.
+
 ## Entrypoint coverage
 
 The script extracts literal source entrypoints from `rsbuild.config.ts`, `scripts/build-electron.mts` and `scripts/build-audio-worklet.mts`. It explicitly checks for the current seven entries: renderer, Electron main/preload, both dedicated ASR Workers, the native Moonshine installer and the standalone PCM AudioWorklet. It fails closed if one of these known build roots disappears from the scanned build definitions or `tsconfig`.
