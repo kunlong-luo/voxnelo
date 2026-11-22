@@ -22,7 +22,7 @@ describe('About and support in Settings', () => {
   it('shows true version, project, license, help and issue templates', () => {
     render(<I18nProvider locale="zh-CN"><SettingsView {...settingsProps}/></I18nProvider>);
     expect(screen.getByRole('heading', {name: '关于 Voxnelo'})).toBeTruthy();
-    expect(screen.getByText('版本 '+APP_VERSION+' · Early Access 早期体验版')).toBeTruthy();
+    expect(screen.getByText('版本 '+APP_VERSION+' · 本地优先应用')).toBeTruthy();
     expect(screen.getByRole('heading', {name: '帮助与反馈'})).toBeTruthy();
     const links: Array<[string,string]> = [
       ['查看开源项目', SUPPORT_LINKS.repository],
@@ -44,7 +44,7 @@ describe('About and support in Settings', () => {
   it('offers the same links and version in English', () => {
     render(<I18nProvider locale="en-US"><SettingsView {...settingsProps}/></I18nProvider>);
     expect(screen.getByRole('heading', {name: 'About Voxnelo'})).toBeTruthy();
-    expect(screen.getByText('Version '+APP_VERSION+' · Early Access')).toBeTruthy();
+    expect(screen.getByText('Version '+APP_VERSION+' · Local-first app')).toBeTruthy();
     expect(screen.getByRole('heading', {name: 'Help & feedback'})).toBeTruthy();
     expect(screen.getByRole('link', {name: /Report an issue/}).getAttribute('href')).toBe(SUPPORT_LINKS.bugReport);
     expect(screen.getByRole('link', {name: /User guide/}).getAttribute('href')).toBe(SUPPORT_LINKS.guide);

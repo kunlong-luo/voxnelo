@@ -3,6 +3,7 @@ import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { FIRST_SENTENCE } from '@voxnelo/content';
+import { APP_VERSION } from '@voxnelo/core';
 import { database, recordEvent } from '@voxnelo/storage';
 import { App } from '../apps/web/src/App';
 import { LANGUAGE_STORAGE_KEY } from '../apps/web/src/i18n';
@@ -21,7 +22,8 @@ beforeEach(async () => {
 describe('App smoke', () => {
   it('首屏展示品牌、首句与导航', async () => {
     render(<App />);
-    expect(screen.getByText(/Voxnelo · Early Access/)).toBeTruthy();
+    expect(screen.getByText('Voxnelo · 版本 '+APP_VERSION)).toBeTruthy();
+    expect(screen.queryByText(/Early Access/)).toBeNull();
     const sidebar = document.querySelector('.sidebar');
     expect(sidebar?.querySelector('.brand img')?.getAttribute('src')).toBe('brand/voxnelo-mark.svg');
     expect(sidebar?.querySelector('.brandText')?.textContent).toBe('Voxnelo');

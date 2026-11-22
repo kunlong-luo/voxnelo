@@ -20,7 +20,13 @@ describe('post-v1.0.0 official unsigned release continuity',()=>{
   it('does not describe a retired Early Access as the current official download',()=>{
     for(const path of current){
       const doc=read(path);
-      expect(doc,path).toContain('v1.0.0');
+      if (path === 'docs/PRIVACY.md') {
+        expect(doc,path).toContain('公开 v1.0.3');
+        expect(doc,path).toContain('未发布 v1.0.4');
+        expect(doc,path).not.toContain('导出/恢复功能尚未提供');
+      } else {
+        expect(doc,path).toContain('v1.0.0'); // historical release evidence must remain traceable
+      }
       expect(doc,path).toContain('未签名');
       expect(doc,path).not.toContain('当前公开版本：v0.1.6');
     }

@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -28,6 +28,37 @@ describe('documentation link and command validation', () => {
   it('does not scan maintained Markdown entrypoints more than once', () => {
     expect(CURRENT_DOCUMENTS.length).toBe(new Set(CURRENT_DOCUMENTS).size);
     expect(CURRENT_DOCUMENTS).toContain('docs/DEVELOPMENT.md');
+  });
+
+  it('keeps current release, privacy, security and audit documents in the required scan', () => {
+    for (const file of [
+      'CHANGELOG.md',
+      'SECURITY.md',
+      'docs/PRIVACY.md',
+      'docs/release-notes/v1.0.4.md',
+      'docs/engineering/ASR-PUBLIC-RELEASE-GATE.md',
+      'docs/engineering/TECH-DEBT-2026-11-16.md',
+      'docs/engineering/V0.1-CONTENT-REVIEW.md',
+      'docs/audits/2026-11-22-MODULE-REACHABILITY.md',
+    ]) {
+      expect(CURRENT_DOCUMENTS).toContain(file);
+    }
+  });
+
+  it('separates the public release from the unpublished source candidate in critical docs', () => {
+    const privacy = readFileSync(path.resolve('docs/PRIVACY.md'), 'utf8');
+    const release = readFileSync(path.resolve('docs/release-notes/v1.0.4.md'), 'utf8');
+    const changelog = readFileSync(path.resolve('CHANGELOG.md'), 'utf8');
+    expect(privacy).toContain('公开 v1.0.3');
+    expect(privacy).toContain('未发布 v1.0.4');
+    expect(privacy).toContain('未加密 JSON');
+    expect(privacy).not.toContain('导出/恢复功能尚未提供');
+    for (const id of ['F102', 'F104', 'F106', 'F107']) {
+      expect(release).toContain(id);
+      expect(changelog).toContain(id);
+    }
+    expect(release).toContain('4aeb58e37840d2aec760fac3e348ab18b9ce1be1');
+    expect(release).toContain('不是当前');
   });
 
   it('recognizes relative links, images and reference definitions but not fenced examples', () => {
