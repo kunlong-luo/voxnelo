@@ -115,6 +115,8 @@ describe('local batch input validation and privacy',()=>{
     substitutions:1,deletions:0,insertions:0,wordErrorRate:0.25,
     durationSeconds:3,elapsedSeconds:1.5,realTimeFactor:0.5,
   };
+  const planned=(...decoders:MeasuredAsrAttempt['decoder'][]) =>
+    decoders.map(decoder=>({id:'q01',scenario:'quiet' as const,decoder}));
   it('rejects damaged or incorrectly encoded WAV before invoking a native model',()=>{
     const wav=Buffer.alloc(48);
     wav.write('RIFF',0,'ascii');
@@ -144,14 +146,56 @@ describe('local batch input validation and privacy',()=>{
   it('makes partially failed evaluations explicit rather than declaring incomplete WER a pass',()=>{
     const failures=[{id:'q01',scenario:'quiet' as const,decoder:'modified_beam_search' as const,
       reason:'invalid-wav-or-inference' as const}];
-    const report=buildBatchReport([example],failures,2);
+    const report=buildBatchReport([example],failures,planned('greedy_search','modified_beam_search'));
     expect(report.status).toBe('incomplete');
     expect(report.failed).toBe(1);
     expect(formatBatchMarkdown(report)).toContain('**Incomplete:**');
     expect(formatBatchMarkdown(report)).toContain('Weighted WER');
     expect(formatBatchMarkdown(report)).toContain('\n## Weighted results');
-    expect(()=>buildBatchReport([example],[],2)).toThrow(/Missing/);
+    expect(()=>buildBatchReport([example],[],planned('greedy_search','modified_beam_search'))).toThrow(/Missing/);
   });
+  it('rejects duplicate, substituted and mismatched outcomes even when total count appears complete',()=>{
+    const expected=planned('greedy_search','modified_beam_search');
+    const second={...example,decoder:'modified_beam_search' as const};
+    expect(()=>buildBatchReport([example,example],[],expected)).toThrow(/Duplicate ASR benchmark attempt/);
+    expect(()=>buildBatchReport([example,{...second,id:'other'}],[],expected)).toThrow(/Unmatched ASR benchmark attempt/);
+    expect(()=>buildBatchReport([example,{...second,scenario:'noise'}],[],expected)).toThrow(/Unmatched ASR benchmark attempt/);
+    expect(()=>buildBatchReport([example],[
+      {id:'q01',scenario:'quiet',decoder:'greedy_search',reason:'invalid-model-result'},
+    ],expected)).toThrow(/Duplicate ASR benchmark attempt/);
+    expect(()=>buildBatchReport([example,second],[],[expected[0]!,expected[0]!]))
+      .toThrow(/Duplicate ASR benchmark plan/);
+    expect(()=>buildBatchReport([],[],[])).toThrow(/Missing ASR benchmark attempt/);
+    expect(buildBatchReport([example,second],[],expected).status).toBe('complete');
+  });
+
+  it('rejects malformed numbers and impossible weighted statistics instead of emitting green/NaN metrics',()=>{
+    const invalid=[
+      {referenceWords:0},
+      {referenceWords:1.5},
+      {substitutions:-1},
+      {deletions:Infinity},
+      {insertions:NaN},
+      {wordErrorRate:NaN},
+      {wordErrorRate:0.1},
+      {durationSeconds:0},
+      {elapsedSeconds:Infinity},
+      {realTimeFactor:NaN},
+      {firstInterimProcessingMs:-1},
+      {modelLoadMs:Infinity},
+    ];
+    for(const patch of invalid){
+      const attempt={...example,...patch};
+      expect(()=>summarizeAsrAttempts([attempt])).toThrow(/Invalid ASR batch attempt metrics/);
+      expect(()=>buildBatchReport([attempt],[],planned('greedy_search')))
+        .toThrow(/Invalid ASR batch attempt metrics/);
+    }
+    // Missing first-interim timing remains an unknown observation, not a
+    // reason to reject an otherwise valid real-model diagnostic.
+    expect(buildBatchReport([{...example,firstInterimAudioSeconds:null}],[],
+      planned('greedy_search')).status).toBe('complete');
+  });
+
   it('retains real fast-fed interim and model initialization timings without inventing latency',()=>{
     const moonshine=extractTimingEvidence({
       firstInterimAudioSeconds:0.85,firstInterimWallMs:178.5,modelLoadMs:1210.3,
@@ -169,7 +213,7 @@ describe('local batch input validation and privacy',()=>{
     },true);
     expect(noInterim.firstInterimAudioSeconds).toBeNull();
     expect(noInterim.firstInterimProcessingMs).toBeNull();
-    const report=buildBatchReport([{...example,...moonshine}],[],1);
+    const report=buildBatchReport([{...example,...moonshine}],[],planned('greedy_search'));
     expect(report.attempts[0]).toMatchObject(moonshine);
     const markdown=formatBatchMarkdown(report);
     expect(markdown).toContain('NOT live microphone-to-screen latency');
@@ -186,7 +230,7 @@ describe('local batch input validation and privacy',()=>{
     });
   });
   it('excludes raw samples/transcripts/paths from locally written reports',()=>{
-    const report=buildBatchReport([example],[],1);
+    const report=buildBatchReport([example],[],planned('greedy_search'));
     const serialized=JSON.stringify(report)+formatBatchMarkdown(report);
     for(const secret of ['/home/secret/voice.wav','private spoken transcript','VOXNELO_ASR_ADDON_PATH'])
       expect(serialized).not.toContain(secret);
