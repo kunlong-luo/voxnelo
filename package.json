@@ -28,6 +28,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "arch": "depcruise --validate .dependency-cruiser.json apps packages tests",
+    "audit:modules": "node --experimental-strip-types scripts/audit-module-reachability.mts",
     "check:stable-deps": "node --experimental-strip-types scripts/check-stable-dependencies.mts",
     "check:toolchain": "node --experimental-strip-types scripts/check-toolchain-consistency.mts",
     "perf:budget": "node --experimental-strip-types scripts/check-performance-budget.mts --report-only",
