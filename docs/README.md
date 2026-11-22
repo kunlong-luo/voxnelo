@@ -13,9 +13,11 @@ Updated: 2026-11-22. This index is navigation, **not** a release approval.
 
 - [User guide](USER-GUIDE.md)
 - [Development](DEVELOPMENT.md)
-- [Privacy](PRIVACY.md)
+- [Privacy — public v1.0.3 versus unpublished v1.0.4 source](PRIVACY.md)
 - [PRD traceability — 23 IDs with code/test paths and unmet requirements](release/PRD-TRACEABILITY.md)
 - [Release readiness](engineering/STABLE-RELEASE-READINESS.md)
+- [v1.0.4 candidate release notes — not published](release-notes/v1.0.4.md)
+- [Changelog (source history versus shipped releases)](../CHANGELOG.md)
 - [ASR evidence and benchmark](engineering/ASR-ACCURACY-EXPERIMENTS.md)
 - [Connected speech and licensed audio review](engineering/CONNECTED-SPEECH-AUDIO-REVIEW.md)
 - [UI and accessibility audit](engineering/UI-ACCESSIBILITY-AUDIT-2026-11-16.md)
@@ -34,6 +36,6 @@ When changing a user-visible feature, update the user guide, PRD traceability, r
 
 ## Offline documentation checks
 
-Run `pnpm docs:check` to validate repository-local Markdown links and package-script commands in maintained user/release/engineering entry points. CI runs the same check on every PR. `pnpm docs:check:all` additionally scans historical Markdown and is an investigative command, not a required passing release gate. This check does **not** test external URLs, heading fragments, translations, screenshots or factual release claims; those require separate review.
+Run `pnpm docs:check` to validate repository-local Markdown links and package-script commands in maintained user/release/engineering entry points, including privacy, security, changelog, candidate notes and the module audit. CI runs the same check on every PR. `pnpm docs:check:all` additionally scans historical Markdown and is an investigative command, not a required passing release gate. This check does **not** test external URLs, heading fragments, translations, screenshots or factual release claims; those require separate review.
 
 The checker's implementation and regression tests live in `scripts/check-documentation.mts` and `tests/documentation-check.test.ts`. Before a new release, compare public/download wording with actual GitHub Releases and verify the real installers separately.
