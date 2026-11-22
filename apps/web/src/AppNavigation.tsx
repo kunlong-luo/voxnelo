@@ -44,7 +44,7 @@ export function NavigationSidebar({view,onNavigate,favorites}:NavigationProps & 
             <strong>{t('sidebarRhythm')}</strong>
             <span>{t('sidebarLocal')}</span>
           </div>
-          <div className="sidebarVersion px-1 text-[10px] text-muted-foreground">Voxnelo · Early Access {APP_VERSION}</div>
+          <div className="sidebarVersion px-1 text-[10px] text-muted-foreground">Voxnelo · {t('sidebarVersion',{version:APP_VERSION})}</div>
         </div>
       </aside>
   );
