@@ -15,7 +15,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check:
+  quality:
+    name: Core quality (TypeScript, tests, build)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -146,3 +147,29 @@ jobs:
             release/candidate-manifest-*.json
           retention-days: 7
           if-no-files-found: error
+
+  # The GitHub main ruleset already requires a status named "check" but its
+  # GitHub App cannot edit required contexts. Keep that exact context as
+  # an aggregate gate so Linux packaging cannot finish AFTER a PR merges.
+  #
+  # All matrix legs are dependencies of desktop-package: one failing or
+  # cancelled platform causes its aggregate result not to be "success".
+  # always() means this gate fails explicitly even when a dependency fails.
+  check:
+    name: check
+    needs: [quality, desktop-package]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require core quality and Linux/Windows/macOS packages
+        env:
+          QUALITY_RESULT: ${{ needs.quality.result }}
+          PACKAGE_RESULT: ${{ needs.desktop-package.result }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Core quality: ${QUALITY_RESULT}"
+          echo "All desktop packages (Linux/Windows/macOS): ${PACKAGE_RESULT}"
+          test "${QUALITY_RESULT}" = "success"
+          test "${PACKAGE_RESULT}" = "success"
