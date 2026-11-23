@@ -21,7 +21,7 @@ describe('archived exact Python 3.12 SDK/transitive wheel digests',()=>{
     expect(evidence.userInstallerHashLocked).toBe(false);
     for(const [target,count] of [['linux',13],['win32',14],['darwin',13]] as const){
       const files=evidence.platforms[target];
-      expect(files).toBeDefined();
+      if(!files)throw Error('Missing platform Wheel digest snapshot: '+target);
       expect(Object.keys(files)).toHaveLength(count);
       for(const [name,hash] of Object.entries(files!)){
         expect(name).toMatch(/^[A-Za-z0-9][A-Za-z0-9_.-]*\.whl$/);
