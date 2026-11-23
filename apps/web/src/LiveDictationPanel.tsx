@@ -39,9 +39,9 @@ export function LiveDictationPanel({dictation,blocked,onStart,onManageModels}:Pr
     :checking||(!window.voxneloDesktop&&dictation.localPack==='unknown')?t('dictationChecking')
     :!dictation.supported?t('dictationUnavailableShort')
     :t(dictation.mode==='browser'?'dictationCloudEnabled':'dictationPrivacy');
-  return <section className="liveDictation mx-auto w-full max-w-160 min-w-0 rounded-[26px] border border-primary/20 bg-card/90 px-3 py-3 text-left shadow-[0_16px_42px_-34px_rgba(63,74,68,.45)] ring-1 ring-white/40 @min-[400px]/lesson:px-4 [@media(max-height:700px)]:py-2"
+  return <section className="liveDictation mx-auto w-full max-w-160 min-w-0 rounded-[26px] border border-primary/20 bg-card/90 px-3 py-3 text-left shadow-[0_16px_42px_-34px_rgba(63,74,68,.45)] ring-1 ring-white/40 @min-[400px]/lesson:px-4 [@media(max-height:700px)]:py-2 [@media(max-height:680px)]:py-1.5"
     aria-label={t('dictationTitle')} data-testid="dictation-workspace" data-state={state}>
-    <div className="flex min-w-0 flex-col gap-2">
+    <div className="flex min-w-0 flex-col gap-2 [@media(max-height:680px)]:gap-1">
       <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <strong className="text-[15px] font-extrabold tracking-tight text-foreground @min-[400px]/lesson:text-base">{t('dictationTitle')}</strong>
