@@ -15,12 +15,18 @@ v1.0.0 公开发行真实 [Actions 运行](https://github.com/kunlong-luo/voxnel
 
 ## v1.0.4 三平台免签名安装包的 Actions 验收产物（不是 Release）
 
-新增 [v1.0.4 Review Installers](../../.github/workflows/v1.0.4-review-installers.yml) 独立一次性验收构建：该 workflow 自身首次合并进 `main` 时自动触发，以后仅能通过手动 Actions 调度或再次修改该文件触发，不会在每次代码提交后反复打包。它不创建标签、草稿或正式 GitHub Release，工作流 token 也没有发布权限。
+现有 [v1.0.4 Review Installers](../../.github/workflows/v1.0.4-review-installers.yml) 只读评审构建：仅在该 workflow 文件于 `main` 发生变更或维护者手动执行时运行，**不对普通 main 提交自动反复打包**。当前工作流已对齐 Node 26 与 pnpm 12.22.0；新建安装包前进行与维护中工作流、锁文件、开发指南一致性的前置检查。它不创建标签、草稿或正式 GitHub Release，工作流 token 也没有发布权限。
 
 - 三系统分别制作实际的 Linux x64 DEB/AppImage、Windows x64 NSIS EXE、macOS ARM64 DMG，生成 SHA-256；Linux DEB 做 apt 实装。
 - 必须等待真正的三平台 Moonshine 原生 SDK/模型 + 打包后的 Worker/PCM 检查通过；然后核对所有安装包都属于本次源码 commit 与运行编号、且版本为 `1.0.4`。
 - 成功后，在 [GitHub Actions 页面](https://github.com/kunlong-luo/voxnelo/actions) 找到 **Build v1.0.4 unsigned installer review artifacts (NOT a Release)** 运行记录，下载附件 `voxnelo-v1.0.4-unsigned-three-platform-REVIEW-NOT-RELEASE`（单个 ZIP，内含五个安装包及三个 SHA-256 清单，有效期 14 天）。工作流不上传模型或个人音频；中间证据 JSON 不属于用户安装包。
 - 文件仅用于维护者核对和针对新原生引擎的验收，**不代表 v1.0.4 已公开发布**，也不等于具有代码签名、Apple 公证、真人 WER/端到端延迟或完成所有第三方许可审核。只有单独通过 `release-draft.yml`、确认发行文案与必要证据后，才考虑人工发布。
+
+### 2026-11-23 基于最新 `main` 的候选包复验方案（非公开发布）
+
+过去的 v1.0.4 Draft ID `428750217` 仍来自 `4aeb58e`，**不是**已合并 Python 3.12 全依赖 SHA-256 锁、原始 Wheel 许可证据及来源核查的当前 `main`。重新构建当前源码的审阅包时，只能使用上面的只读评审 workflow；先确认其前置 Node 26 / pnpm 12.22.0 检查与三平台真实 Moonshine SDK + 打包 Worker 通过，再要求 Linux DEB apt 实装、三系统安装包源提交/运行编号一致、每个平台 SHA256SUMS 逐项验证。仅在实际上传成功后，记录**新运行 ID、完整提交 SHA、精确 ZIP/安装包摘要和保留期限**。未实际生成的附件不能标记为存在，也不能把旧 Draft 的五个二进制视为最新源码。
+
+成功获得审阅包也**不是发布批准**。仍须依照 [八文件模型不可变来源及许可证证据](MOONSHINE-V1.0.4-PROVENANCE-AND-NOTICES-2026-11-23.md)、[实际人声设备台账](../release/V1.0.4-PHYSICAL-DEVICE-EVIDENCE.md) 以及新包 SHA 进行权利、真实麦克风、隐私和升级数据保持验收；不得覆盖现有 Draft，且不创建新的公开版本。
 
 ## v1.0.4 私有 Release Draft 历史一次性准备（**不公开，工作流已退役**）
 
