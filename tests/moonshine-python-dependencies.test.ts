@@ -15,6 +15,7 @@ const mk=(platform:'linux'|'darwin'|'win32')=>
 describe('Moonshine 0.0.65 Python dependency version guards',()=>{
   it('pins all 13 universal dependencies and Windows-only colorama in pip constraints',()=>{
     const text=moonshinePythonConstraints();
+    expect(readFileSync('scripts/moonshine-python-constraints.txt','utf8')).toBe(text);
     expect(Object.keys(MOONSHINE_RUNTIME_DEPENDENCIES)).toHaveLength(14);
     for(const [name,version] of Object.entries(MOONSHINE_RUNTIME_DEPENDENCIES)){
       const requirement=name==='colorama'
@@ -67,6 +68,8 @@ describe('Moonshine 0.0.65 Python dependency version guards',()=>{
     const exporter=readFileSync('scripts/export-moonshine-license-inventory.mts','utf8');
     expect(workflow).toContain("python-version: '3.12'");
     expect(workflow).toContain('--require-python-3.12');
+    const audit=readFileSync('.github/workflows/security-dependency-audit.yml','utf8');
+    expect(audit).toContain('--constraint scripts/moonshine-python-constraints.txt');
     expect(exporter).toContain('verifyMoonshineCiPythonVersion(data.pythonVersion)');
   });
 });
