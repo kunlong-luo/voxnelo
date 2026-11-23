@@ -22,6 +22,7 @@ export const CURRENT_DOCUMENTS = [
   'docs/PRIVACY.md',
   'docs/release-notes/v1.0.4.md',
   'docs/release/PRD-TRACEABILITY.md',
+  'docs/release/V1.0.4-PHYSICAL-DEVICE-EVIDENCE.md',
   'docs/release/DOCUMENT-INDEX.md',
   'docs/release/ASR-BENCHMARK-PROTOCOL.md',
   'docs/audits/2026-11-22-MODULE-REACHABILITY.md',
