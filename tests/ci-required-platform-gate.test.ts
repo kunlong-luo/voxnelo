@@ -18,6 +18,9 @@ describe('Main branch required check gates all desktop platforms', () => {
     expect(packages).toContain('os: [ubuntu-latest, windows-latest, macos-latest]');
     expect(packages).toContain('Install actual Linux DEB via apt');
     expect(packages).toContain('Verify SHA-256 candidate manifest on Linux');
+    expect(packages).toContain('Verify immutable LF checkout inputs in Windows tests');
+    expect(packages).toContain('tests/windows-checkout-lf.test.ts');
+    expect(packages).toContain('tests/retired-publication-workflows.test.ts');
     expect(packages).not.toContain('needs:');
   });
 
