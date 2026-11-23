@@ -1,7 +1,20 @@
-# Visual/native checks are opt-in while iterating rapidly; run before publishing a release.
-name: Optional deep UI and desktop QA
+# Keep expensive visual/native evidence scoped to UI/design changes rather
+# than every PR. Manual dispatch remains available for release sign-off.
+name: Scoped deep UI and desktop QA
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/quality-deep.yml'
+      - 'apps/web/src/LiveDictationPanel.tsx'
+      - 'apps/web/src/PracticeControlPanel.tsx'
+      - 'apps/web/src/PracticeCard.tsx'
+      - 'apps/web/src/PracticeView.tsx'
+      - 'apps/web/src/PracticeSidebarWidgets.tsx'
+      - 'apps/web/src/design-system.css'
+      - 'scripts/check-responsive-browser.mts'
+      - 'scripts/check-electron-window.mts'
+      - 'docs/design/V3-DICTATION-FIRST-UX-2026-11-23.md'
 
 permissions:
   contents: read
