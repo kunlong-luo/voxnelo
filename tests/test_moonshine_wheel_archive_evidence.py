@@ -58,11 +58,11 @@ class WheelArchiveEvidenceTests(unittest.TestCase):
             prefix = f'{name}-0.0.65.dist-info'
             wheel, digest = make_wheel(Path(root), name, {
                 f'{prefix}/METADATA': (
-                    f'Metadata-Version: 2.4\\nName: {name}\\nVersion: 0.0.65\\n'
-                    'License-Expression: MIT\\n'
-                    'License-File: LICENSE\\n'
-                    'License-File: deps/Apache-2.0.txt\\n'
-                    'License-File: AUTHORS\\n'
+                    f'Metadata-Version: 2.4\nName: {name}\nVersion: 0.0.65\n'
+                    'License-Expression: MIT\n'
+                    'License-File: LICENSE\n'
+                    'License-File: deps/Apache-2.0.txt\n'
+                    'License-File: AUTHORS\n'
                 ),
                 f'{prefix}/licenses/deps/Apache-2.0.txt': 'Synthetic license text',
                 f'{prefix}/licenses/AUTHORS': 'Synthetic attribution text',
@@ -88,8 +88,8 @@ class WheelArchiveEvidenceTests(unittest.TestCase):
             prefix = 'numpy-0.0.65.dist-info'
             wheel, digest = make_wheel(Path(root), 'numpy', {
                 f'{prefix}/METADATA': (
-                    'Metadata-Version: 2.4\\nName: numpy\\nVersion: 0.0.65\\n'
-                    'License-File: LICENSE\\nLicense-File: missing/NOTICE.txt\\n'
+                    'Metadata-Version: 2.4\nName: numpy\nVersion: 0.0.65\n'
+                    'License-File: LICENSE\nLicense-File: missing/NOTICE.txt\n'
                 ),
             })
             item = mod.inspect_wheel(wheel, digest)
@@ -102,14 +102,14 @@ class WheelArchiveEvidenceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as root:
             prefix = 'numpy-0.0.65.dist-info'
             for lines in [
-                'License-File: ../private.txt\\n',
-                'License-File: /absolute.txt\\n',
-                'License-File: LICENSE\\nLicense-File: LICENSE\\n',
+                'License-File: ../private.txt\n',
+                'License-File: /absolute.txt\n',
+                'License-File: LICENSE\nLicense-File: LICENSE\n',
             ]:
                 wheel, digest = make_wheel(Path(root), 'numpy', {
                     f'{prefix}/METADATA': (
-                        'Metadata-Version: 2.4\\nName: numpy\\n'
-                        'Version: 0.0.65\\n' + lines
+                        'Metadata-Version: 2.4\nName: numpy\n'
+                        'Version: 0.0.65\n' + lines
                     ),
                 })
                 with self.assertRaises(ValueError):
