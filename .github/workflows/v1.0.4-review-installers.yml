@@ -28,6 +28,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Setup exact candidate Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 26
       - name: Reject stale pinned pnpm/Node toolchains before expensive candidate build
         run: node --experimental-strip-types scripts/check-toolchain-consistency.mts
       - name: Verify version and unpublished notes
