@@ -82,6 +82,14 @@ describe('Nordic three-column learning workspace', () => {
     expect(container.querySelector('.actionRail .nextButton')).toBeNull();
     expect(container.querySelector('.lessonFocus .sentenceContent')).toBeTruthy();
     expect(container.querySelector('.lessonFocus .liveDictation')).toBeTruthy();
+    // The 320x640 Chromium visual probe exposed an actual overlap between
+    // the bottom dock and the recorder. Keep compact-height spacing without
+    // hiding the lesson, IPA or live/secondary audio actions.
+    expect(container.querySelector('.cardHeader')?.className).toContain('[@media(max-height:680px)]:pt-2');
+    expect(container.querySelector('.lessonFocus')?.className).toContain('[@media(max-height:680px)]:gap-1');
+    expect(container.querySelector('.lessonFocus section[aria-label="发音指南"]')?.className).toContain('[@media(max-height:680px)]:py-1');
+    expect(container.querySelector('.liveDictation')?.className).toContain('[@media(max-height:680px)]:py-1.5');
+    expect(container.querySelector('.lessonActions')?.className).toContain('[@media(max-height:680px)]:pt-1');
     const liveMic=container.querySelector('.liveDictation .dictationAction');
     const replayMic=container.querySelector('.actionRail .recordAction');
     expect(liveMic?.className).toContain('rounded-2xl');
