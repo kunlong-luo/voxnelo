@@ -9,6 +9,8 @@ on:
     paths:
       - '.github/workflows/security-dependency-audit.yml'
       - 'scripts/install-moonshine-linux.mts'
+      - 'scripts/moonshine-python-constraints.txt'
+      - 'apps/desktop/moonshinePythonDependencies.ts'
       - 'scripts/moonshine-install-transaction.mts'
       - 'pnpm-lock.yaml'
   schedule:
@@ -42,6 +44,7 @@ jobs:
           "$RUNNER_TEMP/moonshine-runtime/bin/python" -m pip install \
             --isolated --no-input --disable-pip-version-check \
             --only-binary=:all: --index-url https://pypi.org/simple \
+            --constraint scripts/moonshine-python-constraints.txt \
             'moonshine-voice==0.0.65'
           "$RUNNER_TEMP/moonshine-runtime/bin/python" -m pip freeze --local > "$RUNNER_TEMP/moonshine-locked-versions.txt"
           grep -qi '^moonshine-voice==0.0.65$' "$RUNNER_TEMP/moonshine-locked-versions.txt"

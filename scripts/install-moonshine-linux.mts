@@ -5,7 +5,7 @@
  * existing unknown user files and symlinks are never deleted.
  */
 import {spawnSync} from 'node:child_process';
-import {mkdir,rm,cp} from 'node:fs/promises';
+import {mkdir,rm,cp,writeFile} from 'node:fs/promises';
 import {writeSync} from 'node:fs';
 import {homedir,release as osRelease} from 'node:os';
 import path from 'node:path';
@@ -16,6 +16,8 @@ import {provisionMoonshineDirectory} from './moonshine-install-transaction.mts';
 import {moonshineStageLine,type MoonshineInstallStage} from '../apps/desktop/moonshineInstallProgress.ts';
 import {pinnedMoonshineWheel,verifyPinnedMoonshineWheel}
   from '../apps/desktop/moonshineWheelIntegrity.ts';
+import {moonshinePythonConstraints,verifyMoonshineResolvedPackages}
+  from '../apps/desktop/moonshinePythonDependencies.ts';
 
 // A synchronous marker must leave the process before spawnSync blocks Node's event loop.
 function report(stage:MoonshineInstallStage):void{writeSync(1,moonshineStageLine(stage));}
@@ -23,6 +25,30 @@ function run(executable:string,args:string[],env:NodeJS.ProcessEnv=process.env):
   const result=spawnSync(executable,args,{encoding:'utf8',stdio:'inherit',env,timeout:180000});
   if(result.status!==0||result.error)
     throw Error('Moonshine installation step failed; previous files were preserved');
+}
+/** No shell interpolation or renderer-supplied commands. All diagnostics are
+ * generic so private interpreter paths cannot enter the app event stream. */
+function pythonProbe(python:string,source:string):string|null{
+  const r=spawnSync(python,['-I','-c',source],{
+    encoding:'utf8',stdio:['ignore','pipe','ignore'],timeout:10000,
+    maxBuffer:65536,env:{PATH:process.env.PATH??'',PYTHONNOUSERSITE:'1'},
+  });
+  return r.status===0&&!r.error?r.stdout.trim():null;
+}
+function verifyInstalledDependencies(python:string):void{
+  const code='import importlib.metadata,json;print(json.dumps(sorted((d.metadata.get("Name", ""),d.version) for d in importlib.metadata.distributions())))';
+  const stdout=pythonProbe(python,code);
+  if(stdout===null)throw Error('Moonshine Python dependency inventory unavailable');
+  let installed:unknown;
+  try{installed=JSON.parse(stdout);}catch{
+    throw Error('Moonshine Python dependency inventory invalid');
+  }
+  if(!verifyMoonshineResolvedPackages(installed,process.platform))
+    throw Error('Moonshine pinned dependency versions differ; installation aborted');
+}
+function verifyWindowsPython312(python:string):boolean{
+  const code='import sys,struct;print("ok" if sys.version_info[:2]==(3,12) and struct.calcsize("P")==8 else "unsupported")';
+  return pythonProbe(python,code)==='ok';
 }
 async function main():Promise<void>{
   if(process.argv.includes('--help')||process.argv.includes('-h')){
@@ -55,12 +81,19 @@ async function main():Promise<void>{
     const python=interpreter(venv);
     report('environment');
     if(process.platform==='win32'){
-      // Windows Python Launcher is optional: a standard python.exe on PATH
-      // works too. Never construct shell commands from renderer input.
-      const launcher=spawnSync('py',['-3','-m','venv',venv],{
+      // Prefer exactly the native-CI-tested 64-bit Python 3.12, never 'py -3'
+      // (which selected 3.15 in a Windows runner despite setup-python 3.12).
+      // A PATH-based 3.12 remains supported where the py launcher is absent.
+      const launcher=spawnSync('py',['-3.12','-m','venv',venv],{
         encoding:'utf8',stdio:'ignore',timeout:180000,
       });
-      if(launcher.status!==0)run('python',['-m','venv',venv]);
+      if(launcher.status!==0||launcher.error){
+        if(!verifyWindowsPython312('python'))
+          throw Error('Windows Moonshine setup requires 64-bit Python 3.12');
+        run('python',['-m','venv',venv]);
+      }
+      if(!verifyWindowsPython312(python))
+        throw Error('Windows Moonshine runtime must use 64-bit Python 3.12');
     }else run('python3',['-m','venv',venv]);
     report('dependencies');
     // Download exactly one SDK wheel without dependencies and compare it to the
@@ -74,9 +107,14 @@ async function main():Promise<void>{
       'moonshine-voice==0.0.65']);
     if(!await verifyPinnedMoonshineWheel(sdkDownload,sdkWheel))
       throw Error('Moonshine SDK wheel integrity check failed; installation aborted');
+    const constraints=path.join(stage,'dependency-constraints.txt');
+    await writeFile(constraints,moonshinePythonConstraints(),{mode:0o600,flag:'wx'});
     run(python,['-m','pip','install','--isolated','--disable-pip-version-check',
       '--no-input','--only-binary=:all:','--index-url','https://pypi.org/simple',
-      path.join(sdkDownload,sdkWheel.filename)]);
+      '--constraint',constraints,path.join(sdkDownload,sdkWheel.filename)]);
+    verifyInstalledDependencies(python);
+    run(python,['-m','pip','check','--isolated','--disable-pip-version-check']);
+    await rm(constraints);
     await rm(sdkDownload,{recursive:true,force:true});
     const cache=path.join(stage,'download-cache');
     await mkdir(cache,{mode:0o700});

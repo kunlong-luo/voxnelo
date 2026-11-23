@@ -4,8 +4,13 @@ import {spawnSync} from 'node:child_process';
 import {mkdirSync,writeFileSync} from 'node:fs';
 import {homedir} from 'node:os';
 import path from 'node:path';
+import {verifyMoonshineCiPythonVersion}
+  from '../apps/desktop/moonshinePythonDependencies.ts';
 
 const destination=process.argv[2];
+if(process.argv.length>4||
+  (process.argv[3]!==undefined&&process.argv[3]!=='--require-python-3.12'))
+  throw Error('Unsupported Moonshine evidence export argument');
 if(!destination||!path.isAbsolute(destination))
   throw Error('Provide an absolute path for the private metadata evidence file');
 const personal=process.platform==='win32'
@@ -28,6 +33,7 @@ const data=JSON.parse(result.stdout) as {
   schemaVersion?:number;licenseApproved?:boolean;
   copyrightAndRedistributionReviewed?:boolean;
   packages?:Array<{name?:string;version?:string}>;
+  pythonVersion?:string;
 };
 if(data.schemaVersion!==1||data.licenseApproved!==false||
   data.copyrightAndRedistributionReviewed!==false||
@@ -35,6 +41,9 @@ if(data.schemaVersion!==1||data.licenseApproved!==false||
   !data.packages.some(pkg=>pkg.name?.toLowerCase().replace(/_/g,'-')==='moonshine-voice'&&
     pkg.version==='0.0.65'))
   throw Error('Invalid Moonshine license evidence inventory');
+if(process.argv[3]==='--require-python-3.12'&&
+  !verifyMoonshineCiPythonVersion(data.pythonVersion))
+  throw Error('Moonshine native CI Python interpreter drifted from 3.12');
 const serialized=JSON.stringify(data,null,2)+'\n';
 if(serialized.includes(homedir()))
   throw Error('Refusing to export private home-directory data');
