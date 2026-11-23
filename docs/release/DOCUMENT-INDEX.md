@@ -19,5 +19,7 @@ Updated: 2026-11-23. This is an **index, not evidence of a public v1.0.4 release
 ## Status and remaining gates
 
 - **Implemented tooling:** source/test file mappings exist for all 23 original PRD IDs; `pnpm docs:check` validates maintained local links/commands; CI checks Node/pnpm pin consistency; user guide describes Windows/macOS/Linux. Existence of documentation does not prove acceptance.
+- **Moonshine legal-evidence inventory repair (2026-11-23):** [original Wheel ZIP / PEP 639 license declaration coverage and pending reviewer worklist](../engineering/MOONSHINE-V1.0.4-PROVENANCE-AND-NOTICES-2026-11-23.md). Existing 33/34/33 notice-member counts are historical scanner output, not a freshly revalidated or legally approved complete inventory. The scoped Wheel workflow must run on the updated source before interpreting new counts.
+
 - **Still unverified or independently gated:** real-microphone quiet/noise/accent accuracy and latency per OS, physical accessibility tests (including screen readers/zoom), complete content/IPA/audio licensing and language review, signed/notarized credentials where applicable, and explicit publication authorization.
 - **Maintenance rule:** update this index and [the main docs index](../README.md) when promoting or retiring sources; retain historical tests/evidence unless deletion is justified with checked references. Never claim historical audit observations describe the current installer without reconfirmation.
