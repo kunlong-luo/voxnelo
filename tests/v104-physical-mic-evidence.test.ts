@@ -1,4 +1,6 @@
 import { readFileSync } from 'node:fs';
+import { PINNED_MOONSHINE_MEDIUM_FILES } from '../apps/desktop/moonshineIntegrity.ts';
+import wheelSnapshot from '../docs/engineering/moonshine-python312-wheel-digests-2026-11-23.json' with { type: 'json' };
 import { describe, expect, it } from 'vitest';
 import {
   PHYSICAL_MIC_TARGETS,
@@ -6,11 +8,23 @@ import {
 } from '../scripts/audit-v104-physical-mic-evidence.mts';
 
 // Synthetic, invented values for validator regression ONLY. Not Voxnelo device QA.
-const example = () => ({
+const pinnedWheelDigest = (platform: string): string => {
+  const os = platform === 'linux-x64' ? 'linux'
+    : platform === 'windows-x64' ? 'win32' : 'darwin';
+  const hit = Object.entries(wheelSnapshot.platforms[os])
+    .find(([name]) => name.startsWith('moonshine_voice-0.0.65-'));
+  if (!hit) throw Error('Missing synthetic test Wheel pin');
+  return hit[1];
+};
+const example = (platform: string) => ({
   installerSha256: 'a'.repeat(64),
   osVersion: 'test-os',
   microphoneCategory: 'test-physical-microphone',
   sdkVersion: '0.0.65',
+  pythonVersion: '3.12.16',
+  architecture: platform === 'macos-arm64-15plus' ? 'arm64' : 'x64',
+  sdkWheelSha256: pinnedWheelDigest(platform),
+  modelFileSha256: { ...PINNED_MOONSHINE_MEDIUM_FILES },
   modelHashesEvidenceRef: 'private-model-hashes-test',
   reviewerEvidenceRef: 'private-reviewer-ref-test',
   anonymizedEvidenceRef: 'private-session-ref-test',
@@ -30,11 +44,11 @@ const example = () => ({
   offlineAndPrivacyObserved: true,
 });
 const filledSyntheticFixture = () => ({
-  schemaVersion: 1,
+  schemaVersion: 2,
   version: '1.0.4',
   sourceCommit: 'b'.repeat(40),
   corpusDistinctSentences: 20,
-  platforms: Object.fromEntries(PHYSICAL_MIC_TARGETS.map(target => [target, example()])),
+  platforms: Object.fromEntries(PHYSICAL_MIC_TARGETS.map(target => [target, example(target)])),
 });
 
 describe('v1.0.4 physical human microphone evidence intake (NOT release approval)', () => {
@@ -99,7 +113,7 @@ describe('v1.0.4 physical human microphone evidence intake (NOT release approval
   it('fails closed on omitted/unknown platforms, invalid identifiers and dates', () => {
     const input = filledSyntheticFixture();
     delete input.platforms['windows-x64'];
-    input.platforms['unsupported'] = example();
+    input.platforms['unsupported'] = example('unsupported');
     input.platforms['linux-x64']!.installerSha256 = 'not-a-real-hash';
     input.platforms['linux-x64']!.testDate = '2026-02-30';
     input.platforms['linux-x64']!.reviewerEvidenceRef = '../private/user-name';
@@ -109,6 +123,38 @@ describe('v1.0.4 physical human microphone evidence intake (NOT release approval
     expect(issues).toContain('linux-x64.installerSha256');
     expect(issues).toContain('linux-x64.testDate');
     expect(issues).toContain('linux-x64.reviewerEvidenceRef');
+  });
+
+  it('rejects wrong SDK version, untested Python ABI and unsupported architecture', () => {
+    const input = filledSyntheticFixture();
+    input.platforms['linux-x64']!.sdkVersion = '0.1.6';
+    input.platforms['windows-x64']!.pythonVersion = '3.15.2';
+    input.platforms['macos-arm64-15plus']!.architecture = 'x64';
+    const issues = auditV104PhysicalMicEvidence(input).blockers.join(' ');
+    expect(issues).toContain('linux-x64.sdkVersion');
+    expect(issues).toContain('windows-x64.pythonVersion');
+    expect(issues).toContain('macos-arm64-15plus.architecture');
+  });
+
+  it('rejects spoofed, missing and substituted SDK Wheel or model hashes', () => {
+    const input = filledSyntheticFixture();
+    input.platforms['linux-x64']!.sdkWheelSha256 = '0'.repeat(64);
+    input.platforms['windows-x64']!.modelFileSha256 = {};
+    input.platforms['macos-arm64-15plus']!.modelFileSha256 = {
+      ...input.platforms['macos-arm64-15plus']!.modelFileSha256,
+      'frontend.ort': '0'.repeat(64),
+    };
+    const issues = auditV104PhysicalMicEvidence(input).blockers.join(' ');
+    expect(issues).toContain('linux-x64.sdkWheelSha256');
+    expect(issues).toContain('windows-x64.modelFileSha256');
+    expect(issues).toContain('macos-arm64-15plus.modelFileSha256');
+    expect(auditV104PhysicalMicEvidence(input).releaseApproved).toBe(false);
+  });
+
+  it('rejects old schema 1 evidence instead of silently treating it as complete', () => {
+    const input = filledSyntheticFixture();
+    input.schemaVersion = 1;
+    expect(auditV104PhysicalMicEvidence(input).blockers.join(' ')).toContain('schemaVersion/version');
   });
 
   it('does not accept a claimed status or malformed input as a reviewer decision', () => {

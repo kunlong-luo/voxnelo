@@ -23,7 +23,7 @@ export const MOONSHINE_RUNTIME_DEPENDENCIES=Object.freeze({
 
 export function moonshinePythonConstraints():string{
   const lines=[
-    '# Versions observed in native SDK CI on 2026-11-22. Hash locking still pending.',
+    '# Versions observed in native SDK CI on 2026-11-22. Exact Python 3.12 Wheel hashes are separately locked in moonshinePythonWheelLock.ts; legal and original-model provenance review remains pending.',
   ];
   for(const [name,version] of Object.entries(MOONSHINE_RUNTIME_DEPENDENCIES)){
     if(name==='colorama'){

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "version": "1.0.4",
   "sourceCommit": "",
   "corpusDistinctSentences": 0,
@@ -45,7 +45,11 @@
       "disconnectRecoveryObserved": false,
       "stopRestartNoStaleSubtitlesObserved": false,
       "upgradePreservesDataObserved": false,
-      "offlineAndPrivacyObserved": false
+      "offlineAndPrivacyObserved": false,
+      "pythonVersion": "",
+      "architecture": "",
+      "sdkWheelSha256": "",
+      "modelFileSha256": {}
     },
     "windows-x64": {
       "installerSha256": "",
@@ -88,7 +92,11 @@
       "disconnectRecoveryObserved": false,
       "stopRestartNoStaleSubtitlesObserved": false,
       "upgradePreservesDataObserved": false,
-      "offlineAndPrivacyObserved": false
+      "offlineAndPrivacyObserved": false,
+      "pythonVersion": "",
+      "architecture": "",
+      "sdkWheelSha256": "",
+      "modelFileSha256": {}
     },
     "macos-arm64-15plus": {
       "installerSha256": "",
@@ -131,7 +139,11 @@
       "disconnectRecoveryObserved": false,
       "stopRestartNoStaleSubtitlesObserved": false,
       "upgradePreservesDataObserved": false,
-      "offlineAndPrivacyObserved": false
+      "offlineAndPrivacyObserved": false,
+      "pythonVersion": "",
+      "architecture": "",
+      "sdkWheelSha256": "",
+      "modelFileSha256": {}
     }
   }
 }
