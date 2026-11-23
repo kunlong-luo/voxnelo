@@ -16,6 +16,8 @@ export const CURRENT_DOCUMENTS = [
   'docs/README.md',
   'docs/DEVELOPMENT.md',
   'docs/design/V3-DICTATION-FIRST-UX-2026-11-23.md',
+  'docs/design/V3-VISUAL-PRODUCTION-SPEC.md',
+  'docs/engineering/UI-ACCESSIBILITY-AUDIT-2026-11-16.md',
   'docs/USER-GUIDE.md',
   'docs/PRIVACY.md',
   'docs/release-notes/v1.0.4.md',
