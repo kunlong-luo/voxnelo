@@ -7,6 +7,8 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { PINNED_MOONSHINE_MEDIUM_FILES } from '../apps/desktop/moonshineIntegrity.ts';
+import wheelSnapshot from '../docs/engineering/moonshine-python312-wheel-digests-2026-11-23.json' with { type: 'json' };
 
 type Row = Record<string, unknown>;
 const row = (value: unknown): Row =>
@@ -56,8 +58,8 @@ export function auditV104PhysicalMicEvidence(input: unknown): PhysicalMicEvidenc
     if (!isPrivateEvidenceToken(value)) blockers.push(id + ': nonidentifying evidence token required');
   };
 
-  if (data.schemaVersion !== 1 || data.version !== '1.0.4') {
-    blockers.push('schemaVersion/version: v1.0.4 evidence format required');
+  if (data.schemaVersion !== 2 || data.version !== '1.0.4') {
+    blockers.push('schemaVersion/version: v1.0.4 evidence schema 2 required');
   }
   if (!isCommit(data.sourceCommit)) blockers.push('sourceCommit: full source SHA required');
   if (!isCount(data.corpusDistinctSentences) || data.corpusDistinctSentences < 20) {
@@ -75,7 +77,30 @@ export function auditV104PhysicalMicEvidence(input: unknown): PhysicalMicEvidenc
     if (!isSha256(src.installerSha256)) blockers.push(prefix + 'installerSha256: exact tested installer digest required');
     requireText(prefix + 'osVersion', src.osVersion);
     requireText(prefix + 'microphoneCategory', src.microphoneCategory);
-    requireText(prefix + 'sdkVersion', src.sdkVersion);
+    if (src.sdkVersion !== '0.0.65') {
+      blockers.push(prefix + 'sdkVersion: must equal installed Moonshine 0.0.65 pin');
+    }
+    if (typeof src.pythonVersion !== 'string' || !/^3\.12\.\d+$/.test(src.pythonVersion)) {
+      blockers.push(prefix + 'pythonVersion: tested 3.12.x ABI required');
+    }
+    const expectedArch = platform === 'macos-arm64-15plus' ? 'arm64' : 'x64';
+    if (src.architecture !== expectedArch) {
+      blockers.push(prefix + 'architecture: unsupported host architecture');
+    }
+    const wheelPlatform = platform === 'linux-x64' ? 'linux'
+      : platform === 'windows-x64' ? 'win32' : 'darwin';
+    const sdkWheels = Object.entries(wheelSnapshot.platforms[wheelPlatform])
+      .filter(([name]) => name.startsWith('moonshine_voice-0.0.65-') && name.endsWith('.whl'));
+    if (!isSha256(src.sdkWheelSha256) || sdkWheels.length !== 1 ||
+        src.sdkWheelSha256 !== sdkWheels[0]?.[1]) {
+      blockers.push(prefix + 'sdkWheelSha256: must match tested 3.12 platform SDK Wheel digest');
+    }
+    const observedModelHashes = row(src.modelFileSha256);
+    const expectedModelNames = Object.keys(PINNED_MOONSHINE_MEDIUM_FILES);
+    if (Object.keys(observedModelHashes).length !== expectedModelNames.length ||
+        expectedModelNames.some(name => observedModelHashes[name] !== PINNED_MOONSHINE_MEDIUM_FILES[name])) {
+      blockers.push(prefix + 'modelFileSha256: exactly eight locally checked model file digests must match candidate pins');
+    }
     requirePrivateToken(prefix + 'modelHashesEvidenceRef', src.modelHashesEvidenceRef);
     requirePrivateToken(prefix + 'reviewerEvidenceRef', src.reviewerEvidenceRef);
     requirePrivateToken(prefix + 'anonymizedEvidenceRef', src.anonymizedEvidenceRef);
