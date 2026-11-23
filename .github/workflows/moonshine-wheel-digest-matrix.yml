@@ -7,6 +7,8 @@ on:
     paths:
       - '.github/workflows/moonshine-wheel-digest-matrix.yml'
       - 'scripts/audit-moonshine-wheelhouse.py'
+      - 'scripts/collect-moonshine-wheel-archive-evidence.py'
+      - 'tests/test_moonshine_wheel_archive_evidence.py'
       - 'scripts/moonshine-python-constraints.txt'
       - 'docs/engineering/moonshine-python312-wheel-digests-2026-11-23.json'
       - 'tests/test_moonshine_wheelhouse_audit.py'
@@ -40,8 +42,10 @@ jobs:
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.12'
-      - name: Reject unsafe manifests (offline tests)
-        run: python tests/test_moonshine_wheelhouse_audit.py
+      - name: Reject unsafe manifests and archives (offline tests)
+        run: |
+          python tests/test_moonshine_wheelhouse_audit.py
+          python tests/test_moonshine_wheel_archive_evidence.py
       - name: Download exact candidate dependency Wheels and check PyPI SHA-256
         shell: pwsh
         run: |
@@ -52,10 +56,20 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "Candidate Wheel download failed" }
           python scripts/audit-moonshine-wheelhouse.py "$wheelhouse" scripts/moonshine-python-constraints.txt "$report" docs/engineering/moonshine-python312-wheel-digests-2026-11-23.json
           if ($LASTEXITCODE -ne 0) { throw "Downloaded dependency Wheel hashes could not be reconciled" }
-      - name: Retain checksums only, never any downloaded Wheel bytes
+      - name: Inspect original verified Wheel archives for license/native evidence
+        shell: pwsh
+        run: |
+          $wheelhouse = Join-Path $env:RUNNER_TEMP "moonshine-wheelhouse"
+          $report = Join-Path $env:RUNNER_TEMP "moonshine-wheel-digest-${{ matrix.target }}.json"
+          $legal = Join-Path $env:RUNNER_TEMP "moonshine-wheel-contents-${{ matrix.target }}.json"
+          python scripts/collect-moonshine-wheel-archive-evidence.py "$wheelhouse" "$report" "$legal"
+          if ($LASTEXITCODE -ne 0) { throw "Original Wheel metadata/notice evidence collection failed" }
+      - name: Retain digest and sanitized legal-audit JSON, never Wheel bytes
         uses: actions/upload-artifact@v7
         with:
           name: moonshine-wheel-digests-${{ matrix.target }}
-          path: ${{ runner.temp }}/moonshine-wheel-digest-${{ matrix.target }}.json
+          path: |
+            ${{ runner.temp }}/moonshine-wheel-digest-${{ matrix.target }}.json
+            ${{ runner.temp }}/moonshine-wheel-contents-${{ matrix.target }}.json
           if-no-files-found: error
           retention-days: 14
