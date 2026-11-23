@@ -28,6 +28,12 @@ v1.0.0 公开发行真实 [Actions 运行](https://github.com/kunlong-luo/voxnel
 
 成功获得审阅包也**不是发布批准**。仍须依照 [八文件模型不可变来源及许可证证据](MOONSHINE-V1.0.4-PROVENANCE-AND-NOTICES-2026-11-23.md)、[实际人声设备台账](../release/V1.0.4-PHYSICAL-DEVICE-EVIDENCE.md) 以及新包 SHA 进行权利、真实麦克风、隐私和升级数据保持验收；不得覆盖现有 Draft，且不创建新的公开版本。
 
+### 2026-11-23 首轮当前源码评审失败记录与跨平台换行修复
+
+[Actions 45150623898](https://github.com/kunlong-luo/voxnelo/actions/runs/45150623898) 对最新当时的源码 `849c1ce587854b6058986ef51c0de3f298a81bb6` 执行**只读**三平台安装包评审。其 Linux/Windows/macOS 三个真实 Moonshine SDK/模型/打包后 Worker 测试均 **SUCCESS**；Linux 和 macOS 安装包制作/校验也 **SUCCESS**。**Windows 安装包矩阵在 `Typecheck and test` 阶段 FAILED**（17 个文本精确匹配或历史归档 Git blob SHA-1 检查失败）：Windows Git checkout 使用 CRLF 工作区文件，而该仓库原始 Git blob 是 LF。问题还影响 `scripts/moonshine-python-constraints.txt` 对照测试和 YAML 原样字符串判断。因为 Windows 失败，最终聚合评审 ZIP 正确标记为 `skipped`，**没有生成完整三平台新候选包**；不得把这一运行称为候选版验收成功。
+
+修复方案：新增仓库级 `.gitattributes` 为工作流、历史归档 YAML、Python 固定约束、TypeScript/JSON/Python 维护文件强制 LF checkout，**不重写任何已归档的原始 Git blob 或历史 Release**；在日常必需 Windows 包装 CI 中针对七组与 LF/原始哈希相关的回归测试单独执行，另在只读评审流程的三平台任务中提前检查换行和工作区字节一致性。此修复若经 PR CI 全绿合并到 `main`，原有 scoped 触发器会发起**另一次独立的**最新版评审工作流。只在新运行真正成功、全部安装包 SHA-256 已验证时更新候选版本记录；不要从上次失败的工作流搬运 ZIP、复用旧 SHA 或回写 v1.0.4 Draft `428750217`。
+
 ## v1.0.4 私有 Release Draft 历史一次性准备（**不公开，工作流已退役**）
 
 当时为减少维护者反复在 Actions 手动填写参数，曾新增 [已归档的一次性私有草稿入口](../archive/workflows/prepare-v1.0.4-private-draft-once.yml)。**首次经 PR 合并到 main 后**，仅因该文件的变更启动一次：复用原本经审查的 `release-draft.yml`，以固定 `version=1.0.4`、`confirmation=PREPARE_DRAFT_ONLY` 执行，不能发布公开版本；原有手动 `workflow_dispatch` 入口仍保留。
