@@ -33,7 +33,6 @@ export const PHYSICAL_MIC_TARGETS = [
   'linux-x64', 'windows-x64', 'macos-arm64-15plus',
 ] as const;
 
-type ScenarioSummary = { referenceWords: number; substitutions: number; deletions: number; insertions: number };
 export type PhysicalMicEvidenceAudit = {
   blockers: string[];
   // This invariant must not be reused as a release-approval switch.
@@ -113,9 +112,9 @@ export function auditV104PhysicalMicEvidence(input: unknown): PhysicalMicEvidenc
         blockers.push(label + 'edits: substitutions + deletions exceed reference words');
       }
       if (fields.every(field => isCount(scenario[field])) && (scenario.referenceWords as number) > 0) {
-        const summary = scenario as ScenarioSummary;
         results[condition] =
-          (summary.substitutions + summary.deletions + summary.insertions) / summary.referenceWords;
+          ((scenario.substitutions as number) + (scenario.deletions as number) +
+            (scenario.insertions as number)) / (scenario.referenceWords as number);
       }
     }
     weightedWer[platform] = results;
