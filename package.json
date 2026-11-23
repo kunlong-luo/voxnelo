@@ -23,6 +23,7 @@
     "asr:batch": "node --experimental-strip-types scripts/batch-offline-asr.mts",
     "asr:compare:moonshine": "node --experimental-strip-types scripts/batch-offline-asr.mts --compare-moonshine",
     "asr:moonshine:upstream:refs": "node --experimental-strip-types scripts/audit-moonshine-upstream-refs.mts",
+    "asr:mic:evidence:audit": "node --experimental-strip-types scripts/audit-v104-physical-mic-evidence.mts",
     "worklet:build": "node --experimental-strip-types scripts/build-audio-worklet.mts",
     "typecheck": "tsc --noEmit",
     "lint": "node --experimental-strip-types ./node_modules/eslint/bin/eslint.js --flag unstable_native_nodejs_ts_config . --max-warnings=0",
