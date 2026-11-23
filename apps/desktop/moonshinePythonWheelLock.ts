@@ -29,7 +29,7 @@ export function pinnedMoonshineWheelhouse(
     snapshot.buildProvenanceAttested!==false||snapshot.licenseApproved!==false||
     snapshot.userInstallerHashLocked!==false)return null;
   if(platform!=='linux'&&platform!=='win32'&&platform!=='darwin')return null;
-  const entries=snapshot.platforms[platform];
+  const entries:Readonly<Record<string,string>>=snapshot.platforms[platform];
   const expected=new Map(Object.entries(MOONSHINE_RUNTIME_DEPENDENCIES)
     .filter(([name])=>name!=='colorama'||platform==='win32'));
   if(Object.keys(entries).length!==expected.size)return null;
