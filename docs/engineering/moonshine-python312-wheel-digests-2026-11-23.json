@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "candidatePython": "3.12",
+  "evidenceRunId": 45116534459,
+  "evidenceHeadSha": "5d80e5b7ed33834bdd5c718ddbfdd077ebc4e7c1",
+  "source": "GitHub Actions downloaded Wheel bytes SHA-256 matched against PyPI fixed-version file records",
+  "buildProvenanceAttested": false,
+  "licenseApproved": false,
+  "userInstallerHashLocked": false,
+  "platforms": {
+    "linux": {
+      "certifi-2026.11.20-py3-none-any.whl": "7422df25243767b9877031a2248cb14d09ddac9beee846f4cef3d5c9191d488f",
+      "cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl": "c1453022f490d2459a11819d83ad1d586e9ff65a12ac3e705ffebd46d3685dcf",
+      "charset_normalizer-3.5.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl": "3d31298449090ab8d47b7b1b2a555ff73cac7ed438a08b7ac160980c7ebed649",
+      "filelock-4.3.0-py3-none-any.whl": "f933f39f7e01249a4a49b9abab30edc6d4b874624c3de5dd0b0d137aa8adb979",
+      "idna-3.20-py3-none-any.whl": "ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c",
+      "moonshine_voice-0.0.65-py3-none-manylinux_2_34_x86_64.whl": "946e0a056dd3a13ee8cc28dec84c0f01676743a841bae5e6c52a87483b10241b",
+      "numpy-2.5.5-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl": "704d819265e5d1064d932968e9ee85fff2103ccc78c05b878c06943ba27b8507",
+      "platformdirs-4.14.8-py3-none-any.whl": "1e34af590de4d978631b751eb2202f2fee4497537a17c1720b12fcf57b331392",
+      "pycparser-3.12-py3-none-any.whl": "a076f3f489b39b43ed13563a1dafe42447445bec2e294154ec5c57fcdda4c85e",
+      "requests-2.34.2-py3-none-any.whl": "2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0",
+      "sounddevice-0.5.6-py3-none-any.whl": "de099612311ad81e55d31ccbd83f43ea6bf4d87b48f9b6ea55a1fbcde0eee4e0",
+      "tqdm-4.70.1-py3-none-any.whl": "c293e525e6fef9c20e8728fd4612df02a0aa31bb5fe91ecd93e123b1b7bffa73",
+      "urllib3-2.8.0-py3-none-any.whl": "0cf3cae568d36aa9576b28dfb35f11328f1cb974ca7647d9475ebb86c75ac6e3"
+    },
+    "win32": {
+      "certifi-2026.11.20-py3-none-any.whl": "7422df25243767b9877031a2248cb14d09ddac9beee846f4cef3d5c9191d488f",
+      "cffi-2.1.1-cp312-cp312-win_amd64.whl": "f53e442b08449d42821fa4a4fba000095af9f62742a500f978a9f557ec44339a",
+      "charset_normalizer-3.5.2-cp312-cp312-win_amd64.whl": "780fbe7cab297b81dad9fb8dc5eb003c0468ffb0d9e5f65068c53a34661a96bc",
+      "colorama-0.4.6-py2.py3-none-any.whl": "4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6",
+      "filelock-4.3.0-py3-none-any.whl": "f933f39f7e01249a4a49b9abab30edc6d4b874624c3de5dd0b0d137aa8adb979",
+      "idna-3.20-py3-none-any.whl": "ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c",
+      "moonshine_voice-0.0.65-py3-none-win_amd64.whl": "657e16825ca8f4298fea2a9d9a28bb685d9cf6ad247e104656ed5b02b9ff886b",
+      "numpy-2.5.5-cp312-cp312-win_amd64.whl": "919eb420662b0b4ba34889df503f3d5329775b0c1d5f7e5f5af4fba8315b1e30",
+      "platformdirs-4.14.8-py3-none-any.whl": "1e34af590de4d978631b751eb2202f2fee4497537a17c1720b12fcf57b331392",
+      "pycparser-3.12-py3-none-any.whl": "a076f3f489b39b43ed13563a1dafe42447445bec2e294154ec5c57fcdda4c85e",
+      "requests-2.34.2-py3-none-any.whl": "2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0",
+      "sounddevice-0.5.6-py3-none-win_amd64.whl": "7f4162f514f007b0bf25a3ccfed3f1705bc2ec311888a90232729eec4f57a4f4",
+      "tqdm-4.70.1-py3-none-any.whl": "c293e525e6fef9c20e8728fd4612df02a0aa31bb5fe91ecd93e123b1b7bffa73",
+      "urllib3-2.8.0-py3-none-any.whl": "0cf3cae568d36aa9576b28dfb35f11328f1cb974ca7647d9475ebb86c75ac6e3"
+    },
+    "darwin": {
+      "certifi-2026.11.20-py3-none-any.whl": "7422df25243767b9877031a2248cb14d09ddac9beee846f4cef3d5c9191d488f",
+      "cffi-2.1.1-cp312-cp312-macosx_11_0_arm64.whl": "f81b3b8f3d4e343550fa4baa0e479bba9f2d29ce9c2e9b51d1ce1718d7442fcf",
+      "charset_normalizer-3.5.2-cp312-cp312-macosx_10_13_universal2.whl": "ed2a239c0ea213acc1908150a3037257083c7c083128f1a4cec2ec4b97dca491",
+      "filelock-4.3.0-py3-none-any.whl": "f933f39f7e01249a4a49b9abab30edc6d4b874624c3de5dd0b0d137aa8adb979",
+      "idna-3.20-py3-none-any.whl": "ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c",
+      "moonshine_voice-0.0.65-py3-none-macosx_15_0_arm64.whl": "3e92fa8497bf4fc40b6241e4dc29fd4ac77832f7f3d8addc4fd467a6bf1cf605",
+      "numpy-2.5.5-cp312-cp312-macosx_14_0_arm64.whl": "a3856a97e48ed8371c680fb04120b99fbcc29f2076ebe6dc3deb34f77947c5ca",
+      "platformdirs-4.14.8-py3-none-any.whl": "1e34af590de4d978631b751eb2202f2fee4497537a17c1720b12fcf57b331392",
+      "pycparser-3.12-py3-none-any.whl": "a076f3f489b39b43ed13563a1dafe42447445bec2e294154ec5c57fcdda4c85e",
+      "requests-2.34.2-py3-none-any.whl": "2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0",
+      "sounddevice-0.5.6-py3-none-macosx_10_6_x86_64.macosx_10_6_universal2.whl": "e3aef00ad8b1d1740eb66d9a7671eab88a4d2b8fa4ab33498d742e63b65c309c",
+      "tqdm-4.70.1-py3-none-any.whl": "c293e525e6fef9c20e8728fd4612df02a0aa31bb5fe91ecd93e123b1b7bffa73",
+      "urllib3-2.8.0-py3-none-any.whl": "0cf3cae568d36aa9576b28dfb35f11328f1cb974ca7647d9475ebb86c75ac6e3"
+    }
+  }
+}
