@@ -56,8 +56,11 @@ describe('Moonshine 0.0.65 Python dependency version guards',()=>{
     const installer=readFileSync('scripts/install-moonshine-linux.mts','utf8');
     expect(installer).toContain("spawnSync('py',['-3.12','-m','venv',venv]");
     expect(installer).not.toContain("spawnSync('py',['-3','-m','venv',venv]");
-    expect(installer).toContain('verifyWindowsPython312(python)');
-    expect(installer).toContain("'--constraint',constraints");
+    expect(installer).toContain('verifiedPython312Version(python)');
+    expect(installer).toContain("verifiedPython312Version('python3.12')");
+    expect(installer).toContain('moonshineHashedRequirements(wheels)');
+    expect(installer).toContain("'--require-hashes'");
+    expect(installer).toContain("'--no-index','--find-links',wheelhouse");
     expect(installer).toContain('verifyInstalledDependencies(python)');
     expect(installer.indexOf('verifyInstalledDependencies(python);'))
       .toBeLessThan(installer.indexOf("report('model-download')"));
