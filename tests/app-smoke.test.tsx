@@ -155,20 +155,20 @@ describe('App smoke', () => {
     try {
       render(<App />);
       await screen.findByText(FIRST_SENTENCE.english);
-      fireEvent.click(screen.getByRole('button', { name: '开口跟读' }));
+      fireEvent.click(screen.getByRole('button', { name: '录制回听' }));
       const cancel = await screen.findByRole('button', { name: '取消录音授权请求' });
       expect((cancel as HTMLButtonElement).disabled).toBe(false);
       expect(getUserMedia).toHaveBeenCalledTimes(1);
       fireEvent.click(cancel);
       expect(screen.queryByRole('button', { name: '取消录音授权请求' })).toBeNull();
-      expect(screen.getByRole('button', { name: '开口跟读' })).toBeTruthy();
+      expect(screen.getByRole('button', { name: '录制回听' })).toBeTruthy();
       const { act } = await import('@testing-library/react');
       await act(async () => {
         grant?.({ getTracks: () => [{ stop: stopOldTrack }] } as unknown as MediaStream);
       });
       expect(stopOldTrack).toHaveBeenCalledTimes(1);
       expect(screen.queryByRole('button', { name: '结束录音' })).toBeNull();
-      expect(screen.getByRole('button', { name: '开口跟读' })).toBeTruthy();
+      expect(screen.getByRole('button', { name: '录制回听' })).toBeTruthy();
       expect((await database.states.toArray()).every(item => item.practicedCount === 0)).toBe(true);
     } finally {
       vi.unstubAllGlobals();
@@ -197,10 +197,10 @@ describe('App smoke', () => {
     try{
       const view=render(<App/>);
       await screen.findByText(FIRST_SENTENCE.english);
-      fireEvent.click(screen.getByRole('button',{name:'开口跟读'}));
+      fireEvent.click(screen.getByRole('button',{name:'录制回听'}));
       await screen.findByRole('button',{name:'结束录音'});
       fireEvent.click(screen.getByRole('button',{name:'结束录音'}));
-      await waitFor(()=>expect(screen.getByRole('button',{name:'开口跟读'})).toBeTruthy());
+      await waitFor(()=>expect(screen.getByRole('button',{name:'录制回听'})).toBeTruthy());
       expect(stopTrack).toHaveBeenCalled();
       expect((await database.states.toArray()).every(x=>x.practicedCount===0)).toBe(true);
       fireEvent.click(screen.getByRole('button',{name:'换一句'}));
@@ -249,7 +249,7 @@ describe('App smoke', () => {
     try {
       const view = render(<App />);
       await screen.findByText(FIRST_SENTENCE.english);
-      fireEvent.click(screen.getByRole('button', { name: '开口跟读' }));
+      fireEvent.click(screen.getByRole('button', { name: '录制回听' }));
       await screen.findByRole('button', { name: '结束录音' });
       const first = DeferredRecorder.instances[0];
       if (!first) throw new Error('Expected the first MediaRecorder');
@@ -339,7 +339,7 @@ describe('App smoke', () => {
     try {
       const view = render(<App />);
       await screen.findByText(FIRST_SENTENCE.english);
-      fireEvent.click(screen.getByRole('button', { name: '开口跟读' }));
+      fireEvent.click(screen.getByRole('button', { name: '录制回听' }));
       await screen.findByRole('button', { name: '结束录音' });
       const oldRecorder = InterruptedRecorder.instances[0];
       if (!oldRecorder) throw new Error('Expected MediaRecorder');
@@ -396,7 +396,7 @@ describe('App smoke', () => {
     vi.stubGlobal('MediaRecorder', FakeMediaRecorder);
     try {
       const view = render(<App />);
-      fireEvent.click(screen.getByRole('button', { name: '开口跟读' }));
+      fireEvent.click(screen.getByRole('button', { name: '录制回听' }));
       expect(await screen.findByRole('button', { name: '结束录音' })).toBeTruthy();
       expect((screen.getByRole('button', { name: '播放标准朗读' }) as HTMLButtonElement).disabled).toBe(true);
       fireEvent.click(screen.getByRole('button', { name: '我的收藏' }));
