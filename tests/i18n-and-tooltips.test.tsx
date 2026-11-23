@@ -59,7 +59,7 @@ describe('Chinese-first bilingual UI (V0.1 PRD F001)', () => {
     render(<App />);
     expect(document.documentElement.lang).toBe('zh-CN');
     expect(screen.getByRole('button',{name:'开始练习'})).toBeTruthy();
-    expect(screen.getByRole('button',{name:'开口跟读'})).toBeTruthy();
+    expect(screen.getByRole('button',{name:'录制回听'})).toBeTruthy();
     fireEvent.click(screen.getByRole('button',{name:'设置'}));
     expect(screen.getByRole('heading',{name:'界面语言'})).toBeTruthy();
     expect(screen.getByRole('button',{name:/^简体中文/}).getAttribute('aria-pressed')).toBe('true');
@@ -68,7 +68,7 @@ describe('Chinese-first bilingual UI (V0.1 PRD F001)', () => {
     expect(localStorage.getItem(LANGUAGE_STORAGE_KEY)).toBe('en-US');
     expect(screen.getByRole('heading',{name:'Practice settings'})).toBeTruthy();
     fireEvent.click(screen.getByRole('button',{name:'Back to practice'}));
-    expect(screen.getByRole('button',{name:'Speak now'})).toBeTruthy();
+    expect(screen.getByRole('button',{name:'Record & replay'})).toBeTruthy();
     expect(screen.getByRole('button',{name:'Next sentence'})).toBeTruthy();
   });
 
