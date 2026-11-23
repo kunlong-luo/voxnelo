@@ -78,7 +78,7 @@ describe('V3 dictation-first UI without changing ASR or recorder behavior',()=>{
     const status=screen.getByTestId('dictation-workspace');
     expect(status.getAttribute('data-state')).toBe('unavailable');
     expect(status.textContent).toContain('离线英语模型尚未就绪');
-    const action=screen.getByRole('button',{name:'打开模型管理'});
+    const action=screen.getByRole('button',{name:'管理离线模型'});
     expect(action.className).not.toContain('hidden');
     fireEvent.click(action);
     expect(manage).toHaveBeenCalledOnce();
