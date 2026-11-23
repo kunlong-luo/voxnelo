@@ -35,6 +35,7 @@ describe('documentation link and command validation', () => {
       'CHANGELOG.md',
       'SECURITY.md',
       'docs/PRIVACY.md',
+      'docs/design/V3-DICTATION-FIRST-UX-2026-11-23.md',
       'docs/release-notes/v1.0.4.md',
       'docs/engineering/ASR-PUBLIC-RELEASE-GATE.md',
       'docs/engineering/TECH-DEBT-2026-11-16.md',

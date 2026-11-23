@@ -25,3 +25,9 @@
 ## Follow-up
 
 Capture redacted screenshots and issue links for each confirmed defect. Map component names, relevant tests and severity after a source-level UI inventory. Do not report these proposed checks as completed.
+
+## Follow-up on 2026-11-23 — new V3 source-level UI evidence (NOT physical acceptance)
+
+A [new dictation-first V3 design and QA spec](../design/V3-DICTATION-FIRST-UX-2026-11-23.md) addresses two code-observed usability risks: the former live ASR microphone was a small icon-only action competing with a similarly prominent recorder, and unavailable-model recovery/help was hidden at small window heights. The source iteration now exposes a **text-labeled live start/stop action**, actual interim/latest-final text, a distinct **record/replay** name and subdued control, and always-visible model recovery access. Tests in [`tests/live-dictation-v3.test.tsx`](../../tests/live-dictation-v3.test.tsx) confirm semantic states and interaction in JSDOM; the [existing UI test](../../tests/i18n-and-tooltips.test.tsx) confirms the new recorder accessible name.
+
+**Not yet verified here:** rendered 320×640 / 390×844 / 640×720 / 800×610 / 1160×760 / 1440×900 physical UI, actual light/dark contrast compositing, 200% zoom, Narrator/VoiceOver/Orca speech verbosity, OS-native capture prompts and full physical microphone behavior. Browser / virtual Electron CI may add geometry evidence, but it is not a qualified human physical-device review. **Do not replace the 2026-11-16 historical assessment or mark F012 as fully accepted.**
