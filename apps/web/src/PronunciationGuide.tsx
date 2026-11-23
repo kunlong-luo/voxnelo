@@ -37,7 +37,7 @@ export function PronunciationGuide({
   const activeWords=guide&&activeRule ? splitConnectedSpeechSpan(guide.english,activeRule.span) : undefined;
 
   return <section aria-label={t('pronunciationGuide')}
-    className="w-full max-w-155 min-w-0 rounded-2xl border border-border/65 bg-card/70 px-3 py-2.5 text-left shadow-sm backdrop-blur-sm sm:px-4">
+    className="w-full max-w-155 min-w-0 rounded-2xl border border-border/65 bg-card/70 px-3 py-2.5 [@media(max-height:680px)]:py-1 text-left shadow-sm backdrop-blur-sm sm:px-4">
     <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
       <span className="flex min-w-0 items-center gap-1.5 text-xs font-bold text-foreground">
         <BookOpenText size={15} aria-hidden="true"/>{t('pronunciationGuide')}
