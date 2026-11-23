@@ -1,4 +1,4 @@
-# Versions observed in native SDK CI on 2026-11-22. Hash locking still pending.
+# Versions observed in native SDK CI on 2026-11-22. Exact Python 3.12 Wheel hashes are separately locked in moonshinePythonWheelLock.ts; legal and original-model provenance review remains pending.
 certifi==2026.11.20
 cffi==2.1.1
 charset-normalizer==3.5.2
