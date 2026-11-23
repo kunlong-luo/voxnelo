@@ -6,6 +6,8 @@ on:
       - 'apps/desktop/main.ts'
       - 'apps/desktop/moonshine*.ts'
       - 'apps/desktop/moonshinePythonDependencies.ts'
+      - 'apps/desktop/moonshinePythonWheelLock.ts'
+      - 'docs/engineering/moonshine-python312-wheel-digests-2026-11-23.json'
       - 'apps/desktop/asrDefault.ts'
       - 'apps/web/src/OfflineModelsView.tsx'
       - 'scripts/install-moonshine-linux.mts'
