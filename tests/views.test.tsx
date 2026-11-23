@@ -58,7 +58,7 @@ describe('PracticeView', () => {
   it('展示当前短句与操作入口', () => {
     render(<PracticeView {...basePracticeProps} />);
     expect(screen.getByText(FIRST_SENTENCE.english)).toBeTruthy();
-    expect(screen.getByRole('button', { name: '开口跟读' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: '录制回听' })).toBeTruthy();
     expect(screen.getByRole('button', { name: '换一句' })).toBeTruthy();
   });
 
@@ -75,7 +75,7 @@ describe('PracticeView', () => {
     expect(screen.queryByText('连续天数')).toBeNull();
     expect(screen.queryByText('发音准确率')).toBeNull();
     expect(screen.queryByRole('button', { name: '结束录音' })).toBeNull();
-    expect(screen.getByRole('button', { name: '开口跟读' }).getAttribute('aria-pressed')).toBe('false');
+    expect(screen.getByRole('button', { name: '录制回听' }).getAttribute('aria-pressed')).toBe('false');
     expect(screen.getByRole('button', { name: '回听刚才的录音' }).hasAttribute('disabled')).toBe(true);
   });
 
@@ -123,7 +123,7 @@ describe('PracticeView', () => {
     expect(screen.getByTestId('live-transcript').textContent).not.toContain('LEARNING ENGLISH');
     expect(nativeCaps.finalText).toBe('HELLO');
     expect(nativeCaps.interimText).toBe('I AM LEARNING ENGLISH WITH AI');
-    expect((screen.getByRole('button',{name:'开口跟读'}) as HTMLButtonElement).disabled).toBe(true);
+    expect((screen.getByRole('button',{name:'录制回听'}) as HTMLButtonElement).disabled).toBe(true);
   });
 
   it('keeps hours of finalized text out of current subtitle while allowing explicit history inspection',()=>{
@@ -152,10 +152,10 @@ describe('PracticeView', () => {
   it('同一个录音按钮点击开始，录音中改为可点击的结束按钮，其他操作锁定', () => {
     const onRecord=vi.fn();
     const {rerender}=render(<PracticeView {...basePracticeProps} onRecord={onRecord}/>);
-    fireEvent.click(screen.getByRole('button',{name:'开口跟读'}));
+    fireEvent.click(screen.getByRole('button',{name:'录制回听'}));
     expect(onRecord).toHaveBeenCalledOnce();
     rerender(<PracticeView {...basePracticeProps} recorder={stubRecorder({ status: 'recording' })} recordingBusy onRecord={onRecord}/>);
-    expect(screen.queryByRole('button',{name:'开口跟读'})).toBeNull();
+    expect(screen.queryByRole('button',{name:'录制回听'})).toBeNull();
     expect(screen.getByRole('button',{name:'结束录音'}).getAttribute('aria-pressed')).toBe('true');
     fireEvent.click(screen.getByRole('button',{name:'结束录音'}));
     expect(onRecord).toHaveBeenCalledTimes(2);
