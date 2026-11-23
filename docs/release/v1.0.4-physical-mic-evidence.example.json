@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "version": "1.0.4",
+  "sourceCommit": "",
+  "corpusDistinctSentences": 0,
+  "platforms": {
+    "linux-x64": {
+      "installerSha256": "",
+      "osVersion": "",
+      "microphoneCategory": "",
+      "sdkVersion": "",
+      "modelHashesEvidenceRef": "",
+      "reviewerEvidenceRef": "",
+      "anonymizedEvidenceRef": "",
+      "testDate": "",
+      "inputMethod": "",
+      "consentConfirmed": false,
+      "normalizationRule": "",
+      "quiet": {
+        "trials": 0,
+        "referenceWords": 0,
+        "substitutions": 0,
+        "deletions": 0,
+        "insertions": 0
+      },
+      "noisy": {
+        "trials": 0,
+        "referenceWords": 0,
+        "substitutions": 0,
+        "deletions": 0,
+        "insertions": 0
+      },
+      "firstVisibleInterimMs": {
+        "count": 0,
+        "p50": null,
+        "p95": null
+      },
+      "endOfSpeechToFinalVisibleMs": {
+        "count": 0,
+        "p50": null,
+        "p95": null
+      },
+      "tenMinuteSessionObserved": false,
+      "permissionAndDenialRecoveryObserved": false,
+      "disconnectRecoveryObserved": false,
+      "stopRestartNoStaleSubtitlesObserved": false,
+      "upgradePreservesDataObserved": false,
+      "offlineAndPrivacyObserved": false
+    },
+    "windows-x64": {
+      "installerSha256": "",
+      "osVersion": "",
+      "microphoneCategory": "",
+      "sdkVersion": "",
+      "modelHashesEvidenceRef": "",
+      "reviewerEvidenceRef": "",
+      "anonymizedEvidenceRef": "",
+      "testDate": "",
+      "inputMethod": "",
+      "consentConfirmed": false,
+      "normalizationRule": "",
+      "quiet": {
+        "trials": 0,
+        "referenceWords": 0,
+        "substitutions": 0,
+        "deletions": 0,
+        "insertions": 0
+      },
+      "noisy": {
+        "trials": 0,
+        "referenceWords": 0,
+        "substitutions": 0,
+        "deletions": 0,
+        "insertions": 0
+      },
+      "firstVisibleInterimMs": {
+        "count": 0,
+        "p50": null,
+        "p95": null
+      },
+      "endOfSpeechToFinalVisibleMs": {
+        "count": 0,
+        "p50": null,
+        "p95": null
+      },
+      "tenMinuteSessionObserved": false,
+      "permissionAndDenialRecoveryObserved": false,
+      "disconnectRecoveryObserved": false,
+      "stopRestartNoStaleSubtitlesObserved": false,
+      "upgradePreservesDataObserved": false,
+      "offlineAndPrivacyObserved": false
+    },
+    "macos-arm64-15plus": {
+      "installerSha256": "",
+      "osVersion": "",
+      "microphoneCategory": "",
+      "sdkVersion": "",
+      "modelHashesEvidenceRef": "",
+      "reviewerEvidenceRef": "",
+      "anonymizedEvidenceRef": "",
+      "testDate": "",
+      "inputMethod": "",
+      "consentConfirmed": false,
+      "normalizationRule": "",
+      "quiet": {
+        "trials": 0,
+        "referenceWords": 0,
+        "substitutions": 0,
+        "deletions": 0,
+        "insertions": 0
+      },
+      "noisy": {
+        "trials": 0,
+        "referenceWords": 0,
+        "substitutions": 0,
+        "deletions": 0,
+        "insertions": 0
+      },
+      "firstVisibleInterimMs": {
+        "count": 0,
+        "p50": null,
+        "p95": null
+      },
+      "endOfSpeechToFinalVisibleMs": {
+        "count": 0,
+        "p50": null,
+        "p95": null
+      },
+      "tenMinuteSessionObserved": false,
+      "permissionAndDenialRecoveryObserved": false,
+      "disconnectRecoveryObserved": false,
+      "stopRestartNoStaleSubtitlesObserved": false,
+      "upgradePreservesDataObserved": false,
+      "offlineAndPrivacyObserved": false
+    }
+  }
+}
