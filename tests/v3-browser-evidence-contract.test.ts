@@ -18,6 +18,8 @@ describe('V3 primary dictation browser/desktop evidence contract',()=>{
   it('captures real responsive screenshots only when relevant UI sources change, or on manual dispatch',()=>{
     expect(deep).toContain('workflow_dispatch:');
     expect(deep).toContain('pull_request:');
+    expect(deep).toContain('group: deep-ui-');
+    expect(deep).toContain("cancel-in-progress: ${{ github.event_name == 'pull_request' }}");
     for(const path of [
       'apps/web/src/LiveDictationPanel.tsx',
       'apps/web/src/PracticeControlPanel.tsx',
