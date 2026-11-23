@@ -18,6 +18,11 @@ from zipfile import ZipFile, BadZipFile
 
 NATIVE = re.compile(r"(?:\.(?:dll|dylib|pyd|a|so)|\.so\.[0-9.]+)$", re.I)
 NOTICE = re.compile(r"(?:licen[cs]e|notice|copyright|copying|third[-_]?party)", re.I)
+# A license file can be named e.g. Apache-2.0.txt or AUTHORS. Its
+# containing Wheel licenses directory is authoritative, not the basename.
+LEGAL_DIRECTORIES = frozenset({
+    'licenses', 'license', 'license_files', 'notices', 'copyrights', 'legal',
+})
 SHA = re.compile(r"^[a-f0-9]{64}$")
 MAX_METADATA = 512_000
 MAX_TEXT = 5_000_000
@@ -78,7 +83,10 @@ def inspect_wheel(wheel: Path, expected_sha: str) -> dict:
                     raise ValueError("Encrypted Wheel member")
                 if entry.endswith(".dist-info/METADATA"):
                     metadata_names.append(entry)
-                if NOTICE.search(PurePosixPath(entry).name):
+                parts = PurePosixPath(entry).parts
+                if (NOTICE.search(parts[-1])
+                        or any(part.lower() in LEGAL_DIRECTORIES
+                               for part in parts[:-1])):
                     if item.file_size > MAX_TEXT:
                         raise ValueError("Oversized notice file")
                     with source.open(item) as payload:
@@ -110,9 +118,44 @@ def inspect_wheel(wheel: Path, expected_sha: str) -> dict:
                 str(c)[:240] for c in message.get_all("Classifier", [])
                 if c.startswith("License ::")
             ))
-            declared_files = sorted(set(
-                str(p)[:600] for p in message.get_all("License-File", [])
-            ))
+            declared_files: list[str] = []
+            for declaration in message.get_all("License-File", []):
+                if (not isinstance(declaration, str) or not declaration
+                        or safe_name(declaration) != declaration
+                        or declaration == "."):
+                    raise ValueError("Unsafe License-File metadata path")
+                declared_files.append(declaration)
+            if len(declared_files) != len(set(declared_files)):
+                raise ValueError("Duplicate License-File declaration")
+            declared_files.sort()
+            # PEP 639 / Wheel format: for Metadata-Version >= 2.4,
+            # License-File values are relative to .dist-info/licenses/.
+            # Report missing references without pretending that their mere
+            # presence legally clears these binaries.
+            dist_info_root = metadata_names[0].rsplit("/", 1)[0]
+            archive_license_paths = {
+                declaration: dist_info_root + "/licenses/" + declaration
+                for declaration in declared_files
+            }
+            missing_declared = [
+                name for name, candidate in archive_license_paths.items()
+                if candidate not in names
+            ]
+            recorded = {entry["path"] for entry in licenses}
+            for candidate in archive_license_paths.values():
+                if candidate not in names or candidate in recorded:
+                    continue
+                info = source.getinfo(candidate)
+                if info.file_size > MAX_TEXT:
+                    raise ValueError("Oversized declared license file")
+                with source.open(info) as payload:
+                    licenses.append({"path": candidate, "sha256": sha256_bytes(payload)})
+                recorded.add(candidate)
+            metadata_version = message.get("Metadata-Version", "")
+            if not re.fullmatch(r"[0-9]+\\.[0-9]+", metadata_version):
+                raise ValueError("Invalid Wheel core metadata version")
+            core_major, core_minor = (int(part) for part in metadata_version.split("."))
+            pep639_layout_required = (core_major, core_minor) >= (2, 4)
             return {
                 "name": name,
                 "version": version,
@@ -122,6 +165,10 @@ def inspect_wheel(wheel: Path, expected_sha: str) -> dict:
                 "legacyLicenseFieldPresent": bool(message.get("License")),
                 "licenseClassifiers": classifiers,
                 "declaredLicenseFiles": declared_files,
+                "declaredLicenseArchivePaths": archive_license_paths,
+                "missingDeclaredLicenseFiles": missing_declared,
+                "pep639LicenseLayoutRequired": pep639_layout_required,
+                "declaredLicenseFilesLocated": not missing_declared,
                 "noticeFiles": sorted(licenses, key=lambda a: a["path"]),
                 "nativeBinaryFiles": sorted(native, key=lambda a: a["path"]),
                 "manualReviewRequired": True,
