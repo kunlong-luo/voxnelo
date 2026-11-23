@@ -56,7 +56,9 @@ describe('Node and pnpm stable toolchain consistency', () => {
         [filename, read(filename)])),
     });
     expect(result).toEqual([]);
-    expect(MAINTAINED_WORKFLOWS.every(entry => !/publish-all-v|prepare-v|review-installers/.test(entry.path))).toBe(true);
+    expect(MAINTAINED_WORKFLOWS.every(entry => !/publish-all-v|prepare-v/.test(entry.path))).toBe(true);
+    expect(MAINTAINED_WORKFLOWS.some(entry =>
+      entry.path === '.github/workflows/v1.0.4-review-installers.yml')).toBe(true);
   });
 
   it('rejects mismatch between root pnpm pin and lockfile artifact', () => {

@@ -4,7 +4,7 @@ import {describe,expect,it} from 'vitest';
 const workflow=readFileSync('.github/workflows/v1.0.4-review-installers.yml','utf8');
 
 describe('v1.0.4 unsigned three-platform REVIEW artifacts (not a release)',()=>{
-  it('runs automatically only once when its own workflow lands on main',()=>{
+  it('only runs on its own main-branch file changes or manual review dispatch',()=>{
     expect(workflow).toContain('branches: [main]');
     expect(workflow).toContain("- '.github/workflows/v1.0.4-review-installers.yml'");
     expect(workflow).toContain("github.repository == 'kunlong-luo/voxnelo'");
@@ -13,6 +13,14 @@ describe('v1.0.4 unsigned three-platform REVIEW artifacts (not a release)',()=>{
     expect(workflow).not.toMatch(/^\s+tags:/m);
     expect(workflow).not.toMatch(/^\s+schedule:/m);
     expect(workflow).not.toContain('contents: write');
+    expect(workflow).toContain('workflow_dispatch:');
+    expect(workflow).toContain('node --experimental-strip-types scripts/check-toolchain-consistency.mts');
+    // Both preflight and packaging use the maintained Node release, not an
+    // OS runner's default Node. All runtime setup must remain consistent.
+    expect(workflow.match(/node-version: 26/g)).toHaveLength(2);
+    expect(workflow).toContain('version: 12.22.0');
+    expect(workflow).not.toContain('node-version: 22');
+    expect(workflow).not.toContain('version: 12.11.2');
   });
 
   it('requires all three verified real native Moonshine platforms before final artifact ZIP',()=>{
