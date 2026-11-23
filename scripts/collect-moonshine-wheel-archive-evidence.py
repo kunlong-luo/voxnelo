@@ -152,7 +152,7 @@ def inspect_wheel(wheel: Path, expected_sha: str) -> dict:
                     licenses.append({"path": candidate, "sha256": sha256_bytes(payload)})
                 recorded.add(candidate)
             metadata_version = message.get("Metadata-Version", "")
-            if not re.fullmatch(r"[0-9]+\\.[0-9]+", metadata_version):
+            if not re.fullmatch(r"[0-9]+\.[0-9]+", metadata_version):
                 raise ValueError("Invalid Wheel core metadata version")
             core_major, core_minor = (int(part) for part in metadata_version.split("."))
             pep639_layout_required = (core_major, core_minor) >= (2, 4)
