@@ -3,9 +3,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /**
- * Only actively maintained workflows are checked. Version-specific, retired
- * one-time publish/review workflows remain historical evidence and must not
- * be silently rewritten when the toolchain advances.
+ * Only maintained workflows are checked. Historical one-time publish
+ * workflows remain archival evidence. The active read-only v1.0.4 reviewer
+ * workflow MUST stay pinned to the current runtime while the candidate is
+ * being prepared; it is not a retired publication job.
  */
 export const MAINTAINED_WORKFLOWS = [
   { path: '.github/workflows/ci.yml', usesPnpm: true },
@@ -15,6 +16,7 @@ export const MAINTAINED_WORKFLOWS = [
   { path: '.github/workflows/module-reachability-audit.yml', usesPnpm: true },
   { path: '.github/workflows/release.yml', usesPnpm: true },
   { path: '.github/workflows/release-draft.yml', usesPnpm: true },
+  { path: '.github/workflows/v1.0.4-review-installers.yml', usesPnpm: true },
   { path: '.github/workflows/stable-readiness.yml', usesPnpm: false },
   { path: '.github/workflows/moonshine-native-matrix.yml', usesPnpm: true },
   { path: '.github/workflows/moonshine-candidate.yml', usesPnpm: true },
