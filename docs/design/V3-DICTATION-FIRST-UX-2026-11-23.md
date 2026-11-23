@@ -68,3 +68,16 @@ The **successful November 23 review-only installer build** [Actions 45152049592]
 - Consider progressive disclosure of right-hand stats/tips **only after** real 800×610 and 1160×760 screenshots confirm it materially improves discoverability.
 - Evaluate font weight/sizes and static design token contrast with captured Sunset and Nordic screenshots; no theme replacement or unlicensed graphical assets.
 - Document and human-test end-to-end live microphone flows and permissions per OS; improve performance and accuracy **only** from trusted direct-human benchmark evidence.
+
+
+## V3 visual-evidence automation repair (2026-11-23, second pass)
+
+**Confirmed source/test mismatch:** the pre-existing deep Chromium screenshot script `scripts/check-responsive-browser.mts` still asserted the pre-V3 icon-only live microphone was a 48–52px **circle**, centered in the card and surrounded by a continuous animated idle halo. PR #263 replaced that with a **text-labeled, rounded rectangular** start/stop button, removed the misleading idle halo, and committed to preserving user agency. Those old deep-UI expectations became invalid even though PR #263's normal core and three-platform packaging CI passed.
+
+**Implementation:** the screenshot script now measures real browser pixels for the labeled live action's minimum **44px height**, at least **110px width**, accessible name equal to visible text, `aria-pressed=false` in the idle state, horizontal containment within the live panel, and zero legacy idle-microphone halos. It still tests real recorder activation and replay using Chromium's synthetic non-personal audio device, full responsive page screenshots, the two themes, long-phrase layout, local scrolling, the manual reduced-motion switch and Electron virtual desktop size/DPI checks. These checks do **not** substitute fake ASR text or claim microphone recognition accuracy.
+
+**Scope / cost:** `.github/workflows/quality-deep.yml` now triggers on pull requests that actually change the practice UI, visual token CSS or these screenshot scripts; other PRs still use the existing normal CI and do not incur a full deep screenshot run. Maintainers can manually dispatch deep QA for release sign-off. This workflow runs with `contents: read`, generates `browser-layout-evidence` and `linux-electron-evidence` private artifacts, and does not create/upload GitHub Releases.
+
+**Verification state:** source assertions in `tests/v3-browser-evidence-contract.test.ts` confirm the static QA contract; real browser/Electron results must be checked in the associated GitHub Actions run before marking the **new** V3 screenshot gate as passed. If visual assertions fail, preserve logs and screenshots and correct only verified problems. Linux virtual Electron screenshots never establish real Windows/macOS GUI or physical screen-reader acceptance.
+
+**Release boundary:** [PR #263](https://github.com/kunlong-luo/voxnelo/pull/263) merged as `79062baff3a90b922735cb0b875e1339f4d527f2`; its V3 UI is in `main` source but not in the previous five SHA-checked v1.0.4 review installers from source `7793c383`. Publishing is still held pending original ASR model rights, third-party notices, human microphone trials and real-device a11y evidence.
