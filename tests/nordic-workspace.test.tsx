@@ -84,13 +84,16 @@ describe('Nordic three-column learning workspace', () => {
     expect(container.querySelector('.lessonFocus .liveDictation')).toBeTruthy();
     const liveMic=container.querySelector('.liveDictation .dictationAction');
     const replayMic=container.querySelector('.actionRail .recordAction');
-    expect(liveMic?.className).toContain('rounded-full');
+    expect(liveMic?.className).toContain('rounded-2xl');
+    expect(liveMic?.textContent).toContain('开始实时听写');
+    expect(liveMic?.className).toContain('min-h-12');
     expect(container.querySelector('.waveformArt')).toBeTruthy();
     expect(container.querySelector('.liveDictation > div')?.className).toContain('flex-col');
-    expect(container.querySelector('.liveDictation > div')?.className).toContain('items-center');
+    expect(container.querySelector('.liveDictation > div')?.className).toContain('min-w-0');
     expect(liveMic?.className).toContain('bg-[image:var(--mic-gradient)]');
     expect(replayMic).toBeTruthy();
-    expect(replayMic?.className).toContain('bg-[image:var(--mic-gradient)]');
+    expect(replayMic?.className).toContain('bg-card/90');
+    expect(replayMic?.className).not.toContain('bg-[image:var(--mic-gradient)]');
     expect(container.querySelector('.sentenceText')?.className).toContain('6.25cqi');
     // Width containment survives lengthy bilingual content and phonetic
     // symbols: the actual wrap/overflow behavior is tested with CDP.
