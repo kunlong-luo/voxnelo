@@ -67,7 +67,7 @@ describe('Local-only appearance preference', () => {
     expect(localStorage.getItem(APPEARANCE_KEY)).toBe('sunset');
     expect(screen.getByRole('button', { name: '选择日落柔光主题' }).getAttribute('aria-pressed')).toBe('true');
     fireEvent.click(screen.getByRole('button', { name: '返回练习' }));
-    expect(screen.getByRole('button', { name: '开口跟读' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: '录制回听' })).toBeTruthy();
     expect(screen.getByRole('button', { name: '换一句' })).toBeTruthy();
     view.unmount();
 
