@@ -23,7 +23,8 @@ describe('Moonshine 0.0.65 Python dependency version guards',()=>{
         :name+'=='+version;
       expect(text).toContain(requirement);
     }
-    expect(text).toContain('Hash locking still pending');
+    expect(text).toContain('Exact Python 3.12 Wheel hashes are separately locked');
+    expect(text).toContain('legal and original-model provenance review remains pending');
   });
   it('accepts only the observed complete installed package versions for each native OS',()=>{
     for(const platform of ['linux','win32','darwin'] as const){
