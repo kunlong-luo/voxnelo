@@ -1,0 +1,15 @@
+# Keep repository text files byte-stable on Windows, macOS and Linux.
+# Immutable archived GitHub workflows have Git blob SHA-1 regression tests;
+# Windows core.autocrlf must not turn their LF bytes into CRLF at checkout.
+# Pinned Python package constraints must equal generated LF text byte-for-byte.
+*.yml text eol=lf
+*.yaml text eol=lf
+*.txt text eol=lf
+
+# Code/configuration files are edited on three platforms; consistent LF avoids
+# platform-dependent checksum, source diff and exact-text test failures.
+*.ts text eol=lf
+*.tsx text eol=lf
+*.mts text eol=lf
+*.py text eol=lf
+*.json text eol=lf

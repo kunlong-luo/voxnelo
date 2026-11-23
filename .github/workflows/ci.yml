@@ -97,6 +97,20 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Cross-platform Moonshine path policy regression
         run: pnpm exec vitest run tests/moonshine-paths.test.ts
+      # Windows Git checkout may convert LF to CRLF unless .gitattributes
+      # explicitly preserves original Git blob bytes; require actual Windows
+      # coverage for tests that compare exact historical/config text.
+      - name: Verify immutable LF checkout inputs in Windows tests
+        if: runner.os == 'Windows'
+        run: >-
+          pnpm exec vitest run
+          tests/windows-checkout-lf.test.ts
+          tests/retired-publication-workflows.test.ts
+          tests/ci-required-platform-gate.test.ts
+          tests/workflow-trigger-scope.test.ts
+          tests/module-reachability-workflow.test.ts
+          tests/moonshine-python-dependencies.test.ts
+          tests/moonshine-wheelhouse-workflow.test.ts
       - name: Build renderer and Electron
         run: pnpm build
       - name: Gate optional native ASR payload on real WAV inference
