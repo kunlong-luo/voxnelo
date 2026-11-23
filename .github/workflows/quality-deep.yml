@@ -16,6 +16,11 @@ on:
       - 'scripts/check-electron-window.mts'
       - 'docs/design/V3-DICTATION-FIRST-UX-2026-11-23.md'
 
+concurrency:
+  # New revisions of the same UI PR supersede stale screenshot runs.
+  group: deep-ui-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 
