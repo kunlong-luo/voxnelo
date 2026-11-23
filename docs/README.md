@@ -21,7 +21,7 @@ Updated: 2026-11-23. This index is navigation, **not** a release approval.
 - [ASR evidence and benchmark](engineering/ASR-ACCURACY-EXPERIMENTS.md)
 - [Connected speech and licensed audio review](engineering/CONNECTED-SPEECH-AUDIO-REVIEW.md)
 - [UI and accessibility audit](engineering/UI-ACCESSIBILITY-AUDIT-2026-11-16.md)
-- [V3 live dictation-first practice design (source iteration, unshipped; external references and acceptance)](design/V3-DICTATION-FIRST-UX-2026-11-23.md)
+- [V3 live dictation-first practice design (merged source, unshipped; scoped Chromium/Electron visual QA and pending human acceptance)](design/V3-DICTATION-FIRST-UX-2026-11-23.md)
 - [Audit findings and technical debt](engineering/TECH-DEBT-2026-11-16.md)
 - [Read-only module reachability audit (bundler roots, Workers and dynamic imports)](audits/2026-11-22-MODULE-REACHABILITY.md)
 
