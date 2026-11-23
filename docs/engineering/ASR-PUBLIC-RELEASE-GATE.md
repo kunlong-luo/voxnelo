@@ -1,6 +1,6 @@
 # Voxnelo — public native ASR release decision gate
 
-**Status for v1.0.4 native expansion: NOT APPROVED FOR PUBLICATION (pending evidence).** This gate separates CI-ready **internal candidates** from an accepted public native ASR rollout. It does not supersede the frozen V0.1 PRD, revoke the already public v1.0.3 unsigned release, or declare #45 complete. See [pinned upstream license evidence](MOONSHINE-V1.0.4-LICENSE-EVIDENCE.md) and the [per-platform real human microphone evidence ledger](../release/V1.0.4-PHYSICAL-DEVICE-EVIDENCE.md) (all current new-engine sign-offs pending).
+**Status for v1.0.4 native expansion: NOT APPROVED FOR PUBLICATION (pending evidence).** This gate separates CI-ready **internal candidates** from an accepted public native ASR rollout. It does not supersede the frozen V0.1 PRD, revoke the already public v1.0.3 unsigned release, or declare #45 complete. See [pinned upstream license evidence](MOONSHINE-V1.0.4-LICENSE-EVIDENCE.md), the [2026-11-23 model SHA and original-Wheel rights reconciliation](MOONSHINE-V1.0.4-PROVENANCE-AND-NOTICES-2026-11-23.md), and the [per-platform real human microphone evidence ledger](../release/V1.0.4-PHYSICAL-DEVICE-EVIDENCE.md) (all current new-engine sign-offs pending).
 
 ## Release boundaries
 
@@ -12,8 +12,8 @@
 
 | Gate | Required evidence | Current decision |
 | --- | --- | --- |
-| Model provenance and distribution rights | Upstream model URL + immutable revision + verified weight hashes; reviewed license text, attribution/notice obligations and redistribution scope | **Upstream MIT statement recorded** for English Medium Streaming ([evidence](MOONSHINE-V1.0.4-LICENSE-EVIDENCE.md)); exact quantized download provenance/notices and distribution terms **pending** |
-| Native runtime distribution rights | Exact native package/version/source, all transitive dynamic library licenses, redistribution rights, notices and reviewed hashes | Pinned `moonshine-voice==0.0.65`, PyPI MIT metadata identified; per-platform wheels/linked dependencies/notices **pending** |
+| Model provenance and distribution rights | Upstream model URL + immutable revision + verified weight hashes; reviewed license text, attribution/notice obligations and redistribution scope | **Upstream MIT model-family statement recorded**; only **2/8** candidate model hashes match the currently available dated official mirror manifest, so immutable exact-byte asset mapping and redistribution/notices remain **PENDING** ([comparison](MOONSHINE-V1.0.4-PROVENANCE-AND-NOTICES-2026-11-23.md)) |
+| Native runtime distribution rights | Exact native package/version/source, all transitive dynamic library licenses, redistribution rights, notices and reviewed hashes | Complete per-platform Python 3.12 Wheel hashes now enforced and native CI-verified; original Wheel notices/native members inventoried but their actual legal text, embedded runtime linkage, attribution and third-party rights **remain PENDING** |
 | ABI/runtime compatibility | Exact Electron/Node ABI, OS/arch, installer SHA-256, native module load and end-to-end transcript on installed build | **Pending physical-platform QA** |
 | Privacy and consent | Mic access only after explicit action, offline path verified, on-disk artifacts and permissions checked; online transfer absent unless specifically opted in | **Pending physical-device QA** |
 | Recognition quality | Consented nonsensitive real-microphone quiet/noise paired set (≥10 sentences per condition), weighted WER, first partial and stop-to-final latency; failure handling | **Pending measured human data** |
