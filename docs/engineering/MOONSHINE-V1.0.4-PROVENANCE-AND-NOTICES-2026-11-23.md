@@ -1,0 +1,48 @@
+# Moonshine 0.0.65 pre-release provenance / native rights review — 2026-11-23
+
+**Decision: HOLD / EVIDENCE INCOMPLETE.** This is a technical evidence reconciliation and reviewer handoff, **not** legal clearance, an upstream provenance attestation, a human-microphone test, or authorization to publish v1.0.4. Public latest remains v1.0.3; the existing v1.0.4 Draft's eight assets are not rebuilt from current main.
+
+## A. Eight model assets — confirmed gap in available official catalog
+
+The pinned SDK is `moonshine-voice==0.0.65`. At its [tagged source `v0.0.65`](https://github.com/moonshine-ai/moonshine/blob/v0.0.65/python/src/moonshine_voice/download.py), the English Medium Streaming downloader targets the **unversioned** `model/medium-streaming-en/quantized/` CDN directory with eight model filenames. Voxnelo hashes those eight files after user-initiated download in [moonshineIntegrity.ts](../../apps/desktop/moonshineIntegrity.ts). This proves the local files match an earlier validated candidate, **not** a publisher's immutable model release or redistribution rights.
+
+The official [Moonshine Hugging Face assets mirror](https://huggingface.co/moonshine-ai/moonshine-voice-assets) exposes a public [`TRANSFER_REPORT.tsv` on `main`](https://huggingface.co/moonshine-ai/moonshine-voice-assets/raw/main/TRANSFER_REPORT.tsv) with SHA-256 data for the explicitly dated **`model/medium-streaming-en/quantized_26_07_30/`** model. As fetched **2026-11-23**, its eight filenames align with the older Voxnelo inventory, but only two byte digests are equal:
+
+| Exact model filename | Current pinned Voxnelo SHA-256 | Official mirror `quantized_26_07_30` SHA-256 (observed on floating `main`) | Result |
+| --- | --- | --- | --- |
+| `adapter.ort` | `16307442b7f4229f2f1511fc51b545cec9616e55872c588f3a297bbc6f4762ea` | `3f2a287def57cc094367a0eec3c4f5fc36a32ec420e86764b696920991b20281` | DIFF |
+| `cross_kv.ort` | `354b9a955caeb768b528f447f0a36ce4b850ca7b4531900165df304d97904fba` | `642f6e21cd305be79342207c6f9e6b681d469d55bc48c72b27b84846fb71fd1e` | DIFF |
+| `decoder_kv.ort` | `fa67aa87521247f5bf44d3e44d4e4978e58c1f114249c3c6909c882624056715` | `193bb366492b74fc4ad338c6778e8d8eb916aaa11b5aa264f9057f4db7759486` | DIFF |
+| `decoder_kv_with_attention.ort` | `40919de95d08690da3a8ff6df14cf55b3220046f3b767b4a4b769e7b32aaf2d2` | `b5de4b5639b4155fb7956161e43196eb27a26db293f11c1d245effaf6b738118` | DIFF |
+| `encoder.ort` | `a5f11167a62eef61787fe8410453257d6ddb8eba90af461a9604e5f2e93d5322` | `12915e76ebac7dd287c5ea63965d06103a53ba1ce242a4a34f318f3958c60c37` | DIFF |
+| `frontend.ort` | `378fe8a5d7090a1b9ab88bbb1fc95bde010cdd64ec23419350d2d23c675636e9` | `100a4cbc1e96f4f5586330ff60d5f6240813dbb399a0b9c6a187a9491ab716cc` | DIFF |
+| `streaming_config.json` | `28e83b7a28e91472692a035e0dae3116422ae43aeb2bef5ed822c44ce89b88af` | `28e83b7a28e91472692a035e0dae3116422ae43aeb2bef5ed822c44ce89b88af` | SAME |
+| `tokenizer.bin` | `6884b35fd6377d4c4d32336a0bc152f36b64d1e45b6503683cdc238250a8472d` | `6884b35fd6377d4c4d32336a0bc152f36b64d1e45b6503683cdc238250a8472d` | SAME |
+
+**2/8 matching does not establish provenance.** The dated `quantized_26_07_30` files are **not** evidence for the six older/different pinned tensors. Nor does an asset table on a floating `main` ref establish an immutable source revision. The later `quantized_26_08_21` catalog uses `frontend.model.ort` and `frontend.weights.ort` rather than the older single `frontend.ort`, so it is not a filename-compatible drop-in for this pinned v0.0.65 runtime. Do not silently upgrade the model or rewrite existing reference hashes to make an audit pass.
+
+The [Moonshine Hugging Face documentation](https://moonshine-voice.readthedocs.io/en/stable/models/huggingface/) states model archives are tagged by released version, but the prior lookup of `v0.0.65` did not return a valid revision; absence was **not proven**. A publisher-authored **immutable revision** containing the older `quantized/` eight files and all matching SHA-256 values is still needed. If it is unavailable, document an upstream confirmation/permission or hold the new native rollout.
+
+**New read-only check:** `node --experimental-strip-types scripts/compare-moonshine-model-catalog.mts <trusted-local-TRANSFER_REPORT.tsv> model/medium-streaming-en/<exact-quantized-directory>`. This command checks **every exact path and SHA-256**, fails on partial/missing/malformed catalogs, and always reports `upstreamRevisionVerified:false` and `redistributionRightsApproved:false`: the caller must separately validate the file's origin, immutable revision, signed/provenance evidence (if any) and legal terms. Regression tests contain the eight publicly observed dated-table values explicitly as an **observation**, not as a trusted upstream release snapshot.
+
+## B. Original Python Wheel rights & NOTICE worklist (not approved)
+
+Evidence: GitHub Actions [run 45133547540](https://github.com/kunlong-luo/voxnelo/actions/runs/45133547540) on [PR #258](https://github.com/kunlong-luo/voxnelo/pull/258), saved separately for Linux x64, Windows x64 and macOS ARM64 Python 3.12. The original **13/14/13 pinned Wheel ZIPs** were rehashed against their PyPI-version checksum snapshots and inspected **without executing their native payloads**. Recorded LICENSE/NOTICE ZIP entries were **33/34/33**; original native binary entries **29/33/34**. These counts include files for nonhost OS variants (e.g. macOS `.dylib` within Linux Moonshine Wheel and Windows `.dll` inside macOS sounddevice Wheel); inclusion is **not** proof they are executed by that host. The collector stores relative member names/byte digests only, **not license text or a legal conclusion**.
+
+| Installed dependency / observed declaration | Concrete archive evidence | Reviewer action before any license sign-off |
+| --- | --- | --- |
+| `moonshine-voice==0.0.65` — legacy MIT claim | `moonshine_voice-0.0.65.dist-info/licenses/LICENSE` (one file/OS); `moonshine_voice.libs/libonnxruntime-*.so.1` Linux, `moonshine_voice/onnxruntime.dll` Windows, `moonshine_voice/libonnxruntime.1.23.2.dylib` macOS; first-party `libmoonshine` binaries | Inspect that **exact original Wheel LICENSE text**, upstream source tag and ONNX Runtime linked binary version/notice. Verify any vendored static dependencies. **No publisher build attestation** is claimed. |
+| `numpy==2.5.5` — `BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0` | 20 relative LICENSE/NOTICE members per OS; Linux/Windows Wheels contain `numpy.libs/libscipy_openblas64_*` native libraries; Windows Wheel also contains `msvcp140-*.dll` | Review complete main NumPy license/notice **and** its included libdivide, svml, pocketfft, OpenBLAS/BLAS and other notices. Identify required third-party attribution. |
+| `sounddevice==0.5.6` — declared MIT | One package LICENSE/OS; **seven** `_sounddevice_data/portaudio-binaries/*` native files in Windows and macOS Wheels, including both `.dll` and `.dylib`; **no** PortAudio binary included in Linux Wheel | Confirm PortAudio licensing/notice and original binary sources; on Linux inspect the **separately installed system PortAudio runtime** and applicable distribution licensing. |
+| `certifi==2026.11.20` — MPL 2.0 classifier/legacy metadata | One archived LICENSE per OS | Read exact MPL license text and inspect any attribution/notice obligations in the opted-in environment. |
+| `requests==2.34.2` — Apache license classifier/legacy metadata | Both `LICENSE` and `NOTICE` entries per OS | Read both texts and preserve any applicable notices; never infer clearance from classifier alone. |
+| `cffi==2.1.1`, `charset-normalizer==3.5.2` | cffi `MIT-0` SPDX + native `_cffi_backend`; charset-normalizer has legacy license metadata and two native extension files/OS | Inspect exact original license texts and any native-extension inclusion obligations. |
+| Other pinned packages: filelock, idna, platformdirs, pycparser, tqdm, urllib3; Windows-only colorama | One license member for each; SPDX declarations vary or are absent | Complete per-package name/version/license/notice review; no automatic blanket MIT approval. |
+
+**Important distribution boundary:** Voxnelo's *standard* Electron installers do **not** bundle user-downloaded Moonshine Python Wheels or model weights; user opt-in downloads them later. That does not waive the need to review what the application facilitates downloading or any redistribution obligations for **the actual Electron/npm installer contents**. Still required: inspect the original LICENSE/NOTICE *contents*, native dynamic/static linkage and bundled transitives, the relevant model license for the exact eight bytes, and the final Electron/npm SBOM/notices. Do not misrepresent the data extraction as legal approval.
+
+## C. Human gates and release decision
+
+- [v1.0.4 real-mic evidence ledger](../release/V1.0.4-PHYSICAL-DEVICE-EVIDENCE.md): all three live human microphone evidence rows remain **PENDING**, distinct from CI-supplied WAV/PCM.
+- [ASR release gate](ASR-PUBLIC-RELEASE-GATE.md): rights, consent/privacy, hardware WER/latency, installer upgrade and final source/artifact SHA must be reviewed independently.
+- Existing v1.0.4 Draft ID `428750217`: `draft=true`, `published_at=null`; its prior assets target `4aeb58e`, **not** current `main`. Neither this audit nor any CI outcome may rewrite/publish the Draft.

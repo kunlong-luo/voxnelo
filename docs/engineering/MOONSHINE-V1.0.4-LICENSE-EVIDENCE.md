@@ -3,6 +3,9 @@
 **Reviewed against public upstream declarations: 2026-11-12.**
 **Decision: PARTIAL EVIDENCE ONLY — not a release approval or legal opinion.**
 
+**2026-11-23 current checkpoint:** The complete Python 3.12 dependency Wheel SHA-256 lock has **passed real native Linux/Windows/macOS CI** and been merged via [PR #257](https://github.com/kunlong-luo/voxnelo/pull/257). Original Wheel ZIP metadata/NOTICE/native-library inventories were collected on all three OSes via [PR #258](https://github.com/kunlong-luo/voxnelo/pull/258). This supersedes the *historically dated* “not yet downloaded/hashed” work items below. **The legal review itself is still not approved**. Crucially, the [2026-11-23 model/NOTICE reconciliation](MOONSHINE-V1.0.4-PROVENANCE-AND-NOTICES-2026-11-23.md) finds that only **2 of 8** Voxnelo model SHA-256 values match the available official `quantized_26_07_30` mirror inventory; there is **no confirmed immutable upstream revision for all eight exact installed files**. No evidence permits v1.0.4 publication.
+
+
 ## Exact integration under review
 
 - Voxnelo invokes an **opt-in**, isolated local Python environment and pins `moonshine-voice==0.0.65`. The standard Linux x64 / Windows x64 / macOS 15+ ARM64 installers do **not** bundle the Python SDK, wheels or Moonshine model weights. User interaction is required before installing them.
