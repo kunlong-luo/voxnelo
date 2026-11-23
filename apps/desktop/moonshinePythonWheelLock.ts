@@ -42,7 +42,7 @@ export function pinnedMoonshineWheelhouse(
     if((parts.length!==5&&parts.length!==6)||
       !/^[A-Za-z0-9_]+$/.test(parts[0]??'')||
       !/^[A-Za-z0-9.+_]+$/.test(parts[1]??'')||
-      !/^[A-Za-z0-9_.]+\.whl$/.test(filename)||
+      !/^[A-Za-z0-9_.-]+\.whl$/.test(filename)||
       !/^[a-f0-9]{64}$/.test(sha256))return null;
     const name=normalize(parts[0]!),version=parts[1]!;
     if(seen.has(name)||expected.get(name)!==version)return null;
