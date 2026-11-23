@@ -115,6 +115,7 @@ export const zh = {
   "dictationCaptureExternal": "外放英语测试（实验）",
   "dictationCaptureNote": "用另一台设备播放英语测试时，可试用外放模式作对照：它不请求回声消除、降噪和自动增益，可能捕获更多环境噪声，不能保证更准确。默认仍是日常讲话模式。请停止听写后切换；语音不上传。",
   "dictationNoiseNotRequested": "外放测试：未请求设备降噪",
+  "dictationInputLevel": "实时麦克风输入音量",
   "dictationTitle": "实时英语听写",
   "dictationStart": "开始实时听写",
   "dictationStop": "停止听写",
