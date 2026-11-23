@@ -49,7 +49,7 @@ Voxnelo 是一款免费、本地优先的英语口语练习桌面应用，无需
 
 ## Linux 实时英语听写（Moonshine）
 
-Linux x64 默认使用 Moonshine Voice Medium Streaming，**模型与 Python 运行时不会随安装包自动下载**。打开「离线模型管理」并点击「安装 Moonshine 离线识别模型」，在你主动同意后才下载官方 SDK 与模型。首次需要网络、Python 3 的 `venv` 支持和可用磁盘空间；校验 SDK 版本及模型文件哈希通过后才会启用本机推理，缺失时不会静默切回旧引擎。识别后如需断网使用，应先确保模型已完整安装。
+Linux x64 默认使用 Moonshine Voice Medium Streaming，**模型与 Python 运行时不会随安装包自动下载**。打开「离线模型管理」并点击「安装 Moonshine 离线识别模型」，在你主动同意后才下载官方 SDK 与模型。此前版本可能接受其他 Python 3.x，但**尚未发布的 v1.0.4 新安装及主动修复候选流程**为确保完整原生依赖 Wheel SHA-256 对照，限定 64 位 Python 3.12（Linux/macOS 可使用 `python3.12` 或确实为 3.12 的 `python3`；Windows 优先 `py -3.12`）；首次需要网络、Python 3.12 的 `venv` 支持和可用磁盘空间；校验 SDK 版本及模型文件哈希通过后才会启用本机推理，缺失时不会静默切回旧引擎。识别后如需断网使用，应先确保模型已完整安装。
 
 **当前公开 v1.0.3 的 Windows / macOS 不提供原生 Moonshine 离线听写。尚未发布的 v1.0.4 源码候选版增加 Windows x64 与 macOS 15+ Apple Silicon 的用户主动安装试点，但不能将其描述为公开版已有功能。** Windows/macOS 公开版仍能使用课程学习与麦克风录音回听。 **v1.0.4 未发布候选版**的 Windows x64 Moonshine 新安装试点要求已安装 64 位 Python 3.12（优先通过 Python Launcher 的 `py -3.12` 选择）；不满足时安装失败并保留既有用户数据。CI 对三个平台的候选推理环境均使用 Python 3.12，其他本机 Python 版本的可用性不得仅凭 CI 推断。当前没有自动发音评分或音素级纠音。更完整的模型目录与安装说明见 [Moonshine Linux 指南](engineering/MOONSHINE-LINUX-INSTALLATION.md)。
 

@@ -62,11 +62,12 @@ describe('pinned v0.0.65 native SDK wheel integrity gate',()=>{
   it('ensures installer verifies the download before installing it',()=>{
     const script=readFileSync('scripts/install-moonshine-linux.mts','utf8');
     expect(script).toContain("'pip','download'");
-    expect(script).toContain("'--no-deps'");
-    expect(script).toContain('verifyPinnedMoonshineWheel(sdkDownload,sdkWheel)');
-    expect(script.indexOf('verifyPinnedMoonshineWheel(sdkDownload,sdkWheel)'))
+    expect(script).toContain("'--require-hashes'");
+    expect(script).toContain('verifyPinnedMoonshineWheelhouse(wheelhouse,wheels)');
+    expect(script.indexOf('verifyPinnedMoonshineWheelhouse(wheelhouse,wheels)'))
       .toBeLessThan(script.indexOf("'pip','install'"));
-    expect(script).toContain('path.join(sdkDownload,sdkWheel.filename)');
+    expect(script).toContain("'--no-index','--find-links',wheelhouse");
+    expect(script).toContain("'--no-deps','-r',requirements");
     expect(script).toContain('provisionMoonshineDirectory');
   });
 });

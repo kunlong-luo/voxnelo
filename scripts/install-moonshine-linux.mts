@@ -14,10 +14,11 @@ import {PINNED_MOONSHINE_MEDIUM_FILES,verifyPinnedMoonshineMediumModel}
 import {verifyMoonshinePythonRuntime} from '../apps/desktop/moonshinePaths.ts';
 import {provisionMoonshineDirectory} from './moonshine-install-transaction.mts';
 import {moonshineStageLine,type MoonshineInstallStage} from '../apps/desktop/moonshineInstallProgress.ts';
-import {pinnedMoonshineWheel,verifyPinnedMoonshineWheel}
-  from '../apps/desktop/moonshineWheelIntegrity.ts';
-import {moonshinePythonConstraints,verifyMoonshineResolvedPackages}
+import {pinnedMoonshineWheel} from '../apps/desktop/moonshineWheelIntegrity.ts';
+import {verifyMoonshineResolvedPackages}
   from '../apps/desktop/moonshinePythonDependencies.ts';
+import {moonshineHashedRequirements,pinnedMoonshineWheelhouse,verifyPinnedMoonshineWheelhouse}
+  from '../apps/desktop/moonshinePythonWheelLock.ts';
 
 // A synchronous marker must leave the process before spawnSync blocks Node's event loop.
 function report(stage:MoonshineInstallStage):void{writeSync(1,moonshineStageLine(stage));}
@@ -46,9 +47,13 @@ function verifyInstalledDependencies(python:string):void{
   if(!verifyMoonshineResolvedPackages(installed,process.platform))
     throw Error('Moonshine pinned dependency versions differ; installation aborted');
 }
-function verifyWindowsPython312(python:string):boolean{
-  const code='import sys,struct;print("ok" if sys.version_info[:2]==(3,12) and struct.calcsize("P")==8 else "unsupported")';
-  return pythonProbe(python,code)==='ok';
+/** The hash catalog is tested only for 64-bit CPython 3.12. A user with another
+ * Python minor version must not silently receive unverified native wheels.
+ */
+function verifiedPython312Version(python:string):string|null{
+  const code='import sys,struct;print(".".join(map(str,sys.version_info[:3])) if sys.version_info[:2]==(3,12) and struct.calcsize("P")==8 else "unsupported")';
+  const version=pythonProbe(python,code);
+  return version&&/^3\.12\.\d+$/.test(version)?version:null;
 }
 async function main():Promise<void>{
   if(process.argv.includes('--help')||process.argv.includes('-h')){
@@ -81,41 +86,50 @@ async function main():Promise<void>{
     const python=interpreter(venv);
     report('environment');
     if(process.platform==='win32'){
-      // Prefer exactly the native-CI-tested 64-bit Python 3.12, never 'py -3'
-      // (which selected 3.15 in a Windows runner despite setup-python 3.12).
-      // A PATH-based 3.12 remains supported where the py launcher is absent.
+      // The py -3 launcher drifted to Python 3.15 in CI. Require x64 3.12.
       const launcher=spawnSync('py',['-3.12','-m','venv',venv],{
         encoding:'utf8',stdio:'ignore',timeout:180000,
       });
       if(launcher.status!==0||launcher.error){
-        if(!verifyWindowsPython312('python'))
-          throw Error('Windows Moonshine setup requires 64-bit Python 3.12');
+        if(!verifiedPython312Version('python'))
+          throw Error('Moonshine setup requires 64-bit Python 3.12');
         run('python',['-m','venv',venv]);
       }
-      if(!verifyWindowsPython312(python))
-        throw Error('Windows Moonshine runtime must use 64-bit Python 3.12');
-    }else run('python3',['-m','venv',venv]);
+    }else{
+      // Do not silently use system Python 3.11/3.13 with CPython 3.12 hashes.
+      // Previous already-installed verified user models are left untouched.
+      const executable=verifiedPython312Version('python3.12')?'python3.12':
+        verifiedPython312Version('python3')?'python3':null;
+      if(!executable)throw Error('Moonshine setup requires 64-bit Python 3.12');
+      run(executable,['-m','venv',venv]);
+    }
+    const pythonVersion=verifiedPython312Version(python);
+    if(!pythonVersion)throw Error('Moonshine private runtime requires 64-bit Python 3.12');
+    const wheels=pinnedMoonshineWheelhouse(process.platform,process.arch,osRelease(),pythonVersion);
+    if(!wheels||!wheels.some(item=>item.filename===sdkWheel.filename&&
+      item.sha256===sdkWheel.sha256))
+      throw Error('Moonshine Python wheel lock does not match this host or SDK');
     report('dependencies');
-    // Download exactly one SDK wheel without dependencies and compare it to the
-    // pinned platform-specific PyPI checksum *before* pip can install native code.
-    // Dependent packages remain a separate license / lockfile review gate.
-    const sdkDownload=path.join(stage,'sdk-wheel');
-    await mkdir(sdkDownload,{mode:0o700});
+    // Download the *entire* exact platform Wheel set. Pip enforces the hashes
+    // before we independently rehash the directory and permit ANY installation.
+    const wheelhouse=path.join(stage,'sdk-wheelhouse');
+    const requirements=path.join(stage,'wheel-requirements.txt');
+    await mkdir(wheelhouse,{mode:0o700});
+    await writeFile(requirements,moonshineHashedRequirements(wheels),
+      {mode:0o600,flag:'wx'});
     run(python,['-m','pip','download','--isolated','--disable-pip-version-check',
-      '--no-input','--only-binary=:all:','--no-deps',
-      '--index-url','https://pypi.org/simple','--dest',sdkDownload,
-      'moonshine-voice==0.0.65']);
-    if(!await verifyPinnedMoonshineWheel(sdkDownload,sdkWheel))
-      throw Error('Moonshine SDK wheel integrity check failed; installation aborted');
-    const constraints=path.join(stage,'dependency-constraints.txt');
-    await writeFile(constraints,moonshinePythonConstraints(),{mode:0o600,flag:'wx'});
+      '--no-input','--no-cache-dir','--only-binary=:all:','--require-hashes',
+      '--index-url','https://pypi.org/simple','--dest',wheelhouse,'-r',requirements]);
+    if(!await verifyPinnedMoonshineWheelhouse(wheelhouse,wheels))
+      throw Error('Moonshine SDK/dependency Wheel integrity check failed');
+    // Fully offline, no dependency resolver network and no source archives.
     run(python,['-m','pip','install','--isolated','--disable-pip-version-check',
-      '--no-input','--only-binary=:all:','--index-url','https://pypi.org/simple',
-      '--constraint',constraints,path.join(sdkDownload,sdkWheel.filename)]);
+      '--no-input','--no-cache-dir','--no-index','--find-links',wheelhouse,
+      '--only-binary=:all:','--require-hashes','--no-deps','-r',requirements]);
     verifyInstalledDependencies(python);
     run(python,['-m','pip','check','--isolated','--disable-pip-version-check']);
-    await rm(constraints);
-    await rm(sdkDownload,{recursive:true,force:true});
+    await rm(requirements);
+    await rm(wheelhouse,{recursive:true,force:true});
     const cache=path.join(stage,'download-cache');
     await mkdir(cache,{mode:0o700});
     report('model-download');

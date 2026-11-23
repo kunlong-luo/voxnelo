@@ -47,6 +47,14 @@ backups, and competing installers block destructive replacement. Do not
 manually delete personal model data or recovery backups while dictation is
 active; contact support if an interrupted operation left a recovery backup.
 
+## v1.0.4 candidate: hash-locked first-time native installation (not released)
+
+The earlier public Linux guidance documented Python 3 and the eight model-file checksums. For the **unreleased v1.0.4 candidate**, the installer now requires **64-bit CPython 3.12 and its venv module** for new installations or explicit repairs on Linux x64, Windows x64 and macOS 15+ Apple Silicon. This is intentional: the exact Linux/Windows/macOS dependency Wheels are CPython-3.12-specific; their [fixed 40 platform-file SHA-256 records](MOONSHINE-DEPENDENCY-EVIDENCE-2026-11-22.md) have not been validated for Python 3.11, 3.13 or other unlisted ABIs. Linux/macOS first tries `python3.12`, then `python3` **only if** it verifies 64-bit Python 3.12. Windows prefers `py -3.12` with a verified `python` fallback. Other interpreters fail closed without replacing existing installed files. Earlier already-installed, verified models are **not** automatically migrated, deleted or overwritten; explicit repair remains transactional.
+
+After user opt-in, pip downloads every exact-version Python dependency Wheel with `--require-hashes --only-binary=:all:` into a private staging directory. The installer independently validates **all** expected Wheel filenames and SHA-256 digests and rejects missing, extra, symlinked or changed files **before** running pip. The subsequent pip install uses `--no-index --find-links <private-wheelhouse> --no-deps --require-hashes`, never a network fallback or source distribution. It verifies the exact installed distributions and runs `pip check` prior to retrieving or activating the model. Existing eight-model-file SHA-256 checks remain separate. Dependency download failure retains previous user data and does not silently choose a different version or a cloud model.
+
+This is an **integrity mechanism** comparing candidate Wheel bytes to fixed PyPI records, **not** a signed publisher provenance assertion, guarantee for every system, third-party legal approval, live human-microphone WER/latency evidence or permission to release v1.0.4. Before public release, check the real three-OS native workflow and unresolved [license evidence](MOONSHINE-V1.0.4-LICENSE-EVIDENCE.md).
+
 ## Setup status in the model manager
 
 After a user explicitly clicks **Install or repair**, Voxnelo displays real
