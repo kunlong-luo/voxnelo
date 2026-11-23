@@ -211,6 +211,12 @@ def collect(wheelhouse: Path, audit_report: Path) -> dict:
         "platform": source.get("nativePlatform"),
         "python": source.get("candidatePython"),
         "packageCount": len(details),
+        "noticeFileCount": sum(len(item["noticeFiles"]) for item in details),
+        "nativeBinaryCount": sum(len(item["nativeBinaryFiles"]) for item in details),
+        "declaredLicenseFileCount": sum(len(item["declaredLicenseFiles"]) for item in details),
+        "missingDeclaredLicenseFileCount": sum(
+            len(item["missingDeclaredLicenseFiles"]) for item in details
+        ),
         "licenseApproved": False,
         "thirdPartyNoticeObligationsApproved": False,
         "modelRightsApproved": False,
@@ -230,8 +236,14 @@ def main() -> None:
     with output.open("x", encoding="utf-8") as target:
         json.dump(data, target, indent=2, ensure_ascii=False)
         target.write("\n")
-    print(f"Captured original ZIP notices and native libraries for {data['packageCount']} Wheels; "
-          "all legal/provenance decisions still require independent review.")
+    print(
+        f"Original ZIP evidence: {data['packageCount']} Wheels, "
+        f"{data['noticeFileCount']} indexed license/notice members, "
+        f"{data['nativeBinaryCount']} native binary members, "
+        f"{data['declaredLicenseFileCount']} declared license files, "
+        f"{data['missingDeclaredLicenseFileCount']} missing declared file paths; "
+        "all legal/provenance decisions still require independent review."
+    )
 
 
 if __name__ == "__main__":
