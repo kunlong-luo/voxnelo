@@ -27,10 +27,12 @@ export function parseOfficialAssetRefs(raw:unknown):OfficialAssetRef[]|null{
   const v=raw as Record<string,unknown>;
   if(!Array.isArray(v.tags)||!Array.isArray(v.branches))return null;
   if(v.tags.length>40||v.branches.length>10)return null;
+  // Preserve Array.isArray's narrow type through the dynamic discriminant.
+  const groups={tags:v.tags,branches:v.branches};
   const refs:OfficialAssetRef[]=[];
   const names=new Set<string>();
   for(const kind of ['tags','branches'] as const){
-    for(const item of v[kind]){
+    for(const item of groups[kind]){
       if(!item||typeof item!=='object')return null;
       const entry=item as Record<string,unknown>;
       const name=entry.name,sha=entry.targetCommit;
