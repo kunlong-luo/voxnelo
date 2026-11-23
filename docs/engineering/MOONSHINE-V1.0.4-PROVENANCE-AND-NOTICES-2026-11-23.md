@@ -48,6 +48,19 @@ The updated [read-only original Wheel ZIP collector](../../scripts/collect-moons
 For updated evidence, rerun the **scoped, read-only** [Moonshine Wheel digest / original ZIP inventory Action](https://github.com/kunlong-luo/voxnelo/actions/workflows/moonshine-wheel-digest-matrix.yml) against the **intended source SHA**, archive three OS-specific sanitized JSON inventories, and compare them to the prior report. Inspect the **actual legal text privately**, including files that are not named `LICENSE`/ `NOTICE`; review embedded ONNX Runtime, OpenBLAS, PortAudio and other native transitives and final Electron/npm components. An empty `missingDeclaredLicenseFiles` array checks declaration *presence only*: it does **not** prove completeness of all third-party notices, legal compliance, SDK/model rights, reproducible binary provenance or v1.0.4 release readiness. Model exact eight-byte upstream SHA-256 approval and direct-human microphone QA remain separately **PENDING**.
 
 
+### Updated original-Wheel ZIP recheck — three real native runners (2026-11-23)
+
+The corrected scanner was **actually rerun** at exact PR source commit `1e3d1274fbd52d48647cff960e698ca48b09275f` in [native Wheel audit run #45188947162](https://github.com/kunlong-luo/voxnelo/actions/runs/45188947162); **all three jobs passed**. Each job first downloaded the exact Python 3.12 Wheel inventory for that OS and verified PyPI-published SHA-256 values, then scanned the original ZIPs read-only. The following are **observed per-platform sanitized counts from the completed job logs**, not estimates or generated test fixtures:
+
+| Runner target | SHA-verified Wheels | Indexed legal/NOTICE members | Native binary members (including nonhost variants) | Declared `License-File` entries | Declared paths missing in Wheel |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Linux x64 / Python 3.12 | 13 | 33 | 29 | 30 | **0** |
+| Windows x64 / Python 3.12 | 14 | 34 | 33 | 31 | **0** |
+| macOS ARM64 / Python 3.12 | 13 | 33 | 34 | 30 | **0** |
+
+The latest **indexed-member** totals happen to equal the old 33/34/33 inventory output, but the new audit also independently checks **30/31/30 declared legal-file paths**, includes non-keyword basenames in recognized license directories, and would surface any missing declarations. **Zero missing declarations is not a declaration that every applicable notice exists or that any license condition has been fulfilled.** Reviewers must inspect the actual notice content, native and bundled transitive binaries, version-specific distribution rights, original publisher provenance, and final Electron/npm packages. CI still supplies **no** human microphone WER/latency or permission to publish. Keep v1.0.4 **HOLD**.
+
+
 **Important distribution boundary:** Voxnelo's *standard* Electron installers do **not** bundle user-downloaded Moonshine Python Wheels or model weights; user opt-in downloads them later. That does not waive the need to review what the application facilitates downloading or any redistribution obligations for **the actual Electron/npm installer contents**. Still required: inspect the original LICENSE/NOTICE *contents*, native dynamic/static linkage and bundled transitives, the relevant model license for the exact eight bytes, and the final Electron/npm SBOM/notices. Do not misrepresent the data extraction as legal approval.
 
 ## C. Human gates and release decision
