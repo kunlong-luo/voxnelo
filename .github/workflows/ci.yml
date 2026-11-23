@@ -70,7 +70,7 @@ jobs:
         run: node --experimental-strip-types --check scripts/write-candidate-manifest.mts
       - name: Validate static Pages assets
         run: node --experimental-strip-types scripts/check-pages-artifact.mts
-      # Expensive visual/native desktop regressions run on demand via quality-deep.yml.
+      # Expensive visual/native regressions run on UI-scoped PRs or manual dispatch via quality-deep.yml.
       # Keep typecheck, lint, tests, build, content safety and static-asset checks on every PR.
 
   desktop-package:
