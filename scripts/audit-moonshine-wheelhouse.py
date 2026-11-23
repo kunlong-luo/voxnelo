@@ -140,13 +140,30 @@ def audit(directory: Path, constraints: Path) -> dict:
     }
 
 
+def verify_committed_snapshot(report: dict, snapshot: Path) -> None:
+    """Require the reviewed source-tracked digest list to equal downloaded bytes."""
+    data = json.loads(snapshot.read_text(encoding='utf-8'))
+    if (data.get('schemaVersion') != 1 or
+            data.get('candidatePython') != '3.12' or
+            data.get('buildProvenanceAttested') is not False or
+            data.get('licenseApproved') is not False or
+            data.get('userInstallerHashLocked') is not False):
+        raise ValueError('Malformed or misleading Wheel digest snapshot')
+    target = report['nativePlatform']
+    recorded = data.get('platforms', {}).get(target)
+    actual = {row['filename']: row['sha256'] for row in report['wheels']}
+    if not isinstance(recorded, dict) or recorded != actual:
+        raise ValueError('Downloaded Wheels differ from committed SHA-256 evidence')
+
+
 def main() -> None:
-    if len(sys.argv) != 4:
-        raise SystemExit('Expected: <wheelhouse> <pinned-constraints> <output.json>')
-    root, constraints, output = map(Path, sys.argv[1:])
+    if len(sys.argv) != 5:
+        raise SystemExit('Expected: <wheelhouse> <pinned-constraints> <output.json> <committed-snapshot.json>')
+    root, constraints, output, snapshot = map(Path, sys.argv[1:])
     if not output.is_absolute() or output.exists():
         raise SystemExit('Output must be a new, absolute path')
     data = audit(root, constraints)
+    verify_committed_snapshot(data, snapshot)
     output.parent.mkdir(parents=True, exist_ok=True)
     with output.open('x', encoding='utf-8') as stream:
         json.dump(data, stream, indent=2, ensure_ascii=False)
