@@ -5,6 +5,7 @@ on:
     paths:
       - 'apps/desktop/main.ts'
       - 'apps/desktop/moonshine*.ts'
+      - 'apps/desktop/moonshinePythonDependencies.ts'
       - 'apps/desktop/asrDefault.ts'
       - 'apps/web/src/OfflineModelsView.tsx'
       - 'scripts/install-moonshine-linux.mts'
@@ -61,7 +62,7 @@ jobs:
       - name: Verify actual platform-native SDK PCM and final event protocol
         run: node --experimental-strip-types scripts/check-moonshine-native-worker.mts
       - name: Export installed Python license, NOTICE and native-binary metadata (not approval)
-        run: node --experimental-strip-types scripts/export-moonshine-license-inventory.mts "${{ runner.temp }}/moonshine-license-${{ matrix.target }}.json"
+        run: node --experimental-strip-types scripts/export-moonshine-license-inventory.mts "${{ runner.temp }}/moonshine-license-${{ matrix.target }}.json" --require-python-3.12
       - name: Retain per-platform sanitized license metadata for manual review
         uses: actions/upload-artifact@v7
         with:
