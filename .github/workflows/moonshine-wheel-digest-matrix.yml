@@ -8,6 +8,7 @@ on:
       - '.github/workflows/moonshine-wheel-digest-matrix.yml'
       - 'scripts/audit-moonshine-wheelhouse.py'
       - 'scripts/moonshine-python-constraints.txt'
+      - 'docs/engineering/moonshine-python312-wheel-digests-2026-11-23.json'
       - 'tests/test_moonshine_wheelhouse_audit.py'
   workflow_dispatch:
 
@@ -49,7 +50,7 @@ jobs:
           New-Item -Path $wheelhouse -ItemType Directory -Force | Out-Null
           python -m pip download --isolated --disable-pip-version-check --no-input --no-cache-dir --only-binary=:all: --index-url https://pypi.org/simple --constraint scripts/moonshine-python-constraints.txt --dest "$wheelhouse" "moonshine-voice==0.0.65"
           if ($LASTEXITCODE -ne 0) { throw "Candidate Wheel download failed" }
-          python scripts/audit-moonshine-wheelhouse.py "$wheelhouse" scripts/moonshine-python-constraints.txt "$report"
+          python scripts/audit-moonshine-wheelhouse.py "$wheelhouse" scripts/moonshine-python-constraints.txt "$report" docs/engineering/moonshine-python312-wheel-digests-2026-11-23.json
           if ($LASTEXITCODE -ne 0) { throw "Downloaded dependency Wheel hashes could not be reconciled" }
       - name: Retain checksums only, never any downloaded Wheel bytes
         uses: actions/upload-artifact@v7
