@@ -52,6 +52,70 @@ class WheelArchiveEvidenceTests(unittest.TestCase):
                 hashlib.sha256(b'test-only native library').hexdigest(),
             )
 
+    def test_pep639_nested_and_non_keyword_license_files_are_found(self):
+        with tempfile.TemporaryDirectory() as root:
+            name = 'moonshine_voice'
+            prefix = f'{name}-0.0.65.dist-info'
+            wheel, digest = make_wheel(Path(root), name, {
+                f'{prefix}/METADATA': (
+                    f'Metadata-Version: 2.4\nName: {name}\nVersion: 0.0.65\n'
+                    'License-Expression: MIT\n'
+                    'License-File: LICENSE\n'
+                    'License-File: deps/Apache-2.0.txt\n'
+                    'License-File: AUTHORS\n'
+                ),
+                f'{prefix}/licenses/deps/Apache-2.0.txt': 'Synthetic license text',
+                f'{prefix}/licenses/AUTHORS': 'Synthetic attribution text',
+                f'{prefix}/licenses/ThirdParty.md': 'Undeclared synthetic notice',
+            })
+            item = mod.inspect_wheel(wheel, digest)
+            self.assertTrue(item['pep639LicenseLayoutRequired'])
+            self.assertTrue(item['declaredLicenseFilesLocated'])
+            self.assertEqual(item['missingDeclaredLicenseFiles'], [])
+            self.assertEqual(len(item['declaredLicenseFiles']), 3)
+            license_paths = {x['path'] for x in item['noticeFiles']}
+            self.assertIn(f'{prefix}/licenses/deps/Apache-2.0.txt', license_paths)
+            self.assertIn(f'{prefix}/licenses/AUTHORS', license_paths)
+            self.assertIn(f'{prefix}/licenses/ThirdParty.md', license_paths)
+            self.assertEqual(
+                item['declaredLicenseArchivePaths']['deps/Apache-2.0.txt'],
+                f'{prefix}/licenses/deps/Apache-2.0.txt',
+            )
+            self.assertTrue(item['manualReviewRequired'])
+
+    def test_missing_declared_license_is_explicit_pending_not_approval(self):
+        with tempfile.TemporaryDirectory() as root:
+            prefix = 'numpy-0.0.65.dist-info'
+            wheel, digest = make_wheel(Path(root), 'numpy', {
+                f'{prefix}/METADATA': (
+                    'Metadata-Version: 2.4\nName: numpy\nVersion: 0.0.65\n'
+                    'License-File: LICENSE\nLicense-File: missing/NOTICE.txt\n'
+                ),
+            })
+            item = mod.inspect_wheel(wheel, digest)
+            self.assertFalse(item['declaredLicenseFilesLocated'])
+            self.assertEqual(item['missingDeclaredLicenseFiles'], ['missing/NOTICE.txt'])
+            self.assertTrue(item['manualReviewRequired'])
+            self.assertNotIn('licenseApproved', item)
+
+    def test_rejects_unsafe_duplicate_pep639_license_declarations(self):
+        with tempfile.TemporaryDirectory() as root:
+            prefix = 'numpy-0.0.65.dist-info'
+            for lines in [
+                'License-File: ../private.txt\n',
+                'License-File: /absolute.txt\n',
+                'License-File: LICENSE\nLicense-File: LICENSE\n',
+            ]:
+                wheel, digest = make_wheel(Path(root), 'numpy', {
+                    f'{prefix}/METADATA': (
+                        'Metadata-Version: 2.4\nName: numpy\n'
+                        'Version: 0.0.65\n' + lines
+                    ),
+                })
+                with self.assertRaises(ValueError):
+                    mod.inspect_wheel(wheel, digest)
+                wheel.unlink()
+
     def test_rejects_tampering_missing_or_misidentified_metadata(self):
         with tempfile.TemporaryDirectory() as root:
             wheel, digest = make_wheel(Path(root), 'numpy')
@@ -115,6 +179,10 @@ class WheelArchiveEvidenceTests(unittest.TestCase):
             self.assertFalse(outcome['licenseApproved'])
             self.assertFalse(outcome['thirdPartyNoticeObligationsApproved'])
             self.assertEqual(len(outcome['packages']), 13)
+            self.assertEqual(outcome['noticeFileCount'], 13)
+            self.assertEqual(outcome['nativeBinaryCount'], 13)
+            self.assertEqual(outcome['declaredLicenseFileCount'], 13)
+            self.assertEqual(outcome['missingDeclaredLicenseFileCount'], 0)
             source['wheels'][0]['pypiPublishedDigestMatched'] = False
             report.write_text(json.dumps(source), encoding='utf-8')
             with self.assertRaises(ValueError):

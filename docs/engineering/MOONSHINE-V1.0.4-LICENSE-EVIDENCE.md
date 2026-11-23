@@ -50,6 +50,11 @@ The native compatibility workflow now proposes an extra **read-only evidence ste
 
 See the [dated 2026-11-22 actual three-platform Python dependency and versioned upstream source-license inventory](MOONSHINE-DEPENDENCY-EVIDENCE-2026-11-22.md) for concrete, nonidentifying CI observations and remaining binary/notice review obligations. **This is partial evidence, not a license or publication approval.**
 
+## Original Wheel license-file completeness check (2026-11-23)
+
+Earlier three-platform [Wheel ZIP inventories](MOONSHINE-V1.0.4-PROVENANCE-AND-NOTICES-2026-11-23.md) stored known LICENSE/NOTICE filenames and hashes, but an audit identified that files **inside** `.dist-info/licenses/` with non-license-like basenames could be missed. The read-only scanner now covers those directories and checks `METADATA` `License-File` declarations against the corresponding ZIP members using the [Wheel distribution format specification](https://packaging.python.org/en/latest/specifications/binary-distribution-format/). Record each missing declaration as an unresolved rights-review task; an unreferenced notice file or no declarations must not be called legal clearance. The corrected three-platform original-Wheel audit **has now been rerun and inspected**: [run #45188947162](https://github.com/kunlong-luo/voxnelo/actions/runs/45188947162), source `1e3d1274fbd52d48647cff960e698ca48b09275f`. Its Linux/Windows/macOS output contains **30/31/30 declared license-file paths, 0 missing declared paths on each target**, and 33/34/33 indexed LICENSE/NOTICE members respectively. This is **technical file-presence evidence only**; original license texts, native transitive conditions, model rights and final installer notices remain **unapproved**. This check does **not** fetch legal text for publication, execute native libraries, or turn a package's SPDX label into an approval.
+
+
 ## Release evidence still required
 
 1. **Pinned binary provenance.** Record the exact PyPI v0.0.65 Windows x64, Linux x64 and macOS ARM64 wheel filenames and SHA-256, inspect the wheel `METADATA`, `LICENSE`/notices, and confirm native libraries and any other redistributable parts against their respective permissions.
