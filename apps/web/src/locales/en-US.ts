@@ -117,6 +117,7 @@ export const en = {
   "dictationCaptureExternal": "External speaker test (experimental)",
   "dictationCaptureNote": "When playing English from another device, compare the optional playback mode. It does not request echo cancellation, noise suppression or automatic gain, and may capture more ambient noise; accuracy is not guaranteed. Normal speaking remains the default. Stop dictation before changing. Audio is not uploaded.",
   "dictationNoiseNotRequested": "Speaker test: noise filtering not requested",
+  "dictationInputLevel": "Live microphone input level",
   "dictationTitle": "Live English dictation",
   "dictationStart": "Start live dictation",
   "dictationStop": "Stop dictation",
