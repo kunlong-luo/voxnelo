@@ -179,6 +179,10 @@ class WheelArchiveEvidenceTests(unittest.TestCase):
             self.assertFalse(outcome['licenseApproved'])
             self.assertFalse(outcome['thirdPartyNoticeObligationsApproved'])
             self.assertEqual(len(outcome['packages']), 13)
+            self.assertEqual(outcome['noticeFileCount'], 13)
+            self.assertEqual(outcome['nativeBinaryCount'], 13)
+            self.assertEqual(outcome['declaredLicenseFileCount'], 13)
+            self.assertEqual(outcome['missingDeclaredLicenseFileCount'], 0)
             source['wheels'][0]['pypiPublishedDigestMatched'] = False
             report.write_text(json.dumps(source), encoding='utf-8')
             with self.assertRaises(ValueError):
