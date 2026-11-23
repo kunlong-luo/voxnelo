@@ -53,7 +53,7 @@ function verifyInstalledDependencies(python:string):void{
 function verifiedPython312Version(python:string):string|null{
   const code='import sys,struct;print(".".join(map(str,sys.version_info[:3])) if sys.version_info[:2]==(3,12) and struct.calcsize("P")==8 else "unsupported")';
   const version=pythonProbe(python,code);
-  return version&&/^3\\.12\\.\\d+$/.test(version)?version:null;
+  return version&&/^3\.12\.\d+$/.test(version)?version:null;
 }
 async function main():Promise<void>{
   if(process.argv.includes('--help')||process.argv.includes('-h')){
