@@ -70,6 +70,38 @@ class WheelAuditTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     mod.audit(wheels, lock)
 
+    def test_committed_snapshot_must_match_exact_file_and_hash(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / 'snapshot.json'
+            report = {
+                'nativePlatform': 'linux',
+                'wheels': [{
+                    'filename': 'moonshine_voice-0.0.65-py3-none-any.whl',
+                    'sha256': 'a' * 64,
+                }],
+            }
+            snapshot = {
+                'schemaVersion': 1,
+                'candidatePython': '3.12',
+                'buildProvenanceAttested': False,
+                'licenseApproved': False,
+                'userInstallerHashLocked': False,
+                'platforms': {'linux': {
+                    'moonshine_voice-0.0.65-py3-none-any.whl': 'a' * 64,
+                }},
+            }
+            import json
+            path.write_text(json.dumps(snapshot), encoding='utf-8')
+            mod.verify_committed_snapshot(report, path)
+            report['wheels'][0]['sha256'] = 'b' * 64
+            with self.assertRaises(ValueError):
+                mod.verify_committed_snapshot(report, path)
+            report['wheels'][0]['sha256'] = 'a' * 64
+            snapshot['licenseApproved'] = True
+            path.write_text(json.dumps(snapshot), encoding='utf-8')
+            with self.assertRaises(ValueError):
+                mod.verify_committed_snapshot(report, path)
+
 
 if __name__ == '__main__':
     unittest.main()
