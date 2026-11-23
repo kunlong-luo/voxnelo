@@ -87,7 +87,7 @@ describe('Nordic three-column learning workspace', () => {
     // hiding the lesson, IPA or live/secondary audio actions.
     expect(container.querySelector('.cardHeader')?.className).toContain('[@media(max-height:680px)]:pt-2');
     expect(container.querySelector('.lessonFocus')?.className).toContain('[@media(max-height:680px)]:gap-1');
-    expect(container.querySelector('.lessonFocus section[aria-label="发音指南"]')?.className).toContain('[@media(max-height:680px)]:py-1');
+    expect(container.querySelector('.sentenceContent > section')?.className).toContain('[@media(max-height:680px)]:py-1');
     expect(container.querySelector('.liveDictation')?.className).toContain('[@media(max-height:680px)]:py-1.5');
     expect(container.querySelector('.lessonActions')?.className).toContain('[@media(max-height:680px)]:pt-1');
     const liveMic=container.querySelector('.liveDictation .dictationAction');
