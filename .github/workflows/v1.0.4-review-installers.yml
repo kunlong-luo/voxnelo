@@ -92,6 +92,21 @@ jobs:
         run: pnpm typecheck && pnpm test
       - name: Build production renderer and Electron
         run: pnpm build
+      # Bind the live registry evidence to the same exact source as the
+      # review installers. This is not a redistribution/physical QA approval.
+      - name: Verify live archive and installed root notice equivalence
+        if: runner.os == 'Linux'
+        run: pnpm license:audit:registry --compare-notices
+      - name: Preserve sanitized review-source dependency notice evidence
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v7
+        with:
+          name: voxnelo-v1.0.4-review-registry-notice-evidence
+          path: |
+            build/license-inventory/registry-archives.json
+            build/license-inventory/registry-notices.json
+          retention-days: 14
+          if-no-files-found: error
       - name: Assert no unverified native ASR model is bundled
         run: pnpm asr:verify-real
       - name: Build real OS-native unsigned installer (never publish)
