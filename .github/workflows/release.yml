@@ -74,7 +74,8 @@ jobs:
           test "$(dpkg-query -W -f='${Status}' voxnelo)" = 'install ok installed'
           test "$(dpkg-query -W -f='${Status}' fonts-noto-cjk)" = 'install ok installed'
           dpkg -L voxnelo | grep -Eq '^/usr/share/applications/[^/]+\.desktop$'
-          echo "Debian candidate installs cleanly with CJK fonts and desktop integration"
+          node --experimental-strip-types scripts/check-installed-linux-license.mts
+          echo "Debian candidate installs with fonts, desktop integration and exact MIT LICENSE"
       - name: Upload build candidate
         uses: actions/upload-artifact@v7
         with:
