@@ -21,6 +21,8 @@ def inspect_archive(data):
         raise ValueError("Expanded archive exceeds audit bound")
     notices, seen = [], set()
     skipped = nested = 0
+    nested_files = []
+    nested_skipped = 0
     metadata = None
     with tarfile.open(fileobj=io.BytesIO(expanded), mode="r:") as archive:
         for count, member in enumerate(archive, 1):
@@ -40,6 +42,18 @@ def inspect_archive(data):
                 continue
             if len(parts) > 2:
                 nested += 1
+                if nested > 1000:
+                    raise ValueError("Too many nested notice candidates")
+                relative = "/".join(parts[1:])
+                if (not re.fullmatch(r"[A-Za-z0-9_.@+ /-]{1,240}", relative)
+                        or not member.isreg() or not 0 < member.size <= MAX_NOTICE):
+                    nested_skipped += 1
+                    continue
+                raw = archive.extractfile(member).read()
+                if len(raw) != member.size:
+                    raise ValueError("Nested notice size mismatch")
+                nested_files.append({"archiveRelativePath": relative, "bytes": len(raw),
+                                     "sha256": hashlib.sha256(raw).hexdigest()})
                 continue
             if not member.isreg() or not 0 < member.size <= MAX_NOTICE:
                 skipped += 1
@@ -50,9 +64,14 @@ def inspect_archive(data):
             notices.append({"filename": parts[-1], "bytes": len(raw), "sha256": hashlib.sha256(raw).hexdigest()})
     if not isinstance(metadata, dict) or not isinstance(metadata.get("name"), str) or not isinstance(metadata.get("version"), str):
         raise ValueError("Missing archive identity")
+    root_hashes = {(item["bytes"], item["sha256"]) for item in notices}
+    for item in nested_files:
+        item["matchesRootNoticeBytes"] = (item["bytes"], item["sha256"]) in root_hashes
     return {"name": metadata["name"], "version": metadata["version"],
             "noticeFiles": sorted(notices, key=lambda item: item["filename"]),
-            "skippedNoticeCount": skipped, "nestedNoticeCount": nested}
+            "skippedNoticeCount": skipped, "nestedNoticeCount": nested,
+            "nestedSkippedNoticeCount": nested_skipped,
+            "nestedNoticeFiles": sorted(nested_files, key=lambda item: item["archiveRelativePath"])}
 
 if __name__ == "__main__":
     try:
