@@ -41,7 +41,7 @@ Core typechecking, lint, dependency architecture, UI architecture, content/audio
 
 ## v1.0.4 private Wheel legal-text reviewer handoff (2026-11-24)
 
-After an explicitly opted-in Python 3.12 Wheel download and exact PyPI/committed-snapshot SHA verification, the [local-only legal text handoff](MOONSHINE-PRIVATE-LICENSE-TEXT-REVIEW-2026-11-24.md) can extract the original license/NOTICE plus METADATA **bytes** to a newly created private directory **outside this Git repository**. It does not touch the desktop installer, run any native Wheel payload, upload raw text to CI, or set any legal/release status to PASS. Actual third-party notices, runtime linkages, model provenance and privacy/human-microphone evidence remain separately PENDING. Old v1.0.4 Draft assets are unchanged.
+After an explicitly opted-in Python 3.12 Wheel download and exact PyPI/committed-snapshot SHA verification, the [local-only legal text handoff](MOONSHINE-PRIVATE-LICENSE-TEXT-REVIEW-2026-11-24.md) can extract the original license/NOTICE plus METADATA **bytes** to a newly created private directory **outside this Git repository**. It separately verifies original core `METADATA` bytes, rechecks whole-Wheel integrity after local text extraction, and refuses symlinked private-output ancestors. It does not touch the desktop installer, run any native Wheel payload, upload raw text to CI, or set any legal/release status to PASS. Actual third-party notices, runtime linkages, model provenance and privacy/human-microphone evidence remain separately PENDING. Old v1.0.4 Draft assets are unchanged.
 
 ## v1.0.4 private hardware-evidence intake (2026-11-23)
 
