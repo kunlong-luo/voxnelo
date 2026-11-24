@@ -8,6 +8,12 @@
 
 **发行范围：** Linux x64 DEB/AppImage、Windows x64 NSIS EXE、macOS ARM64 DMG。**全部未签名，macOS 未公证**；SmartScreen / Smart App Control 或 Gatekeeper 可能阻止运行。Linux Moonshine 需要用户主动单独安装模型，Windows/macOS 不承诺相同离线引擎。F001–F012、模型/内容权利和至少五位初学者独立审核尚无完整公开可核验证据，但维护者确认所需人工操作测试已通过。详见 [v1.0.3 发行说明](../release-notes/v1.0.3.md) 和 [发行者免签名决定](../release/UNSIGNED-V1-OWNER-DECISION.md)。
 
+## JavaScript 工具链与发布审核（2026-11-24）
+
+- 统一采用固定版本 pnpm，源码安装使用冻结锁文件；开发环境准备参阅 [开发指南](../DEVELOPMENT.md)，版本约束参阅 [工具链规范](NODE26-LTS-MIGRATION.md)。
+- [PR #287](https://github.com/kunlong-luo/voxnelo/pull/287) 跟踪隔离原生 ASR 环境的 pnpm 迁移，需通过对应 CI 后合并；既有已发布版本和旧候选包的记录保持原样。
+- [构建依赖许可证审核](BUILD-LICENSE-INVENTORY.md) 将 pnpm 锁文件完整性与上游 Registry 归档验证区分开来；不调用其他包管理 CLI，不代表更换上游发行源，也不代表第三方许可获批。
+
 ## 不可变的已发布版本
 
 - v1.0.3：**当前公开正式版**，禁止重新创建、覆盖或换掉原有安装包/标签。

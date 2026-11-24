@@ -22,6 +22,10 @@ build/offline-asr/
   manifest.json         # complete, version-pinned SHA-256 file inventory
 ```
 
+## Toolchain boundary (2026-11-24)
+
+Use the pinned pnpm toolchain for development and internal test provisioning; see [Development](../../docs/DEVELOPMENT.md). The isolated native-ASR migration is tracked in [PR #287](https://github.com/kunlong-luo/voxnelo/pull/287). Its hoisted staging layout is designed to preserve the existing rejection of unexpected runtime symlinks; do not relax staging integrity checks. Historical package-source names and manifest values are unchanged. This engineering workflow is not a user-facing prerequisite for the default Moonshine feature or an authorization to redistribute native libraries.
+
 ## Pinned English model candidate (not an installer asset)
 
 `pnpm asr:model:prepare` downloads the English streaming Zipformer transducer

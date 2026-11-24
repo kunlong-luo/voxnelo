@@ -55,7 +55,7 @@ sudo apt install ./Voxnelo.deb
 
 ## 开发与反馈
 
-项目使用 Electron、React、TypeScript、Rsbuild 和 IndexedDB。源码运行、测试、打包请查看 [开发指南](docs/DEVELOPMENT.md)。
+项目使用 Electron、React、TypeScript、Rsbuild 和 IndexedDB，JavaScript 包管理统一使用 pnpm。源码运行、测试、打包请查看 [开发指南](docs/DEVELOPMENT.md) 与 [工具链规范](docs/engineering/NODE26-LTS-MIGRATION.md)。普通桌面安装包用户不需要自行安装 Node.js 或 pnpm。依赖归档来源与许可证证据见 [构建依赖审核](docs/engineering/BUILD-LICENSE-INVENTORY.md)。
 
 - [用户帮助](docs/USER-GUIDE.md)
 - [隐私说明（仍待独立复核）](docs/PRIVACY.md)
