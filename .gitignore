@@ -13,6 +13,8 @@ dist-electron/
 release/
 build/*
 !build/icon.png
+!build/third-party-notices/
+!build/third-party-notices/*.txt
 !build/offline-asr/
 build/offline-asr/*
 !build/offline-asr/README.md

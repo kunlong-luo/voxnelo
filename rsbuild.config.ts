@@ -2,11 +2,12 @@ import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
 import { pluginTailwindcss } from '@rsbuild/plugin-tailwindcss';
 import path from 'node:path';
+import { rendererLicenseInventory } from './scripts/renderer-license-inventory.mts';
 
 const workspace = (name: string) => path.resolve(`packages/${name}/index.ts`);
 
 export default defineConfig({
-  plugins: [pluginReact(), pluginTailwindcss()],
+  plugins: [pluginReact(), pluginTailwindcss(), rendererLicenseInventory()],
   source: { entry: { index: './apps/web/src/main.tsx' } },
   html: { template: './apps/web/index.html' },
   output: {
