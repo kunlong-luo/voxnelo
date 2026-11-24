@@ -145,7 +145,8 @@ jobs:
           dpkg -L voxnelo | grep -Eq '^/usr/share/applications/[^/]+\.desktop$'
           dpkg -L voxnelo | grep -Fx '/usr/share/metainfo/app.voxnelo.desktop.metainfo.xml'
           dpkg -L voxnelo | grep -Eq '^/usr/share/icons/hicolor/[0-9]+x[0-9]+/apps/voxnelo\.png$'
-          echo "apt install verified: Voxnelo, CJK fonts, desktop launcher"
+          node --experimental-strip-types scripts/check-installed-linux-license.mts
+          echo "apt install verified: Voxnelo, CJK fonts, desktop launcher, MIT LICENSE"
       - name: Verify SHA-256 candidate manifest on Linux
         if: runner.os == 'Linux'
         run: node --experimental-strip-types scripts/write-candidate-manifest.mts
