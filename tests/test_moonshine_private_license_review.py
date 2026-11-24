@@ -8,6 +8,7 @@ from pathlib import Path
 import stat
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from test_moonshine_wheel_archive_evidence import make_wheel
 
@@ -83,6 +84,15 @@ class PrivateLicenseReviewTests(unittest.TestCase):
             self.assertEqual(len(list((destination / 'raw-text').glob('*.raw'))), 27)
             first = record['packages'][0]
             self.assertEqual(first['name'], 'syntheticpackage0')
+            original_metadata = next(
+                item for item in first['localLegalText']
+                if item['type'] == 'core-metadata'
+            )
+            self.assertEqual(first['metadataSha256'], original_metadata['sha256'])
+            self.assertEqual(
+                hashlib.sha256((destination / original_metadata['localFile']).read_bytes()).hexdigest(),
+                first['metadataSha256'],
+            )
             authors = next(item for item in first['localLegalText']
                            if item['archiveMember'].endswith('/AUTHORS'))
             extracted = (destination / authors['localFile']).read_bytes()
@@ -146,6 +156,42 @@ class PrivateLicenseReviewTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 review.prepare(wheels, report_file, snapshot_file,
                                review.ROOT / 'private-moonshine-license-review-forbidden')
+
+    def test_rejects_changed_metadata_between_scan_and_export_and_cleans_output(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            wheels, report, snapshot, _, _ = fixtures(root)
+            destination = root / 'private-review'
+            actual_collect = review.collector.collect
+
+            def altered_scanner(*args):
+                result = actual_collect(*args)
+                result['packages'][0]['metadataSha256'] = '0' * 64
+                return result
+
+            with patch.object(review.collector, 'collect', side_effect=altered_scanner):
+                with self.assertRaisesRegex(ValueError, 'ZIP entry changed'):
+                    review.prepare(wheels, report, snapshot, destination)
+            self.assertFalse(destination.exists())
+
+    def test_refuses_symlink_in_any_output_ancestor(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            wheels, report, snapshot, _, _ = fixtures(root)
+            actual = root / 'underlying'
+            (actual / 'child').mkdir(parents=True)
+            link = root / 'symlinked'
+            try:
+                link.symlink_to(actual, target_is_directory=True)
+            except (OSError, NotImplementedError):
+                self.skipTest('This runner cannot create a directory symlink')
+            destination = link / 'child' / 'private-review'
+            # The immediate parent is a normal directory; a higher ancestor
+            # is the symlink. Reject before creating any review output.
+            self.assertFalse(destination.parent.is_symlink())
+            with self.assertRaisesRegex(ValueError, 'non-symlink ancestors'):
+                review.prepare(wheels, report, snapshot, destination)
+            self.assertFalse((actual / 'child' / 'private-review').exists())
 
 
 if __name__ == '__main__':
