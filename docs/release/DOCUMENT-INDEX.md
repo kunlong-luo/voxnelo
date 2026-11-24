@@ -1,6 +1,6 @@
 # Voxnelo documentation navigation and status
 
-Updated: 2026-11-23. This is an **index, not evidence of a public v1.0.4 release**. Latest public release: **v1.0.3**; current source candidate: **v1.0.4**. Check actual GitHub Releases before changing this status.
+Updated: 2026-11-24. This is an **index, not evidence of a public v1.0.4 release**. Latest public release: **v1.0.3**; current source candidate: **v1.0.4**. Check actual GitHub Releases before changing this status.
 
 ## Maintained entries
 
