@@ -9,6 +9,32 @@ Updated: 2026-11-24. This index is navigation, **not** a release approval.
 3. Current release state: GitHub Releases (published versus Draft), package version, and [release operations](engineering/RELEASE-OPERATIONS.md). Never infer publication from `package.json`.
 4. Human review evidence: independently collected private evidence; CI is not an approval.
 
+
+## 文档目录图 / Documentation directory map
+
+| Directory | Role and retention |
+| --- | --- |
+| `docs/` | Current entrypoints: this index, DEVELOPMENT, USER-GUIDE, PRIVACY. Dated product change audit and cross-project engineering reference are historical provenance, not current instructions. |
+| [`ADR/`](ADR/) | Architecture decision records; retain decisions and supersede explicitly. |
+| [`Voxnelo-Product-Docs-v1.0/`](Voxnelo-Product-Docs-v1.0/README.md) | Original product baseline, original DOCX/PDF/checksums and Markdown implementation revisions; retain, no silent rewriting. |
+| [`archive/`](archive/README.md) | Retired one-shot workflow snapshots, referenced by byte-identity regression tests; retain and never execute as active Actions. |
+| [`audits/`](audits/) | Dated repository, PRD, module and documentation evidence; retain distinct findings, not a current status board. |
+| [`deployment/`](deployment/) | Web preview/GitHub Pages deployment boundary. |
+| [`design/`](design/) | Current V3 dictation-first spec plus earlier decisions and reference visuals. V0.1/UI2/U3/theme plans are historical; do not implement older guidance over V3. |
+| [`engineering/`](engineering/) | Current architecture, toolchain, model/rights, security and release procedures; dated V0.1/V0.1.5/V0.1.6 QA and pilot files remain historical evidence. |
+| [`release-notes/`](release-notes/) | Published-version history and unpublished v1.0.4 candidate notes. Never overwrite prior public release history. |
+| [`release/`](release/DOCUMENT-INDEX.md) | Current release gates, score/evidence ledger, PRD traceability and private-evidence templates. |
+| [`support/`](support/) | OS-specific user troubleshooting. |
+
+Current visual authority: [V3 dictation-first](design/V3-DICTATION-FIRST-UX-2026-11-23.md) and [V3 production spec](design/V3-VISUAL-PRODUCTION-SPEC.md). Earlier UI reference images and diagrams are retained for design provenance, not used as installed product screenshots. Historical engineering instructions are not the developer setup path. Current PRD mapping is [PRD-TRACEABILITY.md](release/PRD-TRACEABILITY.md). The obsolete initial matrix was removed from the working tree; [original snapshot at the pre-cleanup commit](https://github.com/kunlong-luo/voxnelo/blob/35e4048affead771477cfd162f7fc2a2a1aee40a/docs/release/PRD-TRACEABILITY-STARTER.md) remains auditable.
+
+### Single source of truth
+
+- Current release decision and checklist: [release freeze](release/V1.0.4-RELEASE-FREEZE.md).
+- Dated scores, registry reports, convergence and native-library provenance: [registry audit ledger](release/V1.0.4-REGISTRY-AUDIT.md). Do not paste its complete log into other documents.
+- Build-specific inventory: [build license inventory](engineering/BUILD-LICENSE-INVENTORY.md); native-ASR gate: [ASR release gate](engineering/ASR-PUBLIC-RELEASE-GATE.md); actual installer hashes: [artifact handoff](release/V1.0.4-REVIEW-ARTIFACT-HANDOFF-2026-11-24.md); human evidence: [physical ledger](release/V1.0.4-PHYSICAL-DEVICE-EVIDENCE.md).
+- Delete superseded duplicate content after exact comparison and keep unique historical evidence/attribution. Do not create parallel status or score ledgers. Historical evidence can be linked to a specific Git commit rather than duplicated. Changes need maintained-link checks and normal protected-main CI.
+
 ## Current guides
 
 - [User guide](USER-GUIDE.md)
@@ -39,7 +65,7 @@ Updated: 2026-11-24. This index is navigation, **not** a release approval.
 
 The [retired one-time workflow archive](archive/README.md) contains nine version-specific publish/Draft Actions snapshots (seven historical v0.1.5–v1.0.3 and two v1.0.4 private Draft writers), now removed from the executable workflow directory. The old root starter ZIP installation guide was removed; use [Development](DEVELOPMENT.md). Do not restore historical publishing workflows without a fresh review.
 
-The [earlier PRD starter](release/PRD-TRACEABILITY-STARTER.md), `V0.1-*`, `V0.1.5-*`, `V0.1.6-*`, dated pilots and release notes are historical evidence, **not** current installation instructions. See [historical V0.1 checklist](release/V0.1-PRD-CHECKLIST.md). The original product baseline describes intended future features, not verified shipped features.
+The earlier PRD starter (removed; immutable snapshot linked above), `V0.1-*`, `V0.1.5-*`, `V0.1.6-*`, dated pilots and release notes are historical evidence, **not** current installation instructions. See [historical V0.1 checklist](release/V0.1-PRD-CHECKLIST.md). The original product baseline describes intended future features, not verified shipped features.
 
 ## Documentation maintenance policy
 
