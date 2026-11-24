@@ -34,8 +34,8 @@ const example = (platform: string) => ({
   normalizationRule: 'test-normalizer',
   quiet: { trials: 10, referenceWords: 40, substitutions: 1, deletions: 2, insertions: 1 },
   noisy: { trials: 10, referenceWords: 40, substitutions: 5, deletions: 4, insertions: 3 },
-  firstVisibleInterimMs: { count: 10, p50: 100, p95: 200 },
-  endOfSpeechToFinalVisibleMs: { count: 10, p50: 180, p95: 360 },
+  firstVisibleInterimMs: { count: 20, p50: 100, p95: 200 },
+  endOfSpeechToFinalVisibleMs: { count: 20, p50: 180, p95: 360 },
   tenMinuteSessionObserved: true,
   permissionAndDenialRecoveryObserved: true,
   disconnectRecoveryObserved: true,
@@ -108,6 +108,29 @@ describe('v1.0.4 physical human microphone evidence intake (NOT release approval
     expect(issues).toContain('linux-x64.tenMinuteSessionObserved');
     expect(issues).toContain('windows-x64.consentConfirmed');
     expect(issues).toContain('macos-arm64-15plus.disconnectRecoveryObserved');
+  });
+
+  it('rejects latency samples covering fewer sessions than quiet+noisy human trials', () => {
+    const input = filledSyntheticFixture();
+    input.platforms['linux-x64']!.firstVisibleInterimMs.count = 1;
+    input.platforms['linux-x64']!.endOfSpeechToFinalVisibleMs.count = 19;
+    input.platforms['windows-x64']!.noisy.trials = 11;
+    // Exactly 20 samples cannot account for 10 quiet + 11 noisy trials.
+    const issues = auditV104PhysicalMicEvidence(input).blockers.join(' ');
+    expect(issues).toContain('linux-x64.firstVisibleInterimMs.count');
+    expect(issues).toContain('linux-x64.endOfSpeechToFinalVisibleMs.count');
+    expect(issues).toContain('windows-x64.firstVisibleInterimMs.count');
+    expect(issues).toContain('windows-x64.endOfSpeechToFinalVisibleMs.count');
+    expect(auditV104PhysicalMicEvidence(input).releaseApproved).toBe(false);
+  });
+
+  it('rejects impossible future human-microphone test dates', () => {
+    const input = filledSyntheticFixture();
+    input.platforms['macos-arm64-15plus']!.testDate = '2999-12-31';
+    const audit = auditV104PhysicalMicEvidence(input);
+    expect(audit.blockers.join(' ')).toContain('macos-arm64-15plus.testDate');
+    expect(audit.structurallyReviewable).toBe(false);
+    expect(audit.releaseApproved).toBe(false);
   });
 
   it('fails closed on omitted/unknown platforms, invalid identifiers and dates', () => {
