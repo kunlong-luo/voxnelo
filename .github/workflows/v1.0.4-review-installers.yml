@@ -81,6 +81,12 @@ jobs:
           cache: pnpm
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
+      # Fail early on the exact local-only Python preflight which exposed a
+      # null child exit on Windows review run 45369201513. The full suite
+      # remains mandatory on every platform; no acoustic threshold changes.
+      - name: Verify local-only Moonshine fixture process on Windows
+        if: runner.os == 'Windows'
+        run: pnpm exec vitest run tests/moonshine-candidate.test.ts
       # The former latest-main candidate run 45150623898 exposed Windows
       # Git CRLF conversion in exact-blob/README/workflow byte assertions.
       # Keep this fast read-only guard before the entire platform test suite.
