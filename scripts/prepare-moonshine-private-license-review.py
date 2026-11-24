@@ -11,12 +11,23 @@ import hashlib
 import importlib.util
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import shutil
 import sys
 from zipfile import ZipFile
 
 ROOT = Path(__file__).resolve().parents[1]
+PINNED_SNAPSHOT = ROOT / "docs/engineering/moonshine-python312-wheel-digests-2026-11-23.json"
+
+
+def verify_cli_snapshot_path(snapshot_file: Path) -> None:
+    # The public-facing CLI must never accept an alternate user-crafted
+    # "approved hashes" file, even if it has the expected JSON schema.
+    # The low-level prepare() helper accepts synthetic fixture snapshots for
+    # offline tests; this guard is mandatory at the actual CLI entry point.
+    if snapshot_file.resolve(strict=True) != PINNED_SNAPSHOT.resolve(strict=True):
+        raise ValueError("Private reviewer must use the repository-tracked Wheel hash snapshot")
+
 
 
 def load_script(filename: str):
@@ -119,6 +130,9 @@ def prepare(
                 ]
                 for member in members:
                     name = member["path"]
+                    if (member["type"] == "legal-file"
+                            and collector.NON_LEGAL_PAYLOAD.search(PurePosixPath(name).name)):
+                        raise ValueError("Executable or model payload cannot be legal review text")
                     info = archive.getinfo(name)
                     limit = (collector.MAX_METADATA if member["type"] == "core-metadata"
                              else collector.MAX_TEXT)
@@ -167,7 +181,9 @@ def main() -> None:
             "<committed-wheel-snapshot.json> <NEW-ABSOLUTE-private-output-dir>"
         )
     try:
-        manifest = prepare(*(Path(value) for value in sys.argv[1:]))
+        args = tuple(Path(value) for value in sys.argv[1:])
+        verify_cli_snapshot_path(args[2])
+        manifest = prepare(*args)
     except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError):
         # No personal absolute paths or license text in CLI errors.
         raise SystemExit("Private license-review export blocked; no approval or release") from None
