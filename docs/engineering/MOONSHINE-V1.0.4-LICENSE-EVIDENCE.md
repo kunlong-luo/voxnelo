@@ -77,3 +77,17 @@ No user audio, identifiable transcripts, private personal paths or device IDs sh
 The [private v1.0.4 Draft](https://github.com/kunlong-luo/voxnelo/releases/tag/untagged-8e53c1681c97fa425813) contains the eight preverified assets built from commit `4aeb58e37840d2aec760fac3e348ab18b9ce1be1`. As of 2026-11-12, its state is `draft=true` and `published_at=null`. Public latest is still v1.0.3. **Never relabel the Draft as built from a later `main` commit.**
 
 The owner chose **unsigned** releases with explicit Windows SmartScreen/macOS Gatekeeper/Apple notarization warnings. Signing/notarization is optional, but the choice does not waive functional, rights or privacy review. The draft is not approved for public publication merely because all native CI and SHA-256 checks passed. The 2026-11-09 full pnpm security audit failed on the dev-only `wait-on` chain; [PR #192](https://github.com/kunlong-luo/voxnelo/pull/192) removed that dependency and **seven PR checks passed** on 2026-11-12, then merged to newer `main`. This security fix does not retroactively alter the older private Draft binary or its source commit.
+
+## Exact-source candidate installed-runtime inventory — 2026-11-24 (UTC)
+
+For [review run 45318769948](https://github.com/kunlong-luo/voxnelo/actions/runs/45318769948), source `be89e098a0c9593f1f87ff8ea6baba2ef9c107ea`, downloaded all three native license evidence archives, independently recomputed their archive SHA-256 and inspected their contained JSON. All archive digests match GitHub API records.
+
+| Target | Artifact ID | Archive SHA-256 | Observed Python | Installed distributions (including pip) | Notice-file entries |
+| --- | ---: | --- | --- | ---: | ---: |
+| Linux x64 | 14886957838 | `24f2da4fac3725a008475142f4f086c9058c01308b95471a0faf836358a3c437` | 3.12.16 | 14 | 34 |
+| Windows x64 | 14886962211 | `dd08a9f23a466cbcd4548d50f048f496b218b93e77fe1f97d54078dbcdde4de3` | 3.12.10 | 15 | 35 |
+| macOS ARM64 | 14887135823 | `3a4b0060ed4bdf9734716caf6f79887b596592b38aa2dc7f3593dda51a1df186` | 3.12.10 | 14 | 34 |
+
+All inventories report Moonshine 0.0.65, `licenseApproved: false`, `copyrightAndRedistributionReviewed: false`, and empty `manualReviewRequired` metadata-classification lists. Empty lists are not legal clearance. These are installed metadata entries, not original Wheel ZIP member counts. Windows additionally reports colorama 0.4.6. Review priorities: certifi 2026.11.20 (MPL-2.0 classifier); requests 2.34.2 (Apache classifier, LICENSE and NOTICE entries); numpy 2.5.5 (declared BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0); cffi 2.1.1 (MIT-0 expression); packages with no SPDX expression or classifier such as moonshine-voice, charset-normalizer and tqdm require actual license-text review even when a license field is present. Inspect native library provenance and applicable notices including ONNX Runtime and OpenBLAS; confirm obligations for the final Electron/npm production distribution separately. No actual third-party license text approval is asserted by this archive check.
+
+The [candidate handoff](../release/V1.0.4-REVIEW-ARTIFACT-HANDOFF-2026-11-24.md) now records five independently measured installer hashes. The previous 2-of-8 model mirror match and missing immutable upstream revision for the complete exact-byte model set remain blockers; installed metadata cannot resolve this. Human rights/redistribution review, physical microphone acceptance and final publication authorization remain PENDING. **v1.0.4 HOLD.**

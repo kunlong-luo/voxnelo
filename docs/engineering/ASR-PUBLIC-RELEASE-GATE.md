@@ -40,6 +40,123 @@ The [private physical-device evidence auditor](../release/V1.0.4-PHYSICAL-DEVICE
 
 A source audit found that the Electron-builder file/resource allowlists did not **explicitly** include Voxnelo's root MIT `LICENSE`. Future native installer candidates now carry an accessible `resources/LICENSE` copy through `extraResources` and the real three-platform package inspection verifies its bytes against the source LICENSE. This guards **only the application's own notice**; it does not authenticate any third-party license, ship Electron/npm transitive notices, resolve exact Moonshine model rights or authorize v1.0.4 publication. In addition, the four Linux DEB pipelines run a `dpkg -L` + byte-for-byte validation **after actual apt installation**, since unpacked `resources/LICENSE` alone is not proof of installed-package contents. Windows/macOS checks verify their unpacked Electron applications, not an end-user NSIS GUI install or DMG mount. Existing older private Draft assets are not updated by source changes. See [release operations](RELEASE-OPERATIONS.md).
 
+
+### Exact-source candidate and shipped Linux third-party notice inventory (2026-11-24)
+
+The [candidate handoff](../release/V1.0.4-REVIEW-ARTIFACT-HANDOFF-2026-11-24.md) records all eight successful jobs of review run `45318769948`, source `be89e098a0c9593f1f87ff8ea6baba2ef9c107ea`, and five independently measured installer SHA-256 values. This is an internal unsigned review build; its manifests expressly deny release approval. Physical-mic QA, legal review and the old Draft remain separate.
+
+Read-only inspection of the SHA-verified Linux `voxnelo_1.0.4_amd64.deb` (SHA-256 `7f5d5b21797c63154ab79a37bb84fc7906fc2a093bf59d968a67a04f8fd1b681`) extracted its data with `dpkg-deb -x` and parsed the ASAR header and package metadata without executing installed code. Under `/opt/Voxnelo/` the following actual files were observed:
+
+| Shipped member | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `LICENSE.electron.txt` | 1096 | `5154e165bd6c2cc0cfbcd8916498c7abab0497923bafcd5cb07673fe8480087d` |
+| `LICENSES.chromium.html` | 5598206 | `214152f78cc0b611f63ff8faefcc6670c4605ffbff05f092bb671e6df80ce741` |
+| `resources/LICENSE` | 1077 | `c419e60283cfcb8c5bb56e0cd7e4e7f37fef6b6d2d29a08eab2d134c1558a438` |
+| `resources/app.asar` | 52917609 | `ed6adc7f15061911d683639c8ce0959a4212106aa8055ff5ae89d908a3f35462` |
+
+The ASAR has 8150 file members. All 18 independently identifiable top-level/scoped npm distributions have a package-level LICENSE file. Their package.json declarations and notice filenames are:
+
+| Package | Version | Declared license | Package-level files |
+| --- | --- | --- | --- |
+| @babel/runtime | 7.29.10 | MIT | LICENSE |
+| @base-ui/react | 1.9.0 | MIT | LICENSE |
+| @base-ui/utils | 0.5.0 | MIT | LICENSE |
+| @floating-ui/core | 1.8.0 | MIT | LICENSE |
+| @floating-ui/dom | 1.8.0 | MIT | LICENSE |
+| @floating-ui/react-dom | 2.1.9 | MIT | LICENSE |
+| @floating-ui/utils | 0.2.12 | MIT | LICENSE |
+| @formkit/auto-animate | 0.10.2 | MIT | LICENSE |
+| class-variance-authority | 0.7.1 | Apache-2.0 | LICENSE |
+| clsx | 2.1.1 | MIT | license |
+| dexie | 4.4.7 | Apache-2.0 | LICENSE, NOTICE |
+| lucide-react | 1.74.0 | ISC | LICENSE |
+| react | 19.3.1 | MIT | LICENSE |
+| react-dom | 19.3.1 | MIT | LICENSE |
+| reselect | 5.3.0 | MIT | LICENSE |
+| scheduler | 0.28.0 | MIT | LICENSE |
+| tailwind-merge | 3.7.0 | MIT | LICENSE.md |
+| use-sync-external-store | 1.7.0 | MIT | LICENSE |
+
+Two generated renderer notice sidecars were also observed: `dist/static/js/k.5869a2c8de.js.LICENSE.txt` (SHA-256 `9c903dd73627e8eac8f63650cee24cbd136fc569322d7e94a85692f195bd839e`) and `dist/static/js/lib-react.0589e6ad37.js.LICENSE.txt` (SHA-256 `e47a413b62a5bf023d2b81a25d0ef4213ff1bb756df7f3c31ba57f88334e1e0f`).
+
+**Scope limitation:** this is Linux DEB file-presence and declared-license evidence, not an exhaustive production SBOM or a review of the legal text. It does not establish coverage for dependencies inlined in renderer bundles, embedded native components, fonts/assets, or the separate Windows NSIS, macOS DMG and Linux AppImage distributions. Review the full license and NOTICE texts, reconcile the bundled-module inventory against the production lockfile and build metadata, inspect each remaining installer and record reviewer/date and exact artifact hash. Keep the separate [Moonshine legal evidence](MOONSHINE-V1.0.4-LICENSE-EVIDENCE.md) and exact eight-model-file provenance gap open. No third-party legal clearance, direct-human microphone approval or publication is implied.
+
+
+### Linux AppImage shipped-content comparison — 2026-11-24
+
+Independently rehashed `Voxnelo-1.0.4.AppImage` (132641993 bytes, SHA-256 `0faeebc7ac35d140f2c7ae4ea47079defa58860adfdb2ea67540b216c6d133d9`) from review run `45318769948`. Read its embedded SquashFS v4 filesystem (offset 188392, gzip compression) using a read-only parser without executing AppRun, mounting or running candidate code. The 101 enumerated non-root filesystem entries include `/LICENSE.electron.txt`, `/LICENSES.chromium.html`, `/resources/LICENSE` and `/resources/app.asar`; each was read and independently SHA-256 hashed and matches the exact DEB member in the table above. This extends the existing 18-package ASAR file-presence evidence to these identical bytes, not to the entire AppImage or a legal approval.
+
+The AppImage also contains six regular ELF files under `/usr/lib/` (not merely symlinks). Observed exact byte identities:
+
+| AppImage member | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `libXss.so.1` | 14488 | `270fe6e4d430118793d01cac5c6081d0ea9e244cfcf510475bc779bef21b754a` |
+| `libXtst.so.6` | 22880 | `38f9ccb12d2c477aad85db6279afc334d9f250f613884c188ace7232b83e9b68` |
+| `libappindicator.so.1` | 52128 | `033b8803f20b98e8cd56fc8e75e3a71a552f75c0cff9bd0937f3ddd6ee5d2145` |
+| `libgconf-2.so.4` | 192296 | `ba977334112bb81f6457ee4aad833c6d5f1ff731c718073cd50777d613b23185` |
+| `libindicator.so.7` | 60648 | `3b61ae3424c4800975c1806245a2d286f6e1fc49cd9350913075c27a95f3c7a0` |
+| `libnotify.so.4` | 31304 | `8f42294247a886c5a94b2a0ce1c0b65e953616d7efe8da664b3826cdeae47948` |
+
+No separate `/usr/share/doc/` tree was observed in this enumerated filesystem. This does not establish that a notice is absent from every shipped notice collection or that any license was violated. Identify exact distribution/build source and licensing terms for each of these six binaries; check notice/source-availability obligations and whether existing shipped texts meet them. Do not assume that the DEB's system dependencies and the AppImage's bundled binaries have identical distribution obligations. Windows NSIS and macOS DMG inner contents remain unverified in this review environment; those installer formats require independent read-only inspection, not extrapolation from Linux. All manual rights, human physical microphone and release approvals remain PENDING; HOLD.
+
+
+### macOS DMG and Windows NSIS payload audit — 2026-11-24
+
+This refresh independently rehashed both original installer files from the three-platform review inputs of run `45318769948` and source `be89e098a0c9593f1f87ff8ea6baba2ef9c107ea`. No candidate executable was run. It supersedes the earlier pending macOS/Windows inner-file inventory status, not the outstanding legal or live-device gates.
+
+- macOS: `Voxnelo-1.0.4-arm64.dmg`, 127336240 bytes, SHA-256 `86d166d81d2cbd4661bb6ef14ebe1c05f8b60f49aca66e662999e4ac0bf2f831`. Read the UDIF footer and zlib block map, then the HFS+ volume/catalog/data forks without mounting. Enumerated 283 file and 317 folder catalog records. All four selected files under `Voxnelo.app/Contents/Resources/` (first-party LICENSE, Electron LICENSE, Chromium LICENSES, app.asar) exactly match the measured Linux DEB hashes above. App Info.plist identifies app.voxnelo.desktop v1.0.4.
+- Windows: `Voxnelo Setup 1.0.4.exe`, 125512212 bytes, SHA-256 `566b9e442efe505805916ff71b94832b05062ff0be75237decb5c73d65ebc1f3`. Located the embedded 7z payload at offset 170285; verified start and next-header CRCs and read 85 archive entries via libarchive without executing NSIS. Payload size 124956814 bytes, SHA-256 `10e1ed8f26b3580004a85ac5889214a2f46fed85b85845c0a4cd44d281e59978`. This is inspection of the application payload, not the entire NSIS bootstrapper/plugin/installation lifecycle.
+
+| Windows payload member | Bytes | Independently measured SHA-256 |
+| --- | ---: | --- |
+| `LICENSE.electron.txt` | 1096 | `5154e165bd6c2cc0cfbcd8916498c7abab0497923bafcd5cb07673fe8480087d` |
+| `LICENSES.chromium.html` | 5705935 | `7dac8267ac6da8d959cfe88f5f055b18a397f10230380b5329125e167bf5639b` |
+| `resources/LICENSE` | 1077 | `c419e60283cfcb8c5bb56e0cd7e4e7f37fef6b6d2d29a08eab2d134c1558a438` |
+| `resources/app.asar` | 52917635 | `ab603096bf4a036fde4e5dfc4e64c67d923ce214d16e47d1ef1c77cbda50f5e0` |
+
+Windows Chromium notices and ASAR differ from Linux/macOS; do not substitute the other platform's hashes. Independent parsing of Windows and macOS ASARs located 8150 offset-backed members each, the same 18 independent npm distributions/versions/license declarations in the Linux table, and 19 package-level LICENSE/NOTICE files (18 licenses plus Dexie NOTICE) with identical per-file hashes across Windows/macOS. Two generated JS license sidecars have the same content digests as Linux, though Windows names its first `dist/static/js/g.25b5af3121.js.LICENSE.txt`. The ASARs share 8146 paths; three shared paths have differing bytes (two brand SVGs and index.html); each has four distinct renderer output paths. This is not evidence of a functional defect or identical builds: investigate reproducibility separately if required.
+
+The actual macOS native frameworks under `Voxnelo.app/Contents/Frameworks/<name>.framework/Versions/A/<name>` were located and hashed (real Mach-O binaries, not framework symlink records):
+
+| Framework | Observed Info.plist version | Bytes | SHA-256 |
+| --- | --- | ---: | --- |
+| Electron Framework | 45.4.1 (build) | 207632704 | `32cc27ed1fb354dad8872006faaac78e9721bdbd1013b26854c06c50bc806447` |
+| ReactiveObjC | 3.1.0 | 352960 | `68d3d635482b079ebcb6487d9bacd6791bf25e9ce730cd36f82f899e82a8215f` |
+| Squirrel | 1.0 | 216672 | `296e443eb9c42eade25b34f60a3d7a0e31259aeab263ffe71f1bbad64e50bdfd` |
+| Mantle | 1.0 | 126656 | `8fb457b9689ae66e2891e5b260b087612420d27aab6aa082f6a9ba3d61a66a4f` |
+
+Info.plist values are bundle metadata, not immutable upstream source attestations. Map each actual framework to its exact upstream license/notice and review its coverage in the delivered notice collection. Windows NSIS bootstrapper, native components, Windows-specific Chromium notice contents, macOS frameworks, six AppImage ELF files, renderer-inlined dependencies and fonts/assets still need full rights and attribution review. All four installer formats now have preliminary actual payload inventories; none has full third-party legal approval. Direct-human microphone acceptance remains pending on all three OSes. **HOLD**, no publication or draft changes.
+
+
+### Pinned macOS upstream legal-text reconciliation — 2026-11-24
+
+Read the actual [Electron v45.4.1 DEPS](https://github.com/electron/electron/blob/v45.4.1/DEPS) and its [license-credits patch](https://github.com/electron/electron/blob/v45.4.1/patches/chromium/add_electron_deps_to_license_credits_file.patch) at the version observed in the DMG. The patch adds source license inputs for Node.js, Squirrel, Mantle, ReactiveObjC and Sparkle to the Chromium credits generator. Fetched the following original license files from the exact dependency commits declared by DEPS. Blob IDs are Git object identifiers, not SHA-256 values of shipped frameworks.
+
+| Upstream dependency / license text | Git blob ID | Observed obligations / review notes |
+| --- | --- | --- |
+| [Squirrel.Mac LICENSE](https://github.com/Squirrel/Squirrel.Mac/blob/fffea30e4a339a7f7d69a3391314b72548d209bd/LICENSE) | `5947a9ffe98ba34011ae42b2851e6fdf050b3ddd` | MIT notice retention; the text explicitly identifies bundled Sparkle BinaryDelta, bsdiff and sais-lite and includes their notices. bsdiff's binary distribution clause requires accompanying copyright, conditions and disclaimer. |
+| [ReactiveObjC LICENSE.md](https://github.com/ReactiveCocoa/ReactiveObjC/blob/74ab5baccc6f7202c8ac69a8d1e152c29dc1ea76/LICENSE.md) | `49bc37468d432900e63a13929c4ca0bdf39f04cc` | MIT copyright and permission notice retention. |
+| [Mantle LICENSE.md](https://github.com/Mantle/Mantle/blob/2a8e2123a3931038179ee06105c9e6ec336b12ea/LICENSE.md) | `4e9825ac272bdbab7e56f9bc5b27fb583144dfc7` | MIT plus a Proton code notice and non-endorsement clause; preserve the complete original text rather than replacing it with generic MIT. |
+| [Sparkle LICENSE](https://github.com/sparkle-project/Sparkle/blob/79bc9e872948e47877e76f194cb0c8e0412b0b90/LICENSE) | `abe6e04c37e0b94e3a25078b6fd4abdafc299af4` | MIT plus external notices for bsdiff, sais-lite, Ed25519 and SUSignatureVerifier; assess which code is actually included and retain applicable original terms. |
+
+**Evidence boundary:** this is an exact source-revision legal-text inventory and technical reading, not a proof that shipped Mach-O binaries were built from these sources, that every credits section survived packaging, or a human approval. Next, compare the actual SHA-bound DMG `LICENSES.chromium.html` against complete applicable upstream texts (including sub-notices; normalize only markup/whitespace), record any omissions and reviewer disposition. Do not infer absence from the presence of a generic MIT label. The six AppImage ELF files still lack an exact versioned binary-to-distribution-source mapping. Public Debian/Ubuntu package records provide research leads, not evidence of the binary identity; attempted Debian latest-copyright URLs were not retrievable during this review. No AppImage license clearance is recorded. No model pin, installer, draft, tag or release is changed. All legal and human-microphone gates remain PENDING.
+
+
+### Actual macOS credits reconciliation — 2026-11-24: notice coverage gap, HOLD
+
+Re-read the original DMG from the exact-source review archive (run `45318769948`, source `be89e098a0c9593f1f87ff8ea6baba2ef9c107ea`). Independent DMG SHA-256 `86d166d81d2cbd4661bb6ef14ebe1c05f8b60f49aca66e662999e4ac0bf2f831`; extracted HFS+ member `Voxnelo.app/Contents/Resources/LICENSES.chromium.html`, 5598206 bytes, SHA-256 `214152f78cc0b611f63ff8faefcc6670c4605ffbff05f092bb671e6df80ce741`. No mounting or execution. Parsed 498 `div.product` credits sections and their license preformatted text; also searched the raw HTML independently of section titles.
+
+| Upstream input (pinned in Electron DEPS) | Actual DMG notice observation | Disposition |
+| --- | --- | --- |
+| Squirrel.Mac | Exactly one Squirrel section. Extracted preformatted UTF-8 text produces Git blob SHA-1 `5947a9ffe98ba34011ae42b2851e6fdf050b3ddd`, identical to the previously fetched immutable upstream LICENSE. Includes BinaryDelta, Colin Percival/bsdiff and Yuta Mori/sais-lite. | Exact text match; reviewer approval still pending. |
+| ReactiveObjC | No named section, no raw HTML occurrence of ReactiveObjC or the exact upstream copyright marker `2012 - 2016, GitHub`. Its native framework was located in the DMG earlier. | **Notice coverage not demonstrated; investigate/remediate before publication.** |
+| Mantle | No named section or raw HTML occurrence of Mantle, Bitswift or Proton framework. Mantle.framework is present. | **Notice coverage not demonstrated; investigate/remediate before publication.** |
+| Sparkle | Squirrel section retains Sparkle BinaryDelta notices; no separate Sparkle section or SUSignatureVerifier marker. An Orson Peters mention in the foldhash section does not establish Sparkle coverage. | Determine actual incorporated Sparkle code and applicable notices. |
+
+A case-insensitive scan of the DMG catalog's member basenames for license/notice/copyright/credits/legal located only the three previously recorded Resources files (first-party LICENSE, LICENSE.electron.txt, LICENSES.chromium.html). The ASAR filename inventory did not locate separately named framework license files; unrelated lucide icon filenames are not evidence. This is a **confirmed gap in the examined credits collection**, not proof of a legal violation or exhaustive absence of text from every possible resource. Upstream credits-generation patch presence is insufficient. The extracted Squirrel Git blob SHA-1 is a source-object comparison, not a binary SHA-256.
+
+**Remediation worklist:** locate any additional applicable original notices and substantiate them in the actual distributed payload. If absent, add a dedicated, accessible third-party notice resource preserving complete pinned ReactiveObjC and Mantle texts (including Proton), plus applicable Sparkle and other native notices; bind notice inputs to exact upstream commits and verified digests. Add a fail-closed packaging regression for expected notice content and verify every platform's actual unpacked/installed payload. If packaging bytes change, generate a separate exact-source review build, record new installer hashes, and bind device acceptance to those new bytes; do not reuse run 45318769948 as evidence for a changed installer. A qualified reviewer must decide applicability and approve all actual license/notice content. No source, model pins or candidate binaries are changed by this documentation-only finding. The old draft remains untouched and unpublished; HOLD.
+
 ## Automation boundaries and known code risk
 
 - `scripts/check-asr-staging.mts` proves inventory/integrity, **not** lawful redistribution.
