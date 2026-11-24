@@ -142,6 +142,8 @@ class WheelArchiveEvidenceTests(unittest.TestCase):
             )
             item = mod.inspect_wheel(wheel, digest)
             self.assertEqual(item['name'], 'moonshine-voice')
+            self.assertEqual(item['distInfoRoot'], 'moonshine-voice-0.0.65.dist-info')
+            self.assertTrue(item['distInfoMatchesWheelIdentity'])
             self.assertTrue(item['declaredLicenseFilesLocated'])
             self.assertTrue(item['manualReviewRequired'])
 
