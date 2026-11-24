@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { Metafile } from 'esbuild';
+import { assertSameNoticeEvidence, readInstalledLicenseIdentity, type PackageLicenseIdentity } from './package-license-evidence.mts';
 
-type PackageEntry = { name: string; version: string; license: string | null; contributedBytes: number };
-type PackageIdentity = { name: string; version: string; license: string | null };
+type PackageEntry = PackageLicenseIdentity & { contributedBytes: number };
+type PackageIdentity = PackageLicenseIdentity;
 
 export function packageRootForInput(input: string): { root: string; name: string } | null {
   const parts = input.replaceAll('\\', '/').split('/');
@@ -43,7 +44,7 @@ export async function summarizeBundledPackages(
         const key = identity.name + '@' + identity.version;
         const prior = totals.get(key);
         if (prior) {
-          assert.equal(prior.license, identity.license, 'Conflicting license metadata for same package version');
+          assertSameNoticeEvidence(prior, identity);
           prior.contributedBytes += contribution.bytesInOutput;
         } else {
           totals.set(key, { ...identity, contributedBytes: contribution.bytesInOutput });
@@ -61,23 +62,12 @@ export async function writeEsbuildLicenseInventory(
   target: 'electron' | 'audio-worklet',
   metafiles: readonly Metafile[],
 ): Promise<void> {
-  const summary = await summarizeBundledPackages(metafiles, async (root, name) => {
-    // Never serialize package paths or raw metafiles; read only installed metadata.
-    const metadata = JSON.parse(await readFile(path.resolve(root, 'package.json'), 'utf8')) as {
-      name?: unknown; version?: unknown; license?: unknown;
-    };
-    assert.equal(metadata.name, name, 'Unexpected installed package name');
-    assert.ok(typeof metadata.version === 'string', 'Missing package version');
-    // License metadata is a hint, not a notice or an approval.
-    const license = typeof metadata.license === 'string' &&
-      /^(?:[a-zA-Z0-9.+() -]{1,160})$/.test(metadata.license) ? metadata.license : null;
-    return { name, version: metadata.version, license };
-  });
+  const summary = await summarizeBundledPackages(metafiles, readInstalledLicenseIdentity);
   const directory = path.resolve('build', 'license-inventory');
   await mkdir(directory, { recursive: true });
   await writeFile(path.join(directory, target + '.json'), JSON.stringify({
-    schemaVersion: 1, target, ...summary, legalApproval: false,
+    schemaVersion: 2, target, ...summary, legalApproval: false,
     scope: 'esbuild positive emitted bytes only; excludes renderer, external and copied assets',
   }, null, 2) + '\n');
-  console.log('License inventory:', target, summary.packages.length, 'bundled npm package versions; legal review PENDING');
+  console.log('License inventory:', target, summary.packages.length, 'bundled npm package versions;', summary.packages.filter(pkg => !pkg.noticeFiles.length).length, 'without recognized regular root notice files; legal review PENDING');
 }

@@ -30,10 +30,10 @@ describe('esbuild bundled package license inventory', () => {
       },
     };
     const result = await summarizeBundledPackages([meta], async (_root, name) => ({
-      name, version: '1.2.3', license: 'MIT',
+      name, version: '1.2.3', license: 'MIT', noticeFiles: [], skippedNoticeCount: 0,
     }));
     expect(result).toEqual({
-      packages: [{ name: 'pkg', version: '1.2.3', license: 'MIT', contributedBytes: 15 }],
+      packages: [{ name: 'pkg', version: '1.2.3', license: 'MIT', noticeFiles: [], skippedNoticeCount: 0, contributedBytes: 15 }],
       externalImportCount: 1,
     });
     expect(JSON.stringify(result)).not.toContain('node_modules');
@@ -46,7 +46,7 @@ describe('esbuild bundled package license inventory', () => {
       } },
     } };
     await expect(summarizeBundledPackages([meta], async () => ({
-      name: 'different', version: '1.0.0', license: null,
+      name: 'different', version: '1.0.0', license: null, noticeFiles: [], skippedNoticeCount: 0,
     }))).rejects.toThrow();
   });
 });

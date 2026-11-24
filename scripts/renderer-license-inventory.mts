@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import type { RsbuildPlugin } from '@rsbuild/core';
 import { packageRootForInput } from './esbuild-license-inventory.mts';
+import { assertSameNoticeEvidence, readInstalledLicenseIdentity, type PackageLicenseIdentity } from './package-license-evidence.mts';
 
 type StatsModule = {
   nameForCondition?: string | null;
@@ -10,7 +11,7 @@ type StatsModule = {
   modules?: StatsModule[];
 };
 type StatsTree = { modules?: StatsModule[]; children?: StatsTree[] };
-type Identity = { name: string; version: string; license: string | null };
+type Identity = PackageLicenseIdentity;
 
 export async function summarizeRendererPackages(
   stats: StatsTree,
@@ -39,7 +40,7 @@ export async function summarizeRendererPackages(
           }
           const key = identity.name + '@' + identity.version;
           const prior = packages.get(key);
-          if (prior) assert.equal(prior.license, identity.license, 'Conflicting renderer license metadata');
+          if (prior) assertSameNoticeEvidence(prior, identity);
           packages.set(key, identity);
         }
       }
@@ -71,26 +72,17 @@ export function rendererLicenseInventory(): RsbuildPlugin {
           groupModulesByExtension: false, groupModulesByLayer: false,
           groupModulesByPath: false, groupModulesByType: false,
         }) as StatsTree;
-        const summary = await summarizeRendererPackages(data, async (root, name) => {
-          const metadata = JSON.parse(await readFile(path.resolve(root, 'package.json'), 'utf8')) as {
-            name?: unknown; version?: unknown; license?: unknown;
-          };
-          assert.equal(metadata.name, name, 'Unexpected renderer package name');
-          assert.ok(typeof metadata.version === 'string', 'Missing renderer package version');
-          const license = typeof metadata.license === 'string' &&
-            /^[a-zA-Z0-9.+() -]{1,160}$/.test(metadata.license) ? metadata.license : null;
-          return { name, version: metadata.version, license };
-        });
+        const summary = await summarizeRendererPackages(data, readInstalledLicenseIdentity);
         // React is an intentional renderer runtime dependency. An empty or incomplete
         // stats projection must not silently be accepted as a successful inventory.
         assert.ok(summary.packages.some(pkg => pkg.name === 'react'), 'Renderer inventory did not identify React');
         const directory = path.resolve('build', 'license-inventory');
         await mkdir(directory, { recursive: true });
         await writeFile(path.join(directory, 'renderer.json'), JSON.stringify({
-          schemaVersion: 1, target: 'renderer', ...summary, legalApproval: false,
+          schemaVersion: 2, target: 'renderer', ...summary, legalApproval: false,
           scope: 'chunk-associated stats modules and nested members; not exact emitted bytes or complete asset inventory',
         }, null, 2) + '\n');
-        console.log('License inventory: renderer', summary.packages.length, 'chunk-associated npm package versions;', summary.unidentifiedModuleCount, 'unidentified active modules; legal review PENDING');
+        console.log('License inventory: renderer', summary.packages.length, 'chunk-associated npm package versions;', summary.unidentifiedModuleCount, 'unidentified active modules;', summary.packages.filter(pkg => !pkg.noticeFiles.length).length, 'without recognized regular root notice files; legal review PENDING');
       });
     },
   };

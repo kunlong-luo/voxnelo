@@ -10,7 +10,7 @@ describe('renderer chunk-associated license inventory', () => {
         { nameForCondition: '/repo/node_modules/pkg/b.js' },
       ] },
       { chunks: [], nameForCondition: '/repo/node_modules/unused/index.js' },
-    ] }] }, async (_root, name) => ({ name, version: '1.0.0', license: 'MIT' }));
+    ] }] }, async (_root, name) => ({ name, version: '1.0.0', license: 'MIT', noticeFiles: [], skippedNoticeCount: 0 }));
     expect(result.packages.map(pkg => pkg.name)).toEqual(['pkg', 'react']);
     expect(result.activeModuleCount).toBe(4);
     expect(result.unidentifiedModuleCount).toBe(1);
@@ -20,6 +20,6 @@ describe('renderer chunk-associated license inventory', () => {
   it('rejects mismatched package identities', async () => {
     await expect(summarizeRendererPackages({ modules: [
       { chunks: ['main'], nameForCondition: 'node_modules/react/index.js' },
-    ] }, async () => ({ name: 'other', version: '1.0.0', license: null }))).rejects.toThrow();
+    ] }, async () => ({ name: 'other', version: '1.0.0', license: null, noticeFiles: [], skippedNoticeCount: 0 }))).rejects.toThrow();
   });
 });
