@@ -69,3 +69,18 @@ Each OS needs at least 10 **quiet + 10 noisy direct-human-microphone trials**, a
 
 
 For the **unpublished** v1.0.4 source candidate, use the [physical human-microphone ledger](../release/V1.0.4-PHYSICAL-DEVICE-EVIDENCE.md) and its blank JSON template. `pnpm asr:mic:evidence:audit <private-file.json>` is an **opt-in local-only completeness checker** (schema 2) for self-reported counts, source/installer SHA, the pinned Moonshine 0.0.65 runtime with Python 3.12, expected per-platform SDK Wheel and eight local model SHA-256 digests, and visible-UI latency. It does not independently inspect devices, audio, model bytes or source rights. A structurally complete summary is **not** an acceptance verdict, and the release owner must retain the actual underlying evidence privately and separately approve every release gate. As checked on 2026-11-23, all three new-native-ASR physical-human-mic rows remain **PENDING**, along with the 0.0.65 model provenance and NOTICE review. Nothing in this intake changes the old Draft Release #428750217, its eight prior assets or public v1.0.3.
+
+## Supplemental native framework notices — proposed packaging correction (2026-11-24)
+
+Review run `45318769948` is the historical pre-correction candidate, not evidence for a corrected installer. The macOS notice coverage finding is tracked in [PR #280](https://github.com/kunlong-luo/voxnelo/pull/280) and the [ASR release gate](ASR-PUBLIC-RELEASE-GATE.md). Four original legal texts are now checked in under `build/third-party-notices/`, from the exact dependency commits declared in [Electron v45.4.1 DEPS](https://github.com/electron/electron/blob/v45.4.1/DEPS).
+
+| Text | Immutable upstream source | Git blob SHA-1 |
+| --- | --- | --- |
+| Squirrel.txt | [LICENSE](https://github.com/Squirrel/Squirrel.Mac/blob/fffea30e4a339a7f7d69a3391314b72548d209bd/LICENSE) | `5947a9ffe98ba34011ae42b2851e6fdf050b3ddd` |
+| ReactiveObjC.txt | [LICENSE.md](https://github.com/ReactiveCocoa/ReactiveObjC/blob/74ab5baccc6f7202c8ac69a8d1e152c29dc1ea76/LICENSE.md) | `49bc37468d432900e63a13929c4ca0bdf39f04cc` |
+| Mantle.txt | [LICENSE.md](https://github.com/Mantle/Mantle/blob/2a8e2123a3931038179ee06105c9e6ec336b12ea/LICENSE.md) | `4e9825ac272bdbab7e56f9bc5b27fb583144dfc7` |
+| Sparkle.txt | [LICENSE](https://github.com/sparkle-project/Sparkle/blob/79bc9e872948e47877e76f194cb0c8e0412b0b90/LICENSE) | `abe6e04c37e0b94e3a25078b6fd4abdafc299af4` |
+
+All four committed blobs were read back and match upstream. Preserve LF and original legal text. Electron-builder copies this supplemental set into `resources/THIRD-PARTY-NOTICES/` (macOS `Contents/Resources/THIRD-PARTY-NOTICES/`) without replacing existing Electron notices. The package integrity checker requires Electron 45.4.1, pinned source blob identities and identical packaged bytes. Future Electron upgrades require refreshing reviewed pins. This is not an exhaustive legal inventory.
+
+CI and corrected installer inspection remain pending. The checker examines unpacked app resources, not every final installer. Verify corrected NSIS, DMG, DEB and AppImage individually. AppImage native libraries, Windows bootstrapper, renderer dependencies/assets, Python and model rights remain pending. Generate a fresh exact-source review-only build after packaging changes, independently hash its installers and collect physical microphone evidence bound to those new bytes. No old draft replacement or publication. **v1.0.4 HOLD.**
