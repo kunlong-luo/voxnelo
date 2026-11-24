@@ -157,6 +157,20 @@ A case-insensitive scan of the DMG catalog's member basenames for license/notice
 
 **Remediation worklist:** locate any additional applicable original notices and substantiate them in the actual distributed payload. If absent, add a dedicated, accessible third-party notice resource preserving complete pinned ReactiveObjC and Mantle texts (including Proton), plus applicable Sparkle and other native notices; bind notice inputs to exact upstream commits and verified digests. Add a fail-closed packaging regression for expected notice content and verify every platform's actual unpacked/installed payload. If packaging bytes change, generate a separate exact-source review build, record new installer hashes, and bind device acceptance to those new bytes; do not reuse run 45318769948 as evidence for a changed installer. A qualified reviewer must decide applicability and approve all actual license/notice content. No source, model pins or candidate binaries are changed by this documentation-only finding. The old draft remains untouched and unpublished; HOLD.
 
+
+### Packaging tool provenance checkpoint — 2026-11-24
+
+For historical review run `45318769948` (source `be89e098a0c9593f1f87ff8ea6baba2ef9c107ea`), inspected original successful platform job logs and the locked source dependency inventory. This is toolset identification, not legal approval or an attestation of exact bundled native library bytes.
+
+| Platform | Observed evidence | Remaining work |
+| --- | --- | --- |
+| Linux AppImage | [Linux job 138193262398](https://github.com/kunlong-luo/voxnelo/actions/runs/45318769948/job/138193262398) explicitly logs download of `appimage-12.0.1.7z` | Recover and independently hash that exact original tool archive, map its x64 library payload to the six previously recorded installer hashes and obtain versioned distribution copyright/source records. |
+| Windows NSIS | [Windows job 138193262385](https://github.com/kunlong-luo/voxnelo/actions/runs/45318769948/job/138193262385) explicitly logs electron-builder 26.18.0, `nsis-3.0.4.1.7z`, `nsis-resources-3.4.1.7z`, and `7zip-win-x64.tar.gz` | Recover exact tool archive identities and inspect incorporated bootstrapper, plug-ins and compression code; distinguish build-only utilities from redistributed bytes. |
+
+The [electron-builder-binaries historical appimage-12.0.1 tag](https://github.com/electron-userland/electron-builder-binaries/tree/appimage-12.0.1) resolves to commit `57839c6516289c0412c1b0887a6718d71e1ac5c2`. Its [Makefile](https://github.com/electron-userland/electron-builder-binaries/blob/57839c6516289c0412c1b0887a6718d71e1ac5c2/Makefile) changes reference AppImageKit release 12 runtime downloads and a publish recipe for version 12.0.0. This is a historical source lead, not a manifest for every byte of the downloaded 12.0.1 archive. The newer [toolset build script at fixed commit 4fa56c6](https://github.com/electron-userland/electron-builder-binaries/blob/4fa56c60939d96f8ee2687670611909c1d1eb42d/packages/appimage/assets/build-appimage.sh) explicitly copies the same six library names (with architecture-dependent appindicator/indicator aliases) and contains license collection logic; it is not the old 12.0.1 build script and its newer license inventory must not be attributed to that old toolset. The exact historical library versions, build sources and applicable obligations remain **PENDING**. No claim of legal clearance, license violation, or successful byte mapping is made.
+
+PR #281 is separately validating the supplemental macOS notice correction and installed DEB checks. Do not invalidate that run by appending unrelated research commits. Once its changes are integrated, a fresh exact-source review-only build and new independent installer hashes are required. All direct-human mic and legal approval gates remain PENDING; **HOLD**.
+
 ## Automation boundaries and known code risk
 
 - `scripts/check-asr-staging.mts` proves inventory/integrity, **not** lawful redistribution.
