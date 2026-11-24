@@ -40,6 +40,47 @@ The [private physical-device evidence auditor](../release/V1.0.4-PHYSICAL-DEVICE
 
 A source audit found that the Electron-builder file/resource allowlists did not **explicitly** include Voxnelo's root MIT `LICENSE`. Future native installer candidates now carry an accessible `resources/LICENSE` copy through `extraResources` and the real three-platform package inspection verifies its bytes against the source LICENSE. This guards **only the application's own notice**; it does not authenticate any third-party license, ship Electron/npm transitive notices, resolve exact Moonshine model rights or authorize v1.0.4 publication. In addition, the four Linux DEB pipelines run a `dpkg -L` + byte-for-byte validation **after actual apt installation**, since unpacked `resources/LICENSE` alone is not proof of installed-package contents. Windows/macOS checks verify their unpacked Electron applications, not an end-user NSIS GUI install or DMG mount. Existing older private Draft assets are not updated by source changes. See [release operations](RELEASE-OPERATIONS.md).
 
+
+### Exact-source candidate and shipped Linux third-party notice inventory (2026-11-24)
+
+The [candidate handoff](../release/V1.0.4-REVIEW-ARTIFACT-HANDOFF-2026-11-24.md) records all eight successful jobs of review run `45318769948`, source `be89e098a0c9593f1f87ff8ea6baba2ef9c107ea`, and five independently measured installer SHA-256 values. This is an internal unsigned review build; its manifests expressly deny release approval. Physical-mic QA, legal review and the old Draft remain separate.
+
+Read-only inspection of the SHA-verified Linux `voxnelo_1.0.4_amd64.deb` (SHA-256 `7f5d5b21797c63154ab79a37bb84fc7906fc2a093bf59d968a67a04f8fd1b681`) extracted its data with `dpkg-deb -x` and parsed the ASAR header and package metadata without executing installed code. Under `/opt/Voxnelo/` the following actual files were observed:
+
+| Shipped member | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `LICENSE.electron.txt` | 1096 | `5154e165bd6c2cc0cfbcd8916498c7abab0497923bafcd5cb07673fe8480087d` |
+| `LICENSES.chromium.html` | 5598206 | `214152f78cc0b611f63ff8faefcc6670c4605ffbff05f092bb671e6df80ce741` |
+| `resources/LICENSE` | 1077 | `c419e60283cfcb8c5bb56e0cd7e4e7f37fef6b6d2d29a08eab2d134c1558a438` |
+| `resources/app.asar` | 52917609 | `ed6adc7f15061911d683639c8ce0959a4212106aa8055ff5ae89d908a3f35462` |
+
+The ASAR has 8150 file members. All 18 independently identifiable top-level/scoped npm distributions have a package-level LICENSE file. Their package.json declarations and notice filenames are:
+
+| Package | Version | Declared license | Package-level files |
+| --- | --- | --- | --- |
+| @babel/runtime | 7.29.10 | MIT | LICENSE |
+| @base-ui/react | 1.9.0 | MIT | LICENSE |
+| @base-ui/utils | 0.5.0 | MIT | LICENSE |
+| @floating-ui/core | 1.8.0 | MIT | LICENSE |
+| @floating-ui/dom | 1.8.0 | MIT | LICENSE |
+| @floating-ui/react-dom | 2.1.9 | MIT | LICENSE |
+| @floating-ui/utils | 0.2.12 | MIT | LICENSE |
+| @formkit/auto-animate | 0.10.2 | MIT | LICENSE |
+| class-variance-authority | 0.7.1 | Apache-2.0 | LICENSE |
+| clsx | 2.1.1 | MIT | license |
+| dexie | 4.4.7 | Apache-2.0 | LICENSE, NOTICE |
+| lucide-react | 1.74.0 | ISC | LICENSE |
+| react | 19.3.1 | MIT | LICENSE |
+| react-dom | 19.3.1 | MIT | LICENSE |
+| reselect | 5.3.0 | MIT | LICENSE |
+| scheduler | 0.28.0 | MIT | LICENSE |
+| tailwind-merge | 3.7.0 | MIT | LICENSE.md |
+| use-sync-external-store | 1.7.0 | MIT | LICENSE |
+
+Two generated renderer notice sidecars were also observed: `dist/static/js/k.5869a2c8de.js.LICENSE.txt` (SHA-256 `9c903dd73627e8eac8f63650cee24cbd136fc569322d7e94a85692f195bd839e`) and `dist/static/js/lib-react.0589e6ad37.js.LICENSE.txt` (SHA-256 `e47a413b62a5bf023d2b81a25d0ef4213ff1bb756df7f3c31ba57f88334e1e0f`).
+
+**Scope limitation:** this is Linux DEB file-presence and declared-license evidence, not an exhaustive production SBOM or a review of the legal text. It does not establish coverage for dependencies inlined in renderer bundles, embedded native components, fonts/assets, or the separate Windows NSIS, macOS DMG and Linux AppImage distributions. Review the full license and NOTICE texts, reconcile the bundled-module inventory against the production lockfile and build metadata, inspect each remaining installer and record reviewer/date and exact artifact hash. Keep the separate [Moonshine legal evidence](MOONSHINE-V1.0.4-LICENSE-EVIDENCE.md) and exact eight-model-file provenance gap open. No third-party legal clearance, direct-human microphone approval or publication is implied.
+
 ## Automation boundaries and known code risk
 
 - `scripts/check-asr-staging.mts` proves inventory/integrity, **not** lawful redistribution.
