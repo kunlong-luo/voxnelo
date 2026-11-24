@@ -64,7 +64,8 @@ def fixtures(root: Path):
 class PrivateLicenseReviewTests(unittest.TestCase):
     def test_exports_original_bytes_privately_and_never_approves_any_gate(self):
         with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
+            # Resolve macOS /var -> /private/var before testing no-symlink outputs.
+            root = Path(temp).resolve()
             wheels, report, snapshot, _, _ = fixtures(root)
             destination = root / 'private-review'
             result = review.prepare(wheels, report, snapshot, destination)
@@ -109,7 +110,8 @@ class PrivateLicenseReviewTests(unittest.TestCase):
 
     def test_refuses_unpinned_digest_or_claimed_legal_approval_without_output(self):
         with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
+            # Resolve macOS /var -> /private/var before testing no-symlink outputs.
+            root = Path(temp).resolve()
             wheels, report_file, snapshot_file, report, snapshot = fixtures(root)
             target = root / 'blocked'
             snapshot['platforms']['linux'][report['wheels'][0]['filename']] = '0' * 64
@@ -128,7 +130,8 @@ class PrivateLicenseReviewTests(unittest.TestCase):
 
     def test_rejects_missing_declared_member_and_bad_destination(self):
         with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
+            # Resolve macOS /var -> /private/var before testing no-symlink outputs.
+            root = Path(temp).resolve()
             wheels, report_file, snapshot_file, report, snapshot = fixtures(root)
             first = report['wheels'][0]
             wheel = wheels / first['filename']
@@ -159,7 +162,8 @@ class PrivateLicenseReviewTests(unittest.TestCase):
 
     def test_rejects_changed_metadata_between_scan_and_export_and_cleans_output(self):
         with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
+            # Resolve macOS /var -> /private/var before testing no-symlink outputs.
+            root = Path(temp).resolve()
             wheels, report, snapshot, _, _ = fixtures(root)
             destination = root / 'private-review'
             actual_collect = review.collector.collect
@@ -176,7 +180,8 @@ class PrivateLicenseReviewTests(unittest.TestCase):
 
     def test_refuses_symlink_in_any_output_ancestor(self):
         with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
+            # Resolve macOS /var -> /private/var before testing no-symlink outputs.
+            root = Path(temp).resolve()
             wheels, report, snapshot, _, _ = fixtures(root)
             actual = root / 'underlying'
             (actual / 'child').mkdir(parents=True)
