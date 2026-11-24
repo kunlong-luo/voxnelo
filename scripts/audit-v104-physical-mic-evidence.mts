@@ -4,11 +4,14 @@
  * It checks the shape and arithmetic of self-reported private summaries only.
  * It cannot authenticate a device, recording, consent, reviewer, legal rights or release.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { PINNED_MOONSHINE_MEDIUM_FILES } from '../apps/desktop/moonshineIntegrity.ts';
 import wheelSnapshot from '../docs/engineering/moonshine-python312-wheel-digests-2026-11-23.json' with { type: 'json' };
+
+// Self-reported summary aggregates must not contain raw transcripts or audio.
+const MAX_PRIVATE_SUMMARY_BYTES = 256 * 1024;
 
 type Row = Record<string, unknown>;
 const row = (value: unknown): Row =>
@@ -74,7 +77,9 @@ export function auditV104PhysicalMicEvidence(input: unknown): PhysicalMicEvidenc
   const platforms = row(data.platforms);
   for (const key of Object.keys(platforms)) {
     if (!(PHYSICAL_MIC_TARGETS as readonly string[]).includes(key)) {
-      blockers.push('platforms: unexpected platform ' + key);
+      // Never echo an attacker/user-controlled JSON property name to CI/CLI
+      // output: it may contain a private path, transcript or other secret.
+      blockers.push('platforms: unexpected platform key (name withheld)');
     }
   }
   for (const platform of PHYSICAL_MIC_TARGETS) {
@@ -143,9 +148,13 @@ export function auditV104PhysicalMicEvidence(input: unknown): PhysicalMicEvidenc
         blockers.push(label + 'edits: substitutions + deletions exceed reference words');
       }
       if (fields.every(field => isCount(scenario[field])) && (scenario.referenceWords as number) > 0) {
-        results[condition] =
-          ((scenario.substitutions as number) + (scenario.deletions as number) +
-            (scenario.insertions as number)) / (scenario.referenceWords as number);
+        const totalEdits = (scenario.substitutions as number) +
+          (scenario.deletions as number) + (scenario.insertions as number);
+        if (!Number.isSafeInteger(totalEdits)) {
+          blockers.push(label + 'edits: combined edit counts exceed safe integer precision');
+        } else {
+          results[condition] = totalEdits / (scenario.referenceWords as number);
+        }
       }
     }
     weightedWer[platform] = results;
@@ -156,15 +165,20 @@ export function auditV104PhysicalMicEvidence(input: unknown): PhysicalMicEvidenc
     const requiredLatencySamples = isCount(quietTrials) && isCount(noisyTrials) &&
       Number.isSafeInteger(quietTrials + noisyTrials)
       ? quietTrials + noisyTrials : null;
+    if (isCount(quietTrials) && isCount(noisyTrials) && requiredLatencySamples === null) {
+      blockers.push(prefix + 'latency: total trial count exceeds safe integer precision');
+    }
     for (const metric of ['firstVisibleInterimMs', 'endOfSpeechToFinalVisibleMs']) {
       const samples = row(src[metric]);
       const label = prefix + metric + '.';
       if (!isCount(samples.count) || samples.count === 0) {
         blockers.push(label + 'count: measured observations required');
       } else if (requiredLatencySamples !== null &&
-          samples.count < requiredLatencySamples) {
+          samples.count !== requiredLatencySamples) {
+        // A first-visible/final-visible value is measured once per attempt,
+        // not multiple times per attempt or on unrelated replayed audio.
         blockers.push(label +
-          'count: must cover every quiet and noisy human-microphone trial');
+          'count: exactly one observation per quiet and noisy human-microphone trial required');
       }
       if (typeof samples.p50 !== 'number' || !Number.isFinite(samples.p50) || samples.p50 < 0 ||
           typeof samples.p95 !== 'number' || !Number.isFinite(samples.p95) || samples.p95 < samples.p50) {
@@ -191,6 +205,9 @@ if (executedAsScript) {
     process.exitCode = 2;
   } else {
     try {
+      if (statSync(file).size > MAX_PRIVATE_SUMMARY_BYTES) {
+        throw new Error('Private evidence aggregate exceeds size limit');
+      }
       const audit = auditV104PhysicalMicEvidence(JSON.parse(readFileSync(file, 'utf8')) as unknown);
       for (const blocker of audit.blockers) console.error('INCOMPLETE: ' + blocker);
       if (audit.blockers.length) process.exitCode = 1;

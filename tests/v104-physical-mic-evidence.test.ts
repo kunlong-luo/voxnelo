@@ -1,4 +1,7 @@
-import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { PINNED_MOONSHINE_MEDIUM_FILES } from '../apps/desktop/moonshineIntegrity.ts';
 import wheelSnapshot from '../docs/engineering/moonshine-python312-wheel-digests-2026-11-23.json' with { type: 'json' };
 import { describe, expect, it } from 'vitest';
@@ -122,6 +125,56 @@ describe('v1.0.4 physical human microphone evidence intake (NOT release approval
     expect(issues).toContain('windows-x64.firstVisibleInterimMs.count');
     expect(issues).toContain('windows-x64.endOfSpeechToFinalVisibleMs.count');
     expect(auditV104PhysicalMicEvidence(input).releaseApproved).toBe(false);
+  });
+
+  it('rejects excessive first-visible/final-visible samples unrelated to the trials', () => {
+    const input = filledSyntheticFixture();
+    input.platforms['linux-x64']!.firstVisibleInterimMs.count = 21;
+    input.platforms['macos-arm64-15plus']!.endOfSpeechToFinalVisibleMs.count = 99;
+    const audit = auditV104PhysicalMicEvidence(input);
+    expect(audit.blockers.join(' ')).toContain('linux-x64.firstVisibleInterimMs.count');
+    expect(audit.blockers.join(' ')).toContain('macos-arm64-15plus.endOfSpeechToFinalVisibleMs.count');
+    expect(audit.structurallyReviewable).toBe(false);
+    expect(audit.releaseApproved).toBe(false);
+  });
+
+  it('refuses integer-overflowed WER sums instead of computing an imprecise score', () => {
+    const input = filledSyntheticFixture();
+    input.platforms['linux-x64']!.quiet.insertions = Number.MAX_SAFE_INTEGER;
+    const audit = auditV104PhysicalMicEvidence(input);
+    expect(audit.blockers.join(' ')).toContain('linux-x64.quiet.edits');
+    expect(audit.weightedWer['linux-x64']?.quiet).toBeNull();
+    expect(audit.releaseApproved).toBe(false);
+  });
+
+  it('never echoes arbitrary unknown platform JSON keys to diagnostics', () => {
+    const input = filledSyntheticFixture();
+    const secret = 'private-transcript-and-home-directory-sentinel';
+    input.platforms[secret] = example(secret);
+    const audit = auditV104PhysicalMicEvidence(input);
+    expect(audit.blockers.join(' ')).toContain('platforms: unexpected platform');
+    expect(JSON.stringify(audit)).not.toContain(secret);
+    expect(audit.structurallyReviewable).toBe(false);
+  });
+
+  it('blocks oversized private evidence input before parsing or logging it', () => {
+    const dir = mkdtempSync(path.join(tmpdir(), 'voxnelo-private-mic-intake-'));
+    try {
+      const file = path.join(dir, 'private-summary.json');
+      const sentinel = 'private-audio-transcript-never-print-this';
+      writeFileSync(file, sentinel.repeat(9000));
+      const run = spawnSync(
+        process.execPath,
+        ['--experimental-strip-types', 'scripts/audit-v104-physical-mic-evidence.mts', file],
+        { cwd: process.cwd(), encoding: 'utf8', timeout: 15000 },
+      );
+      expect(run.status).toBe(1);
+      expect(run.stderr).toContain('Cannot parse or open evidence JSON');
+      expect(run.stderr).not.toContain(sentinel);
+      expect(run.stdout).toBe('');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   it('rejects impossible future human-microphone test dates', () => {
