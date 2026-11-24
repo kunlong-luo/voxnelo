@@ -140,6 +140,10 @@
     },
     "extraResources": [
       {
+        "from": "LICENSE",
+        "to": "LICENSE"
+      },
+      {
         "from": "build/icon.png",
         "to": "icons/voxnelo.png"
       },
