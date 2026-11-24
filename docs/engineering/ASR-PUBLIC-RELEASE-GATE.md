@@ -81,6 +81,24 @@ Two generated renderer notice sidecars were also observed: `dist/static/js/k.586
 
 **Scope limitation:** this is Linux DEB file-presence and declared-license evidence, not an exhaustive production SBOM or a review of the legal text. It does not establish coverage for dependencies inlined in renderer bundles, embedded native components, fonts/assets, or the separate Windows NSIS, macOS DMG and Linux AppImage distributions. Review the full license and NOTICE texts, reconcile the bundled-module inventory against the production lockfile and build metadata, inspect each remaining installer and record reviewer/date and exact artifact hash. Keep the separate [Moonshine legal evidence](MOONSHINE-V1.0.4-LICENSE-EVIDENCE.md) and exact eight-model-file provenance gap open. No third-party legal clearance, direct-human microphone approval or publication is implied.
 
+
+### Linux AppImage shipped-content comparison — 2026-11-24
+
+Independently rehashed `Voxnelo-1.0.4.AppImage` (132641993 bytes, SHA-256 `0faeebc7ac35d140f2c7ae4ea47079defa58860adfdb2ea67540b216c6d133d9`) from review run `45318769948`. Read its embedded SquashFS v4 filesystem (offset 188392, gzip compression) using a read-only parser without executing AppRun, mounting or running candidate code. The 101 enumerated non-root filesystem entries include `/LICENSE.electron.txt`, `/LICENSES.chromium.html`, `/resources/LICENSE` and `/resources/app.asar`; each was read and independently SHA-256 hashed and matches the exact DEB member in the table above. This extends the existing 18-package ASAR file-presence evidence to these identical bytes, not to the entire AppImage or a legal approval.
+
+The AppImage also contains six regular ELF files under `/usr/lib/` (not merely symlinks). Observed exact byte identities:
+
+| AppImage member | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `libXss.so.1` | 14488 | `270fe6e4d430118793d01cac5c6081d0ea9e244cfcf510475bc779bef21b754a` |
+| `libXtst.so.6` | 22880 | `38f9ccb12d2c477aad85db6279afc334d9f250f613884c188ace7232b83e9b68` |
+| `libappindicator.so.1` | 52128 | `033b8803f20b98e8cd56fc8e75e3a71a552f75c0cff9bd0937f3ddd6ee5d2145` |
+| `libgconf-2.so.4` | 192296 | `ba977334112bb81f6457ee4aad833c6d5f1ff731c718073cd50777d613b23185` |
+| `libindicator.so.7` | 60648 | `3b61ae3424c4800975c1806245a2d286f6e1fc49cd9350913075c27a95f3c7a0` |
+| `libnotify.so.4` | 31304 | `8f42294247a886c5a94b2a0ce1c0b65e953616d7efe8da664b3826cdeae47948` |
+
+No separate `/usr/share/doc/` tree was observed in this enumerated filesystem. This does not establish that a notice is absent from every shipped notice collection or that any license was violated. Identify exact distribution/build source and licensing terms for each of these six binaries; check notice/source-availability obligations and whether existing shipped texts meet them. Do not assume that the DEB's system dependencies and the AppImage's bundled binaries have identical distribution obligations. Windows NSIS and macOS DMG inner contents remain unverified in this review environment; those installer formats require independent read-only inspection, not extrapolation from Linux. All manual rights, human physical microphone and release approvals remain PENDING; HOLD.
+
 ## Automation boundaries and known code risk
 
 - `scripts/check-asr-staging.mts` proves inventory/integrity, **not** lawful redistribution.
