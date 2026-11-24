@@ -36,6 +36,17 @@ const executable=platform==='win32'
     : path.join(appRoot,existsSync(path.join(appRoot,'voxnelo'))?'voxnelo':'Voxnelo');
 const bundle=path.join(resources,'app.asar');
 const icon=path.join(resources,'icons','voxnelo.png');
+// MIT copyright notices are part of the distributed first-party software.
+// Compare the *actual packaged* readable file byte-for-byte with the checked-in
+// license; a source-only LICENSE does not prove that installers include it.
+// This does not review Electron, npm, Python, native or model licenses.
+const licenseSource=await readFile(path.resolve('LICENSE'));
+const licensePackagedPath=path.join(resources,'LICENSE');
+const licensePackaged=await readFile(licensePackagedPath);
+assert.ok(licenseSource.length>100,'First-party MIT license is unexpectedly short');
+assert.ok(licenseSource.equals(licensePackaged),
+  'Packaged first-party MIT LICENSE differs from the repository source');
+
 const requiredFiles: Array<[string, string, number]> = [['native executable',executable,1024],['asar archive',bundle,1024],['branded PNG',icon,256]];
 for(const [label,filename,minBytes] of requiredFiles){
   const info=await stat(filename);

@@ -55,6 +55,10 @@ GitHub Release 上传时把 Windows 安装包 `Voxnelo Setup 1.0.4.exe` 自动�
 
 **2026-11-21 清理说明：**上述两个一次性写权限 workflow 已移出 `.github/workflows/` 并原样保存在 [归档索引](../archive/README.md)，不能再经 GitHub Actions 手动执行或因改动文件而自动执行。Git 历史、现存 v1.0.4 私有草稿及其八项附件均保留；本次仅核对其草稿状态与资产清单，不冒称重新核验了所有 SHA-256 或执行了许可/人工验收。需要新的草稿修复请重新审核新流程，不能复活旧的一次性修复脚本。
 
+## 自有 MIT 许可证随安装包携带（2026-11-24）
+
+Voxnelo 的源码根目录存在 MIT [LICENSE](../../LICENSE)，但此前的 Electron 安装包文件清单没有显式声明将其作为可直接访问的资源发布。现已给**未来重新打包的候选件**配置 `extraResources/LICENSE` → 各平台的 `resources/LICENSE`，并由 `scripts/check-desktop-package.mts` 在 Linux、Windows 和 macOS 真实解包目录中核对文件字节。该自动检查只说明 **Voxnelo 自身**许可证被正确打包，**不代表 Electron/npm 或 Moonshine/Python/原生库的 NOTICE 已审核完整**。旧版 v1.0.4 Draft 的八个附件未经重建，不得倒推其已包含该文件，也不能因这个检查通过而人工发布。
+
 ## 后续新版本、草稿和额外的签名通道
 
 新版本应先以 PR 更新源码版本、锁文件、发行说明并通过 CI，再为**未使用的新版本号**建立独立的发布流程。`.github/workflows/release-draft.yml` 可通过 **Actions → Prepare GitHub release draft → Run workflow** 使用 `version` 及 `PREPARE_DRAFT_ONLY` 创建内部草稿；**已有 Draft/Release/tag 不允许覆盖**，草稿不会公开。

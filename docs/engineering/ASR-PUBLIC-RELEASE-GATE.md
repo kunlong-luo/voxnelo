@@ -36,6 +36,10 @@ In addition to SHA-256 and the `License-File` presence checks, the read-only ori
 
 The [private physical-device evidence auditor](../release/V1.0.4-PHYSICAL-DEVICE-EVIDENCE.md) now flags either UI latency metric unless its observation count is **exactly quiet.trials + noisy.trials on the same OS** (one first-visible and one final-visible event per attempted sentence), refuses unsafe WER integer sums, caps input summaries at 256 KiB, and suppresses unrecognized input keys from diagnostic output; it also refuses future-dated test records (with a one-day UTC allowance for time zones). This prevents a structurally complete-looking report based on just one easy subtitle result or extra unrelated timing samples while requiring at least 20 real trials. Missing interim/final events are defects to document privately, **not** permission to drop failed rows from p50/p95. The check examines only self-reported summary fields, not original measurements, speaker identity, audio/video or consent; **no release or real-device approval follows**.
 
+### First-party desktop license packaging check (2026-11-24)
+
+A source audit found that the Electron-builder file/resource allowlists did not **explicitly** include Voxnelo's root MIT `LICENSE`. Future native installer candidates now carry an accessible `resources/LICENSE` copy through `extraResources` and the real three-platform package inspection verifies its bytes against the source LICENSE. This guards **only the application's own notice**; it does not authenticate any third-party license, ship Electron/npm transitive notices, resolve exact Moonshine model rights or authorize v1.0.4 publication. Existing older private Draft assets are not updated by source changes. See [release operations](RELEASE-OPERATIONS.md).
+
 ## Automation boundaries and known code risk
 
 - `scripts/check-asr-staging.mts` proves inventory/integrity, **not** lawful redistribution.
