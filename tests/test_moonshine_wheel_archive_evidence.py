@@ -155,6 +155,26 @@ class WheelArchiveEvidenceTests(unittest.TestCase):
             self.assertTrue(item['declaredLicenseFilesLocated'])
             self.assertTrue(item['manualReviewRequired'])
 
+    def test_rejects_executable_or_model_payloads_disguised_as_notice(self):
+        with tempfile.TemporaryDirectory() as root:
+            base = Path(root)
+            for unsafe_path in (
+                'numpy-0.0.65.dist-info/licenses/NOTICE.dll',
+                'numpy-0.0.65.dist-info/licenses/AUTHORS.ort',
+                'numpy-0.0.65.dist-info/licenses/THIRD-PARTY.exe',
+                'numpy-0.0.65.dist-info/licenses/LICENSE.bin',
+                'numpy/NOTICE.so',
+                'numpy/legal/attribution.wasm',
+            ):
+                wheel, digest = make_wheel(base, 'numpy', {
+                    unsafe_path: b'synthetic executable or model bytes',
+                })
+                with self.assertRaisesRegex(
+                    ValueError, 'Executable or model payload'
+                ):
+                    mod.inspect_wheel(wheel, digest)
+                wheel.unlink()
+
     def test_rejects_tampering_missing_or_misidentified_metadata(self):
         with tempfile.TemporaryDirectory() as root:
             wheel, digest = make_wheel(Path(root), 'numpy')
