@@ -215,6 +215,11 @@ All **6/6** match the historical toolset repository at an exact Git commit. This
 
 Next: trace the history of these pinned library objects to the actual distribution source packages and exact versions; obtain the original copyright/license and applicable source-availability obligations, including any modifications. If archive bytes become available, independently hash them, list members without execution, compare the six x64 members against the candidate SHA-256 table, and retain the original archive identity. NSIS archive members and redistributed bootstrapper/plugin source mappings are still pending. No legal gate is approved, no model or installer is changed, and no publication is authorized. **HOLD.**
 
+
+### Supplemental native notice correction merged — 2026-11-24
+
+[PR #281](https://github.com/kunlong-luo/voxnelo/pull/281) merged into main as `d06fdf32517dfa2795332d7153b4c838bda7d835` after [CI 45324146327](https://github.com/kunlong-luo/voxnelo/actions/runs/45324146327) succeeded on synchronized head `412e4723dfeb7cfd65dbac30c44add7c5bb3f75d`. The earlier installed-DEB run 45323570903 explicitly verified all four original supplemental notice files after actual apt installation. The merged change ships Squirrel, ReactiveObjC, Mantle and Sparkle texts and checks source blob identity and packaged bytes. This is technical notice coverage remediation, not blanket third-party clearance. The old review run 45318769948 remains a pre-correction historical build: do not use its installer SHA-256 values as those of the corrected source. A fresh review-only build must record the exact new source, artifact and installer digests, inspect final installer payloads, and obtain separate physical-microphone evidence. See [release operations](RELEASE-OPERATIONS.md) and [candidate handoff](../release/V1.0.4-REVIEW-ARTIFACT-HANDOFF-2026-11-24.md). AppImage distribution-source mapping, NSIS license obligations, bundled dependencies/assets, Python runtime and model provenance remain open. **HOLD**.
+
 ## Automation boundaries and known code risk
 
 - `scripts/check-asr-staging.mts` proves inventory/integrity, **not** lawful redistribution.
