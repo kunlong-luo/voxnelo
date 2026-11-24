@@ -99,6 +99,34 @@ The AppImage also contains six regular ELF files under `/usr/lib/` (not merely s
 
 No separate `/usr/share/doc/` tree was observed in this enumerated filesystem. This does not establish that a notice is absent from every shipped notice collection or that any license was violated. Identify exact distribution/build source and licensing terms for each of these six binaries; check notice/source-availability obligations and whether existing shipped texts meet them. Do not assume that the DEB's system dependencies and the AppImage's bundled binaries have identical distribution obligations. Windows NSIS and macOS DMG inner contents remain unverified in this review environment; those installer formats require independent read-only inspection, not extrapolation from Linux. All manual rights, human physical microphone and release approvals remain PENDING; HOLD.
 
+
+### macOS DMG and Windows NSIS payload audit — 2026-11-24
+
+This refresh independently rehashed both original installer files from the three-platform review inputs of run `45318769948` and source `be89e098a0c9593f1f87ff8ea6baba2ef9c107ea`. No candidate executable was run. It supersedes the earlier pending macOS/Windows inner-file inventory status, not the outstanding legal or live-device gates.
+
+- macOS: `Voxnelo-1.0.4-arm64.dmg`, 127336240 bytes, SHA-256 `86d166d81d2cbd4661bb6ef14ebe1c05f8b60f49aca66e662999e4ac0bf2f831`. Read the UDIF footer and zlib block map, then the HFS+ volume/catalog/data forks without mounting. Enumerated 283 file and 317 folder catalog records. All four selected files under `Voxnelo.app/Contents/Resources/` (first-party LICENSE, Electron LICENSE, Chromium LICENSES, app.asar) exactly match the measured Linux DEB hashes above. App Info.plist identifies app.voxnelo.desktop v1.0.4.
+- Windows: `Voxnelo Setup 1.0.4.exe`, 125512212 bytes, SHA-256 `566b9e442efe505805916ff71b94832b05062ff0be75237decb5c73d65ebc1f3`. Located the embedded 7z payload at offset 170285; verified start and next-header CRCs and read 85 archive entries via libarchive without executing NSIS. Payload size 124956814 bytes, SHA-256 `10e1ed8f26b3580004a85ac5889214a2f46fed85b85845c0a4cd44d281e59978`. This is inspection of the application payload, not the entire NSIS bootstrapper/plugin/installation lifecycle.
+
+| Windows payload member | Bytes | Independently measured SHA-256 |
+| --- | ---: | --- |
+| `LICENSE.electron.txt` | 1096 | `5154e165bd6c2cc0cfbcd8916498c7abab0497923bafcd5cb07673fe8480087d` |
+| `LICENSES.chromium.html` | 5705935 | `7dac8267ac6da8d959cfe88f5f055b18a397f10230380b5329125e167bf5639b` |
+| `resources/LICENSE` | 1077 | `c419e60283cfcb8c5bb56e0cd7e4e7f37fef6b6d2d29a08eab2d134c1558a438` |
+| `resources/app.asar` | 52917635 | `ab603096bf4a036fde4e5dfc4e64c67d923ce214d16e47d1ef1c77cbda50f5e0` |
+
+Windows Chromium notices and ASAR differ from Linux/macOS; do not substitute the other platform's hashes. Independent parsing of Windows and macOS ASARs located 8150 offset-backed members each, the same 18 independent npm distributions/versions/license declarations in the Linux table, and 19 package-level LICENSE/NOTICE files (18 licenses plus Dexie NOTICE) with identical per-file hashes across Windows/macOS. Two generated JS license sidecars have the same content digests as Linux, though Windows names its first `dist/static/js/g.25b5af3121.js.LICENSE.txt`. The ASARs share 8146 paths; three shared paths have differing bytes (two brand SVGs and index.html); each has four distinct renderer output paths. This is not evidence of a functional defect or identical builds: investigate reproducibility separately if required.
+
+The actual macOS native frameworks under `Voxnelo.app/Contents/Frameworks/<name>.framework/Versions/A/<name>` were located and hashed (real Mach-O binaries, not framework symlink records):
+
+| Framework | Observed Info.plist version | Bytes | SHA-256 |
+| --- | --- | ---: | --- |
+| Electron Framework | 45.4.1 (build) | 207632704 | `32cc27ed1fb354dad8872006faaac78e9721bdbd1013b26854c06c50bc806447` |
+| ReactiveObjC | 3.1.0 | 352960 | `68d3d635482b079ebcb6487d9bacd6791bf25e9ce730cd36f82f899e82a8215f` |
+| Squirrel | 1.0 | 216672 | `296e443eb9c42eade25b34f60a3d7a0e31259aeab263ffe71f1bbad64e50bdfd` |
+| Mantle | 1.0 | 126656 | `8fb457b9689ae66e2891e5b260b087612420d27aab6aa082f6a9ba3d61a66a4f` |
+
+Info.plist values are bundle metadata, not immutable upstream source attestations. Map each actual framework to its exact upstream license/notice and review its coverage in the delivered notice collection. Windows NSIS bootstrapper, native components, Windows-specific Chromium notice contents, macOS frameworks, six AppImage ELF files, renderer-inlined dependencies and fonts/assets still need full rights and attribution review. All four installer formats now have preliminary actual payload inventories; none has full third-party legal approval. Direct-human microphone acceptance remains pending on all three OSes. **HOLD**, no publication or draft changes.
+
 ## Automation boundaries and known code risk
 
 - `scripts/check-asr-staging.mts` proves inventory/integrity, **not** lawful redistribution.
