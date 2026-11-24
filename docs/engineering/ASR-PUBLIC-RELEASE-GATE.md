@@ -25,6 +25,11 @@
 Use evidence entries of the form:
 `gate | tested artifact SHA-256 | OS/arch | reviewer/date | evidence reference (no private paths or audio) | pass/fail/waiver with rationale`.
 
+### Original-Wheel metadata identity and evidence interpretation (2026-11-24)
+
+In addition to SHA-256 and the `License-File` presence checks, the read-only original-Wheel inspector must now bind the top-level `.dist-info` root to the exact normalized pinned distribution/version. This prevents assigning a foreign package's legal-file inventory to the candidate Wheel. The [Moonshine provenance and NOTICE audit](MOONSHINE-V1.0.4-PROVENANCE-AND-NOTICES-2026-11-23.md) distinguishes older successful three-platform inventories from the subsequent stricter check. A passing root-identity check is **not** a signature, legal clearance, actual runtime linkage proof or authorization to publish.
+
+
 ## Automation boundaries and known code risk
 
 - `scripts/check-asr-staging.mts` proves inventory/integrity, **not** lawful redistribution.
