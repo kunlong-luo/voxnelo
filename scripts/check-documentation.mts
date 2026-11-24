@@ -29,6 +29,7 @@ export const CURRENT_DOCUMENTS = [
   'docs/engineering/RELEASE-OPERATIONS.md',
   'docs/engineering/ASR-PUBLIC-RELEASE-GATE.md',
   'docs/engineering/MOONSHINE-PRIVATE-LICENSE-TEXT-REVIEW-2026-11-24.md',
+  'docs/engineering/MOONSHINE-VERSION-MIGRATION-DECISION-2026-11-24.md',
   'docs/engineering/MOONSHINE-V1.0.4-LICENSE-EVIDENCE.md',
   'docs/engineering/MOONSHINE-V1.0.4-PROVENANCE-AND-NOTICES-2026-11-23.md',
   'docs/engineering/MOONSHINE-UPSTREAM-EVIDENCE-REQUEST-2026-11-23.md',
