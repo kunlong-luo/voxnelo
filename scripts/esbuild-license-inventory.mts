@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { bindLockfileEvidence } from './lockfile-license-evidence.mts';
 import type { Metafile } from 'esbuild';
 import { assertSameNoticeEvidence, readInstalledLicenseIdentity, type PackageLicenseIdentity } from './package-license-evidence.mts';
 
@@ -63,10 +64,12 @@ export async function writeEsbuildLicenseInventory(
   metafiles: readonly Metafile[],
 ): Promise<void> {
   const summary = await summarizeBundledPackages(metafiles, readInstalledLicenseIdentity);
+  const locked = await bindLockfileEvidence(summary.packages);
+  console.log('Lockfile evidence:', locked.packages.length, 'exact registry resolutions matched; archive bytes not independently verified');
   const directory = path.resolve('build', 'license-inventory');
   await mkdir(directory, { recursive: true });
   await writeFile(path.join(directory, target + '.json'), JSON.stringify({
-    schemaVersion: 2, target, ...summary, legalApproval: false,
+    schemaVersion: 3, target, ...summary, ...locked, legalApproval: false,
     scope: 'esbuild positive emitted bytes only; excludes renderer, external and copied assets',
   }, null, 2) + '\n');
   console.log('License inventory:', target, summary.packages.length, 'bundled npm package versions;', summary.packages.filter(pkg => !pkg.noticeFiles.length).length, 'without recognized regular root notice files; legal review PENDING');

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { bindLockfileEvidence } from './lockfile-license-evidence.mts';
 import type { RsbuildPlugin } from '@rsbuild/core';
 import { packageRootForInput } from './esbuild-license-inventory.mts';
 import { assertSameNoticeEvidence, readInstalledLicenseIdentity, type PackageLicenseIdentity } from './package-license-evidence.mts';
@@ -76,10 +77,12 @@ export function rendererLicenseInventory(): RsbuildPlugin {
         // React is an intentional renderer runtime dependency. An empty or incomplete
         // stats projection must not silently be accepted as a successful inventory.
         assert.ok(summary.packages.some(pkg => pkg.name === 'react'), 'Renderer inventory did not identify React');
+        const locked = await bindLockfileEvidence(summary.packages);
+        console.log('Lockfile evidence:', locked.packages.length, 'exact registry resolutions matched; archive bytes not independently verified');
         const directory = path.resolve('build', 'license-inventory');
         await mkdir(directory, { recursive: true });
         await writeFile(path.join(directory, 'renderer.json'), JSON.stringify({
-          schemaVersion: 2, target: 'renderer', ...summary, legalApproval: false,
+          schemaVersion: 3, target: 'renderer', ...summary, ...locked, legalApproval: false,
           scope: 'chunk-associated stats modules and nested members; not exact emitted bytes or complete asset inventory',
         }, null, 2) + '\n');
         console.log('License inventory: renderer', summary.packages.length, 'chunk-associated npm package versions;', summary.unidentifiedModuleCount, 'unidentified active modules;', summary.packages.filter(pkg => !pkg.noticeFiles.length).length, 'without recognized regular root notice files; legal review PENDING');
