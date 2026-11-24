@@ -4,6 +4,8 @@ Updated: 2026-11-24. This is an **index, not evidence of a public v1.0.4 release
 
 ## Maintained entries
 
+- [Registry audit and evidence-based quality rubric](V1.0.4-REGISTRY-AUDIT.md) — two live archive audits, macOS legacy retry evidence and provisional score.
+
 - **Release freeze:** [v1.0.4 final acceptance checklist](V1.0.4-RELEASE-FREEZE.md) — HOLD, blocker-only work; no publication.
 
 - **End users:** [English README](../../README.md), [中文 README](../../README.zh-CN.md), [cross-platform user guide](../USER-GUIDE.md), [privacy](../PRIVACY.md), [security](../../SECURITY.md).

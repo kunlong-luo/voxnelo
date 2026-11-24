@@ -13,6 +13,9 @@ on:
       - 'apps/desktop/moonshinePythonDependencies.ts'
       - 'scripts/moonshine-install-transaction.mts'
       - 'pnpm-lock.yaml'
+      - 'scripts/audit-registry-license-archives.mts'
+      - 'scripts/lockfile-license-evidence.mts'
+      - 'scripts/package-license-evidence.mts'
   schedule:
     - cron: '17 8 * * 1'
   workflow_dispatch:
@@ -89,3 +92,19 @@ jobs:
         run: pnpm audit --prod --audit-level high
       - name: Gate full dependency tree including development/test tools
         run: pnpm audit --audit-level high
+      # Review-only archive proof; this runs on the existing scoped supply-chain
+      # workflow, not on every core CI build. A hash match is not legal approval.
+      - name: Rebuild source-bound dependency inventories
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+      - name: Independently measure exact upstream registry archives
+        run: pnpm license:audit:registry
+      - name: Preserve sanitized public archive hash evidence
+        uses: actions/upload-artifact@v7
+        with:
+          name: registry-archive-integrity-evidence
+          path: build/license-inventory/registry-archives.json
+          if-no-files-found: error
+          retention-days: 14
+

@@ -6,7 +6,7 @@
 
 ## 历史流程与当前维护边界（2026-11-24）
 
-本文记录旧版 0.1.5 Zipformer 个人试验，并非当前默认 Moonshine 的安装手册。当前正式版用户优先参阅 [用户帮助](../USER-GUIDE.md) 和 [Moonshine 安装说明](MOONSHINE-LINUX-INSTALLATION.md)。维护中的个人试验安装脚本统一迁移至 pnpm，见 [PR #287](https://github.com/kunlong-luo/voxnelo/pull/287)；迁移尚需对应 CI 和合并，不将旧提交的实际安装记录改写成已使用 pnpm。源码开发环境参阅 [开发指南](../DEVELOPMENT.md)。
+本文记录旧版 0.1.5 Zipformer 个人试验，并非当前默认 Moonshine 的安装手册。当前正式版用户优先参阅 [用户帮助](../USER-GUIDE.md) 和 [Moonshine 安装说明](MOONSHINE-LINUX-INSTALLATION.md)。维护中的个人试验安装脚本统一迁移至 pnpm，见 [PR #287](https://github.com/kunlong-luo/voxnelo/pull/287)；迁移已经合并，三平台旧引擎工程 CI 复验成功，不将旧提交的实际安装记录改写成已使用 pnpm。源码开发环境参阅 [开发指南](../DEVELOPMENT.md)。
 
 ## 在 Pop!_OS / Ubuntu 上启用本地内测
 
@@ -19,7 +19,7 @@
    pnpm asr:personal:install
    ```
 
-   命令会明确从锁定修订的 Hugging Face 模型（`csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-02-21` / `bfbb11950302dad9955f8ede01f0e768595e4fba`）下载、校验模型 SHA-256，在 PR #287 合并后的源码中，再由隔离的 pnpm hoisted 环境安装固定版本的 `sherpa-onnx-node@1.13.8` 原生程序。只有在本机用户亲自运行命令时才会访问网络；**运行 Voxnelo 进行识别时不需联网，也不上传音频**。所需下载及磁盘空间明显超过 130 MB，请先留足空间。
+   命令会明确从锁定修订的 Hugging Face 模型（`csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-02-21` / `bfbb11950302dad9955f8ede01f0e768595e4fba`）下载、校验模型 SHA-256，在当前已合并 PR #287 的源码中，再由隔离的 pnpm hoisted 环境安装固定版本的 `sherpa-onnx-node@1.13.8` 原生程序。只有在本机用户亲自运行命令时才会访问网络；**运行 Voxnelo 进行识别时不需联网，也不上传音频**。所需下载及磁盘空间明显超过 130 MB，请先留足空间。
 3. 完成后，Linux 个人引擎目录为 `${XDG_CONFIG_HOME:-$HOME/.config}/voxnelo/offline-asr`，与仓库 `build/offline-asr` 及公共安装包完全分开。重新启动已安装的 Voxnelo，实时听写按钮仅在原生模块和模型都能找到时解锁。
 4. 主动点击实时听写按钮并允许麦克风权限，对着设备读一句英语；只应显示真正由本地引擎推理得到的增量文字，停止后应完成最终文字。请测试多句、长时间、嘈杂环境、权限拒绝和设备切换。
 

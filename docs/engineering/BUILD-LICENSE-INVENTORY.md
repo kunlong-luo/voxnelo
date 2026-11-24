@@ -65,3 +65,7 @@ Read all three schema 3 inventories, require their exact current lockfile SHA-25
 [PR #286](https://github.com/kunlong-luo/voxnelo/pull/286) merged as `51a46b9a93cc0e3682d5efd80be5030c5107fee9` after all five jobs of [CI 45359814822](https://github.com/kunlong-luo/voxnelo/actions/runs/45359814822) passed. Offline tests and packaging success do not establish that the opt-in online command has actually downloaded the 16 identified archives. Independent live registry audit remains pending.
 
 **Package-manager policy:** pnpm is the sole supported JavaScript package manager; the public npm registry remains the upstream archive source, not a command-line tool. The explicit audit uses the Node fetch API, not the registry provider's CLI; preserve immutable upstream references, registry SHA-512 SRI and measured archive evidence. The current schema 3 build writes renderer, electron and audio-worklet reports. See [Development](../DEVELOPMENT.md) and [toolchain policy](NODE26-LTS-MIGRATION.md). The separate [pnpm-only migration PR #287](https://github.com/kunlong-luo/voxnelo/pull/287) is under CI review. No model, license approval or release state changes. **HOLD.**
+
+## Merged pnpm and repeatable registry evidence
+
+PR #287 and PR #289 have merged. [Registry audit and quality rubric](../release/V1.0.4-REGISTRY-AUDIT.md) records both successful live 16/16 archive integrity runs, identical downloaded JSON report bytes and remaining notice/legal gaps. Do not treat earlier pending historical entries as the current status. No publication authorized.

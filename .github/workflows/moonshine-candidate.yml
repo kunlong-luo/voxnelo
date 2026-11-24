@@ -55,7 +55,7 @@ jobs:
       - name: Prepare current pinned Sherpa Zipformer model and native adapter
         run: |
           pnpm asr:model:prepare --out "$RUNNER_TEMP/old-zipformer/model"
-          npm install --no-save --prefix "$RUNNER_TEMP/voxnelo-native" sherpa-onnx-node@1.13.8
+          node --experimental-strip-types scripts/install-pinned-native-addon.mts "$RUNNER_TEMP/voxnelo-native"
       - name: Execute the same opt-in installer used by the packaged desktop
         run: |
           set -euo pipefail

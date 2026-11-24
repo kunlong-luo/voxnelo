@@ -8,7 +8,6 @@
  * Run only after reviewing the upstream model/native license and accepting
  * that this is an engineering-quality model, not pronunciation assessment.
  */
-import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
@@ -17,6 +16,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ENGLISH_MODEL, prepareEnglishModel } from './prepare-asr-model.mts';
 import { stageInternalAsrCandidate } from './stage-asr-pilot.mts';
+import { installPinnedNativeAddon } from './install-pinned-native-addon.mts';
 import { verifyPersonalAsrCandidate } from '../apps/desktop/asrAssets.ts';
 
 function personalRoot(env:NodeJS.ProcessEnv):string{
@@ -56,17 +56,12 @@ export async function installPersonalAsr(
   await mkdir(temporary,{recursive:true,mode:0o700});
   try{
     const model=path.join(temporary,'english-model');
-    const npmRoot=path.join(temporary,'official-native');
+    const nativeRoot=path.join(temporary,'official-native');
     console.log('Downloading pinned English model with SHA-256 verification...');
     await prepareEnglishModel(model);
     console.log('Installing pinned official native recognizer; this is not a Voxnelo release binary...');
-    const npm=spawnSync(options.runtime??'npm',[
-      'install','--no-save','--no-audit','--no-fund','--prefix',npmRoot,
-      'sherpa-onnx-node@1.13.8',
-    ],{stdio:'inherit',timeout:600000,env:process.env});
-    if(npm.error)throw npm.error;
-    if(npm.status!==0)throw Error('Native npm installation failed with code '+String(npm.status));
-    const result=await stageInternalAsrCandidate(model,path.join(npmRoot,'node_modules'),staged);
+    await installPinnedNativeAddon(nativeRoot, options.runtime ?? 'pnpm');
+    const result=await stageInternalAsrCandidate(model,path.join(nativeRoot,'node_modules'),staged);
     await writeFile(path.join(staged,'personal-install.json'),JSON.stringify({
       optIn:true,platform:process.platform,arch:process.arch,
       modelRevision:ENGLISH_MODEL.revision,nativeVersion:'1.13.8',

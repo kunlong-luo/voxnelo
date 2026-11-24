@@ -106,3 +106,7 @@ The follow-up extends `scripts/check-installed-linux-license.mts` to require eac
 The subsequent [PR #281 CI run 45323570903](https://github.com/kunlong-luo/voxnelo/actions/runs/45323570903) at head `a7f27e59e4a85f60be322f0fa7ecb6bd5073e6ed` completed all five jobs successfully. The [Linux job 138207634957](https://github.com/kunlong-luo/voxnelo/actions/runs/45323570903/job/138207634957) explicitly logged both exact first-party MIT LICENSE verification and all four exact pinned supplemental notices after actual DEB installation, with legal approval still pending. This supersedes the earlier pending installed-DEB observation for that head only.
 
 A subsequent merge attempt was refused by required status checks. The raw PR metadata reported `mergeable_state: behind`. To preserve branch protection, synchronize the PR with main at `3680e25b308d453781b37d421eb0ab315eaa3568`, using the inspected GitHub merge-result tree, retain all nine intended PR files and rerun required checks for the synchronized head. Do not waive checks or claim the previous green run certifies the new head. The fresh final review-only build, installer-level notice inspection, independently measured SHA-256 values, AppImage/NSIS provenance, model rights, and physical human microphone acceptance remain separately pending. **HOLD; no publication.**
+
+## 发布冲刺复验记录
+
+PR #287、#289 已合并，旧 Zipformer 原生工程测试三平台复验通过；两次真实上游归档审核的脱敏 JSON 字节相同。仍不得替代最终候选安装包的法律审核和物理麦克风验收。详见 [发布冲刺清单](../release/V1.0.4-RELEASE-FREEZE.md) 与 [审核评分](../release/V1.0.4-REGISTRY-AUDIT.md)。HOLD。
