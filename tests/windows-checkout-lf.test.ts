@@ -17,6 +17,14 @@ describe('cross-platform source checkout byte stability',()=>{
     for(const ext of ['yml','yaml','txt','ts','tsx','mts','py','json'])
       expect(attrs).toMatch(new RegExp('^\\*\\.'+ext+' text eol=lf$', 'm'));
   });
+  it('protects the distributed first-party MIT LICENSE from CRLF conversion',()=>{
+    expect(attrs).toMatch(/^LICENSE text eol=lf$/m);
+    const notice=readFileSync('LICENSE');
+    expect(notice.includes(13),'CR byte in packaged first-party MIT LICENSE').toBe(false);
+    expect(notice.at(-1)).toBe(10);
+    expect(notice.toString('utf8')).toMatch(/^MIT License\n/);
+  });
+
   it('keeps original archive Git blob content unchanged by Windows core.autocrlf',()=>{
     for(const name of archived){
       const source=readFileSync('docs/archive/workflows/'+name);

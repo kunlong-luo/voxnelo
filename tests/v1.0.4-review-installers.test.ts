@@ -44,6 +44,7 @@ describe('v1.0.4 unsigned three-platform REVIEW artifacts (not a release)',()=>{
     expect(workflow).toContain('pnpm asr:verify-real');
     expect(workflow).toContain('Require unchanged LF bytes in Windows and Unix checkout');
     expect(workflow).toContain('pnpm exec vitest run tests/windows-checkout-lf.test.ts');
+    expect(workflow).toContain('tests/first-party-license-packaging.test.ts');
     expect(workflow).toContain('v1.0.4-unsigned-three-platform-REVIEW-NOT-RELEASE');
     expect(workflow).toContain("Windows default is 'Voxnelo Setup 1.0.4.exe'");
     expect(workflow).toContain('review-assets/*.exe');

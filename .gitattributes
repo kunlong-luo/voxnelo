@@ -13,3 +13,7 @@
 *.mts text eol=lf
 *.py text eol=lf
 *.json text eol=lf
+
+# First-party MIT notice is compared byte-for-byte after desktop packaging.
+# Windows core.autocrlf must not change the source/license payload to CRLF.
+LICENSE text eol=lf
