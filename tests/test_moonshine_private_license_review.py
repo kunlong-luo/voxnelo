@@ -220,9 +220,26 @@ class PrivateLicenseReviewTests(unittest.TestCase):
             # The immediate parent is a normal directory; a higher ancestor
             # is the symlink. Reject before creating any review output.
             self.assertFalse(destination.parent.is_symlink())
-            with self.assertRaisesRegex(ValueError, 'non-symlink ancestors'):
+            with self.assertRaisesRegex(ValueError, 'non-redirected ancestors'):
                 review.prepare(wheels, report, snapshot, destination)
             self.assertFalse((actual / 'child' / 'private-review').exists())
+
+    def test_rejects_windows_junction_like_ancestor_before_export(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            wheels, report, snapshot, _, _ = fixtures(root)
+            parent = root / 'review-parent'
+            parent.mkdir()
+            destination = parent / 'private-review'
+            real_is_junction = Path.is_junction
+
+            def simulate_windows_junction(candidate):
+                return candidate == parent or real_is_junction(candidate)
+
+            with patch.object(Path, 'is_junction', simulate_windows_junction):
+                with self.assertRaisesRegex(ValueError, 'non-redirected ancestors'):
+                    review.prepare(wheels, report, snapshot, destination)
+            self.assertFalse(destination.exists())
 
 
 if __name__ == '__main__':
