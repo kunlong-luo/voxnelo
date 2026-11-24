@@ -157,6 +157,69 @@ A case-insensitive scan of the DMG catalog's member basenames for license/notice
 
 **Remediation worklist:** locate any additional applicable original notices and substantiate them in the actual distributed payload. If absent, add a dedicated, accessible third-party notice resource preserving complete pinned ReactiveObjC and Mantle texts (including Proton), plus applicable Sparkle and other native notices; bind notice inputs to exact upstream commits and verified digests. Add a fail-closed packaging regression for expected notice content and verify every platform's actual unpacked/installed payload. If packaging bytes change, generate a separate exact-source review build, record new installer hashes, and bind device acceptance to those new bytes; do not reuse run 45318769948 as evidence for a changed installer. A qualified reviewer must decide applicability and approve all actual license/notice content. No source, model pins or candidate binaries are changed by this documentation-only finding. The old draft remains untouched and unpublished; HOLD.
 
+
+### Packaging tool provenance checkpoint — 2026-11-24
+
+For historical review run `45318769948` (source `be89e098a0c9593f1f87ff8ea6baba2ef9c107ea`), inspected original successful platform job logs and the locked source dependency inventory. This is toolset identification, not legal approval or an attestation of exact bundled native library bytes.
+
+| Platform | Observed evidence | Remaining work |
+| --- | --- | --- |
+| Linux AppImage | [Linux job 138193262398](https://github.com/kunlong-luo/voxnelo/actions/runs/45318769948/job/138193262398) explicitly logs download of `appimage-12.0.1.7z` | Recover and independently hash that exact original tool archive, map its x64 library payload to the six previously recorded installer hashes and obtain versioned distribution copyright/source records. |
+| Windows NSIS | [Windows job 138193262385](https://github.com/kunlong-luo/voxnelo/actions/runs/45318769948/job/138193262385) explicitly logs electron-builder 26.18.0, `nsis-3.0.4.1.7z`, `nsis-resources-3.4.1.7z`, and `7zip-win-x64.tar.gz` | Recover exact tool archive identities and inspect incorporated bootstrapper, plug-ins and compression code; distinguish build-only utilities from redistributed bytes. |
+
+The [electron-builder-binaries historical appimage-12.0.1 tag](https://github.com/electron-userland/electron-builder-binaries/tree/appimage-12.0.1) resolves to commit `57839c6516289c0412c1b0887a6718d71e1ac5c2`. Its [Makefile](https://github.com/electron-userland/electron-builder-binaries/blob/57839c6516289c0412c1b0887a6718d71e1ac5c2/Makefile) changes reference AppImageKit release 12 runtime downloads and a publish recipe for version 12.0.0. This is a historical source lead, not a manifest for every byte of the downloaded 12.0.1 archive. The newer [toolset build script at fixed commit 4fa56c6](https://github.com/electron-userland/electron-builder-binaries/blob/4fa56c60939d96f8ee2687670611909c1d1eb42d/packages/appimage/assets/build-appimage.sh) explicitly copies the same six library names (with architecture-dependent appindicator/indicator aliases) and contains license collection logic; it is not the old 12.0.1 build script and its newer license inventory must not be attributed to that old toolset. The exact historical library versions, build sources and applicable obligations remain **PENDING**. No claim of legal clearance, license violation, or successful byte mapping is made.
+
+PR #281 is separately validating the supplemental macOS notice correction and installed DEB checks. Do not invalidate that run by appending unrelated research commits. Once its changes are integrated, a fresh exact-source review-only build and new independent installer hashes are required. All direct-human mic and legal approval gates remain PENDING; **HOLD**.
+
+
+### Actual AppImage ELF identity and NSIS license scope — 2026-11-24
+
+Re-read all six bundled ELF members from the historical review AppImage in artifact 14887665319, run 45318769948. Recomputed each SHA-256 (all six equal the earlier installer inventory) and inspected ELF notes and dynamic sections with readelf -n and readelf -d, without executing the binaries. Each SONAME equals its listed filename.
+
+| Bundled library | Observed GNU Build ID | Selected declared DT_NEEDED dependencies |
+| --- | --- | --- |
+| libXss.so.1 | `82c0e3569eb993bf2c2e2bb8379b1564fe28eebf` | libX11.so.6, libXext.so.6 |
+| libXtst.so.6 | `0403493a3501094414e75b977548928a413d8146` | libX11.so.6, libXext.so.6 |
+| libappindicator.so.1 | `3952e6e8393caf73029e13d642c28e822ee50521` | libindicator.so.7, libdbusmenu-gtk.so.4, libdbusmenu-glib.so.4, libgtk-x11-2.0.so.0 |
+| libgconf-2.so.4 | `ac0a2bc11dc7505e276c0327b1c1897a997ba02c` | libdbus-glib-1.so.2, libdbus-1.so.3, libgmodule-2.0.so.0 |
+| libindicator.so.7 | `089a982c5c6194888bb10d378a2f29f719bcddef` | libgtk-x11-2.0.so.0, libgdk_pixbuf-2.0.so.0, libgmodule-2.0.so.0 |
+| libnotify.so.4 | `bc29207f80a6b64aec329dd8397df57672ee132e` | libgdk_pixbuf-2.0.so.0, libgio-2.0.so.0, libgobject-2.0.so.0, libglib-2.0.so.0 |
+
+These selected dynamic tags are not proof of actual runtime resolution or that dependencies are distributed inside the AppImage. A GNU Build ID is a useful lookup key for historical distribution package and debug archives, not a release version or publisher attestation. Match both full SHA-256 and package/source identity before assigning specific copyright and source availability obligations. The attempt to fetch the original appimage-12.0.1.7z release asset failed due to DNS resolution in the audit environment; no archive digest or library-to-upstream byte match was obtained. All six exact source mappings remain PENDING.
+
+The current [official NSIS license page, revision 23142](https://nsis.sourceforge.io/mediawiki/index.php?title=License&oldid=23142) was read: general code and zlib module use zlib/libpng terms, bzip2 module uses the bzip2 license, and LZMA module uses CPL-1.0 with a special linking exception. The exception does not remove the obligations applicable to changes to the LZMA module itself. This is an upstream license-family scope lead, not version-specific proof for the historical electron-builder archives nsis-3.0.4.1.7z and nsis-resources-3.4.1.7z. The [v26 toolset documentation](https://www.electron.build/v26/docs/api/app-builder-lib.interface.toolsetconfig/) identifies these archives as the legacy split bundle. A qualified reviewer must identify actual embedded compression code and plugins, corresponding original sources/notices, and applicable obligations, separately from build-only utilities. Do not classify the complete installer as blanket MIT or zlib. No legal approval, physical-mic approval or publication authorization follows. HOLD.
+
+
+### Historical toolset asset identity and six AppImage upstream Git-object matches — 2026-11-24
+
+Read the upstream release API for each historical tool archive recorded in candidate run 45318769948. The following asset IDs and sizes were returned; the API digest field is null for all three.
+
+| Upstream release | Asset ID | Bytes |
+| --- | ---: | ---: |
+| [appimage-12.0.1](https://github.com/electron-userland/electron-builder-binaries/releases/tag/appimage-12.0.1) | 13613639 | 1573447 |
+| [nsis-3.0.4.1](https://github.com/electron-userland/electron-builder-binaries/releases/tag/nsis-3.0.4.1) | 16428442 | 1287512 |
+| [nsis-resources-3.4.1](https://github.com/electron-userland/electron-builder-binaries/releases/tag/nsis-resources-3.4.1) | 13752602 | 730800 |
+
+**New positive provenance evidence:** the recursive [Git tree of historical appimage-12.0.1 commit 57839c6](https://api.github.com/repos/electron-userland/electron-builder-binaries/git/trees/57839c6516289c0412c1b0887a6718d71e1ac5c2?recursive=1) is not truncated and includes all six regular x64 library blobs under `AppImage/lib/x64/`. For each previously extracted actual candidate ELF file, independently recomputed its SHA-256 (all six match the earlier table) and Git blob object ID (SHA-1 of UTF-8 header `blob <byte-length>\0` followed by exact binary bytes). Compared both size and Git object ID with that upstream immutable tree:
+
+| Library | Actual and upstream bytes | Actual and upstream Git blob ID |
+| --- | ---: | --- |
+| libXss.so.1 | 14488 | `752f223df81288c87f7b8fe9f6692236b6f17088` |
+| libXtst.so.6 | 22880 | `1f6fbf3e3923c203bae147fc2bfed569fbbabb55` |
+| libappindicator.so.1 | 52128 | `a8c5dcaa16e6cd2ea401fae2b19dab045758b8a2` |
+| libgconf-2.so.4 | 192296 | `948925c1ac5d44c046bb94ae481707da65e5eac7` |
+| libindicator.so.7 | 60648 | `f36a7fb508e75655ceefb3d9ffd5749d61ca0ad3` |
+| libnotify.so.4 | 31304 | `e77ed01189376ea6687e82ba30ef59cd273374a6` |
+
+All **6/6** match the historical toolset repository at an exact Git commit. This supersedes the earlier lack of a repository-object mapping, not the missing independent release-archive SHA-256 or exact originating distribution/source-package versions. The release-asset downloads remained unavailable in this environment; raw upstream binary blob reads were rejected as non-UTF-8. Thus no independent upstream binary SHA-256 or archive hash is claimed. Git SHA-1 object identity plus matching sizes and independently measured candidate SHA-256 is useful evidence, not publisher build attestation, source-code provenance or legal approval.
+
+Next: trace the history of these pinned library objects to the actual distribution source packages and exact versions; obtain the original copyright/license and applicable source-availability obligations, including any modifications. If archive bytes become available, independently hash them, list members without execution, compare the six x64 members against the candidate SHA-256 table, and retain the original archive identity. NSIS archive members and redistributed bootstrapper/plugin source mappings are still pending. No legal gate is approved, no model or installer is changed, and no publication is authorized. **HOLD.**
+
+
+### Supplemental native notice correction merged — 2026-11-24
+
+[PR #281](https://github.com/kunlong-luo/voxnelo/pull/281) merged into main as `d06fdf32517dfa2795332d7153b4c838bda7d835` after [CI 45324146327](https://github.com/kunlong-luo/voxnelo/actions/runs/45324146327) succeeded on synchronized head `412e4723dfeb7cfd65dbac30c44add7c5bb3f75d`. The earlier installed-DEB run 45323570903 explicitly verified all four original supplemental notice files after actual apt installation. The merged change ships Squirrel, ReactiveObjC, Mantle and Sparkle texts and checks source blob identity and packaged bytes. This is technical notice coverage remediation, not blanket third-party clearance. The old review run 45318769948 remains a pre-correction historical build: do not use its installer SHA-256 values as those of the corrected source. A fresh review-only build must record the exact new source, artifact and installer digests, inspect final installer payloads, and obtain separate physical-microphone evidence. See [release operations](RELEASE-OPERATIONS.md) and [candidate handoff](../release/V1.0.4-REVIEW-ARTIFACT-HANDOFF-2026-11-24.md). AppImage distribution-source mapping, NSIS license obligations, bundled dependencies/assets, Python runtime and model provenance remain open. **HOLD**.
+
 ## Automation boundaries and known code risk
 
 - `scripts/check-asr-staging.mts` proves inventory/integrity, **not** lawful redistribution.
