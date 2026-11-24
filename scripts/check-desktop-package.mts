@@ -47,6 +47,24 @@ assert.ok(licenseSource.length>100,'First-party MIT license is unexpectedly shor
 assert.ok(licenseSource.equals(licensePackaged),
   'Packaged first-party MIT LICENSE differs from the repository source');
 
+// These complete upstream notices supplement, rather than replace, Electron's
+// generated Chromium credits. A version change requires explicit source review.
+const electronMetadata=JSON.parse(await readFile(path.resolve('node_modules','electron','package.json'),'utf8')) as {version:string};
+assert.equal(electronMetadata.version,'45.4.1','Electron changed: refresh pinned third-party notice sources before packaging');
+const pinnedNotices={
+  'Squirrel.txt':'5947a9ffe98ba34011ae42b2851e6fdf050b3ddd',
+  'ReactiveObjC.txt':'49bc37468d432900e63a13929c4ca0bdf39f04cc',
+  'Mantle.txt':'4e9825ac272bdbab7e56f9bc5b27fb583144dfc7',
+  'Sparkle.txt':'abe6e04c37e0b94e3a25078b6fd4abdafc299af4',
+} as const;
+for(const [name,expectedBlob] of Object.entries(pinnedNotices)){
+  const source=await readFile(path.resolve('build','third-party-notices',name));
+  const blob=createHash('sha1').update('blob '+source.length+'\0').update(source).digest('hex');
+  assert.equal(blob,expectedBlob,'Pinned upstream notice changed: '+name);
+  const packaged=await readFile(path.join(resources,'THIRD-PARTY-NOTICES',name));
+  assert.ok(source.equals(packaged),'Packaged third-party notice differs from upstream source: '+name);
+}
+
 const requiredFiles: Array<[string, string, number]> = [['native executable',executable,1024],['asar archive',bundle,1024],['branded PNG',icon,256]];
 for(const [label,filename,minBytes] of requiredFiles){
   const info=await stat(filename);
@@ -215,7 +233,7 @@ const report={
   output:base,
   appRoot:path.relative(path.resolve('.'),appRoot),
   icon:path.relative(path.resolve('.'),icon),
-  tested:['native executable','asar','bundled branded icon','brand PNG magic',...(platform==='darwin'?['CFBundleIdentifier','NSMicrophoneUsageDescription']:[]),...linuxChecks,...candidateChecks,...asrChecks],
+  tested:['native executable','asar','pinned third-party notices','bundled branded icon','brand PNG magic',...(platform==='darwin'?['CFBundleIdentifier','NSMicrophoneUsageDescription']:[]),...linuxChecks,...candidateChecks,...asrChecks],
   launched:false,
 };
 console.log('Cross-platform package integrity passed:',JSON.stringify(report));

@@ -144,6 +144,10 @@
         "to": "LICENSE"
       },
       {
+        "from": "build/third-party-notices",
+        "to": "THIRD-PARTY-NOTICES"
+      },
+      {
         "from": "build/icon.png",
         "to": "icons/voxnelo.png"
       },

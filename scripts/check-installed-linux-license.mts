@@ -3,7 +3,7 @@
  * Linux DEB post-install evidence. This checks *installed package-owned bytes*,
  * not only the electron-builder unpacked input to the installer.
  *
- * Scope: Voxnelo's first-party MIT LICENSE only. Not a third-party legal review,
+ * Scope: first-party MIT LICENSE and pinned supplemental notices. Not a third-party legal review,
  * a signature, a real-device microphone test, or release approval.
  */
 import assert from 'node:assert/strict';
@@ -32,6 +32,28 @@ export function assertFirstPartyLicenseBytes(expected: Uint8Array, installed: Ui
     'Installed DEB first-party MIT LICENSE differs from tracked source bytes');
 }
 
+export const supplementalNoticeNames = [
+  'Squirrel.txt', 'ReactiveObjC.txt', 'Mantle.txt', 'Sparkle.txt',
+] as const;
+
+export function selectInstalledSupplementalNotice(
+  ownedFiles: readonly string[],
+  installedLicense: string,
+  name: typeof supplementalNoticeNames[number],
+): string {
+  assert.ok(supplementalNoticeNames.includes(name), 'Unknown supplemental notice');
+  const expected = path.posix.join(path.posix.dirname(installedLicense), 'THIRD-PARTY-NOTICES', name);
+  assert.equal(ownedFiles.filter(filename => filename === expected).length, 1,
+    'Expected exactly one package-owned supplemental notice: ' + name);
+  return expected;
+}
+
+export function assertSupplementalNoticeBytes(expected: Uint8Array, installed: Uint8Array): void {
+  assert.ok(expected.byteLength > 100, 'Source supplemental notice is unexpectedly short');
+  assert.ok(Buffer.from(expected).equals(Buffer.from(installed)),
+    'Installed DEB supplemental notice differs from tracked source bytes');
+}
+
 function runPostInstallCheck(): void {
   assert.equal(process.platform, 'linux', 'Linux DEB post-install check requires Linux');
   const query = spawnSync('dpkg-query', ['-W', '-f=${Status}', 'voxnelo'], {
@@ -48,7 +70,16 @@ function runPostInstallCheck(): void {
   assert.ok(lstatSync(installedPath).isFile(),
     'Installed first-party LICENSE must be a regular file, not a symlink');
   assertFirstPartyLicenseBytes(readFileSync(path.resolve('LICENSE')), readFileSync(installedPath));
+  for (const name of supplementalNoticeNames) {
+    const notice = selectInstalledSupplementalNotice(list.stdout.split(/\r?\n/), installedPath, name);
+    assert.ok(lstatSync(notice).isFile(), 'Installed supplemental notice must be a regular file: ' + name);
+    assertSupplementalNoticeBytes(
+      readFileSync(path.resolve('build', 'third-party-notices', name)),
+      readFileSync(notice),
+    );
+  }
   console.log('Installed Linux DEB contains exact first-party MIT LICENSE; third-party review PENDING.');
+  console.log('Installed Linux DEB contains all four exact pinned supplemental notices; legal approval PENDING.');
 }
 
 if (process.argv[1] &&
