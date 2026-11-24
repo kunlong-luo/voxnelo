@@ -32,10 +32,17 @@ function fixture(){
   writeFileSync(wav,bytes);
   return {root,model,wav};
 }
-const run=(wav:string,model:string,size='medium')=>spawnSync('python3',[
+// Slow or contended Windows runners must not turn a child-process timeout
+// into a passing negative fixture. This is a process-startup budget, not an ASR latency gate.
+const run=(wav:string,model:string,size='medium')=>{
+  const result=spawnSync('python3',[
   'scripts/benchmark-moonshine-voice.py','--wav',wav,'--model-dir',model,
   '--size',size,'--validate-only',
-],{cwd:process.cwd(),encoding:'utf8',timeout:5000,env:{...process.env,PYTHONNOUSERSITE:'1'}});
+],{cwd:process.cwd(),encoding:'utf8',timeout:30000,env:{...process.env,PYTHONNOUSERSITE:'1'}});
+  if(result.error) throw new Error('Moonshine fixture subprocess failed: '+(result.error.code??result.error.name));
+  if(result.status===null||result.signal!==null) throw new Error('Moonshine fixture subprocess did not exit normally');
+  return result;
+};
 
 describe('Moonshine candidate selection: deterministic offline preflight',()=>{
   it('accepts only explicitly supplied complete local model directories and WAVs',()=>{
@@ -46,8 +53,8 @@ describe('Moonshine candidate selection: deterministic offline preflight',()=>{
       valid:true,engine:'moonshine-voice',size:'medium',durationSeconds:0.05,
     });
     expect(run(wav,model,'small').status).toBe(0);
-    expect(run(wav,model,'invalid').status).not.toBe(0);
-  });
+    expect(run(wav,model,'invalid').status).toBe(2);
+  },100000);
   it('fails closed on missing or malformed files without ever loading an external model',()=>{
     const {wav,model,root}=fixture();
     const bad=path.join(root,'missing.wav');
@@ -68,5 +75,5 @@ describe('Moonshine candidate selection: deterministic offline preflight',()=>{
     bytes.write('data',36,'ascii');bytes.writeUInt32LE(1600,40);
     writeFileSync(stereo,bytes);
     expect(run(stereo,model).status).not.toBe(0);
-  });
+  },100000);
 });
