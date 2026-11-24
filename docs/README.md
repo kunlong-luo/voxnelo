@@ -21,6 +21,7 @@ Updated: 2026-11-23. This index is navigation, **not** a release approval.
 - [ASR evidence and benchmark](engineering/ASR-ACCURACY-EXPERIMENTS.md)
 - [v1.0.4 direct-human physical microphone evidence ledger and read-only local intake check — NOT accepted](release/V1.0.4-PHYSICAL-DEVICE-EVIDENCE.md)
 - [Moonshine exact-version model provenance / third-party NOTICE gaps — HOLD](engineering/MOONSHINE-V1.0.4-PROVENANCE-AND-NOTICES-2026-11-23.md)
+- [Private original Wheel LICENSE/NOTICE text reviewer handoff — all decisions pending](engineering/MOONSHINE-PRIVATE-LICENSE-TEXT-REVIEW-2026-11-24.md)
 - [Publisher request draft — NOT sent or approved](engineering/MOONSHINE-UPSTREAM-EVIDENCE-REQUEST-2026-11-23.md)
 - [Connected speech and licensed audio review](engineering/CONNECTED-SPEECH-AUDIO-REVIEW.md)
 - [UI and accessibility audit](engineering/UI-ACCESSIBILITY-AUDIT-2026-11-16.md)

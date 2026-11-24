@@ -8,7 +8,9 @@ on:
       - '.github/workflows/moonshine-wheel-digest-matrix.yml'
       - 'scripts/audit-moonshine-wheelhouse.py'
       - 'scripts/collect-moonshine-wheel-archive-evidence.py'
+      - 'scripts/prepare-moonshine-private-license-review.py'
       - 'tests/test_moonshine_wheel_archive_evidence.py'
+      - 'tests/test_moonshine_private_license_review.py'
       - 'scripts/moonshine-python-constraints.txt'
       - 'docs/engineering/moonshine-python312-wheel-digests-2026-11-23.json'
       - 'tests/test_moonshine_wheelhouse_audit.py'
@@ -46,6 +48,7 @@ jobs:
         run: |
           python tests/test_moonshine_wheelhouse_audit.py
           python tests/test_moonshine_wheel_archive_evidence.py
+          python tests/test_moonshine_private_license_review.py
       - name: Download exact candidate dependency Wheels and check PyPI SHA-256
         shell: pwsh
         run: |
