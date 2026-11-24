@@ -39,6 +39,8 @@ describe('documentation link and command validation', () => {
       'docs/design/V3-VISUAL-PRODUCTION-SPEC.md',
       'docs/engineering/UI-ACCESSIBILITY-AUDIT-2026-11-16.md',
       'docs/release/V1.0.4-PHYSICAL-DEVICE-EVIDENCE.md',
+      'docs/release/V1.0.4-REGISTRY-AUDIT.md',
+      'docs/release/V1.0.4-REVIEW-ARTIFACT-HANDOFF-2026-11-24.md',
       'docs/engineering/MOONSHINE-PRIVATE-LICENSE-TEXT-REVIEW-2026-11-24.md',
       'docs/engineering/MOONSHINE-VERSION-MIGRATION-DECISION-2026-11-24.md',
       'docs/engineering/MOONSHINE-V1.0.4-LICENSE-EVIDENCE.md',

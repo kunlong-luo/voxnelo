@@ -4,7 +4,7 @@ Updated: 2026-11-24. This is an **index, not evidence of a public v1.0.4 release
 
 ## Maintained entries
 
-- [Registry audit and evidence-based quality rubric](V1.0.4-REGISTRY-AUDIT.md) — two live archive audits, macOS legacy retry evidence and provisional score.
+- [Registry audit and evidence-based quality rubric](V1.0.4-REGISTRY-AUDIT.md) — source-bound archive/notice audits, macOS legacy retry evidence, native provenance and current provisional score.
 
 - **Release freeze:** [v1.0.4 final acceptance checklist](V1.0.4-RELEASE-FREEZE.md) — HOLD, blocker-only work; no publication.
 
@@ -17,7 +17,7 @@ Updated: 2026-11-24. This is an **index, not evidence of a public v1.0.4 release
 ## Source baseline and historical provenance
 
 - **Frozen original requirement baseline:** [Product Docs v1.0](../Voxnelo-Product-Docs-v1.0/README.md), including original DOCX/PDF and checksums. Do not rewrite it during maintenance.
-- **Historical source/test audits:** [November documentation audit](../audits/2026-11-16-DOCUMENTATION-GAP-AUDIT.md), [initial PRD/release audit](../audits/2026-11-16-PRD-RELEASE-GAP-AUDIT.md), [superseded matrix starter](PRD-TRACEABILITY-STARTER.md), [historical V0.1 checklist](V0.1-PRD-CHECKLIST.md) and [technical-debt register](../engineering/TECH-DEBT-2026-11-16.md). Their assertions are dated; do not treat them as current code state.
+- **Historical source/test audits:** [November documentation audit](../audits/2026-11-16-DOCUMENTATION-GAP-AUDIT.md), [initial PRD/release audit](../audits/2026-11-16-PRD-RELEASE-GAP-AUDIT.md), [superseded matrix starter (Git history)](https://github.com/kunlong-luo/voxnelo/blob/35e4048affead771477cfd162f7fc2a2a1aee40a/docs/release/PRD-TRACEABILITY-STARTER.md), [historical V0.1 checklist](V0.1-PRD-CHECKLIST.md) and [technical-debt register](../engineering/TECH-DEBT-2026-11-16.md). Their assertions are dated; do not treat them as current code state.
 - **Retired executable workflow source:** [archive index](../archive/README.md), including all seven disabled historic v0.1.5–v1.0.3 release/Draft workflows and both v1.0.4 private Draft one-shot writers. These files are no longer registered under `.github/workflows/`.
 - **November 21 cleanup decision log:** [repository cleanup audit](../audits/2026-11-21-REPOSITORY-CLEANUP.md).
 
@@ -28,5 +28,5 @@ Updated: 2026-11-24. This is an **index, not evidence of a public v1.0.4 release
 
 - **Wheel metadata attribution safeguard (2026-11-24; actual three-OS recheck passed):** [Moonshine original-Wheel license handoff](../engineering/MOONSHINE-V1.0.4-PROVENANCE-AND-NOTICES-2026-11-23.md) now documents a stricter match between the root-level `.dist-info/METADATA` location and the wheel's distribution identity. The new assertion **passed** for real pinned Python Wheels on Linux/Windows/macOS in [audit #45294831570](https://github.com/kunlong-luo/voxnelo/actions/runs/45294831570), source `d19c5bc34b11cb054e07821d78ef22868d7cc1c1`. This establishes only Wheel identity/file-presence consistency; model ownership, third-party licensing and human-microphone testing remain unapproved.
 
-- **Still unverified or independently gated:** real-microphone quiet/noise/accent accuracy and latency per OS, physical accessibility tests (including screen readers/zoom), complete content/IPA/audio licensing and language review, signed/notarized credentials where applicable, and explicit publication authorization.
+- **Still unverified or independently gated:** real-microphone quiet/noise/accent accuracy and latency per OS, physical accessibility tests (including screen readers/zoom), complete content/IPA/audio licensing and language review, signed/notarized credentials where applicable, and final evidence-based publication approval (the owner has requested release).
 - **Maintenance rule:** update this index and [the main docs index](../README.md) when promoting or retiring sources; retain historical tests/evidence unless deletion is justified with checked references. Never claim historical audit observations describe the current installer without reconfirmation.

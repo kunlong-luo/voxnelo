@@ -53,6 +53,28 @@ Practice progress and favorites are stored on the device; there is no Voxnelo ac
 
 For the not-yet-released Windows x64 / macOS 15+ ARM64 native Moonshine pilot, see [cross-platform details](docs/engineering/MOONSHINE-CROSS-PLATFORM-PILOT.md). The published v1.0.3 installers do not contain this work.
 
+
+## Repository structure — what to keep
+
+| Directory | Purpose / retention |
+| --- | --- |
+| [`.github/`](.github/) | Active Actions, issue and PR templates; keep. Retired one-shot Actions are not executable here. |
+| [`apps/desktop/`](apps/desktop/) | Electron main process, preload, native ASR and OS integration; production source. |
+| [`apps/web/`](apps/web/) | Shared React renderer, desktop UI, web preview and accessibility; production source. |
+| [`packages/core/`](packages/core/) | Shared types and core domain logic. |
+| [`packages/content/`](packages/content/) | Sentence catalog and teaching-content data. |
+| [`packages/audio/`](packages/audio/) | Audio, speech and PCM helpers. |
+| [`packages/learning/`](packages/learning/) | Learning service and practice orchestration. |
+| [`packages/storage/`](packages/storage/) | Local IndexedDB persistence, schemas and migrations. |
+| [`assets/audio/`](assets/audio/) | Tracked reviewed-audio manifest, currently empty until approved; used by content checks, not a disposable empty folder. |
+| [`build/`](build/) | **Tracked packaging inputs**, icon, entitlements, metadata, offline-ASR README and required third-party notice texts. Keep tracked files; generated license inventories and staged native artifacts are not source. |
+| [`public/brand/`](public/brand/) | Public app brand assets used by the renderer/preview. |
+| [`scripts/`](scripts/) | Build, content, security, ASR and release tools, including Python workers shipped as resources. |
+| [`tests/`](tests/) | Automated regression and package/release checks. |
+| [`docs/`](docs/README.md) | Current documentation, product baseline and retained historical/rights evidence. Follow the directory and retention map there. |
+
+Local-only generated directories such as `node_modules/`, `dist/`, `dist-electron/`, `release/` and `coverage/` may be regenerated and must not be committed. Do not confuse the tracked `build/` directory with generated output. Keep the pnpm lockfile, workspace configuration, build/test configuration, LICENSE, SECURITY, CHANGELOG and AGENTS at the repository root. `.npmrc` is pnpm-compatible configuration, not a second package-manager workflow. Delete a tracked item only after reviewing source/configuration, dynamic loads, packaging, tests and document links; Git history preserves removed obsolete material. Never delete personal models, recordings or learning data as repository cleanup.
+
 ## Development and support
 
 Voxnelo uses Electron, React, TypeScript, Rsbuild, local IndexedDB storage, and pnpm as its sole supported JavaScript package manager. For source setup (including standalone pnpm installation), testing, and packaging commands, see the [development guide](docs/DEVELOPMENT.md) and [toolchain policy](docs/engineering/NODE26-LTS-MIGRATION.md). End users of the official desktop installers do not need Node.js or pnpm for ordinary app use. [Dependency license evidence](docs/engineering/BUILD-LICENSE-INVENTORY.md) distinguishes the package manager from the public upstream registry.

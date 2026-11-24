@@ -53,6 +53,28 @@ sudo apt install ./Voxnelo.deb
 
 有关下一轮跨平台本地识别试验与设备要求，见 [Moonshine 多平台试验说明](docs/engineering/MOONSHINE-CROSS-PLATFORM-PILOT.md)；这不改变已发布的 v1.0.3 能力边界。
 
+
+## 仓库目录说明（保留与清理规则）
+
+| 目录 | 用途与保留规则 |
+| --- | --- |
+| [`.github/`](.github/) | 现役 GitHub Actions、Issue/PR 模板；必须保留。 |
+| [`apps/desktop/`](apps/desktop/) | Electron 主进程、预加载、原生听写与系统集成；生产源码。 |
+| [`apps/web/`](apps/web/) | React 共享渲染层、桌面 UI、网页预览和无障碍；生产源码。 |
+| [`packages/core/`](packages/core/) | 共享类型和领域基础逻辑。 |
+| [`packages/content/`](packages/content/) | 英语语料与教学数据。 |
+| [`packages/audio/`](packages/audio/) | 音频、语音和 PCM 工具。 |
+| [`packages/learning/`](packages/learning/) | 学习服务与练习流程。 |
+| [`packages/storage/`](packages/storage/) | IndexedDB 本地数据、表结构及迁移。 |
+| [`assets/audio/`](assets/audio/) | 已审核音频清单；当前等待审核而为空，仍由内容检查使用。 |
+| [`build/`](build/) | **版本控制中的打包输入**：图标、系统元数据、签名配置、离线 ASR 说明及第三方声明。保留跟踪文件；生成清单和暂存二进制不是源码。 |
+| [`public/brand/`](public/brand/) | 应用和网页预览品牌资源。 |
+| [`scripts/`](scripts/) | 构建、内容、安全、听写与发布脚本，包含随包分发的 Python Worker。 |
+| [`tests/`](tests/) | 回归测试及打包、发布门禁。 |
+| [`docs/`](docs/README.md) | 现役文档、产品基线、必须保留的历史及许可证据；详见文档目录图。 |
+
+**可重新生成、不提交 Git：** `node_modules/`、`dist/`、`dist-electron/`、`release/`、`coverage/`。不要误删作为打包输入的 `build/`。根目录保留 pnpm 锁文件与 workspace 配置、构建/测试配置、LICENSE、SECURITY、CHANGELOG、AGENTS；`.npmrc` 是 pnpm 兼容配置，不代表使用 npm 命令。删除跟踪文件前需核查动态引用、打包、脚本、测试与文档；已淘汰内容从现役文件树删除，Git 历史可查。不要把用户设备的模型、录音和学习记录当成仓库垃圾清理。
+
 ## 开发与反馈
 
 项目使用 Electron、React、TypeScript、Rsbuild 和 IndexedDB，JavaScript 包管理统一使用 pnpm。源码运行、测试、打包请查看 [开发指南](docs/DEVELOPMENT.md) 与 [工具链规范](docs/engineering/NODE26-LTS-MIGRATION.md)。普通桌面安装包用户不需要自行安装 Node.js 或 pnpm。依赖归档来源与许可证证据见 [构建依赖审核](docs/engineering/BUILD-LICENSE-INVENTORY.md)。
