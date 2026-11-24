@@ -171,6 +171,8 @@ def inspect_wheel(wheel: Path, expected_sha: str) -> dict:
                 "version": version,
                 "filename": wheel.name,
                 "sha256": expected_sha,
+                "distInfoRoot": dist_info_root,
+                "distInfoMatchesWheelIdentity": True,
                 "licenseExpression": license_expression or None,
                 "legacyLicenseFieldPresent": bool(message.get("License")),
                 "licenseClassifiers": classifiers,
