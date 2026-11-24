@@ -14,6 +14,8 @@ on:
       - 'scripts/moonshine-install-transaction.mts'
       - 'pnpm-lock.yaml'
       - 'scripts/audit-registry-license-archives.mts'
+      - 'scripts/inspect_registry_notices.py'
+      - 'scripts/test_inspect_registry_notices.py'
       - 'scripts/lockfile-license-evidence.mts'
       - 'scripts/package-license-evidence.mts'
   schedule:
@@ -98,13 +100,17 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
           pnpm build
-      - name: Independently measure exact upstream registry archives
-        run: pnpm license:audit:registry
+      - name: Test bounded read-only notice inspection
+        run: python3 scripts/test_inspect_registry_notices.py
+      - name: Independently measure exact upstream registry archives and compare notices
+        run: pnpm license:audit:registry --compare-notices
       - name: Preserve sanitized public archive hash evidence
         uses: actions/upload-artifact@v7
         with:
           name: registry-archive-integrity-evidence
-          path: build/license-inventory/registry-archives.json
+          path: |
+            build/license-inventory/registry-archives.json
+            build/license-inventory/registry-notices.json
           if-no-files-found: error
           retention-days: 14
 
