@@ -42,6 +42,14 @@ class WheelArchiveEvidenceTests(unittest.TestCase):
             item = mod.inspect_wheel(wheel, digest)
             self.assertEqual(item['name'], 'moonshine-voice')
             self.assertEqual(item['version'], '0.0.65')
+            with ZipFile(wheel) as original:
+                original_metadata = original.read(
+                    'moonshine_voice-0.0.65.dist-info/METADATA'
+                )
+            self.assertEqual(
+                item['metadataSha256'],
+                hashlib.sha256(original_metadata).hexdigest(),
+            )
             self.assertEqual(item['licenseExpression'], 'MIT')
             self.assertEqual(item['declaredLicenseFiles'], ['LICENSE'])
             self.assertEqual(len(item['noticeFiles']), 1)
