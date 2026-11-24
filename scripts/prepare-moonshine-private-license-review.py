@@ -43,11 +43,15 @@ def write_private(path: Path, content: bytes) -> None:
 def prepare(
     wheelhouse: Path, report_file: Path, snapshot_file: Path, output_dir: Path,
 ) -> dict:
-    if (not output_dir.is_absolute() or output_dir.exists()
+    if (not output_dir.is_absolute() or output_dir.exists() or output_dir.is_symlink()
             or output_dir.resolve(strict=False).is_relative_to(ROOT)):
         raise ValueError("Use a new absolute private output directory OUTSIDE the repository")
-    if not output_dir.parent.is_dir() or output_dir.parent.is_symlink():
-        raise ValueError("Private output parent must already exist and not be a symlink")
+    parent = output_dir.parent
+    # A symlink higher in the path can redirect even when the final parent
+    # itself is a real directory; reject the entire existing ancestry.
+    if (not parent.is_dir()
+            or any(ancestor.is_symlink() for ancestor in (parent, *parent.parents))):
+        raise ValueError("Private output path requires existing non-symlink ancestors")
 
     report = json.loads(report_file.read_text(encoding="utf-8"))
     if (not isinstance(report, dict)
@@ -93,6 +97,7 @@ def prepare(
                 "version": package["version"],
                 "wheelFilename": filename,
                 "wheelSha256": package["sha256"],
+                "metadataSha256": package["metadataSha256"],
                 "licenseExpression": package["licenseExpression"],
                 "licenseClassifiers": package["licenseClassifiers"],
                 "declaredLicenseFiles": package["declaredLicenseFiles"],
@@ -106,6 +111,7 @@ def prepare(
                 members = [{
                     "path": package["distInfoRoot"] + "/METADATA",
                     "type": "core-metadata",
+                    "sha256": package["metadataSha256"],
                 }] + [
                     {"path": item["path"], "type": "legal-file", "sha256": item["sha256"]}
                     for item in package["noticeFiles"]
@@ -133,6 +139,12 @@ def prepare(
                     })
                     if member["type"] == "legal-file":
                         manifest["exportedLegalFileCount"] += 1
+            # Close ZIP before a final whole-Wheel check, including members
+            # that are not themselves legal documents. This detects drift
+            # during export even if only unreviewed payload bytes changed.
+            with wheel.open("rb") as stream:
+                if collector.sha256_bytes(stream) != package["sha256"]:
+                    raise ValueError("Pinned Wheel changed during local text export")
             manifest["packages"].append(result)
 
         write_private(output_dir / "REVIEW-INDEX.json",
