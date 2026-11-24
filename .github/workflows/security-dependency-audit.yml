@@ -16,6 +16,8 @@ on:
       - 'scripts/audit-registry-license-archives.mts'
       - 'scripts/inspect_registry_notices.py'
       - 'scripts/test_inspect_registry_notices.py'
+      - 'scripts/inspect_packaged_asar.py'
+      - 'scripts/test_inspect_packaged_asar.py'
       - 'scripts/lockfile-license-evidence.mts'
       - 'scripts/package-license-evidence.mts'
   schedule:
@@ -101,9 +103,15 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm build
       - name: Test bounded read-only notice inspection
-        run: python3 scripts/test_inspect_registry_notices.py
+        run: |
+          python3 scripts/test_inspect_registry_notices.py
+          python3 scripts/test_inspect_packaged_asar.py
+      - name: Assemble Linux unpacked application for copied dependency coverage (no publish)
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: pnpm exec electron-builder --linux --dir --publish never
       - name: Independently measure exact upstream registry archives and compare notices
-        run: pnpm license:audit:registry --compare-notices
+        run: pnpm license:audit:registry --compare-notices --packaged-asar release/linux-unpacked/resources/app.asar
       - name: Preserve sanitized public archive hash evidence
         uses: actions/upload-artifact@v7
         with:

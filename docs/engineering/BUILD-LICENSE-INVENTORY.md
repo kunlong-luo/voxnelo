@@ -73,3 +73,7 @@ PR #287 and PR #289 have merged. [Registry audit and quality rubric](../release/
 ## Current evidence and audit history
 
 The full dated registry, convergence, score and AppImage provenance records are maintained once in [v1.0.4 registry audit and quality rubric](../release/V1.0.4-REGISTRY-AUDIT.md). Earlier duplicate sections have been removed only after exact text comparison against that canonical record. Unique evidence above is retained. Use the canonical record for exact commits, artifact IDs and observed hashes; use this document for its own scope. **HOLD; not legal or physical-device approval.**
+
+## Copied runtime package coverage
+
+The actual candidate DEB and Windows ASARs contain 18 root packages, not just the 16 renderer identities. See the [canonical audit ledger](../release/V1.0.4-REGISTRY-AUDIT.md) for measured payload evidence. The explicit optional audit command `pnpm license:audit:registry --compare-notices --packaged-asar release/linux-unpacked/resources/app.asar` expands the lockfile/SRI and root notice comparison to the supplied ASAR after a local unpacked build. The new bounded parser does not execute or extract its members; unsupported nested dependency trees, links or unpacked members fail closed. The scoped supply-chain job supplies its own freshly built ASAR. It does not certify a historical installer or approve distribution. Live results pending.
