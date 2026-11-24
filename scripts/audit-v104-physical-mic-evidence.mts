@@ -25,7 +25,13 @@ const validDate = (value: unknown): boolean => {
   const date = valueString(value);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return false;
   const parsed = new Date(date + 'T00:00:00Z');
-  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().startsWith(date);
+  if (Number.isNaN(parsed.getTime()) || !parsed.toISOString().startsWith(date)) return false;
+  // A reviewer cannot have observed a future test session. Allow the
+  // next UTC calendar day for testers east of UTC (local date may be +1).
+  const latestUtc = new Date();
+  latestUtc.setUTCHours(0, 0, 0, 0);
+  latestUtc.setUTCDate(latestUtc.getUTCDate() + 1);
+  return parsed.getTime() <= latestUtc.getTime();
 };
 // Opaque, non-identifying reference token; no personal paths, URLs, names or raw audio.
 const isPrivateEvidenceToken = (value: unknown): boolean =>
@@ -143,10 +149,23 @@ export function auditV104PhysicalMicEvidence(input: unknown): PhysicalMicEvidenc
       }
     }
     weightedWer[platform] = results;
+    // All quiet+noisy attempts must be represented by measured UI latency
+    // observations. A single easy example is not enough for 20+ trials.
+    const quietTrials = row(src.quiet).trials;
+    const noisyTrials = row(src.noisy).trials;
+    const requiredLatencySamples = isCount(quietTrials) && isCount(noisyTrials) &&
+      Number.isSafeInteger(quietTrials + noisyTrials)
+      ? quietTrials + noisyTrials : null;
     for (const metric of ['firstVisibleInterimMs', 'endOfSpeechToFinalVisibleMs']) {
       const samples = row(src[metric]);
       const label = prefix + metric + '.';
-      if (!isCount(samples.count) || samples.count === 0) blockers.push(label + 'count: measured observations required');
+      if (!isCount(samples.count) || samples.count === 0) {
+        blockers.push(label + 'count: measured observations required');
+      } else if (requiredLatencySamples !== null &&
+          samples.count < requiredLatencySamples) {
+        blockers.push(label +
+          'count: must cover every quiet and noisy human-microphone trial');
+      }
       if (typeof samples.p50 !== 'number' || !Number.isFinite(samples.p50) || samples.p50 < 0 ||
           typeof samples.p95 !== 'number' || !Number.isFinite(samples.p95) || samples.p95 < samples.p50) {
         blockers.push(label + 'p50/p95: finite nonnegative values with p95 >= p50 required');
