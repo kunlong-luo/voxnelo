@@ -24,7 +24,7 @@ function fixture(): ToolchainInputs {
       'packages:', '  pnpm@12.22.0:',
       '    resolution: {integrity: sha512-ABC123+/=}',
     ].join('\n'),
-    developmentGuide: '- Node.js 26 (Active LTS)\n\nnpm install --global pnpm@12.22.0\n',
+    developmentGuide: '- Node.js 26 (Active LTS)\n\nPNPM_VERSION=12.22.0 sh /tmp/install.sh\n$env:PNPM_VERSION = "12.22.0"\n',
     workflows: Object.fromEntries(MAINTAINED_WORKFLOWS.map(({ path: filename, usesPnpm }) => [
       filename,
       [
@@ -94,12 +94,18 @@ describe('Node and pnpm stable toolchain consistency', () => {
     const input = fixture();
     const first = MAINTAINED_WORKFLOWS[0]!.path;
     input.workflows = { ...input.workflows, [first]: 'steps:\n  - uses: actions/checkout@fixedsha\n' };
-    input.developmentGuide = '- Node.js 22 (Active LTS)\n\nnpm install --global pnpm@12.11.2';
+    input.developmentGuide = '- Node.js 22 (Active LTS)\n\nPNPM_VERSION=12.11.2 sh /tmp/install.sh\n$env:PNPM_VERSION = "12.11.2"';
     expect(checkToolchainConsistency(input)).toEqual(expect.arrayContaining([
       expect.stringContaining('setup-node version(s)'),
       expect.stringContaining('pnpm/action-setup version(s)'),
       expect.stringContaining('documented Node Active LTS'),
       expect.stringContaining('documented pnpm bootstrap'),
     ]));
+  });
+  it('rejects legacy package-manager CLI in active workflows', () => {
+    const input = fixture();
+    const first = MAINTAINED_WORKFLOWS[0]!.path;
+    input.workflows = { ...input.workflows, [first]: input.workflows[first] + '\n        run: ' + ['n' + 'pm', 'install'].join(' ') };
+    expect(checkToolchainConsistency(input)).toEqual(expect.arrayContaining([expect.stringContaining('legacy package-manager CLI')]));
   });
 });

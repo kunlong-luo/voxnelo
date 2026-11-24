@@ -12,16 +12,32 @@ These instructions apply to **Voxnelo 1.0.4 source (unpublished candidate)**. Th
 
 ## Get started
 
-From your own checkout of the repository:
+Install the pinned pnpm release using the [official standalone installer](https://pnpm.io/installation) (not the npm CLI). If pnpm 12.22.0 is already available, skip the bootstrap. Review the downloaded script before execution.
+
+Linux/macOS:
 
 ```bash
-npm install --global pnpm@12.22.0
+curl -fsSL https://get.pnpm.io/install.sh -o /tmp/voxnelo-pnpm-install.sh
+PNPM_VERSION=12.22.0 sh /tmp/voxnelo-pnpm-install.sh
+```
+
+Windows PowerShell:
+
+```powershell
+$env:PNPM_VERSION = '12.22.0'
+Invoke-WebRequest https://get.pnpm.io/install.ps1 -OutFile "$env:TEMP\voxnelo-pnpm-install.ps1"
+& "$env:TEMP\voxnelo-pnpm-install.ps1"
+```
+
+Open a new terminal and run from your own checkout:
+
+```bash
 pnpm --version             # Must report 12.22.0
 pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-**Node.js 26 no longer bundles Corepack.** The commands above bootstrap pnpm directly from the npm registry; they do not assume an installed `corepack` command. If you installed Corepack separately, you can use it with the same pinned pnpm release, but it is optional. The exact dependency and package-manager integrity records live in `pnpm-lock.yaml`. Do not remove existing project files or personal learning data to update the app.
+**Package manager policy:** pnpm is the only supported JavaScript package manager for development, CI and the isolated native-ASR pilot. The standalone bootstrap requires neither npm CLI nor Corepack. The public npm registry remains the upstream package source and its exact archive integrity records remain necessary; this does not mean invoking npm. Keep `pnpm-lock.yaml`; do not create alternate lockfiles. The exact dependency and package-manager integrity records live in `pnpm-lock.yaml`. Do not remove existing project files or personal learning data to update the app.
 
 ## Common tasks
 

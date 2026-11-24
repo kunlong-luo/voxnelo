@@ -5,7 +5,7 @@
  * are committed or published. This is an engineering candidate pending
  * third-party licensing/distribution and physical device approval.
  *
- * The input npm prefix must have been installed in disposable CI space from
+ * The input pnpm hoisted sandbox must have been installed in disposable CI space from
  * sherpa-onnx-node@1.13.8. The complete dependency tree is staged, because
  * Windows/macOS builds may load their own platform-specific sibling package.
  */
@@ -32,8 +32,8 @@ const regular=async(filename:string)=>{
 };
 
 /** Stage only from isolated CI-owned paths. No executable is downloaded here. */
-export async function stageInternalAsrCandidate(modelDir:string,npmNodeModules:string,destination:string) {
-  if(![modelDir,npmNodeModules,destination].every(path.isAbsolute))
+export async function stageInternalAsrCandidate(modelDir:string,nativeNodeModules:string,destination:string) {
+  if(![modelDir,nativeNodeModules,destination].every(path.isAbsolute))
     throw Error('All ASR staging paths must be absolute');
   const target=path.resolve(destination);
   const entries=await readdir(target).catch((e:NodeJS.ErrnoException)=>{
@@ -42,13 +42,13 @@ export async function stageInternalAsrCandidate(modelDir:string,npmNodeModules:s
   });
   if(entries.some(name=>name!=='README.md'))
     throw Error('Refusing to overwrite an already staged ASR candidate');
-  const packageFile=path.join(npmNodeModules,'sherpa-onnx-node','package.json');
-  const npmPackage=JSON.parse(await readFile(packageFile,'utf8')) as {
+  const packageFile=path.join(nativeNodeModules,'sherpa-onnx-node','package.json');
+  const nativePackage=JSON.parse(await readFile(packageFile,'utf8')) as {
     name?:string;version?:string;license?:string;
   };
-  if(npmPackage.name!=='sherpa-onnx-node'||npmPackage.version!=='1.13.8')
+  if(nativePackage.name!=='sherpa-onnx-node'||nativePackage.version!=='1.13.8')
     throw Error('Unexpected native ASR package name or version');
-  if(!npmPackage.license || !/apache[ -]?2/i.test(npmPackage.license))
+  if(!nativePackage.license || !/apache[ -]?2/i.test(nativePackage.license))
     throw Error('Native ASR package has no recognized upstream Apache 2.0 license claim');
 
   const modelFiles=new Map<string,string>();
@@ -66,11 +66,11 @@ export async function stageInternalAsrCandidate(modelDir:string,npmNodeModules:s
   let bytes=0;
   const walk=async(dir:string,prefix='')=>{
     for(const entry of await readdir(dir,{withFileTypes:true})){
-      // npm-generated executable links and lock state are irrelevant to the
+      // Package-manager executable links and lock state are irrelevant to the
       // application runtime, and must not be embedded as dangling symlinks.
-      if(!prefix&&(entry.name==='.bin'||entry.name==='.package-lock.json'))continue;
+      if(!prefix&&['.bin','.package-lock.json','.modules.yaml','.pnpm','.pnpm-workspace-state-v1.json'].includes(entry.name))continue;
       const relative=prefix?prefix+'/'+entry.name:entry.name;
-      if(!isSafe(relative))throw Error('Unsafe native npm path: '+relative);
+      if(!isSafe(relative))throw Error('Unsafe native package path: '+relative);
       const source=path.join(dir,entry.name);
       if(entry.isSymbolicLink())throw Error('Unexpected symlink in native package: '+relative);
       if(entry.isDirectory()){await walk(source,relative);continue;}
@@ -79,10 +79,10 @@ export async function stageInternalAsrCandidate(modelDir:string,npmNodeModules:s
       bytes+=stat.size;
       if(!stat.size||bytes>MAX_BYTES)throw Error('Native package exceeds safe resource size');
       nativeFiles.set('native/node_modules/'+relative,source);
-      if(nativeFiles.size>MAX_FILES)throw Error('Native npm package has too many files');
+      if(nativeFiles.size>MAX_FILES)throw Error('Native package has too many files');
     }
   };
-  await walk(npmNodeModules);
+  await walk(nativeNodeModules);
   if(![...nativeFiles.keys()].some(name=>name.endsWith('.node')))
     throw Error('No actual native ASR .node binary found in pinned npm package');
   const entry="module.exports = require('./node_modules/sherpa-onnx-node');\n";
@@ -104,8 +104,8 @@ export async function stageInternalAsrCandidate(modelDir:string,npmNodeModules:s
   const manifest={
     modelId:ENGLISH_MODEL.id,modelSource:ENGLISH_MODEL.source,
     modelLicense:ENGLISH_MODEL.license,modelRevision:ENGLISH_MODEL.revision,
-    nativePackage:'sherpa-onnx-node',nativeVersion:npmPackage.version,
-    nativeLicense:npmPackage.license,
+    nativePackage:'sherpa-onnx-node',nativeVersion:nativePackage.version,
+    nativeLicense:nativePackage.license,
     nativeSource:'https://www.npmjs.com/package/sherpa-onnx-node',
     platform:process.platform,arch:process.arch,
     reviewState:'engineering-only; native redistribution and signing not approved',

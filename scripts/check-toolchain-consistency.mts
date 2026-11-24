@@ -98,9 +98,15 @@ export function checkToolchainConsistency(inputs: ToolchainInputs): string[] {
   if (!nodeMajor || guideNode !== nodeMajor) {
     issues.push('docs/DEVELOPMENT.md: documented Node Active LTS major differs from CI');
   }
-  const guidePnpm = /npm install --global pnpm@(\d+\.\d+\.\d+)/.exec(inputs.developmentGuide)?.[1];
-  if (!pnpmVersion || guidePnpm !== pnpmVersion) {
+  const posixPnpm = /PNPM_VERSION=(\d+\.\d+\.\d+)\s+sh\b/.exec(inputs.developmentGuide)?.[1];
+  const windowsPnpm = /\$env:PNPM_VERSION\s*=\s*['"](\d+\.\d+\.\d+)['"]/.exec(inputs.developmentGuide)?.[1];
+  if (!pnpmVersion || posixPnpm !== pnpmVersion || windowsPnpm !== pnpmVersion) {
     issues.push('docs/DEVELOPMENT.md: documented pnpm bootstrap differs from packageManager');
+  }
+  const forbidden = /(?:^|[;&|]\s*)\s*(?:run:\s*)?(?:npm\s+|npx\s+)/m;
+  if (forbidden.test(inputs.developmentGuide)) issues.push('docs/DEVELOPMENT.md: use pnpm, not legacy package-manager CLI');
+  for (const [filename, source] of Object.entries(inputs.workflows)) {
+    if (forbidden.test(source)) issues.push(filename + ': use pnpm, not legacy package-manager CLI');
   }
   return issues;
 }

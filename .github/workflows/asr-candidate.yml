@@ -54,7 +54,7 @@ jobs:
         run: pnpm asr:model:prepare --out "$RUNNER_TEMP/voxnelo-english-model"
       - name: Install pinned upstream native addon (CI sandbox only)
         run: |
-          npm install --no-save --prefix "$RUNNER_TEMP/voxnelo-native" sherpa-onnx-node@1.13.8
+          node --experimental-strip-types scripts/install-pinned-native-addon.mts "$RUNNER_TEMP/voxnelo-native"
           node -e 'const {createRequire}=require("node:module");const r=createRequire(process.cwd()+"/package.json");const root=process.env.RUNNER_TEMP+"/voxnelo-native/node_modules";console.log("installed native package:",r.resolve("sherpa-onnx-node",{paths:[root]}))'
       - name: Generate a non-user English reference WAV
         run: |
@@ -185,7 +185,7 @@ jobs:
       - name: Fetch SHA-256 pinned model
         run: pnpm asr:model:prepare --out "${{ runner.temp }}/voxnelo-english-model"
       - name: Install exact upstream platform addon in temporary space
-        run: npm install --no-save --prefix "${{ runner.temp }}/voxnelo-native" sherpa-onnx-node@1.13.8
+        run: node --experimental-strip-types scripts/install-pinned-native-addon.mts "${{ runner.temp }}/voxnelo-native"
       - name: Check real recognition output, WER and runtime speed
         run: node --experimental-strip-types scripts/check-platform-asr-candidate.mts
       - name: Stage complete native runtime and pinned model for internal package
