@@ -24,6 +24,7 @@ export const CURRENT_DOCUMENTS = [
   'docs/release/PRD-TRACEABILITY.md',
   'docs/release/V1.0.4-PHYSICAL-DEVICE-EVIDENCE.md',
   'docs/release/DOCUMENT-INDEX.md',
+  'docs/release/V1.0.4-RELEASE-FREEZE.md',
   'docs/release/ASR-BENCHMARK-PROTOCOL.md',
   'docs/audits/2026-11-22-MODULE-REACHABILITY.md',
   'docs/engineering/RELEASE-OPERATIONS.md',

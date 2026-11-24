@@ -19,6 +19,7 @@ Updated: 2026-11-24. This index is navigation, **not** a release approval.
 - [Privacy — public v1.0.3 versus unpublished v1.0.4 source](PRIVACY.md)
 - [PRD traceability — 23 IDs with code/test paths and unmet requirements](release/PRD-TRACEABILITY.md)
 - [Release readiness](engineering/STABLE-RELEASE-READINESS.md)
+- [v1.0.4 release freeze and ordered acceptance](release/V1.0.4-RELEASE-FREEZE.md)
 - [v1.0.4 candidate release notes — not published](release-notes/v1.0.4.md)
 - [Changelog (source history versus shipped releases)](../CHANGELOG.md)
 - [ASR evidence and benchmark](engineering/ASR-ACCURACY-EXPERIMENTS.md)

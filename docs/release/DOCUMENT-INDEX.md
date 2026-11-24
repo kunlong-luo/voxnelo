@@ -4,6 +4,8 @@ Updated: 2026-11-24. This is an **index, not evidence of a public v1.0.4 release
 
 ## Maintained entries
 
+- **Release freeze:** [v1.0.4 final acceptance checklist](V1.0.4-RELEASE-FREEZE.md) — HOLD, blocker-only work; no publication.
+
 - **End users:** [English README](../../README.md), [中文 README](../../README.zh-CN.md), [cross-platform user guide](../USER-GUIDE.md), [privacy](../PRIVACY.md), [security](../../SECURITY.md).
 - **Current V3 UI (source iteration, not yet released):** [Dictation-first design, external references, accessibility and acceptance](../design/V3-DICTATION-FIRST-UX-2026-11-23.md). Its UI is **not** contained in the earlier SHA-checked v1.0.4 review installers from commit `7793c383`. [PR #264 deep Chromium/Linux Electron QA](https://github.com/kunlong-luo/voxnelo/actions/runs/45166540586) passed for its own PR head, and the [post-merge main CI](https://github.com/kunlong-luo/voxnelo/actions/runs/45168751524) passed separately; **physical accessibility, Moonshine licensing/provenance and v1.0.4 release gates remain open**.
 - **Engineering:** [development](../DEVELOPMENT.md), [release operations](../engineering/RELEASE-OPERATIONS.md), [pnpm-only toolchain compatibility](../engineering/NODE26-LTS-MIGRATION.md), [build dependency license inventory](../engineering/BUILD-LICENSE-INVENTORY.md), [repository governance](../engineering/REPOSITORY-GOVERNANCE.md), [documentation index](../README.md).

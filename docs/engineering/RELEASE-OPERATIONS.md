@@ -8,6 +8,10 @@
 
 **发行范围：** Linux x64 DEB/AppImage、Windows x64 NSIS EXE、macOS ARM64 DMG。**全部未签名，macOS 未公证**；SmartScreen / Smart App Control 或 Gatekeeper 可能阻止运行。Linux Moonshine 需要用户主动单独安装模型，Windows/macOS 不承诺相同离线引擎。F001–F012、模型/内容权利和至少五位初学者独立审核尚无完整公开可核验证据，但维护者确认所需人工操作测试已通过。详见 [v1.0.3 发行说明](../release-notes/v1.0.3.md) 和 [发行者免签名决定](../release/UNSIGNED-V1-OWNER-DECISION.md)。
 
+## v1.0.4 发布冲刺（2026-11-24）
+
+维护者同意进入发布收尾阶段，保留 HOLD。只处理阻塞项、验收与文档；见 [发布冻结和有序验收清单](../release/V1.0.4-RELEASE-FREEZE.md)。不升级 1.0.5、不创建标签、不替换历史 Draft，也不公开发行，直到全部适用门禁通过并取得明确发布授权。
+
 ## JavaScript 工具链与发布审核（2026-11-24）
 
 - 统一采用固定版本 pnpm，源码安装使用冻结锁文件；开发环境准备参阅 [开发指南](../DEVELOPMENT.md)，版本约束参阅 [工具链规范](NODE26-LTS-MIGRATION.md)。
