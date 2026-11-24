@@ -16,14 +16,15 @@ mod = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(mod)
 
 
-def make_wheel(root: Path, name: str, entries=None):
+def make_wheel(root: Path, name: str, entries=None, dist_info_root=None):
     filename = f'{name}-0.0.65-py3-none-any.whl'
     wheel = root / filename
+    info_root = dist_info_root or f'{name}-0.0.65.dist-info'
     data = {
-        f'{name}-0.0.65.dist-info/METADATA':
+        f'{info_root}/METADATA':
             f'Metadata-Version: 2.4\nName: {name}\nVersion: 0.0.65\n'
             'License-Expression: MIT\nLicense-File: LICENSE\n',
-        f'{name}-0.0.65.dist-info/licenses/LICENSE': 'Test-only simulated notice',
+        f'{info_root}/licenses/LICENSE': 'Test-only simulated notice',
         f'{name}/native.so': b'test-only native library',
     }
     data.update(entries or {})
@@ -115,6 +116,36 @@ class WheelArchiveEvidenceTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     mod.inspect_wheel(wheel, digest)
                 wheel.unlink()
+
+    def test_rejects_foreign_or_nested_dist_info_despite_matching_metadata(self):
+        # A valid Name/Version header cannot authenticate a forged metadata
+        # directory. In particular it cannot bind another package's legal
+        # files to the pinned package being examined.
+        for directory in (
+            'other-0.0.65.dist-info',
+            'numpy-9.9.dist-info',
+            'nested/numpy-0.0.65.dist-info',
+        ):
+            with tempfile.TemporaryDirectory() as root:
+                wheel, digest = make_wheel(
+                    Path(root), 'numpy', dist_info_root=directory,
+                )
+                with self.assertRaisesRegex(
+                        ValueError, 'dist-info directory mismatches'):
+                    mod.inspect_wheel(wheel, digest)
+
+    def test_allows_normalized_distribution_spellings_for_valid_wheels(self):
+        with tempfile.TemporaryDirectory() as root:
+            wheel, digest = make_wheel(
+                Path(root), 'moonshine_voice',
+                dist_info_root='moonshine-voice-0.0.65.dist-info',
+            )
+            item = mod.inspect_wheel(wheel, digest)
+            self.assertEqual(item['name'], 'moonshine-voice')
+            self.assertEqual(item['distInfoRoot'], 'moonshine-voice-0.0.65.dist-info')
+            self.assertTrue(item['distInfoMatchesWheelIdentity'])
+            self.assertTrue(item['declaredLicenseFilesLocated'])
+            self.assertTrue(item['manualReviewRequired'])
 
     def test_rejects_tampering_missing_or_misidentified_metadata(self):
         with tempfile.TemporaryDirectory() as root:

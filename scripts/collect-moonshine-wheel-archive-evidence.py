@@ -111,6 +111,17 @@ def inspect_wheel(wheel: Path, expected_sha: str) -> dict:
             if (re.sub(r"[-_.]+", "-", recorded_name).lower() != name
                     or recorded_version != version):
                 raise ValueError("Wheel METADATA mismatches pinned package identity")
+            # Per the Wheel distribution specification, the root-level
+            # {distribution}-{version}.dist-info directory must identify this
+            # very Wheel. A plausible Name/Version header placed in a foreign
+            # .dist-info tree must not be used to attribute legal files.
+            dist_info_root = metadata_names[0].removesuffix("/METADATA")
+            expected_suffix = "-" + version + ".dist-info"
+            if ("/" in dist_info_root
+                    or not dist_info_root.endswith(expected_suffix)
+                    or re.sub(r"[-_.]+", "-",
+                              dist_info_root[:-len(expected_suffix)]).lower() != name):
+                raise ValueError("Wheel .dist-info directory mismatches pinned identity")
             license_expression = message.get("License-Expression", "").strip()
             if len(license_expression) > 300:
                 license_expression = ""
@@ -132,7 +143,6 @@ def inspect_wheel(wheel: Path, expected_sha: str) -> dict:
             # License-File values are relative to .dist-info/licenses/.
             # Report missing references without pretending that their mere
             # presence legally clears these binaries.
-            dist_info_root = metadata_names[0].rsplit("/", 1)[0]
             archive_license_paths = {
                 declaration: dist_info_root + "/licenses/" + declaration
                 for declaration in declared_files
@@ -161,6 +171,8 @@ def inspect_wheel(wheel: Path, expected_sha: str) -> dict:
                 "version": version,
                 "filename": wheel.name,
                 "sha256": expected_sha,
+                "distInfoRoot": dist_info_root,
+                "distInfoMatchesWheelIdentity": True,
                 "licenseExpression": license_expression or None,
                 "legacyLicenseFieldPresent": bool(message.get("License")),
                 "licenseClassifiers": classifiers,
