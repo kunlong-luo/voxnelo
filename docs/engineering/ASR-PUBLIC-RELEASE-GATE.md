@@ -189,6 +189,32 @@ These selected dynamic tags are not proof of actual runtime resolution or that d
 
 The current [official NSIS license page, revision 23142](https://nsis.sourceforge.io/mediawiki/index.php?title=License&oldid=23142) was read: general code and zlib module use zlib/libpng terms, bzip2 module uses the bzip2 license, and LZMA module uses CPL-1.0 with a special linking exception. The exception does not remove the obligations applicable to changes to the LZMA module itself. This is an upstream license-family scope lead, not version-specific proof for the historical electron-builder archives nsis-3.0.4.1.7z and nsis-resources-3.4.1.7z. The [v26 toolset documentation](https://www.electron.build/v26/docs/api/app-builder-lib.interface.toolsetconfig/) identifies these archives as the legacy split bundle. A qualified reviewer must identify actual embedded compression code and plugins, corresponding original sources/notices, and applicable obligations, separately from build-only utilities. Do not classify the complete installer as blanket MIT or zlib. No legal approval, physical-mic approval or publication authorization follows. HOLD.
 
+
+### Historical toolset asset identity and six AppImage upstream Git-object matches — 2026-11-24
+
+Read the upstream release API for each historical tool archive recorded in candidate run 45318769948. The following asset IDs and sizes were returned; the API digest field is null for all three.
+
+| Upstream release | Asset ID | Bytes |
+| --- | ---: | ---: |
+| [appimage-12.0.1](https://github.com/electron-userland/electron-builder-binaries/releases/tag/appimage-12.0.1) | 13613639 | 1573447 |
+| [nsis-3.0.4.1](https://github.com/electron-userland/electron-builder-binaries/releases/tag/nsis-3.0.4.1) | 16428442 | 1287512 |
+| [nsis-resources-3.4.1](https://github.com/electron-userland/electron-builder-binaries/releases/tag/nsis-resources-3.4.1) | 13752602 | 730800 |
+
+**New positive provenance evidence:** the recursive [Git tree of historical appimage-12.0.1 commit 57839c6](https://api.github.com/repos/electron-userland/electron-builder-binaries/git/trees/57839c6516289c0412c1b0887a6718d71e1ac5c2?recursive=1) is not truncated and includes all six regular x64 library blobs under `AppImage/lib/x64/`. For each previously extracted actual candidate ELF file, independently recomputed its SHA-256 (all six match the earlier table) and Git blob object ID (SHA-1 of UTF-8 header `blob <byte-length>\0` followed by exact binary bytes). Compared both size and Git object ID with that upstream immutable tree:
+
+| Library | Actual and upstream bytes | Actual and upstream Git blob ID |
+| --- | ---: | --- |
+| libXss.so.1 | 14488 | `752f223df81288c87f7b8fe9f6692236b6f17088` |
+| libXtst.so.6 | 22880 | `1f6fbf3e3923c203bae147fc2bfed569fbbabb55` |
+| libappindicator.so.1 | 52128 | `a8c5dcaa16e6cd2ea401fae2b19dab045758b8a2` |
+| libgconf-2.so.4 | 192296 | `948925c1ac5d44c046bb94ae481707da65e5eac7` |
+| libindicator.so.7 | 60648 | `f36a7fb508e75655ceefb3d9ffd5749d61ca0ad3` |
+| libnotify.so.4 | 31304 | `e77ed01189376ea6687e82ba30ef59cd273374a6` |
+
+All **6/6** match the historical toolset repository at an exact Git commit. This supersedes the earlier lack of a repository-object mapping, not the missing independent release-archive SHA-256 or exact originating distribution/source-package versions. The release-asset downloads remained unavailable in this environment; raw upstream binary blob reads were rejected as non-UTF-8. Thus no independent upstream binary SHA-256 or archive hash is claimed. Git SHA-1 object identity plus matching sizes and independently measured candidate SHA-256 is useful evidence, not publisher build attestation, source-code provenance or legal approval.
+
+Next: trace the history of these pinned library objects to the actual distribution source packages and exact versions; obtain the original copyright/license and applicable source-availability obligations, including any modifications. If archive bytes become available, independently hash them, list members without execution, compare the six x64 members against the candidate SHA-256 table, and retain the original archive identity. NSIS archive members and redistributed bootstrapper/plugin source mappings are still pending. No legal gate is approved, no model or installer is changed, and no publication is authorized. **HOLD.**
+
 ## Automation boundaries and known code risk
 
 - `scripts/check-asr-staging.mts` proves inventory/integrity, **not** lawful redistribution.
