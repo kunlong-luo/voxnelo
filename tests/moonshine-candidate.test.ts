@@ -39,7 +39,11 @@ const run=(wav:string,model:string,size='medium')=>{
   'scripts/benchmark-moonshine-voice.py','--wav',wav,'--model-dir',model,
   '--size',size,'--validate-only',
 ],{cwd:process.cwd(),encoding:'utf8',timeout:30000,env:{...process.env,PYTHONNOUSERSITE:'1'}});
-  if(result.error) throw new Error('Moonshine fixture subprocess failed: '+(result.error.code??result.error.name));
+  if(result.error){
+    const error=result.error;
+    const code='code' in error && typeof error.code==='string' ? error.code : error.name;
+    throw new Error('Moonshine fixture subprocess failed: '+code);
+  }
   if(result.status===null||result.signal!==null) throw new Error('Moonshine fixture subprocess did not exit normally');
   return result;
 };
