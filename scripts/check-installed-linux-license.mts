@@ -19,7 +19,7 @@ export function selectInstalledVoxneloLicense(ownedFiles: readonly string[]): st
     return segments.length >= 5 &&
       segments.at(-1) === 'LICENSE' && segments.at(-2) === 'resources' &&
       segments.slice(1, -2).every(part => part.length > 0 && part !== '.' &&
-        part !== '..' && !part.includes('\\0'));
+        part !== '..' && !part.includes(String.fromCharCode(0)));
   });
   assert.equal(matching.length, 1,
     'Expected exactly one package-owned, installed resources/LICENSE');
