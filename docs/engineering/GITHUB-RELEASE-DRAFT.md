@@ -59,6 +59,8 @@ GitHub Release 上传时把 Windows 安装包 `Voxnelo Setup 1.0.4.exe` 自动�
 
 Voxnelo 的源码根目录存在 MIT [LICENSE](../../LICENSE)，但此前的 Electron 安装包文件清单没有显式声明将其作为可直接访问的资源发布。现已给**未来重新打包的候选件**配置 `extraResources/LICENSE` → 各平台的 `resources/LICENSE`，并由 `scripts/check-desktop-package.mts` 在 Linux、Windows 和 macOS 真实解包目录中核对文件字节。该自动检查只说明 **Voxnelo 自身**许可证被正确打包，**不代表 Electron/npm 或 Moonshine/Python/原生库的 NOTICE 已审核完整**。旧版 v1.0.4 Draft 的八个附件未经重建，不得倒推其已包含该文件，也不能因这个检查通过而人工发布。
 
+**新增 Linux 实装核验：** 单检查 `electron-builder` 的解包目录不能证明 .deb 安装后仍有 LICENSE。现将 `scripts/check-installed-linux-license.mts` 接入日常 CI、v1.0.4 只读候选、普通候选和手动 Draft 构建的 Linux `apt-get install` 之后，通过 `dpkg -L voxnelo` 查找安装包所有的 `resources/LICENSE`，与仓库原件逐字节比较，任何缺失或差异均拒绝通过。Windows/macOS 当前的核验范围是对应平台解包的桌面应用，而**非**模拟的 NSIS GUI 安装或 DMG 挂载验证；真实安装升级、人声录音和第三方许可证审核仍待单独验收。
+
 ## 后续新版本、草稿和额外的签名通道
 
 新版本应先以 PR 更新源码版本、锁文件、发行说明并通过 CI，再为**未使用的新版本号**建立独立的发布流程。`.github/workflows/release-draft.yml` 可通过 **Actions → Prepare GitHub release draft → Run workflow** 使用 `version` 及 `PREPARE_DRAFT_ONLY` 创建内部草稿；**已有 Draft/Release/tag 不允许覆盖**，草稿不会公开。
