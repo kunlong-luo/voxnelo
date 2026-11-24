@@ -40,6 +40,7 @@ describe('documentation link and command validation', () => {
       'docs/engineering/UI-ACCESSIBILITY-AUDIT-2026-11-16.md',
       'docs/release/V1.0.4-PHYSICAL-DEVICE-EVIDENCE.md',
       'docs/engineering/MOONSHINE-PRIVATE-LICENSE-TEXT-REVIEW-2026-11-24.md',
+      'docs/engineering/MOONSHINE-VERSION-MIGRATION-DECISION-2026-11-24.md',
       'docs/engineering/MOONSHINE-V1.0.4-LICENSE-EVIDENCE.md',
       'docs/engineering/MOONSHINE-V1.0.4-PROVENANCE-AND-NOTICES-2026-11-23.md',
       'docs/engineering/MOONSHINE-UPSTREAM-EVIDENCE-REQUEST-2026-11-23.md',
