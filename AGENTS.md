@@ -58,3 +58,5 @@
 - 任何没有执行的检查如实写“未执行”；不推断构建通过就是发布完成。
 
 详见历史 `docs/engineering/V0.1-ACCEPTANCE-MATRIX.md`、当前 `docs/release/PRD-TRACEABILITY.md` 和 `.github/PULL_REQUEST_TEMPLATE.md`。
+
+- JavaScript 包管理统一使用 pnpm（固定版本以 `package.json` 为准）；禁止在维护中的脚本、CI 和开发安装步骤调用 npm CLI 或 npx。npm Registry 仍是上游分发及许可证证据来源，保留原始来源链接和完整性记录。隔离的原生 ASR 测试环境使用 pnpm hoisted 布局，不放宽原生文件符号链接检查。
