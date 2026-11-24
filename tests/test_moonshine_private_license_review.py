@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import stat
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -223,6 +224,51 @@ class PrivateLicenseReviewTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'non-redirected ancestors'):
                 review.prepare(wheels, report, snapshot, destination)
             self.assertFalse((actual / 'child' / 'private-review').exists())
+
+    def test_cli_rejects_forged_hash_snapshot_even_when_json_is_well_formed(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            _, _, snapshot, _, _ = fixtures(root)
+            shadow = root / 'other-valid-looking-snapshot.json'
+            shadow.write_bytes(snapshot.read_bytes())
+            with patch.object(review, 'PINNED_SNAPSHOT', snapshot):
+                review.verify_cli_snapshot_path(snapshot)
+                with self.assertRaisesRegex(ValueError, 'repository-tracked'):
+                    review.verify_cli_snapshot_path(shadow)
+                argv = [
+                    'prepare-moonshine-private-license-review.py',
+                    str(root / 'wheels'),
+                    str(root / 'verified-digests.json'),
+                    str(shadow),
+                    str(root / 'blocked-private-review'),
+                ]
+                with patch.object(sys, 'argv', argv):
+                    with patch.object(review, 'prepare') as export:
+                        with self.assertRaisesRegex(SystemExit, 'export blocked'):
+                            review.main()
+                        export.assert_not_called()
+            self.assertFalse((root / 'blocked-private-review').exists())
+
+    def test_never_exports_binary_legal_lookalikes(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            wheels, report_file, snapshot_file, report, snapshot = fixtures(root)
+            first = report['wheels'][0]
+            old_wheel = wheels / first['filename']
+            old_wheel.unlink()
+            prefix = 'syntheticpackage0-0.0.65.dist-info'
+            binary_name = f'{prefix}/licenses/THIRD-PARTY.dll'
+            wheel, digest = make_wheel(wheels, 'syntheticpackage0', {
+                binary_name: b'synthetic fake LICENSE content inside native DLL',
+            })
+            first['sha256'] = digest
+            snapshot['platforms']['linux'][wheel.name] = digest
+            report_file.write_text(json.dumps(report), encoding='utf-8')
+            snapshot_file.write_text(json.dumps(snapshot), encoding='utf-8')
+            destination = root / 'blocked-review'
+            with self.assertRaisesRegex(ValueError, 'Executable or model payload'):
+                review.prepare(wheels, report_file, snapshot_file, destination)
+            self.assertFalse(destination.exists())
 
     def test_rejects_windows_junction_like_ancestor_before_export(self):
         with tempfile.TemporaryDirectory() as temp:

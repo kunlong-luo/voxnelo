@@ -18,6 +18,13 @@ from zipfile import ZipFile, BadZipFile
 
 NATIVE = re.compile(r"(?:\.(?:dll|dylib|pyd|a|so)|\.so\.[0-9.]+)$", re.I)
 NOTICE = re.compile(r"(?:licen[cs]e|notice|copyright|copying|third[-_]?party)", re.I)
+# A matching legal-looking basename/directory does NOT make an executable,
+# library or model blob a reviewable text document. Fail closed rather than
+# putting such bytes into the private legal-text export.
+NON_LEGAL_PAYLOAD = re.compile(
+    r"(?:\.(?:dll|dylib|pyd|a|so|exe|wasm|ort|onnx|bin|pyc|pyo|whl)|\.so\.[0-9.]+)$",
+    re.I,
+)
 # A license file can be named e.g. Apache-2.0.txt or AUTHORS. Its
 # containing Wheel licenses directory is authoritative, not the basename.
 LEGAL_DIRECTORIES = frozenset({
@@ -87,6 +94,8 @@ def inspect_wheel(wheel: Path, expected_sha: str) -> dict:
                 if (NOTICE.search(parts[-1])
                         or any(part.lower() in LEGAL_DIRECTORIES
                                for part in parts[:-1])):
+                    if NON_LEGAL_PAYLOAD.search(parts[-1]):
+                        raise ValueError("Executable or model payload cannot be legal review text")
                     if item.file_size > MAX_TEXT:
                         raise ValueError("Oversized notice file")
                     with source.open(item) as payload:
