@@ -15,6 +15,7 @@
     "build": "pnpm build:renderer && pnpm build:electron",
     "build:renderer": "pnpm worklet:build && rsbuild build",
     "build:electron": "node --experimental-strip-types scripts/check-asr-staging.mts && node --experimental-strip-types scripts/build-electron.mts",
+    "license:audit:registry": "node --experimental-strip-types scripts/audit-registry-license-archives.mts",
     "asr:check-staging": "node --experimental-strip-types scripts/check-asr-staging.mts",
     "asr:model:prepare": "node --experimental-strip-types scripts/prepare-asr-model.mts",
     "asr:personal:install": "node --experimental-strip-types scripts/install-personal-asr.mts",
