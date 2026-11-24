@@ -178,6 +178,32 @@ class PrivateLicenseReviewTests(unittest.TestCase):
                     review.prepare(wheels, report, snapshot, destination)
             self.assertFalse(destination.exists())
 
+    def test_detects_whole_wheel_drift_during_export_and_cleans_output(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            wheels, report, snapshot, _, _ = fixtures(root)
+            destination = root / 'private-review'
+            original_zipfile = review.ZipFile
+
+            class ZipThatDriftsAfterRead:
+                def __init__(self, wheel):
+                    self.wheel = Path(wheel)
+                    self.zipped = original_zipfile(wheel)
+
+                def __enter__(self):
+                    return self.zipped.__enter__()
+
+                def __exit__(self, *args):
+                    result = self.zipped.__exit__(*args)
+                    with self.wheel.open('ab') as output:
+                        output.write(b'synthetic unexpected trailing ZIP bytes')
+                    return result
+
+            with patch.object(review, 'ZipFile', ZipThatDriftsAfterRead):
+                with self.assertRaisesRegex(ValueError, 'changed during local text export'):
+                    review.prepare(wheels, report, snapshot, destination)
+            self.assertFalse(destination.exists())
+
     def test_refuses_symlink_in_any_output_ancestor(self):
         with tempfile.TemporaryDirectory() as temp:
             # Resolve macOS /var -> /private/var before testing no-symlink outputs.
