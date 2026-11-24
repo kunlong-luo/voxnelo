@@ -171,6 +171,24 @@ The [electron-builder-binaries historical appimage-12.0.1 tag](https://github.co
 
 PR #281 is separately validating the supplemental macOS notice correction and installed DEB checks. Do not invalidate that run by appending unrelated research commits. Once its changes are integrated, a fresh exact-source review-only build and new independent installer hashes are required. All direct-human mic and legal approval gates remain PENDING; **HOLD**.
 
+
+### Actual AppImage ELF identity and NSIS license scope — 2026-11-24
+
+Re-read all six bundled ELF members from the historical review AppImage in artifact 14887665319, run 45318769948. Recomputed each SHA-256 (all six equal the earlier installer inventory) and inspected ELF notes and dynamic sections with readelf -n and readelf -d, without executing the binaries. Each SONAME equals its listed filename.
+
+| Bundled library | Observed GNU Build ID | Selected declared DT_NEEDED dependencies |
+| --- | --- | --- |
+| libXss.so.1 | `82c0e3569eb993bf2c2e2bb8379b1564fe28eebf` | libX11.so.6, libXext.so.6 |
+| libXtst.so.6 | `0403493a3501094414e75b977548928a413d8146` | libX11.so.6, libXext.so.6 |
+| libappindicator.so.1 | `3952e6e8393caf73029e13d642c28e822ee50521` | libindicator.so.7, libdbusmenu-gtk.so.4, libdbusmenu-glib.so.4, libgtk-x11-2.0.so.0 |
+| libgconf-2.so.4 | `ac0a2bc11dc7505e276c0327b1c1897a997ba02c` | libdbus-glib-1.so.2, libdbus-1.so.3, libgmodule-2.0.so.0 |
+| libindicator.so.7 | `089a982c5c6194888bb10d378a2f29f719bcddef` | libgtk-x11-2.0.so.0, libgdk_pixbuf-2.0.so.0, libgmodule-2.0.so.0 |
+| libnotify.so.4 | `bc29207f80a6b64aec329dd8397df57672ee132e` | libgdk_pixbuf-2.0.so.0, libgio-2.0.so.0, libgobject-2.0.so.0, libglib-2.0.so.0 |
+
+These selected dynamic tags are not proof of actual runtime resolution or that dependencies are distributed inside the AppImage. A GNU Build ID is a useful lookup key for historical distribution package and debug archives, not a release version or publisher attestation. Match both full SHA-256 and package/source identity before assigning specific copyright and source availability obligations. The attempt to fetch the original appimage-12.0.1.7z release asset failed due to DNS resolution in the audit environment; no archive digest or library-to-upstream byte match was obtained. All six exact source mappings remain PENDING.
+
+The current [official NSIS license page, revision 23142](https://nsis.sourceforge.io/mediawiki/index.php?title=License&oldid=23142) was read: general code and zlib module use zlib/libpng terms, bzip2 module uses the bzip2 license, and LZMA module uses CPL-1.0 with a special linking exception. The exception does not remove the obligations applicable to changes to the LZMA module itself. This is an upstream license-family scope lead, not version-specific proof for the historical electron-builder archives nsis-3.0.4.1.7z and nsis-resources-3.4.1.7z. The [v26 toolset documentation](https://www.electron.build/v26/docs/api/app-builder-lib.interface.toolsetconfig/) identifies these archives as the legacy split bundle. A qualified reviewer must identify actual embedded compression code and plugins, corresponding original sources/notices, and applicable obligations, separately from build-only utilities. Do not classify the complete installer as blanket MIT or zlib. No legal approval, physical-mic approval or publication authorization follows. HOLD.
+
 ## Automation boundaries and known code risk
 
 - `scripts/check-asr-staging.mts` proves inventory/integrity, **not** lawful redistribution.
