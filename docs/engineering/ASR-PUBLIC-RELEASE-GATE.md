@@ -8,6 +8,8 @@
 - **Internal ASR candidate:** permitted only for controlled build/test; a reproducible WAV result or valid SHA-256 manifest does not authorize publication.
 - **Public expanded native-ASR v1.0.4 installer:** HOLD until the relevant new-platform evidence below has a reviewer, dated artifact SHA and explicit release approval. The owner has explicitly allowed **unsigned** desktop releases with SmartScreen/Gatekeeper/notarization limitations accurately disclosed; signature is optional, not an automatic release blocker. However, the unsigned decision does **not** waive license, privacy, real microphone or functionality review. Never treat an Actions artifact or a successful private Draft as automatic authorization to publish.
 
+**Model-version fork (2026-11-24):** The [immutable-source comparison of Moonshine 0.0.65 versus 0.1.6](MOONSHINE-VERSION-MIGRATION-DECISION-2026-11-24.md) records a changed model URL, split streaming front-end files, optional word-timestamp decoder, and upstream Windows/VAD improvements. None has been implemented or independently benchmarked in Voxnelo. The current release gate still applies to the **pinned 0.0.65 candidate**; a proposed 0.1.6 upgrade would be a separate PR with **new pinned Python 3.12 Wheel/model SHA inventories, license/NOTICE review, native compatibility and real-human microphone acceptance**, not a workaround for unresolved rights or an automatic publication signal.
+
 ## Evidence ledger (complete separately for each OS/arch and exact artifact SHA-256)
 
 | Gate | Required evidence | Current decision |
