@@ -1,6 +1,6 @@
 # Voxnelo documentation index
 
-Updated: 2026-11-23. This index is navigation, **not** a release approval.
+Updated: 2026-11-24. This index is navigation, **not** a release approval.
 
 ## Source of truth and precedence
 
