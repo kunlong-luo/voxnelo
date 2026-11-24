@@ -46,3 +46,16 @@ A declared SRI is an expected tarball digest, **not a measurement of the downloa
 ## Schema 3 CI correction — 2026-11-24
 
 [CI 45358679644](https://github.com/kunlong-luo/voxnelo/actions/runs/45358679644) on head `d69ebab19e11db535616d2e60114129f48a89aeb` passed all three platform packaging jobs but failed core quality at ESLint: four `no-regex-spaces` errors in the bounded lockfile reader. Core unit tests were not established by that failed run. Replace literal repeated indentation spaces in those four expressions with equivalent explicit quantifiers; no rule suppression or dependency change. Rerun all required checks before merge. Upstream tarball measurement remains pending, and v1.0.4 stays **HOLD**.
+
+## Opt-in independent registry archive audit — 2026-11-24
+
+[PR #285](https://github.com/kunlong-luo/voxnelo/pull/285) merged as `557025a3c245f22868574f5c4f5b29971ad39334` after all five jobs of [CI 45359217365](https://github.com/kunlong-luo/voxnelo/actions/runs/45359217365) passed; its feature branch was confirmed removed. Core job 138324666906 confirms three lockfile unit tests passed and 16 exact renderer registry resolutions matched. The earlier failed lint run remains recorded.
+
+The next change adds a separate, explicit online audit:
+
+```sh
+pnpm build
+pnpm license:audit:registry
+````
+
+Read all three schema 3 inventories, require their exact current lockfile SHA-256 and independently re-index the checked-in lockfile. Deduplicate actual package/version identities, construct only exact public npm registry archive URLs, reject redirects, bound each archive to 64 MiB and 60 seconds, measure its bytes against locked SHA-512 SRI, and record independent SHA-256 and byte count. No package execution, extraction, arbitrary URLs, credentials, dependency installation, default-build network access or release change. The local ignored `build/license-inventory/registry-archives.json` is written only after all archives match; remove prior report at start so failure cannot be mistaken for success. Offline unit tests cover integrity failure, exact URLs and stale/tampered/missing input reports. CI and actual online audit are pending. A successful archive digest does not yet compare installed LICENSE/NOTICE bytes or prove licensing rights; root/nested notice matching, copied dependencies, final installer notices and human legal/device approval remain pending. **HOLD.**
