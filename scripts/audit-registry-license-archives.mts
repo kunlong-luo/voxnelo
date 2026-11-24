@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { lstat, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { indexLockedRegistryPackages } from './lockfile-license-evidence.mts';
+import { indexLockedRegistryPackages, matchLockedPackages } from './lockfile-license-evidence.mts';
 
 const MAX_ARCHIVE_BYTES = 64 * 1024 * 1024;
 const targets = ['renderer', 'electron', 'audio-worklet'] as const;
@@ -32,15 +32,16 @@ export function verifyArchiveBytes(pkg: LockedPackage, bytes: Uint8Array): Archi
   return { ...pkg, bytes: bytes.length, sha256: createHash('sha256').update(bytes).digest('hex'), measuredIntegrity };
 }
 
-export function collectLockedPackages(reports: readonly Report[], lockfileBytes: Uint8Array): LockedPackage[] {
+export function collectLockedPackages(reports: readonly Report[], lockfileBytes: Uint8Array, includePackaged = false): LockedPackage[] {
   const digest = createHash('sha256').update(lockfileBytes).digest('hex');
   const index = indexLockedRegistryPackages(Buffer.from(lockfileBytes).toString('utf8'));
   const packages = new Map<string, LockedPackage>();
   const seenTargets = new Set<string>();
+  const requiredTargets: readonly string[] = includePackaged ? [...targets, 'packaged-asar'] : targets;
   for (const report of reports) {
     assert.equal(report.schemaVersion, 3, 'Rebuild schema 3 inventories first');
     assert.equal(report.legalApproval, false, 'Unexpected approval in input inventory');
-    assert.ok(typeof report.target === 'string' && targets.some(t => t === report.target), 'Unexpected build inventory target');
+    assert.ok(typeof report.target === 'string' && requiredTargets.some(t => t === report.target), 'Unexpected build inventory target');
     assert.ok(!seenTargets.has(report.target), 'Duplicate build inventory target');
     seenTargets.add(report.target);
     assert.equal(report.lockfileSha256, digest, 'Stale build inventory lockfile digest');
@@ -56,7 +57,7 @@ export function collectLockedPackages(reports: readonly Report[], lockfileBytes:
       packages.set(key, pkg);
     }
   }
-  assert.equal(seenTargets.size, targets.length, 'Missing build inventory target');
+  assert.equal(seenTargets.size, requiredTargets.length, 'Missing build inventory target');
   assert.ok([...packages.values()].some(pkg => pkg.name === 'react'), 'Missing required renderer dependency');
   return [...packages.values()].sort((a, b) => (a.name + '@' + a.version).localeCompare(b.name + '@' + b.version, 'en'));
 }
@@ -115,6 +116,24 @@ function compareArchiveNotices(pkg: LockedPackage, bytes: Uint8Array, reports: r
   return actual;
 }
 
+async function readPackagedAsarReport(filename: string, lockfile: Buffer): Promise<Report & { asarSha256: string }> {
+  const info = await lstat(filename);
+  assert.ok(info.isFile() && info.size > 0 && info.size <= 256 * 1024 * 1024, 'ASAR outside audit bounds');
+  const bytes = await readFile(filename);
+  assert.equal(bytes.length, info.size, 'ASAR changed while reading');
+  const child = spawnSync('python3', ['scripts/inspect_packaged_asar.py'], {
+    input: bytes, encoding: 'utf8', timeout: 30_000, maxBuffer: 4 * 1024 * 1024,
+  });
+  assert.ifError(child.error);
+  assert.equal(child.status, 0, 'Read-only packaged ASAR notice inspection failed');
+  const actual = JSON.parse(child.stdout) as { asarSha256: string; packages: ArchiveNoticeEvidence[] };
+  assert.equal(actual.asarSha256, createHash('sha256').update(bytes).digest('hex'));
+  return { schemaVersion: 3, target: 'packaged-asar', legalApproval: false,
+    lockfileSha256: createHash('sha256').update(lockfile).digest('hex'),
+    asarSha256: actual.asarSha256,
+    packages: matchLockedPackages(actual.packages, indexLockedRegistryPackages(lockfile.toString('utf8'))) };
+}
+
 export async function auditRegistryArchives(): Promise<void> {
   const directory = path.resolve('build', 'license-inventory');
   const output = path.join(directory, 'registry-archives.json');
@@ -127,7 +146,15 @@ export async function auditRegistryArchives(): Promise<void> {
   const reports = await Promise.all(targets.map(async target =>
     JSON.parse(await readFile(path.join(directory, target + '.json'), 'utf8')) as Report,
   ));
-  const packages = collectLockedPackages(reports, lockfile);
+  const packagedIndex = process.argv.indexOf('--packaged-asar');
+  let packaged: (Report & { asarSha256: string }) | undefined;
+  if (packagedIndex !== -1) {
+    const filename = process.argv[packagedIndex + 1];
+    assert.ok(compareNotices && filename && !filename.startsWith('--'), 'ASAR audit requires --compare-notices and an explicit file');
+    packaged = await readPackagedAsarReport(filename, lockfile);
+    reports.push(packaged);
+  }
+  const packages = collectLockedPackages(reports, lockfile, Boolean(packaged));
   const archives: ArchiveEvidence[] = [];
   const notices: ArchiveNoticeEvidence[] = [];
   for (const pkg of packages) {
@@ -146,7 +173,8 @@ export async function auditRegistryArchives(): Promise<void> {
     await writeFile(noticeOutput, JSON.stringify({
       schemaVersion: 3, lockfileSha256: createHash('sha256').update(lockfile).digest('hex'),
       rootNoticeBytesMatched: true, legalApproval: false, packages: notices,
-      scope: 'root notice equivalence; nested archive-only digests, root-byte comparisons and structural content hints, not installed or legal review; final installer not inspected',
+      ...(packaged ? { packagedAsarSha256: packaged.asarSha256, packagedRootNoticeBytesMatched: true, packagedPackages: packaged.packages } : {}),
+      scope: packaged ? 'root notice equivalence including supplied packed ASAR; nested notices, outer installer and legal review excluded' : 'root notice equivalence; nested archive-only digests, root-byte comparisons and structural content hints, not installed or legal review; final installer not inspected',
     }, null, 2) + '\n');
     console.log('Verified root notice sets:', notices.length, '; legal review PENDING');
   }
