@@ -67,6 +67,10 @@ Voxnelo 的源码根目录存在 MIT [LICENSE](../../LICENSE)，但此前的 Ele
 
 针对这一新增的确定性回归，已在 `.gitattributes` 显式设置 `LICENSE text eol=lf`，增强 `tests/windows-checkout-lf.test.ts`，并将第一方 LICENSE 检查加入 `v1.0.4-review-installers.yml` 的快速 LF 预检，避免再次把这类换行错误推迟到完整测试末尾。这些是对**未来重新构建的候选**的修复；必须以实际后续三平台只读工作流全部成功及其原始 SHA-256 证据为准，才能称新候选 ZIP 已生成。真人麦克风与第三方/模型许可仍需人工审核，v1.0.4 Draft 和八个旧附件保持未发布、不替换。
 
+### 2026-11-24 固定源码候选件核验交接
+
+新增 [v1.0.4 实际候选安装包审阅与私有实机测试交接清单](../release/V1.0.4-REVIEW-ARTIFACT-HANDOFF-2026-11-24.md)，明确区分失败运行 `45317355055`、修复后运行 `45318769948` 及其精确源提交。后者的初次检查中，三平台 Moonshine 原生检查、Windows/macOS 安装包构建成功，而 Linux apt 实装和最终合并 ZIP 仍在运行，**不等于三平台整包通过**。只有核对该独立工作流的最终 success、已存在的合并 ZIP、源提交和 SHA-256 清单，才能将其交接给真实人声设备验收；短期 Actions 附件不能当作公开 v1.0.4 安装包。
+
 ## 后续新版本、草稿和额外的签名通道
 
 新版本应先以 PR 更新源码版本、锁文件、发行说明并通过 CI，再为**未使用的新版本号**建立独立的发布流程。`.github/workflows/release-draft.yml` 可通过 **Actions → Prepare GitHub release draft → Run workflow** 使用 `version` 及 `PREPARE_DRAFT_ONLY` 创建内部草稿；**已有 Draft/Release/tag 不允许覆盖**，草稿不会公开。
