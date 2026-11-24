@@ -105,7 +105,9 @@ def inspect_wheel(wheel: Path, expected_sha: str) -> dict:
             info = source.getinfo(metadata_names[0])
             if info.file_size > MAX_METADATA:
                 raise ValueError("Oversized Wheel METADATA")
-            message = BytesParser().parsebytes(source.read(info), headersonly=True)
+            metadata_bytes = source.read(info)
+            metadata_sha256 = hashlib.sha256(metadata_bytes).hexdigest()
+            message = BytesParser().parsebytes(metadata_bytes, headersonly=True)
             recorded_name = message.get("Name", "")
             recorded_version = message.get("Version", "")
             if (re.sub(r"[-_.]+", "-", recorded_name).lower() != name
@@ -172,6 +174,7 @@ def inspect_wheel(wheel: Path, expected_sha: str) -> dict:
                 "filename": wheel.name,
                 "sha256": expected_sha,
                 "distInfoRoot": dist_info_root,
+                "metadataSha256": metadata_sha256,
                 "distInfoMatchesWheelIdentity": True,
                 "licenseExpression": license_expression or None,
                 "legacyLicenseFieldPresent": bool(message.get("License")),
