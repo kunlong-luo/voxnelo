@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -86,9 +87,40 @@ async function downloadRegistryArchive(pkg: LockedPackage): Promise<Uint8Array> 
   return Buffer.concat(chunks, size);
 }
 
+
+type NoticeEvidence = { filename: string; bytes: number; sha256: string };
+type ArchiveNoticeEvidence = { name: string; version: string; noticeFiles: NoticeEvidence[]; skippedNoticeCount: number; nestedNoticeCount: number };
+
+function compareArchiveNotices(pkg: LockedPackage, bytes: Uint8Array, reports: readonly Report[]): ArchiveNoticeEvidence {
+  const child = spawnSync('python3', ['scripts/inspect_registry_notices.py'], {
+    input: bytes, encoding: 'utf8', timeout: 30_000, maxBuffer: 1024 * 1024,
+  });
+  assert.ifError(child.error);
+  assert.equal(child.status, 0, 'Read-only archive notice inspection failed for ' + pkg.name);
+  const actual = JSON.parse(child.stdout) as ArchiveNoticeEvidence;
+  assert.equal(actual.name, pkg.name);
+  assert.equal(actual.version, pkg.version);
+  assert.ok(actual.noticeFiles.length > 0, 'No recognized regular upstream root notice for ' + pkg.name);
+  assert.equal(actual.skippedNoticeCount, 0, 'Skipped upstream root notice candidates require review');
+  let matched = 0;
+  for (const report of reports) {
+    for (const item of report.packages as (LockedPackage & { noticeFiles: NoticeEvidence[]; skippedNoticeCount: number })[]) {
+      if (item.name !== pkg.name || item.version !== pkg.version) continue;
+      assert.deepEqual(item.noticeFiles, actual.noticeFiles, 'Installed/upstream root notice bytes differ for ' + pkg.name);
+      assert.equal(item.skippedNoticeCount, 0, 'Skipped installed root notice candidates require review');
+      matched++;
+    }
+  }
+  assert.ok(matched > 0, 'No installed notice record');
+  return actual;
+}
+
 export async function auditRegistryArchives(): Promise<void> {
   const directory = path.resolve('build', 'license-inventory');
   const output = path.join(directory, 'registry-archives.json');
+  const noticeOutput = path.join(directory, 'registry-notices.json');
+  const compareNotices = process.argv.includes('--compare-notices');
+  await rm(noticeOutput, { force: true });
   // Never leave an older successful report looking current after a failed audit.
   await rm(output, { force: true });
   const lockfile = await readFile('pnpm-lock.yaml');
@@ -97,8 +129,11 @@ export async function auditRegistryArchives(): Promise<void> {
   ));
   const packages = collectLockedPackages(reports, lockfile);
   const archives: ArchiveEvidence[] = [];
+  const notices: ArchiveNoticeEvidence[] = [];
   for (const pkg of packages) {
-    archives.push(verifyArchiveBytes(pkg, await downloadRegistryArchive(pkg)));
+    const bytes = await downloadRegistryArchive(pkg);
+    archives.push(verifyArchiveBytes(pkg, bytes));
+    if (compareNotices) notices.push(compareArchiveNotices(pkg, bytes, reports));
     console.log('Registry archive verified:', pkg.name + '@' + pkg.version);
   }
   await mkdir(directory, { recursive: true });
@@ -107,6 +142,14 @@ export async function auditRegistryArchives(): Promise<void> {
     archiveIntegrityVerified: true, legalApproval: false, archives,
     scope: 'explicit registry archive digest verification; no installed file or notice equivalence',
   }, null, 2) + '\n');
+  if (compareNotices) {
+    await writeFile(noticeOutput, JSON.stringify({
+      schemaVersion: 1, lockfileSha256: createHash('sha256').update(lockfile).digest('hex'),
+      rootNoticeBytesMatched: true, legalApproval: false, packages: notices,
+      scope: 'root notice equivalence only; nested candidates counted, not reviewed; final installer not inspected',
+    }, null, 2) + '\n');
+    console.log('Verified root notice sets:', notices.length, '; legal review PENDING');
+  }
   console.log('Verified registry archives:', archives.length, '; legal review PENDING');
 }
 
