@@ -8,6 +8,16 @@
 
 **发行范围：** Linux x64 DEB/AppImage、Windows x64 NSIS EXE、macOS ARM64 DMG。**全部未签名，macOS 未公证**；SmartScreen / Smart App Control 或 Gatekeeper 可能阻止运行。Linux Moonshine 需要用户主动单独安装模型，Windows/macOS 不承诺相同离线引擎。F001–F012、模型/内容权利和至少五位初学者独立审核尚无完整公开可核验证据，但维护者确认所需人工操作测试已通过。详见 [v1.0.3 发行说明](../release-notes/v1.0.3.md) 和 [发行者免签名决定](../release/UNSIGNED-V1-OWNER-DECISION.md)。
 
+## v1.0.4 发布冲刺（2026-11-24）
+
+维护者同意进入发布收尾阶段，保留 HOLD。只处理阻塞项、验收与文档；见 [发布冻结和有序验收清单](../release/V1.0.4-RELEASE-FREEZE.md)。不升级 1.0.5、不创建标签、不替换历史 Draft，也不公开发行，直到全部适用门禁通过并取得明确发布授权。
+
+## JavaScript 工具链与发布审核（2026-11-24）
+
+- 统一采用固定版本 pnpm，源码安装使用冻结锁文件；开发环境准备参阅 [开发指南](../DEVELOPMENT.md)，版本约束参阅 [工具链规范](NODE26-LTS-MIGRATION.md)。
+- [PR #287](https://github.com/kunlong-luo/voxnelo/pull/287) 跟踪隔离原生 ASR 环境的 pnpm 迁移，需通过对应 CI 后合并；既有已发布版本和旧候选包的记录保持原样。
+- [构建依赖许可证审核](BUILD-LICENSE-INVENTORY.md) 将 pnpm 锁文件完整性与上游 Registry 归档验证区分开来；不调用其他包管理 CLI，不代表更换上游发行源，也不代表第三方许可获批。
+
 ## 不可变的已发布版本
 
 - v1.0.3：**当前公开正式版**，禁止重新创建、覆盖或换掉原有安装包/标签。
@@ -96,3 +106,7 @@ The follow-up extends `scripts/check-installed-linux-license.mts` to require eac
 The subsequent [PR #281 CI run 45323570903](https://github.com/kunlong-luo/voxnelo/actions/runs/45323570903) at head `a7f27e59e4a85f60be322f0fa7ecb6bd5073e6ed` completed all five jobs successfully. The [Linux job 138207634957](https://github.com/kunlong-luo/voxnelo/actions/runs/45323570903/job/138207634957) explicitly logged both exact first-party MIT LICENSE verification and all four exact pinned supplemental notices after actual DEB installation, with legal approval still pending. This supersedes the earlier pending installed-DEB observation for that head only.
 
 A subsequent merge attempt was refused by required status checks. The raw PR metadata reported `mergeable_state: behind`. To preserve branch protection, synchronize the PR with main at `3680e25b308d453781b37d421eb0ab315eaa3568`, using the inspected GitHub merge-result tree, retain all nine intended PR files and rerun required checks for the synchronized head. Do not waive checks or claim the previous green run certifies the new head. The fresh final review-only build, installer-level notice inspection, independently measured SHA-256 values, AppImage/NSIS provenance, model rights, and physical human microphone acceptance remain separately pending. **HOLD; no publication.**
+
+## 发布冲刺复验记录
+
+PR #287、#289 已合并，旧 Zipformer 原生工程测试三平台复验通过；两次真实上游归档审核的脱敏 JSON 字节相同。仍不得替代最终候选安装包的法律审核和物理麦克风验收。详见 [发布冲刺清单](../release/V1.0.4-RELEASE-FREEZE.md) 与 [审核评分](../release/V1.0.4-REGISTRY-AUDIT.md)。HOLD。

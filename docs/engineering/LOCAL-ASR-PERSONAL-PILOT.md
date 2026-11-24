@@ -4,6 +4,10 @@
 
 > V0.1 候选版生成和 SHA-256 清单见 `docs/engineering/V0.1-RC-PLAYBOOK.md`。个人安装成功也不构成 #45 正式三平台流式识别验收证据；不可据此把已公开发行状态标为通过。
 
+## 历史流程与当前维护边界（2026-11-24）
+
+本文记录旧版 0.1.5 Zipformer 个人试验，并非当前默认 Moonshine 的安装手册。当前正式版用户优先参阅 [用户帮助](../USER-GUIDE.md) 和 [Moonshine 安装说明](MOONSHINE-LINUX-INSTALLATION.md)。维护中的个人试验安装脚本统一迁移至 pnpm，见 [PR #287](https://github.com/kunlong-luo/voxnelo/pull/287)；迁移已经合并，三平台旧引擎工程 CI 复验成功，不将旧提交的实际安装记录改写成已使用 pnpm。源码开发环境参阅 [开发指南](../DEVELOPMENT.md)。
+
 ## 在 Pop!_OS / Ubuntu 上启用本地内测
 
 1. 将 Voxnelo 原位升级到 **0.1.5** 的 DEB（`apt install ./voxnelo_0.1.5_amd64.deb`，无需先卸载），并**完全退出** Voxnelo。
@@ -15,7 +19,7 @@
    pnpm asr:personal:install
    ```
 
-   命令会明确从锁定修订的 Hugging Face 模型（`csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-02-21` / `bfbb11950302dad9955f8ede01f0e768595e4fba`）下载、校验模型 SHA-256，再用 npm 安装固定版本的 `sherpa-onnx-node@1.13.8` 原生程序。只有在本机用户亲自运行命令时才会访问网络；**运行 Voxnelo 进行识别时不需联网，也不上传音频**。所需下载及磁盘空间明显超过 130 MB，请先留足空间。
+   命令会明确从锁定修订的 Hugging Face 模型（`csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-02-21` / `bfbb11950302dad9955f8ede01f0e768595e4fba`）下载、校验模型 SHA-256，在当前已合并 PR #287 的源码中，再由隔离的 pnpm hoisted 环境安装固定版本的 `sherpa-onnx-node@1.13.8` 原生程序。只有在本机用户亲自运行命令时才会访问网络；**运行 Voxnelo 进行识别时不需联网，也不上传音频**。所需下载及磁盘空间明显超过 130 MB，请先留足空间。
 3. 完成后，Linux 个人引擎目录为 `${XDG_CONFIG_HOME:-$HOME/.config}/voxnelo/offline-asr`，与仓库 `build/offline-asr` 及公共安装包完全分开。重新启动已安装的 Voxnelo，实时听写按钮仅在原生模块和模型都能找到时解锁。
 4. 主动点击实时听写按钮并允许麦克风权限，对着设备读一句英语；只应显示真正由本地引擎推理得到的增量文字，停止后应完成最终文字。请测试多句、长时间、嘈杂环境、权限拒绝和设备切换。
 
@@ -23,7 +27,7 @@
 
 ## 失败排查
 
-- `npm install` 失败：检查网络和 npm 输出，并核对平台是 Linux x64。
+- 原生依赖安装失败：核对源码是否已包含 PR #287 的迁移、固定 pnpm 版本、网络及 Linux x64 平台；保留终端输出。不要切换回其他 JavaScript 包管理器或放宽文件完整性检查。
 - 再次运行安装命令：**已安装且完整性验证通过时直接复用，不重复下载模型，也不覆盖旧文件**。如果旧文件存在但校验失败，脚本会明确拒绝覆盖并提示寻求修复帮助；请勿直接删除未知个人数据。
 - 按钮仍不可用：确认完全退出应用后重新启动，确认 `personal-install.json` 和 `manifest.json` 位于上面的用户路径（不是仓库 `build` 目录）。
 - 按钮解锁但启动失败：不能视为功能验收成功，可能是动态库、原生 ABI、权限或模型推理失败；保留终端/应用日志用于排查。不要把自己的原始麦克风音频公开上传到 issue。

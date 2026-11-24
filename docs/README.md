@@ -12,10 +12,15 @@ Updated: 2026-11-24. This index is navigation, **not** a release approval.
 ## Current guides
 
 - [User guide](USER-GUIDE.md)
-- [Development](DEVELOPMENT.md)
+- [Development — pnpm-only source setup](DEVELOPMENT.md)
+- [Node.js / pinned pnpm toolchain policy](engineering/NODE26-LTS-MIGRATION.md)
+- [Build dependency license inventory and upstream archive audit](engineering/BUILD-LICENSE-INVENTORY.md)
+- [Historical Zipformer personal pilot — not the default Moonshine installation](engineering/LOCAL-ASR-PERSONAL-PILOT.md)
 - [Privacy — public v1.0.3 versus unpublished v1.0.4 source](PRIVACY.md)
 - [PRD traceability — 23 IDs with code/test paths and unmet requirements](release/PRD-TRACEABILITY.md)
 - [Release readiness](engineering/STABLE-RELEASE-READINESS.md)
+- [v1.0.4 release freeze and ordered acceptance](release/V1.0.4-RELEASE-FREEZE.md)
+- [Registry audit and evidence-based quality rubric](release/V1.0.4-REGISTRY-AUDIT.md)
 - [v1.0.4 candidate release notes — not published](release-notes/v1.0.4.md)
 - [Changelog (source history versus shipped releases)](../CHANGELOG.md)
 - [ASR evidence and benchmark](engineering/ASR-ACCURACY-EXPERIMENTS.md)
@@ -38,7 +43,7 @@ The [earlier PRD starter](release/PRD-TRACEABILITY-STARTER.md), `V0.1-*`, `V0.1.
 
 ## Documentation maintenance policy
 
-When changing a user-visible feature, update the user guide, PRD traceability, release notes (if applicable), and associated tests in the same PR. When changing model support, explicitly distinguish CI packaging, installed runtime, and physical microphone acceptance. Keep private recordings, rights agreements, reviewer identities and local file paths out of public docs.
+For JavaScript dependency or toolchain changes, keep the development guide, both root READMEs, toolchain policy, release operations and affected ASR instructions consistent. pnpm is the sole supported JavaScript package manager; the public npm registry remains the upstream archive source, not a command-line tool. When changing a user-visible feature, update the user guide, PRD traceability, release notes (if applicable), and associated tests in the same PR. When changing model support, explicitly distinguish CI packaging, installed runtime, and physical microphone acceptance. Keep private recordings, rights agreements, reviewer identities and local file paths out of public docs.
 
 ## Offline documentation checks
 

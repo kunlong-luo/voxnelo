@@ -12,8 +12,9 @@ Voxnelo uses Node.js as its build and test runtime; Electron embeds its own inde
 
 1. Use supported **stable/LTS** Node.js, not Current, nightly, alpha, beta or RC.
 2. Pin a concrete pnpm version in `packageManager`; verify its package SHA-512 integrity in `pnpm-lock.yaml` (`packageManagerDependencies` and pnpm artifact resolution). The `packageManager` string itself need not carry a checksum. Never edit integrity values by hand.
-3. Use `pnpm install --frozen-lockfile` on CI, keep TypeScript/lint/unit tests/build/security audits and cross-platform package gates intact.
-4. Keep Electron's embedded Node version separate from the build-runtime version and validate native packages for Windows, macOS and Linux.
+3. pnpm is the sole supported JavaScript package manager; the public npm registry remains the upstream archive source, not a command-line tool. Bootstrap pnpm using the official standalone installer as described in [Development](../DEVELOPMENT.md). Do not invoke other JavaScript package-manager CLIs or create alternative lockfiles.
+4. Use `pnpm install --frozen-lockfile` on CI, keep TypeScript/lint/unit tests/build/security audits and cross-platform package gates intact.
+5. Keep Electron's embedded Node version separate from the build-runtime version and validate native packages for Windows, macOS and Linux.
 
 ## Maintained versions and follow-up checks
 
@@ -21,7 +22,9 @@ Voxnelo uses Node.js as its build and test runtime; Electron embeds its own inde
 - Electron is declared at **45.4.1** with a pnpm-generated lockfile (the stable patch published 2026-11-18); future Electron upgrades require Windows/macOS/Linux packaging and ASR worker protocol verification.
 - pnpm was updated to the verified stable **12.22.0** via pnpm's own `self-update` and lockfile resolver. The `packageManagerDependencies` section in `pnpm-lock.yaml` tracks its version and artifact integrity. Maintained Actions setup steps use the same version; historical one-off release workflows remain untouched. See [Issue #231](https://github.com/kunlong-luo/voxnelo/issues/231).
 - Optional manual workflows (deep UI QA, signed candidate, native Moonshine validation) remain real release gates where required; changing their `setup-node` value is **not** evidence they have run.
-- Historical version-specific workflows (for example `publish-all-v1.0.3.yml`, `prepare-v0.1.7-draft-once.yml`, `v1.0.4-review-installers.yml`) remain archived evidence and are not automatically regenerated.
+- Historical version-specific workflows (for example `publish-all-v1.0.3.yml`, `prepare-v0.1.7-draft-once.yml`) remain archived evidence and are not automatically regenerated.
+
+The active review-only `v1.0.4-review-installers.yml` is not an archived publication workflow and remains subject to the maintained toolchain pin check. The pnpm-only native pilot migration is tracked in [PR #287](https://github.com/kunlong-luo/voxnelo/pull/287); CI success for historical installations is not evidence of the changed installation path.
 
 ## Developer checks
 

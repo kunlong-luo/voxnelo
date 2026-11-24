@@ -55,7 +55,7 @@ For the not-yet-released Windows x64 / macOS 15+ ARM64 native Moonshine pilot, s
 
 ## Development and support
 
-Voxnelo uses Electron, React, TypeScript, Rsbuild, and local IndexedDB storage. For setup, testing, and packaging commands, see the [development guide](docs/DEVELOPMENT.md).
+Voxnelo uses Electron, React, TypeScript, Rsbuild, local IndexedDB storage, and pnpm as its sole supported JavaScript package manager. For source setup (including standalone pnpm installation), testing, and packaging commands, see the [development guide](docs/DEVELOPMENT.md) and [toolchain policy](docs/engineering/NODE26-LTS-MIGRATION.md). End users of the official desktop installers do not need Node.js or pnpm for ordinary app use. [Dependency license evidence](docs/engineering/BUILD-LICENSE-INVENTORY.md) distinguishes the package manager from the public upstream registry.
 
 - [User guide](docs/USER-GUIDE.md)
 - [Privacy information (still subject to independent review)](docs/PRIVACY.md)
