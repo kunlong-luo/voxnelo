@@ -61,6 +61,12 @@ Voxnelo 的源码根目录存在 MIT [LICENSE](../../LICENSE)，但此前的 Ele
 
 **新增 Linux 实装核验：** 单检查 `electron-builder` 的解包目录不能证明 .deb 安装后仍有 LICENSE。现将 `scripts/check-installed-linux-license.mts` 接入日常 CI、v1.0.4 只读候选、普通候选和手动 Draft 构建的 Linux `apt-get install` 之后，通过 `dpkg -L voxnelo` 查找安装包所有的 `resources/LICENSE`，与仓库原件逐字节比较，任何缺失或差异均拒绝通过。Windows/macOS 当前的核验范围是对应平台解包的桌面应用，而**非**模拟的 NSIS GUI 安装或 DMG 挂载验证；真实安装升级、人声录音和第三方许可证审核仍待单独验收。
 
+### 2026-11-24 评审候选 Windows CRLF 故障与修复（不是发布结果）
+
+针对主分支 `5498764c9133c9b82e76fb653d040d4dde40500e` 的 [只读评审工作流 #45317355055](https://github.com/kunlong-luo/voxnelo/actions/runs/45317355055)，Windows 候选安装包矩阵在 `Typecheck and test` 阶段**确实失败**：616 条测试中 615 条成功，唯一失败的 `tests/first-party-license-packaging.test.ts` 要求根目录 `LICENSE` 以 `MIT License\n` 开头，而 Windows checkout 的该文件变为 `MIT License\r\n`。这不是 LICENSE 内容缺失，也不代表原生 Moonshine SDK 安装失败；但阻止了三平台完整候选 ZIP 验证。**旧的失败运行不得标记为验收通过或当作新版安装包来源**。
+
+针对这一新增的确定性回归，已在 `.gitattributes` 显式设置 `LICENSE text eol=lf`，增强 `tests/windows-checkout-lf.test.ts`，并将第一方 LICENSE 检查加入 `v1.0.4-review-installers.yml` 的快速 LF 预检，避免再次把这类换行错误推迟到完整测试末尾。这些是对**未来重新构建的候选**的修复；必须以实际后续三平台只读工作流全部成功及其原始 SHA-256 证据为准，才能称新候选 ZIP 已生成。真人麦克风与第三方/模型许可仍需人工审核，v1.0.4 Draft 和八个旧附件保持未发布、不替换。
+
 ## 后续新版本、草稿和额外的签名通道
 
 新版本应先以 PR 更新源码版本、锁文件、发行说明并通过 CI，再为**未使用的新版本号**建立独立的发布流程。`.github/workflows/release-draft.yml` 可通过 **Actions → Prepare GitHub release draft → Run workflow** 使用 `version` 及 `PREPARE_DRAFT_ONLY` 创建内部草稿；**已有 Draft/Release/tag 不允许覆盖**，草稿不会公开。
