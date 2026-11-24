@@ -130,6 +130,7 @@ jobs:
           sudo apt-get install -y "./release/voxnelo_${version}_amd64.deb"
           test "$(dpkg-query -W -f='${Version}' voxnelo)" = "$version"
           dpkg -L voxnelo | grep -Fx '/usr/share/metainfo/app.voxnelo.desktop.metainfo.xml'
+          node --experimental-strip-types scripts/check-installed-linux-license.mts
       - name: Upload candidate for draft assembly
         uses: actions/upload-artifact@v7
         with:
