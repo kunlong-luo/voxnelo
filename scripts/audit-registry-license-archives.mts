@@ -89,7 +89,7 @@ async function downloadRegistryArchive(pkg: LockedPackage): Promise<Uint8Array> 
 
 
 type NoticeEvidence = { filename: string; bytes: number; sha256: string };
-type ArchiveNoticeEvidence = { name: string; version: string; noticeFiles: NoticeEvidence[]; skippedNoticeCount: number; nestedNoticeCount: number };
+type ArchiveNoticeEvidence = { name: string; version: string; noticeFiles: NoticeEvidence[]; skippedNoticeCount: number; nestedNoticeCount: number; nestedSkippedNoticeCount: number; nestedNoticeFiles: { archiveRelativePath: string; bytes: number; sha256: string; matchesRootNoticeBytes: boolean; contentKindHint: 'copyright-icon-module-markers' | 'source-map-v3-structure' | 'unclassified' }[] };
 
 function compareArchiveNotices(pkg: LockedPackage, bytes: Uint8Array, reports: readonly Report[]): ArchiveNoticeEvidence {
   const child = spawnSync('python3', ['scripts/inspect_registry_notices.py'], {
@@ -144,9 +144,9 @@ export async function auditRegistryArchives(): Promise<void> {
   }, null, 2) + '\n');
   if (compareNotices) {
     await writeFile(noticeOutput, JSON.stringify({
-      schemaVersion: 1, lockfileSha256: createHash('sha256').update(lockfile).digest('hex'),
+      schemaVersion: 3, lockfileSha256: createHash('sha256').update(lockfile).digest('hex'),
       rootNoticeBytesMatched: true, legalApproval: false, packages: notices,
-      scope: 'root notice equivalence only; nested candidates counted, not reviewed; final installer not inspected',
+      scope: 'root notice equivalence; nested archive-only digests, root-byte comparisons and structural content hints, not installed or legal review; final installer not inspected',
     }, null, 2) + '\n');
     console.log('Verified root notice sets:', notices.length, '; legal review PENDING');
   }
