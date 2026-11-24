@@ -127,6 +127,20 @@ The actual macOS native frameworks under `Voxnelo.app/Contents/Frameworks/<name>
 
 Info.plist values are bundle metadata, not immutable upstream source attestations. Map each actual framework to its exact upstream license/notice and review its coverage in the delivered notice collection. Windows NSIS bootstrapper, native components, Windows-specific Chromium notice contents, macOS frameworks, six AppImage ELF files, renderer-inlined dependencies and fonts/assets still need full rights and attribution review. All four installer formats now have preliminary actual payload inventories; none has full third-party legal approval. Direct-human microphone acceptance remains pending on all three OSes. **HOLD**, no publication or draft changes.
 
+
+### Pinned macOS upstream legal-text reconciliation — 2026-11-24
+
+Read the actual [Electron v45.4.1 DEPS](https://github.com/electron/electron/blob/v45.4.1/DEPS) and its [license-credits patch](https://github.com/electron/electron/blob/v45.4.1/patches/chromium/add_electron_deps_to_license_credits_file.patch) at the version observed in the DMG. The patch adds source license inputs for Node.js, Squirrel, Mantle, ReactiveObjC and Sparkle to the Chromium credits generator. Fetched the following original license files from the exact dependency commits declared by DEPS. Blob IDs are Git object identifiers, not SHA-256 values of shipped frameworks.
+
+| Upstream dependency / license text | Git blob ID | Observed obligations / review notes |
+| --- | --- | --- |
+| [Squirrel.Mac LICENSE](https://github.com/Squirrel/Squirrel.Mac/blob/fffea30e4a339a7f7d69a3391314b72548d209bd/LICENSE) | `5947a9ffe98ba34011ae42b2851e6fdf050b3ddd` | MIT notice retention; the text explicitly identifies bundled Sparkle BinaryDelta, bsdiff and sais-lite and includes their notices. bsdiff's binary distribution clause requires accompanying copyright, conditions and disclaimer. |
+| [ReactiveObjC LICENSE.md](https://github.com/ReactiveCocoa/ReactiveObjC/blob/74ab5baccc6f7202c8ac69a8d1e152c29dc1ea76/LICENSE.md) | `49bc37468d432900e63a13929c4ca0bdf39f04cc` | MIT copyright and permission notice retention. |
+| [Mantle LICENSE.md](https://github.com/Mantle/Mantle/blob/2a8e2123a3931038179ee06105c9e6ec336b12ea/LICENSE.md) | `4e9825ac272bdbab7e56f9bc5b27fb583144dfc7` | MIT plus a Proton code notice and non-endorsement clause; preserve the complete original text rather than replacing it with generic MIT. |
+| [Sparkle LICENSE](https://github.com/sparkle-project/Sparkle/blob/79bc9e872948e47877e76f194cb0c8e0412b0b90/LICENSE) | `abe6e04c37e0b94e3a25078b6fd4abdafc299af4` | MIT plus external notices for bsdiff, sais-lite, Ed25519 and SUSignatureVerifier; assess which code is actually included and retain applicable original terms. |
+
+**Evidence boundary:** this is an exact source-revision legal-text inventory and technical reading, not a proof that shipped Mach-O binaries were built from these sources, that every credits section survived packaging, or a human approval. Next, compare the actual SHA-bound DMG `LICENSES.chromium.html` against complete applicable upstream texts (including sub-notices; normalize only markup/whitespace), record any omissions and reviewer disposition. Do not infer absence from the presence of a generic MIT label. The six AppImage ELF files still lack an exact versioned binary-to-distribution-source mapping. Public Debian/Ubuntu package records provide research leads, not evidence of the binary identity; attempted Debian latest-copyright URLs were not retrievable during this review. No AppImage license clearance is recorded. No model pin, installer, draft, tag or release is changed. All legal and human-microphone gates remain PENDING.
+
 ## Automation boundaries and known code risk
 
 - `scripts/check-asr-staging.mts` proves inventory/integrity, **not** lawful redistribution.
