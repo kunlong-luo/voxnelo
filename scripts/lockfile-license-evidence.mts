@@ -32,15 +32,15 @@ export function indexLockedRegistryPackages(lockfile: string): Map<string, strin
       continue;
     }
     if (!inPackages) continue;
-    if (/^  \S/.test(line)) {
+    if (/^ {2}\S/.test(line)) {
       key = undefined;
-      const match = /^  (?:'([^']+)'|([^:'"]+)):\s*$/.exec(line);
+      const match = /^ {2}(?:'([^']+)'|([^:'"]+)):\s*$/.exec(line);
       const candidate = match?.[1] ?? match?.[2];
       if (candidate && keyPattern.test(candidate)) key = candidate;
       continue;
     }
-    if (!key || !/^    resolution:/.test(line)) continue;
-    const match = /^    resolution: \{integrity: (sha512-[A-Za-z0-9+/]{86}==)\}\s*$/.exec(line);
+    if (!key || !/^ {4}resolution:/.test(line)) continue;
+    const match = /^ {4}resolution: \{integrity: (sha512-[A-Za-z0-9+/]{86}==)\}\s*$/.exec(line);
     const integrity = match?.[1];
     // Even a second occurrence with an unsupported resolution is ambiguous.
     if (seen.has(key)) {
