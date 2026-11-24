@@ -47,11 +47,12 @@ def prepare(
             or output_dir.resolve(strict=False).is_relative_to(ROOT)):
         raise ValueError("Use a new absolute private output directory OUTSIDE the repository")
     parent = output_dir.parent
-    # A symlink higher in the path can redirect even when the final parent
-    # itself is a real directory; reject the entire existing ancestry.
+    # A symlink or Windows directory junction higher in the path can redirect
+    # even when the final parent itself is real; reject the full ancestry.
     if (not parent.is_dir()
-            or any(ancestor.is_symlink() for ancestor in (parent, *parent.parents))):
-        raise ValueError("Private output path requires existing non-symlink ancestors")
+            or any(ancestor.is_symlink() or ancestor.is_junction()
+                   for ancestor in (parent, *parent.parents))):
+        raise ValueError("Private output path requires real, non-redirected ancestors")
 
     report = json.loads(report_file.read_text(encoding="utf-8"))
     if (not isinstance(report, dict)
