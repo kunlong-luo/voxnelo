@@ -77,3 +77,7 @@ The full dated registry, convergence, score and AppImage provenance records are 
 ## Copied runtime package coverage
 
 The actual candidate DEB and Windows ASARs contain 18 root packages, not just the 16 renderer identities. See the [canonical audit ledger](../release/V1.0.4-REGISTRY-AUDIT.md) for measured payload evidence. The explicit optional audit command `pnpm license:audit:registry --compare-notices --packaged-asar release/linux-unpacked/resources/app.asar` expands the lockfile/SRI and root notice comparison to the supplied ASAR after a local unpacked build. The new bounded parser does not execute or extract its members; unsupported nested dependency trees, links or unpacked members fail closed. The scoped supply-chain job supplies its own freshly built ASAR. It does not certify a historical installer or approve distribution. Live scoped audit passed at #296 (18 package sets, 19 root notices; Linux ASAR digest matches actual DEB, DMG and AppImage). Windows actual root sets also match. See canonical audit and artifact handoff for measured evidence. Full native/wrapper/source legal review remains pending.
+
+## Native-library audit boundary
+
+JS registry and Python advisory checks do not cover copied AppImage ELF code. The [native evidence and security follow-up](../release/V1.0.4-REGISTRY-AUDIT.md) documents the six historical distributor-package leads, libXtst security risk and the opt-in local read-only package checker. Original binary/copyright/source verification and applicable security remediation are pending. HOLD.
