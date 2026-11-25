@@ -151,7 +151,7 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update -o APT::Update::Error-Mode=any
-          sudo apt-get install -y --no-install-recommends p7zip-full squashfs-tools binutils
+          sudo apt-get install -y --no-install-recommends p7zip-full squashfs-tools binutils xvfb xauth libx11-6 libxext6
           mkdir -p "$RUNNER_TEMP/voxnelo-patched-toolset" "$RUNNER_TEMP/voxnelo-patched-deb" patched-evidence
           curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --max-time 120 --max-filesize 4194304 'https://github.com/electron-userland/electron-builder-binaries/releases/download/appimage-12.0.1/appimage-12.0.1.7z' -o "$RUNNER_TEMP/voxnelo-legacy-toolset.7z"
           printf '%s  %s\n' 'd12ff7eb8f1d1ec4652ca5237a7fbdca33acc0c758045636feca62dc6ecb8ec4' "$RUNNER_TEMP/voxnelo-legacy-toolset.7z" | sha256sum -c -
@@ -238,10 +238,63 @@ jobs:
           if actual!="4198b32dc9fba7dfc0ee2bb1b6bc85067c89adfc68d0279059ad82c207cc3c35" or notice!="304f78731e1e0e78132fbba4e1909c8642878a3b8c4837b36cb2d38891bf2204":
               raise SystemExit("Final payload mismatch")
           with image.open("rb") as f:
-              sha=hashlib.file_digest(f,"sha256").hexdigest()
+              hasher=hashlib.sha256()
+              for chunk in iter(lambda: f.read(1024*1024), b""):
+                  hasher.update(chunk)
+              sha=hasher.hexdigest()
           report={"schemaVersion":1,"filename":image.name,"bytes":size,"sha256":sha,"squashfsOffset":offsets[0],"patchedElfSha256":actual,"copyrightSha256":notice,"candidateOnly":True,"legalApproval":False,"publicReleaseApproved":False,"runtimeTested":False}
           pathlib.Path("patched-evidence/payload.json").write_text(json.dumps(report,indent=2)+"\n")
           print(json.dumps(report,indent=2))
+          PY
+      - name: Check actual patched library exports and X11 load on Jammy
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/voxnelo-patched-runtime"
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, subprocess
+          report=json.loads(pathlib.Path("patched-evidence/payload.json").read_text())
+          image=pathlib.Path("release")/report["filename"]
+          library=subprocess.check_output(["unsquashfs","-o",str(report["squashfsOffset"]),"-cat",str(image),"usr/lib/libXtst.so.6"],timeout=60)
+          if hashlib.sha256(library).hexdigest()!=report["patchedElfSha256"]:
+              raise SystemExit("Extracted runtime probe input mismatch")
+          (pathlib.Path(os.environ["RUNNER_TEMP"])/"voxnelo-patched-runtime/libXtst.so.6").write_bytes(library)
+          PY
+          python3 - <<'PY'
+          import json, os, pathlib, subprocess
+          root=pathlib.Path(os.environ["RUNNER_TEMP"])
+          def exports(path):
+              output=subprocess.check_output(["nm","-D","--defined-only","--format=posix",str(path)],text=True,timeout=15)
+              return {line.split()[0] for line in output.splitlines() if line.startswith(("XTest","XRecord"))}
+          old=exports(root/"voxnelo-old-libXtst.so.6")
+          new=exports(root/"voxnelo-patched-runtime/libXtst.so.6")
+          report={"oldPublicExports":sorted(old),"patchedPublicExports":sorted(new),"missingPublicExports":sorted(old-new)}
+          pathlib.Path("patched-evidence/export-comparison.json").write_text(json.dumps(report,indent=2)+"\n")
+          if not old or old-new:
+              raise SystemExit("Missing historical XTest/XRecord public exports")
+          PY
+          xvfb-run -a python3 - <<'PY'
+          import ctypes as c, hashlib, json, os, pathlib
+          path=pathlib.Path(os.environ["RUNNER_TEMP"])/"voxnelo-patched-runtime/libXtst.so.6"
+          x11=c.CDLL("libX11.so.6")
+          xtst=c.CDLL(str(path))
+          x11.XOpenDisplay.argtypes=[c.c_char_p]
+          x11.XOpenDisplay.restype=c.c_void_p
+          x11.XCloseDisplay.argtypes=[c.c_void_p]
+          x11.XCloseDisplay.restype=c.c_int
+          xtst.XTestQueryExtension.argtypes=[c.c_void_p]+[c.POINTER(c.c_int)]*4
+          xtst.XTestQueryExtension.restype=c.c_int
+          display=x11.XOpenDisplay(None)
+          if not display:
+              raise SystemExit("Xvfb display unavailable")
+          event,error,major,minor=(c.c_int() for _ in range(4))
+          try:
+              if not xtst.XTestQueryExtension(display,c.byref(event),c.byref(error),c.byref(major),c.byref(minor)):
+                  raise SystemExit("XTest extension unavailable")
+          finally:
+              x11.XCloseDisplay(display)
+          report={"schemaVersion":1,"librarySha256":hashlib.sha256(path.read_bytes()).hexdigest(),"xvfbLoadAndQueryPassed":True,"xTestExtensionVersion":[major.value,minor.value],"fullAppLaunchTested":False,"physicalMicTested":False,"legalApproval":False,"publicReleaseApproved":False}
+          pathlib.Path("patched-evidence/x11-runtime-probe.json").write_text(json.dumps(report,indent=2)+"\n")
           PY
       - name: Preserve isolated proof, even when failed
         if: always()
