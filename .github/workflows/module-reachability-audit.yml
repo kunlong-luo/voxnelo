@@ -78,7 +78,7 @@ jobs:
             fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, markdown);
           ' "$RUNNER_TEMP/module-report.json"
       - name: Save read-only inventory for human review
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: module-reachability-report
           path: ${{ runner.temp }}/module-report.json

@@ -68,7 +68,7 @@ jobs:
         run: VOXNELO_DPI_SCALE=1.5 xvfb-run -a -s "-screen 0 2400x1600x24" node --experimental-strip-types scripts/check-electron-window.mts
       - name: Upload Electron desktop evidence
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: linux-electron-evidence
           path: desktop-evidence/
@@ -76,7 +76,7 @@ jobs:
           if-no-files-found: ignore
       - name: Upload responsive layout evidence
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: browser-layout-evidence
           path: browser-layout/
