@@ -139,7 +139,7 @@ try{
     'V3 idle live action must be labeled, inactive and have no fake microphone halo: '+JSON.stringify(idleDictation));
   report.push({page:'idle-dictation-primary-semantics',...idleDictation});
   // V3.1 disclosure uses buttons and actual hidden regions, preserving focus and content.
-  const disclosure=await evalJs<{count:number;collapsed:boolean;expanded:boolean;closed:boolean}>('(()=>{const buttons=[...document.querySelectorAll(".referenceInsights button[aria-expanded]")];const region=b=>document.getElementById(b.getAttribute("aria-controls"));const collapsed=buttons.every(b=>b.getAttribute("aria-expanded")==="false"&&region(b)?.hidden);return {count:buttons.length,collapsed,expanded:false,closed:false}})()');
+  const disclosure=await evalJs<{count:number;collapsed:boolean}>('(()=>{const buttons=[...document.querySelectorAll(".referenceInsights button[aria-expanded]")];const region=b=>document.getElementById(b.getAttribute("aria-controls"));const collapsed=buttons.every(b=>b.getAttribute("aria-expanded")==="false"&&region(b)?.hidden);return {count:buttons.length,collapsed}})()');
   assert.equal(disclosure.count,3,'V3.1 requires three independent auxiliary disclosures');
   assert.ok(disclosure.collapsed,'V3.1 auxiliary details must start collapsed');
   await evalJs('document.querySelector(".feedCard button[aria-expanded]").click()');

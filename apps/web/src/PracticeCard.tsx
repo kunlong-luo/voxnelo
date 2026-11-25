@@ -77,7 +77,7 @@ export function PracticeCard({current,currentState,speed,volume,showIpa,recorder
             <PronunciationGuide key={current.id} sentence={current} showIpa={showIpa}
               recordingBusy={recordingBusy} onToggleIpa={onToggleIpa} onSpeak={onSpeak} onSpeakSegment={onSpeakSegment}/>
           </div>
-          <div className="pointer-events-none hidden w-full max-w-120 opacity-80 @min-[700px]/workspace:block [@media(max-height:900px)]:hidden" aria-hidden="true"><WaveformArt/></div>
+          <div className="pointer-events-none hidden w-full max-w-120 opacity-80 @min-[700px]/workspace:block [@media(max-height:800px)]:hidden" aria-hidden="true"><WaveformArt/></div>
           <LiveDictationPanel dictation={dictation} blocked={recorder.status==='requesting'||recorder.status==='recording'} onStart={onStartDictation} onManageModels={onManageModels}/>
         </div>
         <PracticeControlPanel recorder={recorder} recordingBusy={recordingBusy} speed={speed} volume={volume} onSpeak={onSpeak} onToggleSpeed={onToggleSpeed} onRecord={onRecord} />

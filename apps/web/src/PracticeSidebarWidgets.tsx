@@ -55,7 +55,7 @@ export function PracticeSidebarWidgets({current,stats,recordingBusy,onChooseRela
           <div className="progressDonut grid size-14 shrink-0 place-items-center rounded-full p-1.5" role="img" aria-label={t('viewedCount',{viewed:stats.viewed,total:SENTENCES.length})} style={{background:'conic-gradient(var(--primary) '+progressPercent+'%,var(--muted) 0)'}}>
             <div className="donutInner flex size-full flex-col items-center justify-center rounded-full bg-card"><strong className="text-base font-extrabold tabular-nums">{stats.viewed}</strong><small className="text-[10px] text-muted-foreground">/{SENTENCES.length}</small></div>
           </div>
-          <div className="progressSummary flex min-w-0 flex-1 flex-col gap-1.5"><span className="text-[11px] text-muted-foreground">{t('viewedLessons')}</span><strong className="text-sm font-bold">{t('sentencesCount',{count:stats.viewed,total:SENTENCES.length})}</strong></div>
+          <div className="progressSummary flex min-w-0 flex-1 flex-col gap-1"><span className="text-[11px] text-muted-foreground">{t('viewedLessons')}</span><strong className="text-sm font-bold">{t('sentencesCount',{count:stats.viewed,total:SENTENCES.length})}</strong><small className="text-[11px] leading-4 text-translation-ink">{t('progressEncourage')}</small></div>
         </div>
         <div className="miniMetrics grid grid-cols-3 gap-1.5"><Metric count={stats.practiced} label={t('practiced')}/><Metric count={stats.favorites} label={t('favorited')}/><Metric count={stats.review} label={t('toReview')}/></div>
         <p className="progressCopy text-[11px] leading-4 text-translation-ink">{t('progressDisclaimer')}</p>
