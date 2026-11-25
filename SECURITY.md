@@ -43,6 +43,24 @@ pnpm 锁文件变更的 PR，以及每周定时任务中执行安全告警扫描
 
 请通过项目的安全报告渠道或 GitHub Issues 报告问题，附复现步骤与影响范围；不要在公开 Issue 附上令牌、私人录音、完整设备标识或可利用的敏感信息。公开披露前请预留合理修复时间。
 
+
+## GitHub Actions direct dependency pinning — 2026-11-25
+
+Reviewed all 14 live workflow files at source `a4f1e4faec9bff23e14b2a64b35e701a64ea6afd`. Found 26 direct external uses entries in 13 files referring to mutable major-version tags. Resolved each of the five tags through its official GitHub repository refs API to a commit object (not a tag object). Proposed replacement uses the exact 40-character commit, retaining the previous major version as a comment:
+
+| Action / prior tag | Resolved official commit |
+| --- | --- |
+| actions/upload-artifact@v7 | [cf430e030ddbb5b0abf93d22962f4752f3646cd9](https://github.com/actions/upload-artifact/commit/cf430e030ddbb5b0abf93d22962f4752f3646cd9) |
+| actions/download-artifact@v8 | [9000827ccba6bdab643e8b6fd33ac0654aef8333](https://github.com/actions/download-artifact/commit/9000827ccba6bdab643e8b6fd33ac0654aef8333) |
+| actions/configure-pages@v6 | [45bfe0192ca1faeb007ade9deae92b16b8254a0d](https://github.com/actions/configure-pages/commit/45bfe0192ca1faeb007ade9deae92b16b8254a0d) |
+| actions/upload-pages-artifact@v5 | [fc324d3547104276b827a68afc52ff2a11cc49c9](https://github.com/actions/upload-pages-artifact/commit/fc324d3547104276b827a68afc52ff2a11cc49c9) |
+| actions/deploy-pages@v5 | [368f82528645a54fb793d4d04e342629a3f51346](https://github.com/actions/deploy-pages/commit/368f82528645a54fb793d4d04e342629a3f51346) |
+
+The other direct external entries already used full commit hashes; local reusable workflows remain local. Reviewed actual upload-pages-artifact action.yml at the pinned commit: its nested upload-artifact reference is itself pinned (bbbca2ddaa5d8feaa63e36b76fdaad77386f024f, v7.0.0). This is not an exhaustive transitive action/runner/download audit or a claim that pinned code is vulnerability-free. The regression scans direct uses entries in the active YAML files using the repository's current block-style convention, not a full YAML parser. Archived historical workflows are intentionally unchanged. No triggers, token permissions, build commands, release flags, dependencies or production runtime changed; existing scoped workflow triggers may run the relevant security/native checks because their own files changed. Manual release writers remain manual only. Do not rebuild or publish the selected installer solely because of this change.
+
+
+最近一次已核实的 main 定时供应链审计 [45257208260](https://github.com/kunlong-luo/voxnelo/actions/runs/45257208260)（2026-11-23）成功；另核实 [45395086206](https://github.com/kunlong-luo/voxnelo/actions/runs/45395086206) 的 Python 版本告警扫描及 pnpm 生产/完整依赖 High/Critical 门禁步骤均成功。历史通过不证明今日无新告警；本轮固定 Action 引用的 PR 尚待自身 CI。Python 安全扫描使用约束解析的实际环境，不等同于三平台原始 Wheel 哈希及全部原生库 CVE/许可审核。
+
 ## Electron audio permission boundary — proposed hardening (2026-11-25)
 
 Reviewed main/preload/security source and exact locked Electron 45.4.1. Its [PermissionRequest structure](https://github.com/electron/electron/blob/v45.4.1/docs/api/structures/permission-request.md) provides isMainFrame and requestingUrl; [MediaAccessPermissionRequest](https://github.com/electron/electron/blob/v45.4.1/docs/api/structures/media-access-permission-request.md) extends it with optional securityOrigin and mediaTypes. Previously the permission-check callback required main-frame metadata but the permission-request callback only checked origins; a same-origin subframe could satisfy the request predicate, though no actual exploit or microphone capture was demonstrated. The check callback also accepted undefined/unrecognized mediaType other than video/unknown. Proposed change requires explicit main-frame metadata in both callbacks, exact audio check type and audio-only request, trusted URL and any supplied security origin. Missing frame metadata fails closed; missing optional securityOrigin remains compatible with Electron. Added predicate regressions for same-origin subframes, missing metadata, inconsistent origins and unexpected media types. Existing main IPC independently requires senderFrame === contents.mainFrame and a trusted WebContents; preload exposes named capabilities, not arbitrary IPC or shell. No change to user gesture UI, model pins or dependency versions. This is a narrow source hardening, not a demonstrated vulnerability exploit, complete IPC/runtime audit or actual mic acceptance. Required CI and real desktop mic permission/recovery tests pending.

@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
@@ -43,5 +43,21 @@ describe('Expensive native ASR / dependency workflow trigger scope', () => {
     expect(pullRequestPaths(yaml).filter(name => name === 'scripts/check-platform-asr-candidate.mts'))
       .toHaveLength(1);
     expect(yaml).toContain('workflow_dispatch:');
+  });
+});
+
+describe('Live GitHub Actions dependency pinning', () => {
+  it('requires full commit hashes for every direct external uses entry in active workflows', () => {
+    const workflows = readdirSync(path.resolve('.github/workflows'))
+      .filter(name => /\.ya?ml$/.test(name));
+    expect(workflows.length).toBeGreaterThan(0);
+    for (const workflow of workflows) {
+      const yaml = read(workflow);
+      for (const entry of yaml.matchAll(/^\s*(?:-\s*)?uses:\s*([^\n#]+)/gm)) {
+        const ref = entry[1]!.trim().replace(/^['"]|['"]$/g, '');
+        if (ref.startsWith('./')) continue;
+        expect(ref, workflow + ': ' + ref).toMatch(/^[^@\s]+@[a-f0-9]{40}$/);
+      }
+    }
   });
 });

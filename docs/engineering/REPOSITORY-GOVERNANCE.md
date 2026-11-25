@@ -38,3 +38,21 @@ The repository is **public** (verified on GitHub, 2026-11-21). Ordinary dependen
 ## Important
 
 GitHub settings cannot be enforced merely by committing this document. A maintainer must verify the settings are enabled. Never assume pending GitHub checks have passed.
+
+
+## GitHub Actions direct dependency pinning — 2026-11-25
+
+Reviewed all 14 live workflow files at source `a4f1e4faec9bff23e14b2a64b35e701a64ea6afd`. Found 26 direct external uses entries in 13 files referring to mutable major-version tags. Resolved each of the five tags through its official GitHub repository refs API to a commit object (not a tag object). Proposed replacement uses the exact 40-character commit, retaining the previous major version as a comment:
+
+| Action / prior tag | Resolved official commit |
+| --- | --- |
+| actions/upload-artifact@v7 | [cf430e030ddbb5b0abf93d22962f4752f3646cd9](https://github.com/actions/upload-artifact/commit/cf430e030ddbb5b0abf93d22962f4752f3646cd9) |
+| actions/download-artifact@v8 | [9000827ccba6bdab643e8b6fd33ac0654aef8333](https://github.com/actions/download-artifact/commit/9000827ccba6bdab643e8b6fd33ac0654aef8333) |
+| actions/configure-pages@v6 | [45bfe0192ca1faeb007ade9deae92b16b8254a0d](https://github.com/actions/configure-pages/commit/45bfe0192ca1faeb007ade9deae92b16b8254a0d) |
+| actions/upload-pages-artifact@v5 | [fc324d3547104276b827a68afc52ff2a11cc49c9](https://github.com/actions/upload-pages-artifact/commit/fc324d3547104276b827a68afc52ff2a11cc49c9) |
+| actions/deploy-pages@v5 | [368f82528645a54fb793d4d04e342629a3f51346](https://github.com/actions/deploy-pages/commit/368f82528645a54fb793d4d04e342629a3f51346) |
+
+The other direct external entries already used full commit hashes; local reusable workflows remain local. Reviewed actual upload-pages-artifact action.yml at the pinned commit: its nested upload-artifact reference is itself pinned (bbbca2ddaa5d8feaa63e36b76fdaad77386f024f, v7.0.0). This is not an exhaustive transitive action/runner/download audit or a claim that pinned code is vulnerability-free. The regression scans direct uses entries in the active YAML files using the repository's current block-style convention, not a full YAML parser. Archived historical workflows are intentionally unchanged. No triggers, token permissions, build commands, release flags, dependencies or production runtime changed; existing scoped workflow triggers may run the relevant security/native checks because their own files changed. Manual release writers remain manual only. Do not rebuild or publish the selected installer solely because of this change.
+
+
+Maintenance: review upstream release/commit changes explicitly before updating pins, record the new exact SHA and run applicable CI. Do not change live GitHub Rulesets or Actions policy implicitly; no settings mutation was performed. Historical archive byte-identity checks remain intact.
