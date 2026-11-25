@@ -233,3 +233,7 @@ Next: trace the history of these pinned library objects to the actual distributi
 ## Current evidence and audit history
 
 The full dated registry, convergence, score and AppImage provenance records are maintained once in [v1.0.4 registry audit and quality rubric](../release/V1.0.4-REGISTRY-AUDIT.md). Earlier duplicate sections have been removed only after exact text comparison against that canonical record. Unique evidence above is retained. Use the canonical record for exact commits, artifact IDs and observed hashes; use this document for its own scope. **HOLD; not legal or physical-device approval.**
+
+## Native security follow-up (2026-11-25)
+
+The [canonical audit ledger](../release/V1.0.4-REGISTRY-AUDIT.md) now documents the version-specific Ubuntu historical package archive leads and USN-8939-1 libXtst risk. Original distributor bytes remain unavailable in this review environment; do not approve older native libraries from registry audit results. An isolated toolset pilot may be considered, but require exact supported versions, final payload/source/notice mapping, actual runtime regression and fresh installer evidence before any change is published. HOLD.

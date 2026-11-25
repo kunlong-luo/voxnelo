@@ -18,6 +18,8 @@ on:
       - 'scripts/test_inspect_registry_notices.py'
       - 'scripts/inspect_packaged_asar.py'
       - 'scripts/test_inspect_packaged_asar.py'
+      - 'scripts/audit_appimage_distro_packages.py'
+      - 'scripts/test_audit_appimage_distro_packages.py'
       - 'scripts/lockfile-license-evidence.mts'
       - 'scripts/package-license-evidence.mts'
   schedule:
@@ -106,6 +108,7 @@ jobs:
         run: |
           python3 scripts/test_inspect_registry_notices.py
           python3 scripts/test_inspect_packaged_asar.py
+          python3 scripts/test_audit_appimage_distro_packages.py
       - name: Assemble Linux unpacked application for copied dependency coverage (no publish)
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
