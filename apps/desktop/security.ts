@@ -37,20 +37,24 @@ export function isAudioOnlyRequest(mediaTypes: unknown): boolean {
   return Array.isArray(mediaTypes) && mediaTypes.length > 0 && mediaTypes.every((type) => type === 'audio');
 }
 
-/** Deny permission requests from subframes with an untrusted origin.
+/** Deny permission requests from every subframe, including trusted-origin ones.
  * Electron exposes the top-level WebContents URL even for subframe requests.
+ * Require its own explicit main-frame flag and an audio-only request.
  */
 export function allowsAudioPermissionRequest(
   webContentsUrl: string,
   permission: string,
-  details: { mediaTypes?: unknown; requestingUrl?: unknown },
+  details: { isMainFrame?: boolean; mediaTypes?: unknown; requestingUrl?: unknown; securityOrigin?: unknown },
   options: TrustOptions,
 ): boolean {
   return permission === 'media' &&
+    details.isMainFrame === true &&
     isAudioOnlyRequest(details.mediaTypes) &&
     typeof details.requestingUrl === 'string' &&
     isTrustedUrl(webContentsUrl, options) &&
-    isTrustedUrl(details.requestingUrl, options);
+    isTrustedUrl(details.requestingUrl, options) &&
+    (details.securityOrigin === undefined ||
+      (typeof details.securityOrigin === 'string' && isTrustedUrl(details.securityOrigin, options)));
 }
 
 /** Permission checks are separate from permission requests in Electron.
@@ -71,8 +75,7 @@ export function allowsAudioPermissionCheck(
 ): boolean {
   return permission === 'media' &&
     details.isMainFrame === true &&
-    details.mediaType !== 'video' &&
-    details.mediaType !== 'unknown' &&
+    details.mediaType === 'audio' &&
     webContentsUrl !== null &&
     isTrustedUrl(webContentsUrl, options) &&
     isTrustedUrl(requestingOrigin, options) &&
