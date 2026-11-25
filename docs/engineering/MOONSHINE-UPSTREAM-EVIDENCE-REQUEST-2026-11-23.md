@@ -45,3 +45,22 @@ pnpm asr:moonshine:upstream:refs
 This **opt-in read-only** command fetches the current official ref list plus text SHA-256 reports at exact commit SHAs. It exits with a nonzero status while `v0.0.65` or all eight matching legacy assets are missing. A future passing result **still does not** signify that model-license review, build provenance or physical microphone QA are complete. No binary model, audio, transcript or third-party account credentials are downloaded or uploaded.
 
 Voxnelo public v1.0.3 remains separate; GitHub Release Draft `428750217` for v1.0.4 must stay `draft=true`, `published_at=null` with original assets untouched.
+
+### 2026-11-25 independent source corroboration (request remains UNSENT)
+
+The official GitHub **source** tag [v0.0.65](https://github.com/moonshine-ai/moonshine/tree/c09053306769543292b676c0c1e6bd55b2b6ca38) resolves directly to commit `c09053306769543292b676c0c1e6bd55b2b6ca38`. Read the exact [LICENSE](https://github.com/moonshine-ai/moonshine/blob/c09053306769543292b676c0c1e6bd55b2b6ca38/LICENSE) (Git blob `f2b06557a63284695955aba3880ee7f5dab123f3`), [README](https://github.com/moonshine-ai/moonshine/blob/c09053306769543292b676c0c1e6bd55b2b6ca38/README.md) (blob `2b7bca046b164a9dd0ab9eafdbabe84b448440c7`) and [Python downloader](https://github.com/moonshine-ai/moonshine/blob/c09053306769543292b676c0c1e6bd55b2b6ca38/python/src/moonshine_voice/download.py) (blob `7f9f1fa636573613b5cf40f120d265e6bd91bacc`). The tag explicitly declares English-language models MIT, with Section 1 attribution/notice obligations, and separately excludes core/third-party from the blanket code license. The downloader identifies the legacy quantized CDN path and conditionally adds decoder_kv_with_attention.ort. The recursive source tree returned 2102 entries and was not truncated; no path matched medium-streaming-en, decoder_kv_with_attention.ort, FILES.tsv or TRANSFER_REPORT.tsv. This is version-specific publisher license-family and path evidence, not a checksum manifest for the actual eight downloaded bytes. Distinguish the existing GitHub source tag from the missing historical Hugging Face **asset** tag. Current HF ref API could not be retrieved in this check; retain prior dated ref observation, not a new asserted ref inventory.
+
+A separate third-party [Milkrice mirror, immutable commit 0b8af8ae18434331ab897269db81b2011a9c37a2](https://huggingface.co/milkrice/moonshine-streaming-medium-en/commit/0b8af8ae18434331ab897269db81b2011a9c37a2) claims to mirror the same legacy CDN quantized directory. Compared the model card and committed Git LFS pointer OIDs against all eight exact constants in apps/desktop/moonshineIntegrity.ts. Results:
+
+| Pinned filename | Mirror metadata result | Declared bytes (if LFS pointer) |
+| --- | --- | ---: |
+| adapter.ort | SHA-256 exact match in README and LFS pointer | 3647712 |
+| cross_kv.ort | exact match in README and LFS pointer | 11544952 |
+| decoder_kv.ort | exact match in README and LFS pointer | 146216448 |
+| decoder_kv_with_attention.ort | absent from commit and file list | — |
+| encoder.ort | exact match in README and LFS pointer | 94202872 |
+| frontend.ort | exact match in README and LFS pointer | 47467256 |
+| streaming_config.json | exact match in README; text file present, bytes not independently hashed | — |
+| tokenizer.bin | exact match in README and LFS pointer | 249974 |
+
+Thus 7/8 published digest declarations agree, including 6/8 LFS SHA-256 pointers. The third-party mirror also carries an MIT notice. No mirror model binaries downloaded, no publisher identity/authority inferred from the mirror's verified commit indicator, no independent mirror byte rehash, no transfer of source trust or change to download URL. The exact missing attention decoder hash remains in question 1 above; a public search for that digest returned no result, not proof of global absence. The official [current transfer report](https://huggingface.co/moonshine-ai/moonshine-voice-assets/raw/main/TRANSFER_REPORT.tsv) still lists the eight files under the different dated quantized_26_07_30 directory, only 2/8 matching existing pins. Keep the original all-eight publisher-authored immutable manifest request and version-specific notice review; this corroboration narrows the investigation but does not close it. No external request sent, no upstream issue opened, no alternative mirror configured, no model pins changed. HOLD.
