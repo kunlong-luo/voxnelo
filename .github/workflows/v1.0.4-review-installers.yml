@@ -5,6 +5,9 @@ name: Build v1.0.4 unsigned installer review artifacts (NOT a Release)
 # Release, bundled SDK/model, user audio or public announcement.
 # Artifacts have limited retention and require maintainer review before the
 # separate manual release-draft workflow is invoked.
+# 2026-11-26 candidate refresh: merge this workflow comment with V3.1 and the
+# main-frame permission guard to use the existing main path trigger exactly
+# once for the integrated source. This is review-only; no release publication.
 on:
   push:
     branches: [main]
