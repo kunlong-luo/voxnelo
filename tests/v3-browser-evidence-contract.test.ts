@@ -15,6 +15,12 @@ describe('V3 primary dictation browser/desktop evidence contract',()=>{
     expect(browser).not.toContain('dictationOffset<=');
     expect(browser).not.toContain('visible idle microphone halo is missing');
   });
+  it('checks independent auxiliary disclosures and prevents artificial lesson stretch',()=>{
+    expect(browser).toContain("page:'v31-auxiliary-disclosure'");
+    expect(browser).toContain('disclosure.count,3');
+    expect(browser).toContain('!m.columnIsStretching');
+    expect(browser).toContain('expanded related phrases are not visible');
+  });
   it('captures real responsive screenshots only when relevant UI sources change, or on manual dispatch',()=>{
     expect(deep).toContain('workflow_dispatch:');
     expect(deep).toContain('pull_request:');

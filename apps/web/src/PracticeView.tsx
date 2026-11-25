@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from 'react';
 import { VolumeX, X } from 'lucide-react';
 import type { PracticeViewProps } from './PracticeTypes';
 import { PracticeCard } from './PracticeCard';
@@ -11,28 +10,8 @@ export function PracticeView({current,currentState,stats,speed,volume,showIpa,no
   canGoPrevious,onStartDictation,onManageModels,onToggleIpa,onSpeak,onSpeakSegment,onToggleSpeed,onRecord,onToggleFlag,onNext,onPrevious,
   onChooseRelated,onDismissNotice}:PracticeViewProps) {
   const {t}=useI18n();
-  const layoutRef=useRef<HTMLDivElement>(null);
-  const [alignFullHeight,setAlignFullHeight]=useState(false);
-  useEffect(()=>{
-    const grid=layoutRef.current;
-    const insights=grid?.querySelector<HTMLElement>('.referenceInsights');
-    if(!grid||!insights)return;
-    const update=()=>{
-      const columns=getComputedStyle(grid).gridTemplateColumns.split(/\s+/).filter(Boolean).length;
-      const rail=insights.getBoundingClientRect();
-      // Avoid stretching the lesson beyond the first screen when the insights
-      // stack is taller than the window (particularly at medium widths).
-      const fits=columns>=2&&rail.height>0&&rail.top>=0&&rail.bottom<=window.innerHeight-12;
-      setAlignFullHeight(previous=>previous===fits?previous:fits);
-    };
-    update();
-    const observer=typeof ResizeObserver!=='undefined'?new ResizeObserver(update):null;
-    observer?.observe(insights);
-    window.addEventListener('resize',update);
-    return ()=>{observer?.disconnect();window.removeEventListener('resize',update);};
-  },[]);
-  return <div ref={layoutRef} className={`practiceLayout layoutWorkbench grid min-w-0 grid-cols-1 gap-5 animate-view-enter @min-[840px]/workspace:grid-cols-[minmax(0,1fr)_minmax(230px,28%)] @min-[1040px]/workspace:gap-7 @min-[1200px]/workspace:gap-9 ${alignFullHeight?'items-stretch':'items-start'}`}>
-    <div className={`practiceColumn flex min-w-0 flex-col gap-5 ${alignFullHeight?'self-stretch':''}`}>
+  return <div className="practiceLayout layoutWorkbench grid min-w-0 grid-cols-1 items-start gap-3 animate-view-enter @min-[840px]/workspace:grid-cols-[minmax(0,1fr)_minmax(210px,25%)] @min-[1040px]/workspace:gap-5">
+    <div className="practiceColumn flex min-w-0 flex-col gap-3">
       <PracticeCard current={current} currentState={currentState} speed={speed} volume={volume} showIpa={showIpa}
         recorder={recorder} dictation={dictation} recordingBusy={recordingBusy} canGoPrevious={canGoPrevious} onStartDictation={onStartDictation} onManageModels={onManageModels}
         onToggleIpa={onToggleIpa} onSpeak={onSpeak} onSpeakSegment={onSpeakSegment} onToggleSpeed={onToggleSpeed}

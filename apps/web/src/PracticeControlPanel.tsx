@@ -48,10 +48,10 @@ export function PracticeControlPanel({recorder,recordingBusy,speed,volume,onSpea
             </ActionSlot>
             <RecordingPlayback key={recorder.recordingUrl??'no-recording'} src={recorder.recordingUrl} volume={volume}/>
           </div>
-          {recording?<p className="recordingStatus mt-5 flex items-center justify-center gap-2 text-center text-xs font-semibold text-primary" role="status"><span aria-hidden="true" className="size-2 rounded-full bg-mic-halo animate-status-breathe"/>{t('recordingStatus')}</p>
-            :requesting?<p className="recordingStatus mt-5 text-center text-xs text-muted-foreground" role="status">{t('permissionHint')}</p>
-            :ready?<p className="recordingReady mt-4 flex items-center justify-center gap-1.5 text-center text-xs font-medium leading-5 text-primary" role="status"><CheckCircle2 size={15} data-motion="success-glint" className="shrink-0 animate-success-glint" aria-hidden="true"/>{t('recordingReadyStatus')}</p>
-            :<p className="practicePrompt mt-5 flex items-center justify-center gap-1 text-center text-[10px] leading-4 text-muted-foreground"><ShieldCheck size={13}/>{t('privacyRecording')}</p>}
+          {recording?<p className="recordingStatus mt-3 [@media(max-height:680px)]:mt-1 flex items-center justify-center gap-2 text-center text-xs font-semibold text-primary" role="status"><span aria-hidden="true" className="size-2 rounded-full bg-mic-halo animate-status-breathe"/>{t('recordingStatus')}</p>
+            :requesting?<p className="recordingStatus mt-3 [@media(max-height:680px)]:mt-1 text-center text-xs text-muted-foreground" role="status">{t('permissionHint')}</p>
+            :ready?<p className="recordingReady mt-3 [@media(max-height:680px)]:mt-1 flex items-center justify-center gap-1.5 text-center text-xs font-medium leading-5 text-primary" role="status"><CheckCircle2 size={15} data-motion="success-glint" className="shrink-0 animate-success-glint" aria-hidden="true"/>{t('recordingReadyStatus')}</p>
+            :<p className="practicePrompt mt-3 [@media(max-height:680px)]:mt-1 flex items-center justify-center gap-1 text-center text-[10px] leading-4 text-muted-foreground"><ShieldCheck size={13}/>{t('privacyRecording')}</p>}
           {recorder.error && <p className="warning mt-2 flex items-start gap-2 rounded-xl border border-border/70 bg-secondary/55 p-3 text-xs leading-5 text-translation-ink" role="status"><CircleHelp size={16} className="mt-0.5 shrink-0 text-primary" aria-hidden="true"/>{recorder.error}</p>}
         </section>
   );

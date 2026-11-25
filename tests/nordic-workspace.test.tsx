@@ -27,7 +27,7 @@ function stubRecorder() {
 }
 
 describe('Nordic three-column learning workspace', () => {
-  it('shows real related sentences and lets learners navigate them', () => {
+  it('discloses real related sentences and scenes on demand and preserves navigation', () => {
     const onChooseRelated = vi.fn();
     const { container } = render(
       <PracticeView current={FIRST_SENTENCE} currentState={undefined}
@@ -45,8 +45,22 @@ describe('Nordic three-column learning workspace', () => {
     expect(screen.getByText('相关场景')).toBeTruthy();
     expect(screen.getByText('1 / 280 句')).toBeTruthy();
     expect(container.querySelector('.liveDictation')).toBeTruthy();
+    const related = screen.getByRole('button', { name: '相关表达' });
+    const scenes = screen.getByRole('button', { name: '相关场景' });
+    expect(related.getAttribute('aria-expanded')).toBe('false');
+    expect(scenes.getAttribute('aria-expanded')).toBe('false');
+    expect(screen.queryByRole('button', { name: '练习短句：Hi!' })).toBeNull();
+    expect(screen.queryByRole('button', { name: '练习场景：自我介绍' })).toBeNull();
+    fireEvent.click(related);
+    expect(related.getAttribute('aria-expanded')).toBe('true');
+    expect(scenes.getAttribute('aria-expanded')).toBe('false');
     fireEvent.click(screen.getByRole('button', { name: '练习短句：Hi!' }));
     expect(onChooseRelated).toHaveBeenCalledWith(expect.objectContaining({ english: 'Hi!' }));
+    fireEvent.click(related);
+    expect(related.getAttribute('aria-expanded')).toBe('false');
+    expect(screen.queryByRole('button', { name: '练习短句：Hi!' })).toBeNull();
+    fireEvent.click(scenes);
+    expect(scenes.getAttribute('aria-expanded')).toBe('true');
     fireEvent.click(screen.getByRole('button', { name: '练习场景：自我介绍' }));
     expect(onChooseRelated).toHaveBeenCalledWith(expect.objectContaining({ topic: 'personal' }));
   });
@@ -85,7 +99,7 @@ describe('Nordic three-column learning workspace', () => {
     // The 320x640 Chromium visual probe exposed an actual overlap between
     // the bottom dock and the recorder. Keep compact-height spacing without
     // hiding the lesson, IPA or live/secondary audio actions.
-    expect(container.querySelector('.cardHeader')?.className).toContain('[@media(max-height:680px)]:pt-2');
+    expect(container.querySelector('.cardHeader')?.className).toContain('[@media(max-height:680px)]:pt-1');
     expect(container.querySelector('.lessonFocus')?.className).toContain('[@media(max-height:680px)]:gap-1');
     expect(container.querySelector('.sentenceContent > section')?.className).toContain('[@media(max-height:680px)]:py-1');
     expect(container.querySelector('.liveDictation')?.className).toContain('[@media(max-height:680px)]:py-1.5');
