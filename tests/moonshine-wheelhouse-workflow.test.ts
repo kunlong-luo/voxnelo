@@ -20,7 +20,7 @@ describe('read-only Python Wheel registry-digest candidate audit',()=>{
     expect(workflow).toContain("python-version: '3.12'");
     expect(workflow).toContain('--constraint scripts/moonshine-python-constraints.txt');
     expect(workflow).toContain('python scripts/audit-moonshine-wheelhouse.py');
-    expect(workflow).toContain('actions/upload-artifact@v7');
+    expect(workflow).toMatch(/actions\/upload-artifact@[a-f0-9]{40} # v7/);
     expect(workflow).toContain('.json');
     expect(workflow).not.toContain('gh release');
   });

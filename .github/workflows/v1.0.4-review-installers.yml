@@ -147,7 +147,7 @@ jobs:
           pnpm license:audit:registry --compare-notices --packaged-asar "$installed_asar"
       - name: Preserve sanitized review-source dependency notice evidence
         if: runner.os == 'Linux'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: voxnelo-v1.0.4-review-registry-notice-evidence
           path: |
@@ -160,7 +160,7 @@ jobs:
       - name: Generate review-only per-platform SHA-256 and provenance manifest
         run: node --experimental-strip-types scripts/write-candidate-manifest.mts
       - name: Upload private CI assembly inputs (NOT Release attachments)
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: voxnelo-v1.0.4-${{ matrix.target }}-review-input
           path: |
@@ -181,7 +181,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           pattern: voxnelo-v1.0.4-*-review-input
           path: review-assets
@@ -196,7 +196,7 @@ jobs:
             (cd review-assets && sha256sum -c "SHA256SUMS-$platform.txt")
           done
       - name: Archive verified user-facing unsigned installers for maintainer review
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: voxnelo-v1.0.4-unsigned-three-platform-REVIEW-NOT-RELEASE
           path: |
