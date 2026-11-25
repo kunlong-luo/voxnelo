@@ -44,6 +44,18 @@ export const CURRENT_DOCUMENTS = [
   'docs/engineering/REPOSITORY-GOVERNANCE.md',
   'docs/engineering/NODE26-LTS-MIGRATION.md',
   'docs/engineering/CONNECTED-SPEECH-AUDIO-REVIEW.md',
+  'AGENTS.md',
+  '.github/PULL_REQUEST_TEMPLATE.md',
+  'docs/deployment/GITHUB-PAGES-WEB-PREVIEW.md',
+  'docs/engineering/MOONSHINE-LINUX-INSTALLATION.md',
+  'docs/engineering/MOONSHINE-CROSS-PLATFORM-PILOT.md',
+  'docs/engineering/MOONSHINE-DEPENDENCY-EVIDENCE-2026-11-22.md',
+  'docs/engineering/GITHUB-RELEASE-DRAFT.md',
+  'docs/engineering/STABLE-RELEASE-READINESS.md',
+  'docs/engineering/SIGNED-CANDIDATE-SETUP.md',
+  'docs/support/POP-OS-24-ENGLISH-TTS.md',
+  'docs/release/UNSIGNED-V1-OWNER-DECISION.md',
+  'docs/release-notes/v1.0.3.md',
 ] as const;
 
 const BUILTIN_PNPM_COMMANDS = new Set([
