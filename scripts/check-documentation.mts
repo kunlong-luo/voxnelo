@@ -150,9 +150,11 @@ function allMarkdownFiles(root: string): string[] {
     for (const entry of readdirSync(directory, { withFileTypes: true })) {
       if (entry.isSymbolicLink()) continue;
       if (entry.isDirectory()) {
-        if (!['.git', 'node_modules', 'dist', 'release'].includes(entry.name)) {
-          visit(path.join(relative, entry.name));
-        }
+        // Skip dependency/VCS directories at any depth, but build output
+        // names only at the repository root. docs/release is tracked evidence.
+        if (entry.name === '.git' || entry.name === 'node_modules') continue;
+        if (!relative && ['dist', 'dist-electron', 'release', 'coverage'].includes(entry.name)) continue;
+        visit(path.join(relative, entry.name));
       } else if (entry.isFile() && entry.name.endsWith('.md')) {
         results.push(path.join(relative, entry.name).split(path.sep).join('/'));
       }

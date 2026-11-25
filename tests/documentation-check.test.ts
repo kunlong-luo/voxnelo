@@ -141,6 +141,21 @@ describe('documentation link and command validation', () => {
     expect(documentedPnpmCommands(markdown)).toEqual(['typechek', 'lint']);
   });
 
+  it('scans nested release docs while excluding root build output and dependencies in all mode', () => {
+    withFixture(root => {
+      const included = ['docs/release', 'docs/archive/release', 'docs/dist', 'docs/coverage'];
+      const excluded = ['release', 'dist', 'dist-electron', 'coverage', '.git', 'node_modules', 'docs/node_modules'];
+      for (const directory of [...included, ...excluded]) {
+        mkdirSync(path.join(root, directory), { recursive: true });
+        writeFileSync(path.join(root, directory, 'probe.md'), '[missing](missing.md)\n');
+      }
+      const issues = checkDocumentation(root, true);
+      expect(issues).toEqual(included.sort().map(directory => ({
+        file: directory + '/probe.md', kind: 'missing-file', detail: 'missing.md',
+      })));
+    });
+  });
+
   it('distinguishes missing maintained files from a passing current documentation set', () => {
     withFixture(root => {
       const issues = checkDocumentation(root);
