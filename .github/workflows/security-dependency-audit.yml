@@ -151,7 +151,7 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update -o APT::Update::Error-Mode=any
-          sudo apt-get install -y --no-install-recommends p7zip-full squashfs-tools binutils xvfb xauth libx11-6 libxext6
+          sudo apt-get install -y --no-install-recommends p7zip-full squashfs-tools binutils xvfb xauth libx11-6 libxext6 x11-utils libgtk-3-0 libnss3 libasound2 libgbm1
           mkdir -p "$RUNNER_TEMP/voxnelo-patched-toolset" "$RUNNER_TEMP/voxnelo-patched-deb" patched-evidence
           curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --max-time 120 --max-filesize 4194304 'https://github.com/electron-userland/electron-builder-binaries/releases/download/appimage-12.0.1/appimage-12.0.1.7z' -o "$RUNNER_TEMP/voxnelo-legacy-toolset.7z"
           printf '%s  %s\n' 'd12ff7eb8f1d1ec4652ca5237a7fbdca33acc0c758045636feca62dc6ecb8ec4' "$RUNNER_TEMP/voxnelo-legacy-toolset.7z" | sha256sum -c -
@@ -295,6 +295,69 @@ jobs:
               x11.XCloseDisplay(display)
           report={"schemaVersion":1,"librarySha256":hashlib.sha256(path.read_bytes()).hexdigest(),"xvfbLoadAndQueryPassed":True,"xTestExtensionVersion":[major.value,minor.value],"fullAppLaunchTested":False,"physicalMicTested":False,"legalApproval":False,"publicReleaseApproved":False}
           pathlib.Path("patched-evidence/x11-runtime-probe.json").write_text(json.dumps(report,indent=2)+"\n")
+          PY
+      - name: Observe actual packaged app startup and mapped patched library (Xvfb)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, subprocess
+          report=json.loads(pathlib.Path("patched-evidence/payload.json").read_text())
+          image=pathlib.Path("release")/report["filename"]
+          root=pathlib.Path(os.environ["RUNNER_TEMP"])/"voxnelo-appdir"
+          if root.exists():
+              raise SystemExit("Expected fresh app directory")
+          subprocess.run(["unsquashfs","-o",str(report["squashfsOffset"]),"-d",str(root),str(image)],check=True,timeout=120)
+          library=root/"usr/lib/libXtst.so.6"
+          if not library.is_file() or library.is_symlink() or hashlib.sha256(library.read_bytes()).hexdigest()!=report["patchedElfSha256"]:
+              raise SystemExit("Extracted app directory library mismatch")
+          PY
+          xvfb-run -a python3 - <<'PY'
+          import hashlib, json, os, pathlib, signal, subprocess, tempfile, time
+          root=pathlib.Path(os.environ["RUNNER_TEMP"])/"voxnelo-appdir"
+          expected=str(root/"usr/lib/libXtst.so.6")
+          report={"schemaVersion":1,"fullAppLaunchTested":False,"windowObserved":False,"rendererObserved":False,"patchedLibraryMapped":False,"physicalMicTested":False,"legalApproval":False,"publicReleaseApproved":False,"scope":"Extracted AppDir launcher on Ubuntu 22.04 Xvfb; not FUSE mount or real desktop"}
+          with tempfile.TemporaryDirectory(prefix="voxnelo-app-profile-") as private:
+              env=dict(os.environ,HOME=private,XDG_CONFIG_HOME=private+"/config",XDG_DATA_HOME=private+"/data",XDG_CACHE_HOME=private+"/cache",APPDIR=str(root),APPIMAGE=str(root/"AppRun"),APPIMAGE_SILENT_INSTALL="1")
+              with tempfile.TemporaryFile() as log:
+                  proc=subprocess.Popen([str(root/"AppRun")],cwd=str(root),env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+                  try:
+                      for _ in range(60):
+                          if proc.poll() is not None:
+                              report["launcherExitCode"]=proc.returncode
+                              break
+                          members=[]
+                          for entry in pathlib.Path("/proc").iterdir():
+                              if not entry.name.isdigit(): continue
+                              try:
+                                  if os.getpgid(int(entry.name))!=proc.pid: continue
+                                  cmd=(entry/"cmdline").read_bytes()
+                                  maps=(entry/"maps").read_text(errors="replace")
+                                  members.append((cmd,maps))
+                              except (OSError,ProcessLookupError):
+                                  continue
+                          report["rendererObserved"]|=any(b"--type=renderer" in cmd for cmd,_ in members)
+                          report["patchedLibraryMapped"]|=any(any(line.endswith(" "+expected) for line in maps.splitlines()) for _,maps in members)
+                          windows=subprocess.run(["xwininfo","-root","-tree"],capture_output=True,text=True,timeout=5)
+                          report["windowObserved"]|=windows.returncode==0 and any('"Voxnelo' in line for line in windows.stdout.splitlines())
+                          if all(report[k] for k in ("rendererObserved","patchedLibraryMapped","windowObserved")):
+                              report["fullAppLaunchTested"]=True
+                              break
+                          time.sleep(0.5)
+                  finally:
+                      try: os.killpg(proc.pid,signal.SIGTERM)
+                      except ProcessLookupError: pass
+                      try: proc.wait(timeout=5)
+                      except subprocess.TimeoutExpired:
+                          os.killpg(proc.pid,signal.SIGKILL)
+                          proc.wait(timeout=5)
+                      log.seek(0)
+                      # Retain only a bounded diagnostic; fresh synthetic profile, no user data.
+                      pathlib.Path("patched-evidence/app-launch-diagnostic.txt").write_bytes(log.read(65536))
+          pathlib.Path("patched-evidence/app-launch-probe.json").write_text(json.dumps(report,indent=2)+"\n")
+          print(json.dumps(report,indent=2))
+          if not report["fullAppLaunchTested"]:
+              raise SystemExit("Full extracted AppDir launch evidence incomplete")
           PY
       - name: Preserve isolated proof, even when failed
         if: always()
