@@ -30,4 +30,16 @@ describe('registry archive audit', () => {
     expect(() => collectLockedPackages(reports.map(r => ({ ...r, lockfileSha256: 'stale' })), lockfile)).toThrow();
     expect(() => collectLockedPackages(reports.map(r => ({ ...r, packages: [{ ...pkg, lockfileIntegrity: 'fake' }] })), lockfile)).toThrow();
   });
+  it('includes copied-only packed packages and refuses incomplete or stale packed inventories', () => {
+    const copied = { name: 'reselect', version: '5.3.0', lockfileIntegrity: integrity };
+    const expandedLock = Buffer.concat([lockfile, Buffer.from('  reselect@5.3.0:\n    resolution: {integrity: ' + integrity + '}\n')]);
+    const expandedDigest = createHash('sha256').update(expandedLock).digest('hex');
+    const inputs = reports.map(r => ({ ...r, lockfileSha256: expandedDigest }));
+    const packed = { schemaVersion: 3, target: 'packaged-asar', lockfileSha256: expandedDigest, legalApproval: false, packages: [pkg, copied] };
+    expect(collectLockedPackages([...inputs, packed], expandedLock, true)).toEqual([pkg, copied]);
+    expect(() => collectLockedPackages(inputs, expandedLock, true)).toThrow();
+    expect(() => collectLockedPackages([...inputs, packed], expandedLock)).toThrow();
+    expect(() => collectLockedPackages([...inputs, { ...packed, lockfileSha256: digest }], expandedLock, true)).toThrow();
+    expect(() => collectLockedPackages([...inputs, { ...packed, packages: [pkg, { ...copied, version: '5.3.1' }] }], expandedLock, true)).toThrow();
+  });
 });

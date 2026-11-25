@@ -56,4 +56,26 @@ describe('v1.0.4 unsigned three-platform REVIEW artifacts (not a release)',()=>{
     expect(workflow).not.toContain('--latest');
     expect(workflow).not.toContain('review-assets/candidate-manifest-*.json');
   });
+  it('requires installed Linux ASAR byte and registry notice checks before candidate evidence upload',()=>{
+    const install=workflow.indexOf('sudo apt-get install -y ./release/voxnelo_1.0.4_amd64.deb');
+    const audit=workflow.indexOf('- name: Verify installed DEB ASAR and upstream root notice equivalence');
+    const reportUpload=workflow.indexOf('- name: Preserve sanitized review-source dependency notice evidence');
+    const manifest=workflow.indexOf('- name: Generate review-only per-platform SHA-256 and provenance manifest');
+    expect(install).toBeGreaterThan(-1);
+    expect(audit).toBeGreaterThan(install);
+    expect(reportUpload).toBeGreaterThan(audit);
+    expect(manifest).toBeGreaterThan(reportUpload);
+    const step=workflow.slice(audit,reportUpload);
+    expect(step).toContain("if: runner.os == 'Linux'");
+    expect(step).toContain('set -euo pipefail');
+    expect(step).toContain('installed_asar=/opt/Voxnelo/resources/app.asar');
+    expect(step).toContain('dpkg -L voxnelo | grep -Fx "$installed_asar"');
+    expect(step).toContain('test -f "$installed_asar" && test ! -L "$installed_asar"');
+    expect(step).toContain('test -f "$unpacked_asar" && test ! -L "$unpacked_asar"');
+    expect(step).toContain('cmp -- "$installed_asar" "$unpacked_asar"');
+    expect(step).toContain('pnpm license:audit:registry --compare-notices --packaged-asar "$installed_asar"');
+    expect(step).not.toContain('continue-on-error');
+    expect(workflow.match(/pnpm license:audit:registry /g)).toHaveLength(1);
+    expect(workflow.slice(reportUpload,manifest)).toContain('if-no-files-found: error');
+  });
 });
