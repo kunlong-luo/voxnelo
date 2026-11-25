@@ -125,3 +125,121 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  native-toolset-pilot:
+    # Temporary branch-only investigation, remove after decision.
+    if: github.event_name == 'pull_request' && github.head_ref == 'audit/v104-native-toolset-pilot-20261125' && github.event.pull_request.head.repo.full_name == github.repository
+    name: Native toolset pilot (NOT a Release) (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            target: appimage
+          - os: windows-latest
+            target: nsis
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          version: 12.22.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 26
+      - name: Build unchanged app using locked dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+          pnpm asr:verify-real
+      - name: Verify original beta archives and list members
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p pilot-evidence
+          sudo apt-get update -qq
+          sudo apt-get install -y squashfs-tools
+          curl --fail --location --proto '=https' --proto-redir '=https' --max-time 120 'https://github.com/electron-userland/electron-builder-binaries/releases/download/appimage%401.0.3/appimage-tools-runtime-20251108.tar.gz' -o "$RUNNER_TEMP/appimage-pilot.tar.gz"
+          curl --fail --location --proto '=https' --proto-redir '=https' --max-time 120 'https://github.com/electron-userland/electron-builder-binaries/releases/download/nsis%401.2.1/nsis-bundle-3.12.tar.gz' -o "$RUNNER_TEMP/nsis-pilot.tar.gz"
+          (cd "$RUNNER_TEMP" && printf '%s\n' '84021a78ee214ae6fd33a2d62a92ba25542dd10bc86bf117a9b2d0bba44e7665  appimage-pilot.tar.gz' '56997fdefe25e7928a1a68b4583d08b240b66cf660234053b20131a74cc082f4  nsis-pilot.tar.gz' | sha256sum -c -)
+          (cd "$RUNNER_TEMP" && sha256sum appimage-pilot.tar.gz nsis-pilot.tar.gz) > pilot-evidence/toolset-archives.sha256
+          tar -tzf "$RUNNER_TEMP/appimage-pilot.tar.gz" > pilot-evidence/appimage-toolset-members.txt
+          tar -tzf "$RUNNER_TEMP/nsis-pilot.tar.gz" > pilot-evidence/nsis-toolset-members.txt
+      - name: Build isolated static-runtime AppImage
+        if: runner.os == 'Linux'
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: pnpm exec electron-builder --linux AppImage --x64 --config.toolsets.appimage=1.0.3 --publish never
+      - name: Inspect actual AppImage without executing
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, pathlib, re, struct, subprocess
+          files = list(pathlib.Path("release").glob("*.AppImage"))
+          if len(files) != 1:
+              raise SystemExit("Expected exactly one pilot AppImage")
+          image = files[0]
+          size = image.stat().st_size
+          with image.open("rb") as f:
+              prefix = f.read(16 * 1024 * 1024)
+          offsets = []
+          for match in re.finditer(b"hsqs", prefix):
+              offset = match.start()
+              if offset + 96 > len(prefix):
+                  continue
+              major, minor = struct.unpack_from("<HH", prefix, offset + 28)
+              used = struct.unpack_from("<Q", prefix, offset + 40)[0]
+              block = struct.unpack_from("<I", prefix, offset + 12)[0]
+              if (major, minor) == (4, 0) and block in (4096,8192,16384,32768,65536,131072,262144,524288,1048576) and 96 <= used <= size-offset:
+                  offsets.append(offset)
+          if len(offsets) != 1 or prefix[:4] != b"\x7fELF":
+              raise SystemExit("Expected unique bounded SquashFS offset")
+          offset = offsets[0]
+          command = ["unsquashfs", "-o", str(offset)]
+          listing = subprocess.check_output(command + ["-ls", str(image)], timeout=90, text=True)
+          pathlib.Path("pilot-evidence/appimage-payload-members.txt").write_text(listing)
+          names = ["libXss.so.1", "libXtst.so.6", "libappindicator.so.1", "libgconf-2.so.4", "libindicator.so.7", "libnotify.so.4"]
+          records = []
+          for name in names:
+              expected = "squashfs-root/usr/lib/" + name
+              matches = [line for line in listing.splitlines() if line == expected or line.startswith(expected + ".")]
+              record = {"historicalName": name, "listedMembers": matches}
+              if expected in matches:
+                  raw = subprocess.check_output(command + ["-cat", str(image), "usr/lib/" + name], timeout=60)
+                  record.update(bytes=len(raw), sha256=hashlib.sha256(raw).hexdigest())
+              records.append(record)
+          with image.open("rb") as f:
+              sha = hashlib.file_digest(f, "sha256").hexdigest()
+          report = {"schemaVersion":1, "candidateOnly":True, "legalApproval":False, "publicReleaseApproved":False, "toolset":"1.0.3", "filename":image.name, "bytes":size, "sha256":sha, "runtimeSha256":hashlib.sha256(prefix[:offset]).hexdigest(), "squashfsOffset":offset, "historicalLibraryPaths":records}
+          pathlib.Path("pilot-evidence/appimage-payload.json").write_text(json.dumps(report, indent=2)+"\n")
+          print(json.dumps(report, indent=2))
+          PY
+      - name: Build isolated NSIS unified toolset
+        if: runner.os == 'Windows'
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: pnpm exec electron-builder --win nsis --x64 --config.toolsets.nsis=1.2.1 --publish never
+      - name: Record NSIS pilot identity
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force pilot-evidence | Out-Null
+          $files = @(Get-ChildItem release -Filter '*.exe' -File)
+          if ($files.Count -ne 1) { throw 'Expected exactly one NSIS pilot installer' }
+          $f = $files[0]
+          @{schemaVersion=1;candidateOnly=$true;legalApproval=$false;publicReleaseApproved=$false;toolset='1.2.1';filename=$f.Name;bytes=$f.Length;sha256=(Get-FileHash -Algorithm SHA256 $f.FullName).Hash.ToLowerInvariant()} | ConvertTo-Json | Set-Content -Encoding utf8 pilot-evidence/nsis-payload.json
+      - name: Preserve isolated pilot evidence (NOT Release)
+        uses: actions/upload-artifact@v7
+        with:
+          name: voxnelo-native-toolset-pilot-${{ matrix.target }}-NOT-RELEASE
+          path: |
+            pilot-evidence/
+            release/*.AppImage
+            release/*.exe
+          retention-days: 14
+          if-no-files-found: error

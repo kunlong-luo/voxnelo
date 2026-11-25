@@ -81,3 +81,7 @@ The actual candidate DEB and Windows ASARs contain 18 root packages, not just th
 ## Native-library audit boundary
 
 JS registry and Python advisory checks do not cover copied AppImage ELF code. The [native evidence and security follow-up](../release/V1.0.4-REGISTRY-AUDIT.md) documents the six historical distributor-package leads, libXtst security risk and the opt-in local read-only package checker. Original binary/copyright/source verification and applicable security remediation are pending. HOLD.
+
+## Isolated toolset pilot
+
+Pinned electron-builder 26.18.0 upstream source supports beta AppImage 1.0.3 and NSIS 1.2.1. Exact archive metadata and scoped read-only pilot plan are in the [canonical audit ledger](../release/V1.0.4-REGISTRY-AUDIT.md). The static runtime still copies native libraries; actual payload and source/security verification remain required. Current defaults unchanged. HOLD.
