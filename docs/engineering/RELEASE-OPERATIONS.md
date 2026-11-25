@@ -114,3 +114,7 @@ PR #287、#289 已合并，旧 Zipformer 原生工程测试三平台复验通过
 ## Linux x64 原生补丁构建要求（v1.0.4，待 CI 验证）
 
 Linux 本地打包统一使用 `pnpm pack:linux`。构建机需要 Python 3.10+、curl、7z（Ubuntu/Debian 的 p7zip-full）、dpkg-deb 和 squashfs-tools（unsquashfs）；它们仅是构建工具，不是新增的用户运行依赖。同版本 AppImage 已存在时，请先移动到 `release/` 之外保存，再重新构建；脚本不会覆盖旧文件。不要直接调用 electron-builder 的 Linux AppImage 目标绕过补丁准备。脚本检查已审计的 electron-builder 26.18.0、固定历史工具集和官方修复版 DEB 的哈希，使用临时工具集和独占版权声明文件，完成后清理；输入缺失、哈希不符或最终 AppImage 载荷不符直接失败，不回退到旧库。构建后由 `check-desktop-package.mts` 再次检查成品。CI、ASR 候选、通用发行候选、私有草稿及 v1.0.4 审核流水线均接入同一路径。当前改动待 CI，旧候选与旧 Draft 不能作为补丁集成通过的证据；重新生成完整三平台候选及完成权利、真实设备验收后方可发布。详见 [发布审核台账](../release/V1.0.4-REGISTRY-AUDIT.md)。
+
+## v1.0.4 审核包 ASAR 许可门禁（待验证）
+
+拟将现有审核工作流中的 Registry 核对移到 Linux DEB 实际安装之后：确认 dpkg 所属的 /opt/Voxnelo/resources/app.asar 是普通文件，与 release/linux-unpacked/resources/app.asar 完整字节一致，再运行 pnpm license:audit:registry --compare-notices --packaged-asar，传入实际安装的文件路径。缺失、符号链接、字节不匹配、上游归档或许可证错误均须使任务失败，禁止跳过。保留原两个 JSON 证据文件与候选清单，仍只有一次 Registry 在线核查。合并工作流变更会触发现有 main 审核构建，不创建 Release 或标签。必须在新源码候选完成后复核报告、归档和安装文件哈希；不能用旧候选的物理验收替代新字节证据。当前变更尚待 CI 与实际审核构建验证。完整原生库、模型、安装器法律义务与真人验收仍待完成，保持 HOLD。
