@@ -8,6 +8,8 @@ Voxnelo 是一款开源、本地优先的英语口语跟读桌面应用。听一
 
 **源码版本：** `1.0.4`（尚未发布的候选源码） · **最新公开发行：** `v1.0.3` 正式免签名版 · **开发者：** Leo Luo · **许可证：** [MIT](LICENSE)
 
+**维护者审核专用：** v1.0.4 仍处于发布冻结（HOLD）。当前选定的未签名审核构建为 [run 45578438677](https://github.com/kunlong-luo/voxnelo/actions/runs/45578438677)，源码 `e35cc3a`，不是公开发行版，也不是旧私有 Draft。当前门禁与精确候选实机测试步骤见[发布冻结页](docs/release/V1.0.4-RELEASE-FREEZE.md)和[实机证据台账](docs/release/V1.0.4-PHYSICAL-DEVICE-EVIDENCE.md)。旧版本基础使用确认不能替代本批安装文件验收。普通用户仍应从公开 Releases 页面下载。
+
 ## 已实现的基础功能
 
 - **40 条入门短句 + 240 条待审校扩展草稿**：入门句包含中文翻译、话题、难度及 IPA 教学参考；扩展语料分场景提供文本/翻译，但标记为待审核、暂不提供未经核验的 IPA。总计 280 条，不应视为全部通过语言学或版权审核。
@@ -47,7 +49,7 @@ sudo apt install ./Voxnelo.deb
 
 ## 实时听写与隐私
 
-**Linux 默认使用 Moonshine Medium Streaming 进行本地实时英语听写。** 公开的 v1.0.3 在 Windows 和 macOS 只承诺基础学习、录音回听及相应打包检查；公开的 v1.0.3 **尚未接入**这两个平台的 Moonshine 本机推理。待发布 v1.0.4 源码已增加 Windows x64 / macOS 15+ Apple Silicon 的用户主动下载安装与本地推理能力，但不等于已有真人麦克风声学验收。 标准安装包不内置第三方模型或原生推理 SDK。首次使用请在应用「离线模型管理」页主动点击「安装 Moonshine 离线识别模型」，由应用下载安装固定版本的本机 SDK/模型并校验 SHA-256。首次安装需要网络、Python 3 + venv 和足够磁盘空间；公开 v1.0.3 仅支持 Linux x64，v1.0.4 候选源码另外面向 Windows x64 和 macOS 15+ ARM64；之后在本机识别，不自动切换回 Zipformer。维护者已于 2026-10-25 确认所需人工测试通过；不同口音、噪声条件下的可复算 WER 与精确延迟指标尚无完整公开证据，不能冒充量化验收。当前**没有自动发音评分或逐词纠音**。详见 [Moonshine 安装说明](docs/engineering/MOONSHINE-LINUX-INSTALLATION.md)。
+**Linux 默认使用 Moonshine Medium Streaming 进行本地实时英语听写。** 公开的 v1.0.3 在 Windows 和 macOS 只承诺基础学习、录音回听及相应打包检查；公开的 v1.0.3 **尚未接入**这两个平台的 Moonshine 本机推理。待发布 v1.0.4 源码已增加 Windows x64 / macOS 15+ Apple Silicon 的用户主动下载安装与本地推理能力，但不等于已有真人麦克风声学验收。 标准安装包不内置第三方模型或原生推理 SDK。首次使用请在应用「离线模型管理」页主动点击「安装 Moonshine 离线识别模型」，由应用下载安装固定版本的本机 SDK/模型并校验 SHA-256。首次安装需要网络、Python 3 + venv 和足够磁盘空间；公开 v1.0.3 仅支持 Linux x64，v1.0.4 候选源码另外面向 Windows x64 和 macOS 15+ ARM64；之后在本机识别，不自动切换回 Zipformer。维护者于 2026-10-25 确认的是历史版本的基础使用；最新 v1.0.4 精确候选的真人麦克风验收仍待完成，不同口音、噪声下的可复算 WER 与可见字幕延迟尚无完整证据。当前**没有自动发音评分或逐词纠音**。详见 [Moonshine 安装说明](docs/engineering/MOONSHINE-LINUX-INSTALLATION.md)。
 
 学习记录和收藏保存在当前设备上，没有 Voxnelo 账号及跨设备同步。只有在授权后才会使用麦克风；录音仅供当前句子临时回听，Voxnelo 不会上传跟读录音。如果在网页中尝试语音识别，浏览器提供的服务可能具有不同的联网和隐私行为。
 
