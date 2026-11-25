@@ -312,13 +312,21 @@ jobs:
           if not library.is_file() or library.is_symlink() or hashlib.sha256(library.read_bytes()).hexdigest()!=report["patchedElfSha256"]:
               raise SystemExit("Extracted app directory library mismatch")
           PY
+          # Static linkage and loader tracing supplement /proc mapping; no preload.
+          readelf -d "$RUNNER_TEMP/voxnelo-appdir/voxnelo" > patched-evidence/app-executable-dynamic.txt
+          grep -nE 'LD_LIBRARY_PATH|exec |no-sandbox' "$RUNNER_TEMP/voxnelo-appdir/AppRun" > patched-evidence/launcher-library-path.txt || true
           xvfb-run -a python3 - <<'PY'
-          import hashlib, json, os, pathlib, signal, subprocess, tempfile, time
+          import json, os, pathlib, signal, subprocess, tempfile, time
           root=pathlib.Path(os.environ["RUNNER_TEMP"])/"voxnelo-appdir"
           expected=str(root/"usr/lib/libXtst.so.6")
-          report={"schemaVersion":1,"fullAppLaunchTested":False,"windowObserved":False,"rendererObserved":False,"patchedLibraryMapped":False,"physicalMicTested":False,"legalApproval":False,"publicReleaseApproved":False,"scope":"Extracted AppDir launcher on Ubuntu 22.04 Xvfb; not FUSE mount or real desktop"}
+          report={"schemaVersion":2,"fullAppLaunchTested":False,"windowObserved":False,"rendererObserved":False,"patchedLibraryMapped":False,"patchedLibraryLoaderInitObserved":False,"otherXtstPathObserved":False,"physicalMicTested":False,"legalApproval":False,"publicReleaseApproved":False,"scope":"Extracted AppDir launcher on Ubuntu 22.04 Xvfb; no forced preload, not FUSE mount or real desktop"}
+          observed=set()
+          map_errors=set()
+          readable=set()
+          seen=set()
           with tempfile.TemporaryDirectory(prefix="voxnelo-app-profile-") as private:
-              env=dict(os.environ,HOME=private,XDG_CONFIG_HOME=private+"/config",XDG_DATA_HOME=private+"/data",XDG_CACHE_HOME=private+"/cache",APPDIR=str(root),APPIMAGE=str(root/"AppRun"),APPIMAGE_SILENT_INSTALL="1")
+              trace=pathlib.Path(private)/"loader-trace"
+              env=dict(os.environ,HOME=private,XDG_CONFIG_HOME=private+"/config",XDG_DATA_HOME=private+"/data",XDG_CACHE_HOME=private+"/cache",APPDIR=str(root),APPIMAGE=str(root/"AppRun"),APPIMAGE_SILENT_INSTALL="1",LD_DEBUG="libs",LD_DEBUG_OUTPUT=str(trace))
               with tempfile.TemporaryFile() as log:
                   proc=subprocess.Popen([str(root/"AppRun")],cwd=str(root),env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
                   try:
@@ -326,25 +334,36 @@ jobs:
                           if proc.poll() is not None:
                               report["launcherExitCode"]=proc.returncode
                               break
-                          members=[]
                           for entry in pathlib.Path("/proc").iterdir():
                               if not entry.name.isdigit(): continue
                               try:
-                                  if os.getpgid(int(entry.name))!=proc.pid: continue
+                                  pid=int(entry.name)
+                                  if os.getpgid(pid)!=proc.pid: continue
                                   cmd=(entry/"cmdline").read_bytes()
-                                  maps=(entry/"maps").read_text(errors="replace")
-                                  members.append((cmd,maps))
-                              except (OSError,ProcessLookupError):
+                              except OSError:
                                   continue
-                          report["rendererObserved"]|=any(b"--type=renderer" in cmd for cmd,_ in members)
-                          report["patchedLibraryMapped"]|=any(any(line.endswith(" "+expected) for line in maps.splitlines()) for _,maps in members)
+                              seen.add(pid)
+                              report["rendererObserved"]|=b"--type=renderer" in cmd
+                              # Count unreadable maps separately; do not discard cmdline.
+                              try:
+                                  maps=(entry/"maps").read_text(errors="replace")
+                                  readable.add(pid)
+                              except OSError as exc:
+                                  map_errors.add((pid,type(exc).__name__))
+                                  continue
+                              for line in maps.splitlines():
+                                  parts=line.split(maxsplit=5)
+                                  if len(parts)==6 and "libXtst.so" in parts[5]:
+                                      observed.add(parts[5])
                           windows=subprocess.run(["xwininfo","-root","-tree"],capture_output=True,text=True,timeout=5)
                           report["windowObserved"]|=windows.returncode==0 and any('"Voxnelo' in line for line in windows.stdout.splitlines())
+                          report["patchedLibraryMapped"]|=expected in observed
                           if all(report[k] for k in ("rendererObserved","patchedLibraryMapped","windowObserved")):
-                              report["fullAppLaunchTested"]=True
                               break
                           time.sleep(0.5)
                   finally:
+                      # Capture exit before cleanup; cleanup-induced messages are not startup failures.
+                      report["launcherAliveBeforeCleanup"]=proc.poll() is None
                       try: os.killpg(proc.pid,signal.SIGTERM)
                       except ProcessLookupError: pass
                       try: proc.wait(timeout=5)
@@ -352,12 +371,45 @@ jobs:
                           os.killpg(proc.pid,signal.SIGKILL)
                           proc.wait(timeout=5)
                       log.seek(0)
-                      # Retain only a bounded diagnostic; fresh synthetic profile, no user data.
                       pathlib.Path("patched-evidence/app-launch-diagnostic.txt").write_bytes(log.read(65536))
+                  lines=[]
+                  truncated=False
+                  # Loader initialization is stronger than a search-path string.
+                  # Inspect only generated glibc per-process trace files, with bounds.
+                  traces=sorted(pathlib.Path(private).glob("loader-trace.*"))
+                  if len(traces)>128:
+                      truncated=True
+                  for path in traces[:128]:
+                      if not path.is_file() or path.is_symlink(): continue
+                      with path.open("r",errors="replace") as stream:
+                          content=stream.read(2*1024*1024+1)
+                      if len(content)>2*1024*1024:
+                          truncated=True
+                      for line in content[:2*1024*1024].splitlines():
+                          if "libXtst.so" in line:
+                              if len(lines)<1024: lines.append(line[:1024])
+                              else: truncated=True
+                              if "calling init:" in line:
+                                  loaded=line.split("calling init:",1)[1].strip()
+                                  if loaded==expected:
+                                      report["patchedLibraryLoaderInitObserved"]=True
+                                  elif loaded.startswith("/"):
+                                      report["otherXtstPathObserved"]=True
+                  pathlib.Path("patched-evidence/xtst-loader-trace.txt").write_text("\n".join(lines)+"\n")
+                  report["loaderTraceFiles"]=len(traces)
+                  report["loaderTraceTruncated"]=truncated
+          report["observedXtstMapPaths"]=sorted(observed)
+          report["mapReadableProcessCount"]=len(readable)
+          report["observedProcessCount"]=len(seen)
+          report["mapReadErrorCount"]=len(map_errors)
+          report["otherXtstPathObserved"]|=any(path!=expected for path in observed)
+          report["fullAppLaunchTested"]=all(report[k] for k in ("windowObserved","rendererObserved","launcherAliveBeforeCleanup"))
+          report["patchedLibraryUseObserved"]=report["patchedLibraryMapped"] or report["patchedLibraryLoaderInitObserved"]
+          report["verdict"]="patched-use-observed" if report["fullAppLaunchTested"] and report["patchedLibraryUseObserved"] and not report["otherXtstPathObserved"] else "incomplete"
           pathlib.Path("patched-evidence/app-launch-probe.json").write_text(json.dumps(report,indent=2)+"\n")
           print(json.dumps(report,indent=2))
-          if not report["fullAppLaunchTested"]:
-              raise SystemExit("Full extracted AppDir launch evidence incomplete")
+          if report["verdict"]!="patched-use-observed":
+              raise SystemExit("Full extracted AppDir launch/library-use evidence incomplete")
           PY
       - name: Preserve isolated proof, even when failed
         if: always()
