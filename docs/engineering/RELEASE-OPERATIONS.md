@@ -110,3 +110,7 @@ A subsequent merge attempt was refused by required status checks. The raw PR met
 ## 发布冲刺复验记录
 
 PR #287、#289 已合并，旧 Zipformer 原生工程测试三平台复验通过；两次真实上游归档审核的脱敏 JSON 字节相同。仍不得替代最终候选安装包的法律审核和物理麦克风验收。详见 [发布冲刺清单](../release/V1.0.4-RELEASE-FREEZE.md) 与 [审核评分](../release/V1.0.4-REGISTRY-AUDIT.md)。HOLD。
+
+## Linux x64 原生补丁构建要求（v1.0.4，待 CI 验证）
+
+Linux 本地打包统一使用 `pnpm pack:linux`。构建机需要 Python 3.10+、curl、7z（Ubuntu/Debian 的 p7zip-full）、dpkg-deb 和 squashfs-tools（unsquashfs）；它们仅是构建工具，不是新增的用户运行依赖。同版本 AppImage 已存在时，请先移动到 `release/` 之外保存，再重新构建；脚本不会覆盖旧文件。不要直接调用 electron-builder 的 Linux AppImage 目标绕过补丁准备。脚本检查已审计的 electron-builder 26.18.0、固定历史工具集和官方修复版 DEB 的哈希，使用临时工具集和独占版权声明文件，完成后清理；输入缺失、哈希不符或最终 AppImage 载荷不符直接失败，不回退到旧库。构建后由 `check-desktop-package.mts` 再次检查成品。CI、ASR 候选、通用发行候选、私有草稿及 v1.0.4 审核流水线均接入同一路径。当前改动待 CI，旧候选与旧 Draft 不能作为补丁集成通过的证据；重新生成完整三平台候选及完成权利、真实设备验收后方可发布。详见 [发布审核台账](../release/V1.0.4-REGISTRY-AUDIT.md)。
