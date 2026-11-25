@@ -70,7 +70,7 @@ describe('Voxnelo V0.1 主进程安全守卫', () => {
     });
     it('rejects same-origin subframes, missing frame metadata and inconsistent security origins', () => {
       expect(allowsAudioPermissionRequest(top,'media',{...trustedRequest,isMainFrame:false},options)).toBe(false);
-      expect(allowsAudioPermissionRequest(top,'media',{...trustedRequest,isMainFrame:undefined},options)).toBe(false);
+      expect(allowsAudioPermissionRequest(top,'media',{mediaTypes:trustedRequest.mediaTypes,requestingUrl:top},options)).toBe(false);
       expect(allowsAudioPermissionRequest(top,'media',{...trustedRequest,securityOrigin:'https://attacker.example'},options)).toBe(false);
       expect(allowsAudioPermissionRequest(top,'media',{...trustedRequest,securityOrigin:'voxnelo://app'},options)).toBe(true);
     });
@@ -87,7 +87,7 @@ describe('Voxnelo V0.1 主进程安全守卫', () => {
       expect(allowsAudioPermissionCheck(top,'media','voxnelo://app',{...details,isMainFrame:false},options)).toBe(false);
       expect(allowsAudioPermissionCheck(top,'media','voxnelo://app',{...details,mediaType:'video'},options)).toBe(false);
       expect(allowsAudioPermissionCheck(top,'media','voxnelo://app',{...details,mediaType:'unknown'},options)).toBe(false);
-      expect(allowsAudioPermissionCheck(top,'media','voxnelo://app',{...details,mediaType:undefined},options)).toBe(false);
+      expect(allowsAudioPermissionCheck(top,'media','voxnelo://app',{isMainFrame:true,requestingUrl:top,securityOrigin:'voxnelo://app'},options)).toBe(false);
       expect(allowsAudioPermissionCheck(top,'media','voxnelo://app',{...details,mediaType:'unexpected'},options)).toBe(false);
       expect(allowsAudioPermissionCheck(top,'display-capture','voxnelo://app',details,options)).toBe(false);
       expect(allowsAudioPermissionCheck(top,'media','voxnelo://app',{...details,requestingUrl:'https://attacker.example'},options)).toBe(false);
