@@ -20,7 +20,9 @@ const pinnedWheelDigest = (platform: string): string => {
   return hit[1];
 };
 const example = (platform: string) => ({
-  installerSha256: 'a'.repeat(64),
+  installerSha256: platform === 'linux-x64' ? 'c4b3a31270259a8f21a91347dfefc635d115eaf0a9513a991f6fef4cfd0b706f'
+    : platform === 'windows-x64' ? '981fec2f95ba2d6b46171b44a74583b5374c7481c70a350bc09cfdd9e060a714'
+    : '3ea038a9062c2bd95417ceaa70f074392031291c86e96768f84dd80b8564401d',
   osVersion: 'test-os',
   microphoneCategory: 'test-physical-microphone',
   sdkVersion: '0.0.65',
@@ -49,7 +51,7 @@ const example = (platform: string) => ({
 const filledSyntheticFixture = () => ({
   schemaVersion: 2,
   version: '1.0.4',
-  sourceCommit: 'b'.repeat(40),
+  sourceCommit: 'e35cc3a7ec2d6c21625ec4d99449e01605b1e29a',
   corpusDistinctSentences: 20,
   platforms: Object.fromEntries(PHYSICAL_MIC_TARGETS.map(target => [target, example(target)])),
 });
@@ -237,5 +239,21 @@ describe('v1.0.4 physical human microphone evidence intake (NOT release approval
     const fake = { ...filledSyntheticFixture(), releaseApproved: true };
     expect(auditV104PhysicalMicEvidence(fake).releaseApproved).toBe(false);
     expect(auditV104PhysicalMicEvidence(null).structurallyReviewable).toBe(false);
+  });
+  it('accepts either exact Linux installer but rejects stale source, swapped platforms and fabricated hashes', () => {
+    const input = filledSyntheticFixture();
+    input.platforms['linux-x64']!.installerSha256 = '67705fb5cd3990bbcfe2a77b93651903398e1928423b700847887a77bb0bbac9';
+    expect(auditV104PhysicalMicEvidence(input).blockers).toEqual([]);
+    input.sourceCommit = '3cebc475e3918db89ee503a5a85ffae16a885b3d';
+    input.platforms['windows-x64']!.installerSha256 = 'c4b3a31270259a8f21a91347dfefc635d115eaf0a9513a991f6fef4cfd0b706f';
+    input.platforms['macos-arm64-15plus']!.installerSha256 = 'a'.repeat(64);
+    input.platforms['linux-x64']!.installerSha256 = '766c27b844d9165fe3112cd592112e022eac0cc85a2721f33b2dad79cea59b0f';
+    const audit = auditV104PhysicalMicEvidence(input);
+    expect(audit.blockers.join(' ')).toContain('sourceCommit');
+    for (const target of PHYSICAL_MIC_TARGETS) {
+      expect(audit.blockers.join(' ')).toContain(target + '.installerSha256');
+    }
+    expect(audit.structurallyReviewable).toBe(false);
+    expect(audit.releaseApproved).toBe(false);
   });
 });

@@ -44,6 +44,18 @@ export const PHYSICAL_MIC_TARGETS = [
   'linux-x64', 'windows-x64', 'macos-arm64-15plus',
 ] as const;
 
+// Exact, independently verified review-only run 45578438677, not HEAD or
+// historical Draft. Update only after a newly selected candidate's byte audit.
+const CURRENT_REVIEW_SOURCE = 'e35cc3a7ec2d6c21625ec4d99449e01605b1e29a';
+const CURRENT_INSTALLER_DIGESTS: Readonly<Record<typeof PHYSICAL_MIC_TARGETS[number], readonly string[]>> = {
+  'linux-x64': [
+    '67705fb5cd3990bbcfe2a77b93651903398e1928423b700847887a77bb0bbac9',
+    'c4b3a31270259a8f21a91347dfefc635d115eaf0a9513a991f6fef4cfd0b706f', // both DEB filenames have identical bytes
+  ],
+  'windows-x64': ['981fec2f95ba2d6b46171b44a74583b5374c7481c70a350bc09cfdd9e060a714'],
+  'macos-arm64-15plus': ['3ea038a9062c2bd95417ceaa70f074392031291c86e96768f84dd80b8564401d'],
+};
+
 export type PhysicalMicEvidenceAudit = {
   blockers: string[];
   // This invariant must not be reused as a release-approval switch.
@@ -70,7 +82,9 @@ export function auditV104PhysicalMicEvidence(input: unknown): PhysicalMicEvidenc
   if (data.schemaVersion !== 2 || data.version !== '1.0.4') {
     blockers.push('schemaVersion/version: v1.0.4 evidence schema 2 required');
   }
-  if (!isCommit(data.sourceCommit)) blockers.push('sourceCommit: full source SHA required');
+  if (!isCommit(data.sourceCommit) || data.sourceCommit !== CURRENT_REVIEW_SOURCE) {
+    blockers.push('sourceCommit: must match the selected v1.0.4 review candidate');
+  }
   if (!isCount(data.corpusDistinctSentences) || data.corpusDistinctSentences < 20) {
     blockers.push('corpusDistinctSentences: at least 20 different consented human sentences required overall');
   }
@@ -85,7 +99,10 @@ export function auditV104PhysicalMicEvidence(input: unknown): PhysicalMicEvidenc
   for (const platform of PHYSICAL_MIC_TARGETS) {
     const src = row(platforms[platform]);
     const prefix = platform + '.';
-    if (!isSha256(src.installerSha256)) blockers.push(prefix + 'installerSha256: exact tested installer digest required');
+    if (!isSha256(src.installerSha256) || typeof src.installerSha256 !== 'string' ||
+        !CURRENT_INSTALLER_DIGESTS[platform].includes(src.installerSha256)) {
+      blockers.push(prefix + 'installerSha256: must match the selected candidate for this platform');
+    }
     requireText(prefix + 'osVersion', src.osVersion);
     requireText(prefix + 'microphoneCategory', src.microphoneCategory);
     if (src.sdkVersion !== '0.0.65') {
