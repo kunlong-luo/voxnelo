@@ -125,115 +125,131 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-  distro-source-pilot:
-    # One-off public archive evidence; remove after review, not a release job.
+  patched-appimage-pilot:
+    # Temporary same-repository review branch only; no production toolset change.
     if: github.event_name == 'pull_request' && github.head_ref == 'audit/v104-distro-source-pilot-20261125' && github.event.pull_request.head.repo.full_name == github.repository
-    name: Historical distro bytes and patched libXtst candidate (NOT Release)
+    name: Pinned patched libXtst AppImage pilot (NOT Release)
     runs-on: ubuntu-22.04
-    timeout-minutes: 12
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Obtain exact historical public archive filenames without installing
-        shell: bash
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+        with:
+          version: 12.22.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 26
+      - name: Build unchanged application
         run: |
-          set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/voxnelo-distro" distro-evidence
-          python3 - <<'PY'
-          import json, os, pathlib, subprocess, sys
-          sys.path.insert(0, "scripts")
-          from audit_appimage_distro_packages import PACKAGES
-          root = pathlib.Path(os.environ["RUNNER_TEMP"]) / "voxnelo-distro"
-          pool = ["libx/libxss", "libx/libxtst", "liba/libappindicator", "g/gconf", "libi/libindicator", "libn/libnotify"]
-          hosts = ["https://old-releases.ubuntu.com/ubuntu/pool/main/", "https://archive.ubuntu.com/ubuntu/pool/main/", "https://old-releases.ubuntu.com/ubuntu/pool/universe/"]
-          rows = []
-          for spec, subdir in zip(PACKAGES, pool):
-              name, version, _, _ = spec
-              filename = f"{name}_{version}_amd64.deb"
-              row = {"filename":filename,"attempts":[],"downloaded":False}
-              for host in hosts:
-                  url = host + subdir + "/" + filename
-                  target = root / filename
-                  result = subprocess.run(["curl","--fail","--silent","--show-error","--location","--proto","=https","--proto-redir","=https","--connect-timeout","8","--max-time","20","--max-filesize","4194304",url,"-o",str(target)],check=False)
-                  row["attempts"].append({"url":url,"exit":result.returncode})
-                  if result.returncode == 0 and 0 < target.stat().st_size <= 4194304:
-                      row["downloaded"] = True
-                      break
-                  target.unlink(missing_ok=True)
-              rows.append(row)
-          pathlib.Path("distro-evidence/downloads.json").write_text(json.dumps(rows,indent=2)+"\n")
-          PY
-          result=0
-          python3 scripts/audit_appimage_distro_packages.py "$RUNNER_TEMP/voxnelo-distro" > distro-evidence/legacy-comparison.json || result=$?
-          printf '%s\n' "$result" > distro-evidence/legacy-comparison.exit
-          cat distro-evidence/legacy-comparison.json
-          # A partial evidence report is deliberately preserved, not a gate pass.
-          test -s distro-evidence/legacy-comparison.json
-      - name: Compare Ubuntu 18.04-era libXtst with static pilot bytes
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/voxnelo-pilot-distro"
-          target="$RUNNER_TEMP/voxnelo-pilot-distro/libxtst6_1.2.3-1_amd64.deb"
-          if curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --max-time 30 --max-filesize 4194304 'https://old-releases.ubuntu.com/ubuntu/pool/main/libx/libxtst/libxtst6_1.2.3-1_amd64.deb' -o "$target"; then
-            python3 - <<'PY'
-          import json, os, pathlib, sys
-          sys.path.insert(0,"scripts")
-          from audit_appimage_distro_packages import inspect
-          root=pathlib.Path(os.environ["RUNNER_TEMP"])/"voxnelo-pilot-distro"
-          result=inspect(root,("libxtst6","1.2.3-1","libXtst.so.6.1.0","a3343e51790f219fbb3cb48bc1ba267b4727d9e9277e43cdfc081deb14d910b2"))
-          result.update(legalApproval=False,distributorSignatureVerified=False)
-          pathlib.Path("distro-evidence/static-pilot-libxtst.json").write_text(json.dumps(result,indent=2)+"\n")
-          PY
-          else
-            printf '%s\n' '{"status":"download-failed","legalApproval":false,"distributorSignatureVerified":false}' > distro-evidence/static-pilot-libxtst.json
-          fi
-          cat distro-evidence/static-pilot-libxtst.json
-      - name: Inspect patched Jammy package via APT authenticated indexes
+          pnpm install --frozen-lockfile
+          pnpm build
+          pnpm asr:verify-real
+      - name: Verify pinned patched package and prepare isolated toolset
         shell: bash
         run: |
           set -euo pipefail
           sudo apt-get update -o APT::Update::Error-Mode=any
-          apt-cache policy libxtst6:amd64 > distro-evidence/jammy-apt-policy.txt
-          version="$(apt-cache policy libxtst6:amd64 | awk '/Candidate:/ {print $2}')"
-          test -n "$version"
-          dpkg --compare-versions "$version" ge '2:1.2.3-1ubuntu0.22.04.1'
-          mkdir -p "$RUNNER_TEMP/voxnelo-patched-distro"
-          (cd "$RUNNER_TEMP/voxnelo-patched-distro" && apt-get download "libxtst6:amd64=$version")
-          apt-cache show "libxtst6:amd64=$version" > distro-evidence/jammy-package-index.txt
+          sudo apt-get install -y --no-install-recommends p7zip-full squashfs-tools binutils
+          mkdir -p "$RUNNER_TEMP/voxnelo-patched-toolset" "$RUNNER_TEMP/voxnelo-patched-deb" patched-evidence
+          curl --fail --silent --show-error --location --proto '=https' --proto-redir '=https' --max-time 120 --max-filesize 4194304 'https://github.com/electron-userland/electron-builder-binaries/releases/download/appimage-12.0.1/appimage-12.0.1.7z' -o "$RUNNER_TEMP/voxnelo-legacy-toolset.7z"
+          printf '%s  %s\n' 'd12ff7eb8f1d1ec4652ca5237a7fbdca33acc0c758045636feca62dc6ecb8ec4' "$RUNNER_TEMP/voxnelo-legacy-toolset.7z" | sha256sum -c -
+          7z x -y "-o$RUNNER_TEMP/voxnelo-patched-toolset" "$RUNNER_TEMP/voxnelo-legacy-toolset.7z"
+          version='2:1.2.3-1ubuntu0.22.04.1'
+          apt-cache show "libxtst6:amd64=$version" > patched-evidence/apt-package-index.txt
+          (cd "$RUNNER_TEMP/voxnelo-patched-deb" && apt-get download "libxtst6:amd64=$version")
           python3 - <<'PY'
-          import hashlib, json, os, pathlib, re, subprocess, sys
+          import hashlib, json, os, pathlib, re, sys
           sys.path.insert(0,"scripts")
-          from audit_appimage_distro_packages import inspect, selected_members, dpkg_output
-          root=pathlib.Path(os.environ["RUNNER_TEMP"])/"voxnelo-patched-distro"
-          files=list(root.glob("*.deb"))
-          if len(files)!=1 or files[0].stat().st_size>4194304:
-              raise SystemExit("Expected one bounded APT package")
+          from audit_appimage_distro_packages import dpkg_output, selected_members
+          temp=pathlib.Path(os.environ["RUNNER_TEMP"])
+          files=list((temp/"voxnelo-patched-deb").glob("*.deb"))
+          if len(files)!=1 or files[0].stat().st_size!=13436:
+              raise SystemExit("Expected exact previously measured patched archive")
           p=files[0]
-          raw=p.read_bytes()
-          sha=hashlib.sha256(raw).hexdigest()
-          index=pathlib.Path("distro-evidence/jammy-package-index.txt").read_text()
-          if sha not in re.findall(r"^SHA256: ([a-f0-9]{64})$",index,re.M):
-              raise SystemExit("Downloaded archive differs from APT metadata")
-          fields={field:dpkg_output(["--field",str(p),field]).decode().strip() for field in ("Package","Version","Architecture","Source")}
-          if fields["Package"]!="libxtst6" or fields["Architecture"]!="amd64":
-              raise SystemExit("Unexpected APT package identity")
-          subprocess.run(["dpkg","--compare-versions",fields["Version"],"ge","2:1.2.3-1ubuntu0.22.04.1"],check=True)
+          sha=hashlib.sha256(p.read_bytes()).hexdigest()
+          if sha!="1cda20d06d364fbe534755cfbe60e387fcecac537e7ab5b8c7a9e83bffd911f8" or sha not in re.findall(r"^SHA256: ([a-f0-9]{64})$",pathlib.Path("patched-evidence/apt-package-index.txt").read_text(),re.M):
+              raise SystemExit("Patched archive differs from pinned bytes or APT index")
+          fields={k:dpkg_output(["--field",str(p),k]).decode().strip() for k in ("Package","Version","Architecture")}
+          if fields!={"Package":"libxtst6","Version":"2:1.2.3-1ubuntu0.22.04.1","Architecture":"amd64"}:
+              raise SystemExit("Unexpected package identity")
           elf="usr/lib/x86_64-linux-gnu/libXtst.so.6.1.0"
-          copyright="usr/share/doc/libxtst6/copyright"
-          members=selected_members(dpkg_output(["--fsys-tarfile",str(p)]),{elf,copyright})
-          # Retain original text for reviewer, not a production package or license approval.
-          pathlib.Path("distro-evidence/jammy-libxtst-copyright.txt").write_bytes(members[copyright])
-          report={"schemaVersion":1,"fields":fields,"archiveSha256":sha,"archiveBytes":len(raw),"aptIndexSha256Matched":True,"elfSha256":hashlib.sha256(members[elf]).hexdigest(),"elfBytes":len(members[elf]),"copyrightSha256":hashlib.sha256(members[copyright]).hexdigest(),"legalApproval":False,"candidateOnly":True,"productionReplacement":False}
-          pathlib.Path("distro-evidence/jammy-patched-libxtst.json").write_text(json.dumps(report,indent=2)+"\n")
+          notice="usr/share/doc/libxtst6/copyright"
+          members=selected_members(dpkg_output(["--fsys-tarfile",str(p)]),{elf,notice})
+          digest=lambda b:hashlib.sha256(b).hexdigest()
+          if digest(members[elf])!="4198b32dc9fba7dfc0ee2bb1b6bc85067c89adfc68d0279059ad82c207cc3c35" or digest(members[notice])!="304f78731e1e0e78132fbba4e1909c8642878a3b8c4837b36cb2d38891bf2204":
+              raise SystemExit("Patched ELF or notice mismatch")
+          dest=temp/"voxnelo-patched-toolset/lib/x64/libXtst.so.6"
+          if dest.is_symlink() or not dest.is_file() or digest(dest.read_bytes())!="38f9ccb12d2c477aad85db6279afc334d9f250f613884c188ace7232b83e9b68":
+              raise SystemExit("Unexpected legacy toolset library")
+          (temp/"voxnelo-old-libXtst.so.6").write_bytes(dest.read_bytes())
+          dest.write_bytes(members[elf])
+          # Ephemeral build input only, not a committed production notice.
+          pathlib.Path("build/third-party-notices/Ubuntu-libXtst.txt").write_bytes(members[notice])
+          pathlib.Path("patched-evidence/Ubuntu-libXtst.txt").write_bytes(members[notice])
+          pathlib.Path("patched-evidence/input.json").write_text(json.dumps({"fields":fields,"archiveSha256":sha,"oldElfSha256":"38f9ccb12d2c477aad85db6279afc334d9f250f613884c188ace7232b83e9b68","patchedElfSha256":digest(members[elf]),"copyrightSha256":digest(members[notice]),"legalApproval":False,"candidateOnly":True},indent=2)+"\n")
+          PY
+          readelf -d -V "$RUNNER_TEMP/voxnelo-old-libXtst.so.6" > patched-evidence/old-elf-dynamic-versions.txt
+          readelf -d -V "$RUNNER_TEMP/voxnelo-patched-toolset/lib/x64/libXtst.so.6" > patched-evidence/patched-elf-dynamic-versions.txt
+      - name: Build AppImage with isolated replacement, never publish
+        shell: bash
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: |
+          set -euo pipefail
+          export APPIMAGE_TOOLS_PATH="$RUNNER_TEMP/voxnelo-patched-toolset"
+          pnpm exec electron-builder --linux AppImage --x64 --config.toolsets.appimage=0.0.0 --publish never
+      - name: Prove actual final payload has exact replacement and notice bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, pathlib, re, struct, subprocess
+          files=list(pathlib.Path("release").glob("*.AppImage"))
+          if len(files)!=1:
+              raise SystemExit("Expected one pilot AppImage")
+          image=files[0]
+          size=image.stat().st_size
+          with image.open("rb") as f:
+              prefix=f.read(16*1024*1024)
+          offsets=[]
+          for m in re.finditer(b"hsqs",prefix):
+              o=m.start()
+              if o+96>len(prefix): continue
+              version=struct.unpack_from("<HH",prefix,o+28)
+              used=struct.unpack_from("<Q",prefix,o+40)[0]
+              block=struct.unpack_from("<I",prefix,o+12)[0]
+              if version==(4,0) and block in (4096,8192,16384,32768,65536,131072,262144,524288,1048576) and 96<=used<=size-o:
+                  offsets.append(o)
+          if prefix[:4]!=b"\x7fELF" or len(offsets)!=1:
+              raise SystemExit("Invalid AppImage container")
+          cmd=["unsquashfs","-o",str(offsets[0])]
+          listing=subprocess.check_output(cmd+["-ls",str(image)],timeout=90,text=True)
+          pathlib.Path("patched-evidence/payload-members.txt").write_text(listing)
+          xtst=[line for line in listing.splitlines() if "libXtst.so" in line]
+          if xtst!=["squashfs-root/usr/lib/libXtst.so.6"]:
+              raise SystemExit("Unexpected additional/missing Xtst path")
+          def member(path):
+              return subprocess.check_output(cmd+["-cat",str(image),path],timeout=60)
+          digest=lambda b:hashlib.sha256(b).hexdigest()
+          actual=digest(member("usr/lib/libXtst.so.6"))
+          notice=digest(member("resources/THIRD-PARTY-NOTICES/Ubuntu-libXtst.txt"))
+          if actual!="4198b32dc9fba7dfc0ee2bb1b6bc85067c89adfc68d0279059ad82c207cc3c35" or notice!="304f78731e1e0e78132fbba4e1909c8642878a3b8c4837b36cb2d38891bf2204":
+              raise SystemExit("Final payload mismatch")
+          with image.open("rb") as f:
+              sha=hashlib.file_digest(f,"sha256").hexdigest()
+          report={"schemaVersion":1,"filename":image.name,"bytes":size,"sha256":sha,"squashfsOffset":offsets[0],"patchedElfSha256":actual,"copyrightSha256":notice,"candidateOnly":True,"legalApproval":False,"publicReleaseApproved":False,"runtimeTested":False}
+          pathlib.Path("patched-evidence/payload.json").write_text(json.dumps(report,indent=2)+"\n")
           print(json.dumps(report,indent=2))
           PY
-      - name: Preserve source-review evidence even if some checks fail
+      - name: Preserve isolated proof, even when failed
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: voxnelo-distro-source-review-NOT-RELEASE
-          path: distro-evidence/
+          name: voxnelo-patched-libxtst-pilot-NOT-RELEASE
+          path: |
+            patched-evidence/
+            release/*.AppImage
           retention-days: 14
           if-no-files-found: error
