@@ -56,6 +56,23 @@ describe('documentation link and command validation', () => {
     }
   });
 
+  it('checks maintained installation, public-release, contributor and distribution guides', () => {
+    for (const file of [
+      'AGENTS.md',
+      '.github/PULL_REQUEST_TEMPLATE.md',
+      'docs/deployment/GITHUB-PAGES-WEB-PREVIEW.md',
+      'docs/engineering/MOONSHINE-LINUX-INSTALLATION.md',
+      'docs/engineering/MOONSHINE-CROSS-PLATFORM-PILOT.md',
+      'docs/engineering/MOONSHINE-DEPENDENCY-EVIDENCE-2026-11-22.md',
+      'docs/engineering/GITHUB-RELEASE-DRAFT.md',
+      'docs/engineering/STABLE-RELEASE-READINESS.md',
+      'docs/engineering/SIGNED-CANDIDATE-SETUP.md',
+      'docs/support/POP-OS-24-ENGLISH-TTS.md',
+      'docs/release/UNSIGNED-V1-OWNER-DECISION.md',
+      'docs/release-notes/v1.0.3.md',
+    ]) expect(CURRENT_DOCUMENTS).toContain(file);
+  });
+
   it('separates the public release from the unpublished source candidate in critical docs', () => {
     const privacy = readFileSync(path.resolve('docs/PRIVACY.md'), 'utf8');
     const release = readFileSync(path.resolve('docs/release-notes/v1.0.4.md'), 'utf8');
