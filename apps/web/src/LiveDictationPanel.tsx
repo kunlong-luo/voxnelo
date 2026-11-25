@@ -39,7 +39,7 @@ export function LiveDictationPanel({dictation,blocked,onStart,onManageModels}:Pr
     :checking||(!window.voxneloDesktop&&dictation.localPack==='unknown')?t('dictationChecking')
     :!dictation.supported?t('dictationUnavailableShort')
     :t(dictation.mode==='browser'?'dictationCloudEnabled':'dictationPrivacy');
-  return <section className="liveDictation mx-auto w-full max-w-160 min-w-0 rounded-[26px] border border-primary/20 bg-card/90 px-3 py-3 text-left shadow-[0_16px_42px_-34px_rgba(63,74,68,.45)] ring-1 ring-white/40 @min-[400px]/lesson:px-4 [@media(max-height:700px)]:py-2 [@media(max-height:680px)]:py-1.5"
+  return <section className="liveDictation mx-auto w-full max-w-192 min-w-0 rounded-[26px] border border-primary/20 bg-card/90 px-3 py-3 text-left shadow-[0_16px_42px_-34px_rgba(63,74,68,.45)] ring-1 ring-white/40 @min-[400px]/lesson:px-4 [@media(max-height:700px)]:py-2 [@media(max-height:680px)]:py-1.5"
     aria-label={t('dictationTitle')} data-testid="dictation-workspace" data-state={state}>
     <div className="flex min-w-0 flex-col gap-2 [@media(max-height:680px)]:gap-1">
       <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
@@ -80,7 +80,7 @@ export function LiveDictationPanel({dictation,blocked,onStart,onManageModels}:Pr
           className={cn('max-h-16 min-h-5 overflow-hidden break-words text-sm font-semibold leading-6 text-sentence-ink @min-[400px]/lesson:text-base',focused.source==='empty'&&'font-normal text-muted-foreground')}>
           {focused.source==='empty'?t('dictationPlaceholder'):formatAsrTranscriptForDisplay(focused.text)}
         </p>
-      </div>:<p className="text-[11px] leading-4 text-muted-foreground [@media(max-height:700px)]:hidden" data-testid="dictation-empty-hint">{t('dictationPlaceholder')}</p>}
+      </div>:<p className="text-xs leading-4 text-translation-ink [@media(max-height:700px)]:hidden" data-testid="dictation-empty-hint">{t('dictationPlaceholder')}</p>}
       {historyOpen&&focused.hasHistory&&<div id={historyId} role="region" aria-label={t('dictationHistoryLabel')}
         className="w-full min-w-0 rounded-xl border border-border/60 bg-card p-3 text-left text-xs leading-5 text-translation-ink">
         <p className="mb-1 font-bold text-foreground">{t('dictationHistoryLabel')}</p>
@@ -99,14 +99,14 @@ export function LiveDictationPanel({dictation,blocked,onStart,onManageModels}:Pr
       href={SUPPORT_LINKS.guide}
       target="_blank"
       rel="noopener noreferrer"
-      className="mt-2 inline-flex min-h-9 items-center rounded-xl px-3 py-1 text-[11px] font-semibold text-primary underline-offset-4 transition-colors hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      className="mt-1 inline-flex min-h-9 items-center rounded-xl px-3 py-1 text-[11px] font-semibold text-primary underline-offset-4 transition-colors hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
     >{t('dictationHelp')}</a>}
     {listening&&window.voxneloDesktop&&dictation.noiseReduction!=='unknown'&&<p className="mt-2 flex items-center gap-1.5 text-[11px] leading-4 text-translation-ink">
       <ShieldCheck size={13} aria-hidden="true"/>{t(dictation.noiseReduction==='not-requested'?'dictationNoiseNotRequested':dictation.noiseReduction==='enabled'?'dictationNoiseEnabled':'dictationNoiseUnverified')}
     </p>}
     {dictation.error&&<p role="status" className="mt-2 text-[12px] leading-5 text-translation-ink">{dictation.error}</p>}
     {!busy&&!dictation.supported&&onManageModels&&<Button variant="ghost" size="sm"
-      className="mt-1 min-h-9 rounded-xl border border-primary/20 bg-secondary/75 px-3 text-xs font-bold text-primary"
+      className="mt-1 min-h-9 rounded-xl border border-primary/30 bg-secondary px-3 text-xs font-bold text-primary"
       onClick={onManageModels}>
       <HardDriveDownload size={14} aria-hidden="true"/>{t('modelOpenAction')}
     </Button>}

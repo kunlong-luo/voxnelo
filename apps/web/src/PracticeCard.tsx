@@ -34,11 +34,11 @@ export function PracticeCard({current,currentState,speed,volume,showIpa,recorder
   const review=Boolean(currentState?.review);
   const familiar=Boolean(currentState?.familiar);
   return (
-      <Card className="practiceCard referenceLesson relative isolate flex min-h-[min(700px,calc(100dvh-120px))] [@media(max-height:800px)]:min-h-[min(560px,calc(100dvh-180px))] min-w-0 flex-1 flex-col overflow-visible rounded-[34px] border border-glass-edge bg-glass-surface shadow-glass backdrop-blur-[var(--glass-blur)] ring-1 ring-white/25">
+      <Card className="practiceCard referenceLesson relative isolate flex min-h-[min(620px,calc(100dvh-120px))] [@media(max-height:800px)]:min-h-0 min-w-0 flex-1 flex-col overflow-visible rounded-[34px] border border-glass-edge bg-glass-surface shadow-glass backdrop-blur-[var(--glass-blur)] ring-1 ring-white/25">
         <div aria-hidden="true" data-motion="lesson-breathe" className="pointer-events-none absolute inset-x-[16%] top-[12%] h-60 rounded-[50%] bg-brand-cream/85 blur-3xl animate-ambient-breathe [animation-delay:-1.7s]"/>
         <div aria-hidden="true" data-motion="glass-shimmer" className="pointer-events-none absolute -top-28 -right-24 size-82 rounded-full bg-white/45 blur-[65px] animate-glass-shimmer"/>
         <div aria-hidden="true" className="pointer-events-none absolute inset-x-8 top-0 h-px bg-linear-to-r from-transparent via-white/90 to-transparent"/>
-        <header className="cardHeader lessonHeader relative flex min-h-19 [@media(max-height:680px)]:min-h-14 flex-wrap items-center justify-between gap-4 px-5 pt-6 pb-0 [@media(max-height:680px)]:pt-2 sm:px-8 sm:pt-8 lg:px-10">
+        <header className="cardHeader lessonHeader relative flex min-h-16 flex-wrap items-center justify-between gap-2 px-5 pt-5 pb-0 sm:px-7 sm:pt-6 lg:px-8 [@media(max-height:680px)]:min-h-12 [@media(max-height:680px)]:pt-1">
           <div className="lessonProgress flex min-w-22 flex-col gap-2" aria-label={t('coursePosition',{index,total:SENTENCES.length})}>
             <span className="lessonCount text-sm font-extrabold tracking-tight tabular-nums text-foreground">{String(index).padStart(2,'0')} <span className="font-medium text-muted-foreground">/ {SENTENCES.length}</span></span>
             <Progress label={t('coursePosition',{index,total:SENTENCES.length})} value={index} max={SENTENCES.length} className="h-1.5 w-24"/>
@@ -67,7 +67,7 @@ export function PracticeCard({current,currentState,speed,volume,showIpa,recorder
             </div>
           </div>
         </header>
-        <div className="lessonFocus @container/lesson relative flex min-h-44 min-w-0 flex-1 sm:min-h-64 flex-col items-center justify-center gap-3 px-4 py-3 text-center sm:gap-3 sm:px-5 sm:py-3 [@media(max-height:800px)]:gap-1 [@media(max-height:800px)]:py-2 [@media(max-height:680px)]:min-h-36 [@media(max-height:680px)]:flex-none [@media(max-height:680px)]:gap-1 [@media(max-height:680px)]:py-1 @min-[560px]/workspace:px-9 @min-[700px]/workspace:min-h-[clamp(12rem,calc(100dvh-525px),18rem)]">
+        <div className="lessonFocus @container/lesson relative flex min-h-40 min-w-0 flex-1 sm:min-h-52 flex-col items-center justify-center gap-3 px-4 py-3 text-center sm:gap-3 sm:px-5 sm:py-3 [@media(max-height:800px)]:gap-1 [@media(max-height:800px)]:py-2 [@media(max-height:680px)]:min-h-0 [@media(max-height:680px)]:flex-none [@media(max-height:680px)]:gap-1 [@media(max-height:680px)]:py-1 @min-[560px]/workspace:px-9 @min-[700px]/workspace:min-h-40 [@media(max-height:680px)]:@min-[700px]/workspace:min-h-0">
           <div className="sentenceContent flex w-full flex-col items-center justify-center gap-3 sm:gap-4 [@media(max-height:800px)]:gap-2 [@media(max-height:680px)]:gap-1.5">
             <span className="lessonLevel text-[11px] font-bold tracking-[.2em] text-muted-foreground uppercase">{t('speakingPractice')} · {current.level}</span>
             <div ref={sentenceMotionRef} className="sentenceHeading flex w-full min-w-0 justify-center">
@@ -77,11 +77,11 @@ export function PracticeCard({current,currentState,speed,volume,showIpa,recorder
             <PronunciationGuide key={current.id} sentence={current} showIpa={showIpa}
               recordingBusy={recordingBusy} onToggleIpa={onToggleIpa} onSpeak={onSpeak} onSpeakSegment={onSpeakSegment}/>
           </div>
-          <div className="pointer-events-none hidden w-full max-w-145 opacity-95 @min-[700px]/workspace:block [@media(max-height:800px)]:hidden" aria-hidden="true"><WaveformArt/></div>
+          <div className="pointer-events-none hidden w-full max-w-120 opacity-80 @min-[700px]/workspace:block [@media(max-height:900px)]:hidden" aria-hidden="true"><WaveformArt/></div>
           <LiveDictationPanel dictation={dictation} blocked={recorder.status==='requesting'||recorder.status==='recording'} onStart={onStartDictation} onManageModels={onManageModels}/>
         </div>
         <PracticeControlPanel recorder={recorder} recordingBusy={recordingBusy} speed={speed} volume={volume} onSpeak={onSpeak} onToggleSpeed={onToggleSpeed} onRecord={onRecord} />
-        <footer className="cardFooter referenceFooter grid min-h-18 [@media(max-height:680px)]:min-h-14 grid-cols-[minmax(95px,1fr)_auto_minmax(95px,1fr)] items-center gap-2 rounded-b-[var(--radius)] border-t border-border/60 bg-card/75 px-5 py-3 sm:px-8 lg:px-10">
+        <footer className="cardFooter referenceFooter grid min-h-14 [@media(max-height:680px)]:min-h-11 grid-cols-[minmax(95px,1fr)_auto_minmax(95px,1fr)] items-center gap-2 rounded-b-[var(--radius)] border-t border-border/60 bg-card/90 px-4 py-2 sm:px-7 lg:px-8 [@media(max-height:680px)]:py-1">
           <Button variant="outline" size="sm" className="prevButton pagerButton justify-self-start text-primary" onClick={onPrevious} disabled={!canGoPrevious} aria-label={t('previous')}><ChevronLeft size={16}/>{t('previous')}</Button>
           <span className="footerHint text-center text-[10px] text-muted-foreground max-[1050px]:hidden">{t('footerHint')}</span>
           <Button variant="outline" size="sm" className="nextButton pagerButton col-start-3 justify-self-end text-primary" onClick={onNext} disabled={recordingBusy} aria-label={t('nextAccessible')}>{t('next')}<ArrowRight size={16}/></Button>

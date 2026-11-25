@@ -79,12 +79,7 @@ const shot=async(w:number,h:number,name:string):Promise<void>=>{
     assert.ok(m.heroWidth>=110&&m.heroHeight>=44&&m.heroAccessible&&m.heroInBounds,'V3 dictation primary button must have visible text, matching accessible name and a 44px+ hit target: '+JSON.stringify(m));
     assert.ok(m.sentenceFontSize>=32,'U3 lesson sentence must remain visually prominent: '+JSON.stringify(m));
     assert.ok(m.dictationWidth>0&&m.heroWidth<=m.dictationWidth,'V3 labeled dictation action overflows its panel '+w+'x'+h+': '+JSON.stringify(m));
-    if(m.mainWidth>=840&&m.railFitsViewport){
-      assert.ok(m.columnIsStretching,'lesson is not stretching although insights fit '+w+'x'+h+': '+JSON.stringify(m));
-      assert.ok(m.columnBottomDelta<=5,'lesson and final insights card bottoms diverge '+w+'x'+h+': '+JSON.stringify(m));
-    } else {
-      assert.ok(!m.columnIsStretching,'lesson is being stretched past the first viewport '+w+'x'+h+': '+JSON.stringify(m));
-    }
+    assert.ok(!m.columnIsStretching,'V3.1 auxiliary disclosure must not stretch the primary lesson '+w+'x'+h+': '+JSON.stringify(m));
     if(w>=640){
       assert.equal(m.workspaceScrollbarWidth,'none','native workspace scrollbar must remain hidden on desktop');
       assert.equal(m.workspaceOverflowY,'auto','workspace must remain keyboard/wheel scrollable');
@@ -143,6 +138,16 @@ try{
   assert.ok(idleDictation.label.trim().length>0&&idleDictation.pressed==='false'&&idleDictation.haloCount===0,
     'V3 idle live action must be labeled, inactive and have no fake microphone halo: '+JSON.stringify(idleDictation));
   report.push({page:'idle-dictation-primary-semantics',...idleDictation});
+  // V3.1 disclosure uses buttons and actual hidden regions, preserving focus and content.
+  const disclosure=await evalJs<{count:number;collapsed:boolean;expanded:boolean;closed:boolean}>('(()=>{const buttons=[...document.querySelectorAll(".referenceInsights button[aria-expanded]")];const region=b=>document.getElementById(b.getAttribute("aria-controls"));const collapsed=buttons.every(b=>b.getAttribute("aria-expanded")==="false"&&region(b)?.hidden);return {count:buttons.length,collapsed,expanded:false,closed:false}})()');
+  assert.equal(disclosure.count,3,'V3.1 requires three independent auxiliary disclosures');
+  assert.ok(disclosure.collapsed,'V3.1 auxiliary details must start collapsed');
+  await evalJs('document.querySelector(".feedCard button[aria-expanded]").click()');
+  await until('(()=>{const b=document.querySelector(".feedCard button[aria-expanded]");return b.getAttribute("aria-expanded")==="true"&&!document.getElementById(b.getAttribute("aria-controls")).hidden})()');
+  assert.ok(await evalJs('!!document.querySelector(".feedCard .feedItem")?.getBoundingClientRect().height'),'expanded related phrases are not visible');
+  await evalJs('document.querySelector(".feedCard button[aria-expanded]").click()');
+  await until('(()=>{const b=document.querySelector(".feedCard button[aria-expanded]");return b.getAttribute("aria-expanded")==="false"&&document.getElementById(b.getAttribute("aria-controls")).hidden})()');
+  report.push({page:'v31-auxiliary-disclosure',count:disclosure.count,collapsed:true,expanded:true,closed:true});
   // The ribbon used to be hidden below 1000px and was a static SVG. Verify
   // actual compositor progression at a realistic desktop viewport (1440x900).
   const ribbonBefore=await evalJs<{visible:boolean;name:string;active:number;time:number}>('(()=>{const e=document.querySelector("[data-motion=ribbon-flow]"),svg=e?.closest("svg"),a=e?.getAnimations()??[];return{visible:!!svg&&getComputedStyle(svg).display!=="none"&&svg.getBoundingClientRect().height>0,name:e?getComputedStyle(e).animationName:"missing",active:a.filter(x=>x.playState==="running").length,time:Number(a[0]?.currentTime??0)}})()');
