@@ -118,3 +118,7 @@ Linux 本地打包统一使用 `pnpm pack:linux`。构建机需要 Python 3.10+�
 ## v1.0.4 审核包 ASAR 许可门禁（待验证）
 
 拟将现有审核工作流中的 Registry 核对移到 Linux DEB 实际安装之后：确认 dpkg 所属的 /opt/Voxnelo/resources/app.asar 是普通文件，与 release/linux-unpacked/resources/app.asar 完整字节一致，再运行 pnpm license:audit:registry --compare-notices --packaged-asar，传入实际安装的文件路径。缺失、符号链接、字节不匹配、上游归档或许可证错误均须使任务失败，禁止跳过。保留原两个 JSON 证据文件与候选清单，仍只有一次 Registry 在线核查。合并工作流变更会触发现有 main 审核构建，不创建 Release 或标签。必须在新源码候选完成后复核报告、归档和安装文件哈希；不能用旧候选的物理验收替代新字节证据。当前变更尚待 CI 与实际审核构建验证。完整原生库、模型、安装器法律义务与真人验收仍待完成，保持 HOLD。
+
+## 安装后 ASAR 门禁验证结果（2026-11-25）
+
+#306 已合并；新审核构建 45578438677 八项任务全部通过，实际 DEB 所属 ASAR 与打包目录字节一致，18 个依赖包及 19 份根许可证自动核对成功。独立下载的报告及三个分平台安装包已经复算，详见[审核台账](../release/V1.0.4-REGISTRY-AUDIT.md)。仅文档更新不重新生成候选；当前以该次构建的精确源码及安装文件哈希为准。法律与真人设备验收仍待完成。HOLD。
