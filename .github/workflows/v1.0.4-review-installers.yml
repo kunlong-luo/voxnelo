@@ -139,8 +139,10 @@ jobs:
           installed_asar=/opt/Voxnelo/resources/app.asar
           unpacked_asar=release/linux-unpacked/resources/app.asar
           dpkg -L voxnelo | grep -Fx "$installed_asar"
-          test -f "$installed_asar" && test ! -L "$installed_asar"
-          test -f "$unpacked_asar" && test ! -L "$unpacked_asar"
+          test -f "$installed_asar"
+          test ! -L "$installed_asar"
+          test -f "$unpacked_asar"
+          test ! -L "$unpacked_asar"
           cmp -- "$installed_asar" "$unpacked_asar"
           pnpm license:audit:registry --compare-notices --packaged-asar "$installed_asar"
       - name: Preserve sanitized review-source dependency notice evidence

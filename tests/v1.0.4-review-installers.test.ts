@@ -70,8 +70,10 @@ describe('v1.0.4 unsigned three-platform REVIEW artifacts (not a release)',()=>{
     expect(step).toContain('set -euo pipefail');
     expect(step).toContain('installed_asar=/opt/Voxnelo/resources/app.asar');
     expect(step).toContain('dpkg -L voxnelo | grep -Fx "$installed_asar"');
-    expect(step).toContain('test -f "$installed_asar" && test ! -L "$installed_asar"');
-    expect(step).toContain('test -f "$unpacked_asar" && test ! -L "$unpacked_asar"');
+    expect(step).toContain('test -f "$installed_asar"');
+    expect(step).toContain('test ! -L "$installed_asar"');
+    expect(step).toContain('test -f "$unpacked_asar"');
+    expect(step).toContain('test ! -L "$unpacked_asar"');
     expect(step).toContain('cmp -- "$installed_asar" "$unpacked_asar"');
     expect(step).toContain('pnpm license:audit:registry --compare-notices --packaged-asar "$installed_asar"');
     expect(step).not.toContain('continue-on-error');
