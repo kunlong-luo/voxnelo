@@ -6,6 +6,13 @@ const root = path.resolve('.');
 const read = (relative: string) => readFileSync(path.join(root, relative), 'utf8');
 const packageInfo = JSON.parse(read('package.json')) as { version: string };
 
+// Exempt only these exact maintained Markdown destinations, not their visible
+// link labels or other README text. The local-link test still checks existence.
+const withoutReviewLinkDestinations = (content: string) =>
+  content.replace(/\]\(docs\/release\/V1\.0\.4-(?:RELEASE-FREEZE|PHYSICAL-DEVICE-EVIDENCE)\.md\)/g, ']');
+const unsupportedClaim = /SpeakFeed|Speak Karaoke|Smart Prompt|V1\.0|coming soon|敬请期待/;
+
+
 describe('Current release README claims (English first, Chinese equivalent)', () => {
   const en = read('README.md');
   const zh = read('README.zh-CN.md');
@@ -29,7 +36,7 @@ describe('Current release README claims (English first, Chinese equivalent)', ()
       expect(zh).toContain(phrase);
 
     for (const content of [en, zh]) {
-      expect(content).not.toMatch(/SpeakFeed|Speak Karaoke|Smart Prompt|V1\.0|coming soon|敬请期待/);
+      expect(withoutReviewLinkDestinations(content)).not.toMatch(unsupportedClaim);
       expect(content).toContain(packageInfo.version);
     }
     expect(en).toContain('deliberately omit unreviewed IPA');
@@ -46,6 +53,20 @@ describe('Current release README claims (English first, Chinese equivalent)', ()
     expect(zh).toContain('GitHub Releases');
     expect(en).toContain('unsigned');
     expect(zh).toContain('未签名');
+  });
+
+  it('allows only the current review document destinations without hiding unsupported claims', () => {
+    for (const content of [en, zh]) {
+      expect(content).toContain('(docs/release/V1.0.4-RELEASE-FREEZE.md)');
+      expect(content).toContain('(docs/release/V1.0.4-PHYSICAL-DEVICE-EVIDENCE.md)');
+    }
+    expect(withoutReviewLinkDestinations('[review](docs/release/V1.0.4-RELEASE-FREEZE.md)')).not.toMatch(unsupportedClaim);
+    for (const invalid of [
+      '[V1.0](docs/release/V1.0.4-RELEASE-FREEZE.md)',
+      '[SpeakFeed](docs/release/V1.0.4-PHYSICAL-DEVICE-EVIDENCE.md)',
+      'coming soon [review](docs/release/V1.0.4-RELEASE-FREEZE.md)',
+      '[review](docs/release/V1.0-OLD.md)',
+    ]) expect(withoutReviewLinkDestinations(invalid)).toMatch(unsupportedClaim);
   });
 
   it('keeps local Markdown links valid across both languages and the development guide', () => {

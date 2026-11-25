@@ -1,6 +1,6 @@
 # Voxnelo documentation index
 
-Updated: 2026-11-24. This index is navigation, **not** a release approval.
+Updated: 2026-11-25. This index is navigation, **not** a release approval.
 
 ## Source of truth and precedence
 
@@ -29,6 +29,8 @@ Updated: 2026-11-24. This index is navigation, **not** a release approval.
 Current visual authority: [V3 dictation-first](design/V3-DICTATION-FIRST-UX-2026-11-23.md) and [V3 production spec](design/V3-VISUAL-PRODUCTION-SPEC.md). Earlier UI reference images and diagrams are retained for design provenance, not used as installed product screenshots. Historical engineering instructions are not the developer setup path. Current PRD mapping is [PRD-TRACEABILITY.md](release/PRD-TRACEABILITY.md). The obsolete initial matrix was removed from the working tree; [original snapshot at the pre-cleanup commit](https://github.com/kunlong-luo/voxnelo/blob/35e4048affead771477cfd162f7fc2a2a1aee40a/docs/release/PRD-TRACEABILITY-STARTER.md) remains auditable.
 
 ### Single source of truth
+
+Current selected review-only build: [45578438677](https://github.com/kunlong-luo/voxnelo/actions/runs/45578438677), exact binary source `e35cc3a7ec2d6c21625ec4d99449e01605b1e29a`. Public latest v1.0.3; v1.0.4 HOLD. Follow the current checklist at the top of the release freeze, not dated historical checkpoints or docs-only HEAD. The candidate is independently checked for all four distinct formats at selected inner-member scope; rights and physical acceptance remain pending.
 
 - Current release decision and checklist: [release freeze](release/V1.0.4-RELEASE-FREEZE.md).
 - Dated scores, registry reports, convergence and native-library provenance: [registry audit ledger](release/V1.0.4-REGISTRY-AUDIT.md). Do not paste its complete log into other documents.

@@ -8,6 +8,8 @@ Voxnelo is an open-source, local-first desktop app for practicing spoken English
 
 **Source version:** `1.0.4` (unpublished candidate) · **Latest public release:** `v1.0.3` (unsigned, known limitations) · **Maintainer:** Leo Luo · **License:** [MIT](LICENSE)
 
+**Maintainer review only:** v1.0.4 is on HOLD. Its selected unsigned review build is [run 45578438677](https://github.com/kunlong-luo/voxnelo/actions/runs/45578438677) at source `e35cc3a`, not a public Release or the old private Draft. For current gates and the exact candidate testing instructions, see the [release freeze](docs/release/V1.0.4-RELEASE-FREEZE.md) and [physical-device evidence ledger](docs/release/V1.0.4-PHYSICAL-DEVICE-EVIDENCE.md). Prior user-reported basic-use tests do not establish acceptance of these exact installer bytes. Ordinary users should continue to use the public Releases page.
+
 ## Core features
 
 - **40 starter sentences and 240 additional review-pending drafts** (280 entries total). Starter sentences include Chinese translations, topics, difficulty levels, and IPA teaching references. Expansion drafts include bilingual text but deliberately omit unreviewed IPA; they must not be described as linguistically or rights-approved.
