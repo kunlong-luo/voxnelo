@@ -85,3 +85,5 @@ JS registry and Python advisory checks do not cover copied AppImage ELF code. Th
 ## Isolated toolset pilot
 
 Pinned electron-builder 26.18.0 upstream source supports beta AppImage 1.0.3 and NSIS 1.2.1. Exact archive metadata and scoped read-only pilot plan are in the [canonical audit ledger](../release/V1.0.4-REGISTRY-AUDIT.md). The static runtime still copies native libraries; actual payload and source/security verification remain required. Current defaults unchanged. HOLD.
+
+The isolated [pilot results](../release/V1.0.4-REGISTRY-AUDIT.md) now establish real AppImage/NSIS build feasibility and archive/installer identities. New AppImage still copies six native library families (two GTK3 names); exact distro versions and security patches not established. NSIS source recipe includes patched official 3.12 and ten plugin acquisition leads. Full obligations, actual wrapper coverage and installed regression remain open. Temporary pilot job removed; defaults unchanged. HOLD.
