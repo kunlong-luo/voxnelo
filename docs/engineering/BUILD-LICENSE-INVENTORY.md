@@ -111,3 +111,7 @@ The v1.0.4 review-only workflow now proposes one live registry audit after actua
 ## Installed ASAR gate verified (2026-11-25)
 
 #306 merged; review-only run 45578438677 passed the actual installed/unpacked ASAR byte equality and single live 18-package/19-root-file audit. Independent report ZIP and actual DEB ASAR verification recorded in [canonical audit](../release/V1.0.4-REGISTRY-AUDIT.md). This replaces the pending proposal above; do not infer nested, outer-wrapper, native or legal approval. No additional workflow or registry pass. HOLD.
+
+## Exact latest final installer ASAR and native payload review (2026-11-25)
+
+Current review run 45578438677 now has independent selected inner member evidence across DEB, Windows EXE, AppImage and DMG. The latest AppImage and DMG were independently parsed with scoped read-only SquashFS/HFS+ review code (not a committed production tool); ASAR bytes equal each other and match exact DEB/report SHA. AppImage directly compared all 18 recorded package versions and 19 root notice digests; patched libXtst ELF and Ubuntu copyright match pinned values. DMG selected ARM64 framework files and original supplemental notice bytes recorded. See [canonical audit](../release/V1.0.4-REGISTRY-AUDIT.md) for measured hashes and limitations. Native/wrapper/model legal and actual human acceptance remain pending. HOLD.
