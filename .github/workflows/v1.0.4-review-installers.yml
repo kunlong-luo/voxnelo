@@ -118,7 +118,15 @@ jobs:
       - name: Build real OS-native unsigned installer (never publish)
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        if: runner.os != 'Linux'
         run: pnpm exec electron-builder ${{ matrix.args }} --publish never
+      - name: Build Linux installers with pinned libXtst security patch
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends p7zip-full squashfs-tools curl
+          python3 scripts/pack_linux_patched.py
       - name: Brand Linux AppStream and create identical Discover DEB alias
         if: runner.os == 'Linux'
         run: node --experimental-strip-types scripts/brand-linux-installer.mts

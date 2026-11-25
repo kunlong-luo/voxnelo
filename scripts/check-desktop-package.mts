@@ -152,6 +152,10 @@ if(platform==='linux'){
   assert.equal(await hashFile(discoverDebPath),await hashFile(debPath),
     'User-friendly Discover DEB must be byte-for-byte identical to the versioned installer');
   assert.equal((await readPrefix(appImagePath,4)).toString('hex'),'7f454c46','AppImage is not an ELF executable');
+  const patched=spawnSync('python3',['scripts/pack_linux_patched.py','--verify',appImagePath],{encoding:'utf8',timeout:240000,maxBuffer:65536});
+  assert.equal(patched.status,0,'AppImage native patch verification failed: '+(patched.error?.message??patched.stderr));
+  console.log(patched.stdout.trim());
+  linuxChecks.push('exact patched libXtst and copyright in final AppImage');
   const metadata=spawnSync('dpkg-deb',['--field',debPath,'Package'],{encoding:'utf8'});
   assert.equal(metadata.status,0,'dpkg-deb could not inspect installer: '+metadata.stderr);
   assert.match(metadata.stdout.trim(),/^voxnelo$/i,'Wrong Debian package identity');
