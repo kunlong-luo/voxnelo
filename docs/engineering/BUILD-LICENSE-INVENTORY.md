@@ -115,3 +115,17 @@ The v1.0.4 review-only workflow now proposes one live registry audit after actua
 ## Exact latest final installer ASAR and native payload review (2026-11-25)
 
 Current review run 45578438677 now has independent selected inner member evidence across DEB, Windows EXE, AppImage and DMG. The latest AppImage and DMG were independently parsed with scoped read-only SquashFS/HFS+ review code (not a committed production tool); ASAR bytes equal each other and match exact DEB/report SHA. AppImage directly compared all 18 recorded package versions and 19 root notice digests; patched libXtst ELF and Ubuntu copyright match pinned values. DMG selected ARM64 framework files and original supplemental notice bytes recorded. See [canonical audit](../release/V1.0.4-REGISTRY-AUDIT.md) for measured hashes and limitations. Native/wrapper/model legal and actual human acceptance remain pending. HOLD.
+
+## Integrated V3.1 candidate actual selected members — 2026-11-26
+
+#320 merged at `746af27278595422daf608f0c39dc3dac31191cb`; all five PR CI jobs in 45742147489 passed (core: 115 files / 645 tests, maintained docs passed). Pages 45742491556 passed; separate main CI 45742491636 still running at observation. The selected binary source remains 0ccc624ab893396829de40b4ed3b7d84de656e3a, review run 45723704316, not the local QA/docs HEAD. Latest public Release API remains v1.0.3.
+
+| Actual extracted payload | Bytes | SHA-256 |
+| --- | ---: | --- |
+| Windows embedded 7z, offset 170283 | 124962362 | `f077d635b26410f84797f233348b0477df46dfe5bbd19acc2b9da63fb10c4e40` |
+| Windows ASAR | 52915600 | `de8cceed704ccea1c2c4347890ff901a396ccfd6fbd71aa37a8202b6f46cb802` |
+| DEB, AppImage and DMG ASAR (actual byte equality) | 52915574 each | `fd958b36ff39843dec61a50e10744c748e3e08092aceb29f4d4a89efe758d210` |
+
+Independently read actual ASAR header/offsets and each of the 18 package.json version fields and 19 root notice bytes per format against registry report 15073756502. All 72 version comparisons and 76 root notice comparisons matched; no ASAR link/unpacked target accepted for these reads. This is scoped to the expected package/member set, not every executable or nested license. EXE/AppImage/DMG selected first-party MIT, Electron, Chromium and four supplemental notices match prior candidate measured values; Windows Chromium retains its platform-specific hash. AppImage six actual ELF hashes and Ubuntu-libXtst notice match previously recorded digests (including patched libXtst 4198b32dc9fba7dfc0ee2bb1b6bc85067c89adfc68d0279059ad82c207cc3c35). DMG actual Electron Framework, ReactiveObjC, Squirrel and Mantle Versions/A files match previously recorded hashes; ARM64 Mach-O headers confirmed. No claim of source/license completeness, original Wheel bytes, executed installers or physical microphone acceptance. Combined ZIP remains CI-only due to interface limit.
+
+Historical native and notice hash tables are unchanged; actual newly selected formats have been checked again rather than inferred from source similarity. Full extraction details and remaining release gates: [canonical audit](../release/V1.0.4-REGISTRY-AUDIT.md). Legal approval remains false.

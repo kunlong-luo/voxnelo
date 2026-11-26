@@ -1,8 +1,8 @@
 # Voxnelo documentation navigation and status
 
-Updated: 2026-11-25. This is an **index, not evidence of a public v1.0.4 release**. Latest public release: **v1.0.3**; current source candidate: **v1.0.4**. Check actual GitHub Releases before changing this status.
+Updated: 2026-11-26. This is an **index, not evidence of a public v1.0.4 release**. Latest public release: **v1.0.3**; current source candidate: **v1.0.4**. Check actual GitHub Releases before changing this status.
 
-Current selected review-only build: [45723704316](https://github.com/kunlong-luo/voxnelo/actions/runs/45723704316), exact source `0ccc624ab893396829de40b4ed3b7d84de656e3a`. Current gate status lives in the release freeze; detailed evidence/score lives in the canonical audit, not this index. All five installer hashes and actual DEB ASAR independently checked; other latest-format inner members pending; no final rights, real-microphone or owner approval.
+Current selected review-only build: [45723704316](https://github.com/kunlong-luo/voxnelo/actions/runs/45723704316), exact source `0ccc624ab893396829de40b4ed3b7d84de656e3a`. Current gate status lives in the release freeze; detailed evidence/score lives in the canonical audit, not this index. All five installer hashes and all four distinct formats' selected inner members independently checked; exact intake pins merged in #320; no final rights, real-microphone or owner approval.
 
 ## Maintained entries
 
