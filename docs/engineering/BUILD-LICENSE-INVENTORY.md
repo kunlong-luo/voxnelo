@@ -137,3 +137,7 @@ Five unchanged historical library blobs now have exact Ubuntu DEB filename/versi
 ## Current AppImage distro intake correction — 2026-11-26
 
 The old private DEB inspection utility still selected pre-patch libXtst and historical candidate identity. Updated local review-only pins and patched archive/ELF/notice checks are proposed, with synthetic regressions. See [native release gate](ASR-PUBLIC-RELEASE-GATE.md) for precise archive inputs and acquisition limits. Three historical archive index leads found; no original DEB or legal text independently acquired. Existing production packaging guard unchanged. HOLD.
+
+## Actual six Ubuntu distro copyright texts — 2026-11-26
+
+Temporary scoped audit job 139664175164 in 45746633439 succeeded; downloaded artifact 15083269073 and independently verified all six actual copyright text hashes, matching prior runner evidence. Exact archive/version/ELF identities match the selected AppImage. See [native release gate](ASR-PUBLIC-RELEASE-GATE.md) for text-derived GPL/LGPL/permissive classifications and remaining source/notice obligations. Copyright texts are actual recovered members, not proof of notice inclusion or complete distribution approval. Current rights/provenance partial credit 19/25; public release HOLD. No packaging or workflow changes retained.
