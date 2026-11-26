@@ -125,3 +125,72 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  # Temporary review branch only; remove before merge.
+  distro-notice-review:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'audit/v104-exact-distro-notices-20261126'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Recover exact original distro archives and copyright members without installation
+        shell: bash
+        run: |
+          set -euo pipefail
+          export REVIEW_ROOT="$RUNNER_TEMP/voxnelo-distro-notice-review"
+          mkdir -p "$REVIEW_ROOT/archives" "$REVIEW_ROOT/report"
+          PYTHONPATH=scripts python3 - <<'PY'
+          import json, os, subprocess
+          from pathlib import Path
+          from audit_appimage_distro_packages import PACKAGES, inspect, digest, selected_members, dpkg_output
+          root = Path(os.environ['REVIEW_ROOT'])
+          pins = {
+            'libxss1': ('libx/libxss', '1:1.2.2-1', '759a4a9e185c76172efc48184398d377279e870a57e1ae17fe97a21067dda479', '6b822bc28b9b4dfddac70104ebb55d1116da3aede42065d80168ba732ef46502'),
+            'libxtst6': ('libx/libxtst', '2:1.2.3-1ubuntu0.22.04.1', '1cda20d06d364fbe534755cfbe60e387fcecac537e7ab5b8c7a9e83bffd911f8', '304f78731e1e0e78132fbba4e1909c8642878a3b8c4837b36cb2d38891bf2204'),
+            'libappindicator1': ('liba/libappindicator', '12.10.1+13.10.20130920-0ubuntu4', '2993735f38a5eecb6b2f68af99dabaa32d9c44ff16c4c9c5d8e95a07e9e78cd5', '518f65dcd8b7a81d83c5e9dcdad5635b3d18e3e529a85ae53af0090a94ab508d'),
+            'libgconf-2-4': ('g/gconf', '3.2.6-0ubuntu2', '952e3f4ed08461e2f95f38b54c66f6a84a6a393a4580e0a64ce9fe84db5b5530', '2b3bf476b11bc6405fa1d58c8d83c1b3fea4f26f56bd486bc63c6a6b91eb4353'),
+            'libindicator7': ('libi/libindicator', '12.10.2+14.04.20140402-0ubuntu1', '3b8ca09d67c91f076d2880694e0e7a896e01d6d96c1f8b29526ba497dc905b31', '2ff451abf91d34acfb35b943fa62d2b49053ae28aa6232dd6f8eddcacebb4b6b'),
+            'libnotify4': ('libn/libnotify', '0.7.6-1ubuntu3', 'c663fc5c7d35e8ff8a08b9ad57f7c121262e22424f8b87da494ce55a9fcd8e9a', '5456597d0b556f4c0aadeaefc793358115c3a7a56ab87a9846e2366344d7549d'),
+          }
+          results = []
+          for spec in PACKAGES:
+              name, version, elf, expected = spec
+              pool, full_version, archive_sha, notice_sha = pins[name]
+              filename = f'{name}_{version}_amd64.deb'
+              target = root / 'archives' / filename
+              record = {'package':name, 'filename':filename, 'attempts':[], 'status':'missing'}
+              hosts = ['archive.ubuntu.com','security.ubuntu.com'] if name == 'libxtst6' else ['old-releases.ubuntu.com','archive.ubuntu.com']
+              for host in hosts:
+                  url = f'https://{host}/ubuntu/pool/main/{pool}/{filename}'
+                  proc = subprocess.run(['curl','--fail','--silent','--show-error','--proto','=https','--proto-redir','=https','--location','--connect-timeout','8','--max-time','25','--max-filesize','4194304','--output',str(target),url],check=False)
+                  record['attempts'].append({'url':url,'exit':proc.returncode})
+                  if proc.returncode == 0 and target.is_file() and target.stat().st_size <= 4194304 and digest(target.read_bytes()) == archive_sha:
+                      break
+                  target.unlink(missing_ok=True)
+              if target.is_file():
+                  record.update(inspect(root/'archives',spec))
+                  if record['status']=='matched' and record['version']==full_version and record['archiveSha256']==archive_sha and record['copyrightSha256']==notice_sha:
+                      member = 'usr/share/doc/'+name+'/copyright'
+                      notice = selected_members(dpkg_output(['--fsys-tarfile',str(target)]),{member})[member]
+                      if digest(notice)==notice_sha and digest(target.read_bytes())==archive_sha:
+                          (root/'report'/(name+'-copyright.txt')).write_bytes(notice)
+                          record['status']='matched-notice-recovered'
+                      else:
+                          record['status']='notice-or-archive-changed'
+                  else:
+                      record['status']='identity-or-notice-mismatch'
+              results.append(record)
+          report = {'candidateRun':45723704316,'candidateSource':'0ccc624ab893396829de40b4ed3b7d84de656e3a','legalApproval':False,'historicalDistributorSignatureVerified':False,'packages':results}
+          (root/'report'/'current-distro-notices.json').write_text(json.dumps(report,indent=2)+'\n')
+          if not all(x['status']=='matched-notice-recovered' for x in results):
+              raise SystemExit(1)
+          PY
+      - name: Retain actual public copyright texts and comparison report only
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: current-distro-notice-review-NOT-RELEASE
+          path: ${{ runner.temp }}/voxnelo-distro-notice-review/report/
+          retention-days: 14
+          if-no-files-found: error
