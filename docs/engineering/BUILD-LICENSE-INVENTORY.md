@@ -133,3 +133,7 @@ Historical native and notice hash tables are unchanged; actual newly selected fo
 ## Legacy AppImage distribution source leads — 2026-11-26
 
 Five unchanged historical library blobs now have exact Ubuntu DEB filename/version and extracted member leads from the immutable 2017 acquisition recipe, with checked upstream history. See [native release gate](ASR-PUBLIC-RELEASE-GATE.md) for the table and limits. No original distro DEB or source archive retrieved, no actual copyright/NOTICE or corresponding-source closure. Patched libXtst remains separate. Do not label those five libraries rights-cleared. Current integrated candidate 0ccc624 / 45723704316 unchanged.
+
+## Current AppImage distro intake correction — 2026-11-26
+
+The old private DEB inspection utility still selected pre-patch libXtst and historical candidate identity. Updated local review-only pins and patched archive/ELF/notice checks are proposed, with synthetic regressions. See [native release gate](ASR-PUBLIC-RELEASE-GATE.md) for precise archive inputs and acquisition limits. Three historical archive index leads found; no original DEB or legal text independently acquired. Existing production packaging guard unchanged. HOLD.
