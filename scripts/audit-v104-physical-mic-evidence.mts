@@ -47,6 +47,9 @@ export const PHYSICAL_MIC_TARGETS = [
 // Exact, independently verified review-only run 45723704316, not HEAD or
 // historical Draft. Update only after a newly selected candidate's byte audit.
 const CURRENT_REVIEW_SOURCE = '0ccc624ab893396829de40b4ed3b7d84de656e3a';
+// Run completed 2026-11-25T23:48:32Z. Local calendar date can be Nov 25 or 26.
+// Day precision cannot prove ordering within that day; reviewer checks timestamps.
+const EARLIEST_CURRENT_TEST_DATE = '2026-11-25';
 const CURRENT_INSTALLER_DIGESTS: Readonly<Record<typeof PHYSICAL_MIC_TARGETS[number], readonly string[]>> = {
   'linux-x64': [
     'c6ed1bba1637d8bf8c599957306c000934678ebd4861b56b2df949f2e9c2d891',
@@ -96,6 +99,8 @@ export function auditV104PhysicalMicEvidence(input: unknown): PhysicalMicEvidenc
       blockers.push('platforms: unexpected platform key (name withheld)');
     }
   }
+  let totalHumanTrials = 0;
+  let totalHumanTrialsKnown = true;
   for (const platform of PHYSICAL_MIC_TARGETS) {
     const src = row(platforms[platform]);
     const prefix = platform + '.';
@@ -104,6 +109,13 @@ export function auditV104PhysicalMicEvidence(input: unknown): PhysicalMicEvidenc
       blockers.push(prefix + 'installerSha256: must match the selected candidate for this platform');
     }
     requireText(prefix + 'osVersion', src.osVersion);
+    if (platform === 'macos-arm64-15plus') {
+      const version = /^(\d+)(?:\.\d+){0,2}$/.exec(valueString(src.osVersion));
+      const major = version ? Number(version[1]) : NaN;
+      if (!Number.isSafeInteger(major) || major < 15) {
+        blockers.push(prefix + 'osVersion: numeric macOS product version 15 or later required');
+      }
+    }
     requireText(prefix + 'microphoneCategory', src.microphoneCategory);
     if (src.sdkVersion !== '0.0.65') {
       blockers.push(prefix + 'sdkVersion: must equal installed Moonshine 0.0.65 pin');
@@ -133,6 +145,9 @@ export function auditV104PhysicalMicEvidence(input: unknown): PhysicalMicEvidenc
     requirePrivateToken(prefix + 'reviewerEvidenceRef', src.reviewerEvidenceRef);
     requirePrivateToken(prefix + 'anonymizedEvidenceRef', src.anonymizedEvidenceRef);
     if (!validDate(src.testDate)) blockers.push(prefix + 'testDate: valid YYYY-MM-DD required');
+    else if (valueString(src.testDate) < EARLIEST_CURRENT_TEST_DATE) {
+      blockers.push(prefix + 'testDate: predates the selected candidate build');
+    }
     if (src.inputMethod !== 'direct-human-physical-microphone') {
       blockers.push(prefix + 'inputMethod: direct human speech through physical microphone required');
     }
@@ -151,6 +166,8 @@ export function auditV104PhysicalMicEvidence(input: unknown): PhysicalMicEvidenc
       const label = prefix + condition + '.';
       const trials = scenario.trials;
       if (!isCount(trials) || trials < 10) blockers.push(label + 'trials: at least 10 real human-microphone trials required');
+      if (isCount(trials) && Number.isSafeInteger(totalHumanTrials + trials)) totalHumanTrials += trials;
+      else totalHumanTrialsKnown = false;
       const fields = ['referenceWords', 'substitutions', 'deletions', 'insertions'] as const;
       for (const field of fields) {
         if (!isCount(scenario[field])) blockers.push(label + field + ': nonnegative integer required');
@@ -202,6 +219,12 @@ export function auditV104PhysicalMicEvidence(input: unknown): PhysicalMicEvidenc
         blockers.push(label + 'p50/p95: finite nonnegative values with p95 >= p50 required');
       }
     }
+  }
+
+  if (!totalHumanTrialsKnown) {
+    blockers.push('corpusDistinctSentences: total trial count missing or exceeds safe integer precision');
+  } else if (isCount(data.corpusDistinctSentences) && data.corpusDistinctSentences > totalHumanTrials) {
+    blockers.push('corpusDistinctSentences: cannot exceed total human-microphone trials across platforms');
   }
 
   return {
