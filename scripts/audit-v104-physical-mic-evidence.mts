@@ -44,16 +44,16 @@ export const PHYSICAL_MIC_TARGETS = [
   'linux-x64', 'windows-x64', 'macos-arm64-15plus',
 ] as const;
 
-// Exact, independently verified review-only run 45578438677, not HEAD or
+// Exact, independently verified review-only run 45723704316, not HEAD or
 // historical Draft. Update only after a newly selected candidate's byte audit.
-const CURRENT_REVIEW_SOURCE = 'e35cc3a7ec2d6c21625ec4d99449e01605b1e29a';
+const CURRENT_REVIEW_SOURCE = '0ccc624ab893396829de40b4ed3b7d84de656e3a';
 const CURRENT_INSTALLER_DIGESTS: Readonly<Record<typeof PHYSICAL_MIC_TARGETS[number], readonly string[]>> = {
   'linux-x64': [
-    '67705fb5cd3990bbcfe2a77b93651903398e1928423b700847887a77bb0bbac9',
-    'c4b3a31270259a8f21a91347dfefc635d115eaf0a9513a991f6fef4cfd0b706f', // both DEB filenames have identical bytes
+    'c6ed1bba1637d8bf8c599957306c000934678ebd4861b56b2df949f2e9c2d891',
+    'f8c9e9f63cd498a8724e21a72de0f70f27d76865a47d2c7a1c9620777f3897d5', // both DEB filenames have identical bytes
   ],
-  'windows-x64': ['981fec2f95ba2d6b46171b44a74583b5374c7481c70a350bc09cfdd9e060a714'],
-  'macos-arm64-15plus': ['3ea038a9062c2bd95417ceaa70f074392031291c86e96768f84dd80b8564401d'],
+  'windows-x64': ['53b1837afc3180ef6470aed558843acd06dd7d060cb0b996c2e1f596d4c4891e'],
+  'macos-arm64-15plus': ['726abf91698638a083d4392db731f9dd55a94d8c77dfeee6efbed3f585a5f440'],
 };
 
 export type PhysicalMicEvidenceAudit = {

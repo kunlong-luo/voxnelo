@@ -20,9 +20,9 @@ const pinnedWheelDigest = (platform: string): string => {
   return hit[1];
 };
 const example = (platform: string) => ({
-  installerSha256: platform === 'linux-x64' ? 'c4b3a31270259a8f21a91347dfefc635d115eaf0a9513a991f6fef4cfd0b706f'
-    : platform === 'windows-x64' ? '981fec2f95ba2d6b46171b44a74583b5374c7481c70a350bc09cfdd9e060a714'
-    : '3ea038a9062c2bd95417ceaa70f074392031291c86e96768f84dd80b8564401d',
+  installerSha256: platform === 'linux-x64' ? 'f8c9e9f63cd498a8724e21a72de0f70f27d76865a47d2c7a1c9620777f3897d5'
+    : platform === 'windows-x64' ? '53b1837afc3180ef6470aed558843acd06dd7d060cb0b996c2e1f596d4c4891e'
+    : '726abf91698638a083d4392db731f9dd55a94d8c77dfeee6efbed3f585a5f440',
   osVersion: 'test-os',
   microphoneCategory: 'test-physical-microphone',
   sdkVersion: '0.0.65',
@@ -51,7 +51,7 @@ const example = (platform: string) => ({
 const filledSyntheticFixture = () => ({
   schemaVersion: 2,
   version: '1.0.4',
-  sourceCommit: 'e35cc3a7ec2d6c21625ec4d99449e01605b1e29a',
+  sourceCommit: '0ccc624ab893396829de40b4ed3b7d84de656e3a',
   corpusDistinctSentences: 20,
   platforms: Object.fromEntries(PHYSICAL_MIC_TARGETS.map(target => [target, example(target)])),
 });
@@ -240,14 +240,26 @@ describe('v1.0.4 physical human microphone evidence intake (NOT release approval
     expect(auditV104PhysicalMicEvidence(fake).releaseApproved).toBe(false);
     expect(auditV104PhysicalMicEvidence(null).structurallyReviewable).toBe(false);
   });
+  it('rejects the immediately superseded candidate even with its genuine installer hashes', () => {
+    const input = filledSyntheticFixture();
+    input.sourceCommit = 'e35cc3a7ec2d6c21625ec4d99449e01605b1e29a';
+    input.platforms['linux-x64']!.installerSha256 = 'c4b3a31270259a8f21a91347dfefc635d115eaf0a9513a991f6fef4cfd0b706f';
+    input.platforms['windows-x64']!.installerSha256 = '981fec2f95ba2d6b46171b44a74583b5374c7481c70a350bc09cfdd9e060a714';
+    input.platforms['macos-arm64-15plus']!.installerSha256 = '3ea038a9062c2bd95417ceaa70f074392031291c86e96768f84dd80b8564401d';
+    const audit = auditV104PhysicalMicEvidence(input);
+    expect(audit.blockers.join(' ')).toContain('sourceCommit');
+    for (const target of PHYSICAL_MIC_TARGETS) expect(audit.blockers.join(' ')).toContain(target + '.installerSha256');
+    expect(audit.structurallyReviewable).toBe(false);
+    expect(audit.releaseApproved).toBe(false);
+  });
   it('accepts either exact Linux installer but rejects stale source, swapped platforms and fabricated hashes', () => {
     const input = filledSyntheticFixture();
-    input.platforms['linux-x64']!.installerSha256 = '67705fb5cd3990bbcfe2a77b93651903398e1928423b700847887a77bb0bbac9';
+    input.platforms['linux-x64']!.installerSha256 = 'c6ed1bba1637d8bf8c599957306c000934678ebd4861b56b2df949f2e9c2d891';
     expect(auditV104PhysicalMicEvidence(input).blockers).toEqual([]);
-    input.sourceCommit = '3cebc475e3918db89ee503a5a85ffae16a885b3d';
-    input.platforms['windows-x64']!.installerSha256 = 'c4b3a31270259a8f21a91347dfefc635d115eaf0a9513a991f6fef4cfd0b706f';
+    input.sourceCommit = 'e35cc3a7ec2d6c21625ec4d99449e01605b1e29a';
+    input.platforms['windows-x64']!.installerSha256 = 'f8c9e9f63cd498a8724e21a72de0f70f27d76865a47d2c7a1c9620777f3897d5';
     input.platforms['macos-arm64-15plus']!.installerSha256 = 'a'.repeat(64);
-    input.platforms['linux-x64']!.installerSha256 = '766c27b844d9165fe3112cd592112e022eac0cc85a2721f33b2dad79cea59b0f';
+    input.platforms['linux-x64']!.installerSha256 = '67705fb5cd3990bbcfe2a77b93651903398e1928423b700847887a77bb0bbac9';
     const audit = auditV104PhysicalMicEvidence(input);
     expect(audit.blockers.join(' ')).toContain('sourceCommit');
     for (const target of PHYSICAL_MIC_TARGETS) {

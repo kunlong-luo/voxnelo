@@ -62,3 +62,7 @@
 ### V3.1 CI follow-up (2026-11-26)
 
 #318 merged at `1b41b0ea9747daf92457409fd0bbf75c4a49fc45`; PR core 45619697452 and deep UI 45619697419 passed; main CI 45620325874 and Pages 45620321939 passed. #319 initial deep UI [45619766955](https://github.com/kunlong-luo/voxnelo/actions/runs/45619766955) passed (browser artifact 15023493649, Linux Electron artifact 15023613378); all three platform packages in core run 45619766682 passed, but two Nordic workspace tests failed (641/643). The stale test expected an initially visible related phrase and the old 8px compact header top padding. Update the test to require collapsed accessible controls, explicit expand/collapse and preserved related phrase/scene navigation, and the new 4px compact padding. No geometry gate disabled. Branch synchronized to merged security guard. New integrated checks pending. No public release; prior installer bytes do not contain both changes.
+
+### V3.1 集成结果（2026-11-26）
+
+#319 已合并至 `0ccc624ab893396829de40b4ed3b7d84de656e3a`，最终核心 CI 45723079001、深度 UI 45723079092、main CI 45723704270、Pages 45723704293 通过。新三平台审核构建 45723704316 成功。该候选源码包含 V3.1 与 #318 权限加固；未独立观看本次最新截图，不声称实体屏幕或实际听写通过。参见[精确候选](../release/V1.0.4-REVIEW-ARTIFACT-HANDOFF-2026-11-24.md)。

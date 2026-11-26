@@ -30,7 +30,7 @@ Current visual authority: [V3 dictation-first](design/V3-DICTATION-FIRST-UX-2026
 
 ### Single source of truth
 
-Current selected review-only build: [45578438677](https://github.com/kunlong-luo/voxnelo/actions/runs/45578438677), exact binary source `e35cc3a7ec2d6c21625ec4d99449e01605b1e29a`. Public latest v1.0.3; v1.0.4 HOLD. Follow the current checklist at the top of the release freeze, not dated historical checkpoints or docs-only HEAD. The candidate is independently checked for all four distinct formats at selected inner-member scope; rights and physical acceptance remain pending.
+Current selected review-only build: [45723704316](https://github.com/kunlong-luo/voxnelo/actions/runs/45723704316), exact binary source `0ccc624ab893396829de40b4ed3b7d84de656e3a`. Public latest v1.0.3; v1.0.4 HOLD. Follow the current checklist at the top of the release freeze, not dated historical checkpoints or docs-only HEAD. All five installer hashes and actual DEB ASAR independently checked; other latest-format inner members pending; rights and physical acceptance remain pending.
 
 - Current release decision and checklist: [release freeze](release/V1.0.4-RELEASE-FREEZE.md).
 - Dated scores, registry reports, convergence and native-library provenance: [registry audit ledger](release/V1.0.4-REGISTRY-AUDIT.md). Do not paste its complete log into other documents.

@@ -8,7 +8,7 @@ Voxnelo 是一款开源、本地优先的英语口语跟读桌面应用。听一
 
 **源码版本：** `1.0.4`（尚未发布的候选源码） · **最新公开发行：** `v1.0.3` 正式免签名版 · **开发者：** Leo Luo · **许可证：** [MIT](LICENSE)
 
-**维护者审核专用：** v1.0.4 仍处于发布冻结（HOLD）。当前选定的未签名审核构建为 [run 45578438677](https://github.com/kunlong-luo/voxnelo/actions/runs/45578438677)，源码 `e35cc3a`，不是公开发行版，也不是旧私有 Draft。当前门禁与精确候选实机测试步骤见[发布冻结页](docs/release/V1.0.4-RELEASE-FREEZE.md)和[实机证据台账](docs/release/V1.0.4-PHYSICAL-DEVICE-EVIDENCE.md)。旧版本基础使用确认不能替代本批安装文件验收。普通用户仍应从公开 Releases 页面下载。
+**维护者审核专用：** v1.0.4 仍处于发布冻结（HOLD）。当前选定的未签名审核构建为 [run 45723704316](https://github.com/kunlong-luo/voxnelo/actions/runs/45723704316)，源码 `0ccc624`，不是公开发行版，也不是旧私有 Draft。当前门禁与精确候选实机测试步骤见[发布冻结页](docs/release/V1.0.4-RELEASE-FREEZE.md)和[实机证据台账](docs/release/V1.0.4-PHYSICAL-DEVICE-EVIDENCE.md)。旧版本基础使用确认不能替代本批安装文件验收。普通用户仍应从公开 Releases 页面下载。
 
 ## 已实现的基础功能
 
