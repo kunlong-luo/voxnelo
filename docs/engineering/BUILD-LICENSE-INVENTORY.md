@@ -141,3 +141,7 @@ The old private DEB inspection utility still selected pre-patch libXtst and hist
 ## Actual six Ubuntu distro copyright texts — 2026-11-26
 
 Temporary scoped audit job 139664175164 in 45746633439 succeeded; downloaded artifact 15083269073 and independently verified all six actual copyright text hashes, matching prior runner evidence. Exact archive/version/ELF identities match the selected AppImage. See [native release gate](ASR-PUBLIC-RELEASE-GATE.md) for text-derived GPL/LGPL/permissive classifications and remaining source/notice obligations. Copyright texts are actual recovered members, not proof of notice inclusion or complete distribution approval. Current rights/provenance partial credit 19/25; public release HOLD. No packaging or workflow changes retained.
+
+## Ubuntu source archives and actual AppImage notice gap — 2026-11-26
+
+Source acquisition job 139665494679 succeeded; actual six descriptors and twelve archive members independently matched descriptor Source/Version/Binary and SHA-256 fields. Seven actual upstream COPYING texts and three current runner common-license references reviewed; exact evidence in [native gate](ASR-PUBLIC-RELEASE-GATE.md). Current selected AppImage exact SHA rechecked: only Xtst full distro copyright text found in the uncompressed 91 regular files; five other exact byte strings absent. This is not a complete legal interpretation. Qualified GPL/LGPL linkage, corresponding source/notice delivery and possible packaging correction remain required; no approval. Provisional rights 20/25. HOLD.

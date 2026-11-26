@@ -308,3 +308,43 @@ Independently downloaded [artifact 15083269073](https://github.com/kunlong-luo/v
 Material next step: recover exact corresponding source packages and full license texts, verify applicable file-to-library licensing/linkage and redistribution requirements (especially GPL-3 and LGPL), check actual distributed notice inclusion and source/relinking obligations with qualified reviewer. Copyright file references to distro common-licenses are not proof those complete texts exist in the AppImage. The patched Xtst notice was already independently present; no claim the other five notices/full license texts are currently shipped. If packaging must change, require newly built and independently verified candidate plus candidate-specific acceptance. Do not assume GPL automatically applies to all Voxnelo code or that dynamic linkage automatically resolves obligations. Preserve the evidence artifact privately before expiry. The temporary branch job is removed in this follow-up; original workflow restored byte-for-byte. No new production code, dependencies, build or release.
 
 Provisional internal readiness increases from 57 to **58/100** solely for newly recovered and actually reviewed exact copyright texts and completed six-way archive/version/ELF/notice reconciliation (rights/provenance 18→19/25; source 20/20, candidate 19/20, human 0/25, final approval 0/10 unchanged). Engineering 99/100. This is partial evidence credit, not legal clearance; public desktop release remains HOLD. Documentation PR CI pending. No source/rights, human or final approval gate marked closed.
+
+## Exact Ubuntu corresponding-source archive recovery — 2026-11-26
+
+#327 merged at `4a57720b22bbc8096f6e0d296dd03c4d10fdc76a` after CI 45746796883 succeeded. Temporary branch-only source acquisition job 139665494679 in [run 45747038504](https://github.com/kunlong-luo/voxnelo/actions/runs/45747038504) succeeded; supply-chain aggregate also succeeded. The six exact binary Source/Version fields from notice artifact 15083269073 select these Ubuntu source sets. Independently downloaded both new artifacts and recomputed ZIP SHA-256:
+
+| Artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| [15083856544 report + common license texts](https://github.com/kunlong-luo/voxnelo/actions/runs/45747038504/artifacts/15083856544) | 32713 | `1a81114794342c83815025aee22f6e279ff33fb8a8a735097581f906610a87c5` |
+| [15083469024 original source sets](https://github.com/kunlong-luo/voxnelo/actions/runs/45747038504/artifacts/15083469024) | 2836499 | `26d6323977814466b4f4964ec641576aa03dd19af720234ab9819acc8969c980` |
+
+source-reconciliation.json 8391 bytes SHA-256 f052106454396557df1078a053c09069b3953b6709fe744e800d0f792ef3b62a. Actual source ZIP contains exactly 18 regular members (six .dsc plus twelve source members; source members total 2825756 bytes). Independently parsed each actual descriptor Source, full Version, Binary (includes the observed binary package), and Checksums-Sha256, then independently measured all 12 actual source member byte lengths and SHA-256 against those fields. All matched. All six descriptors have a PGP signed-message envelope, but signatures and historical signed distro indexes were **not** cryptographically verified; no build reproduced, no claim exact build flags or complete corresponding source obligations satisfied.
+
+| Source / exact full version | Actual descriptor SHA-256 | Source set |
+| --- | --- | --- |
+| libxss 1:1.2.2-1 | `22379490d80d7661c793f0f016a5e12255fdb53a0b2b58b6fe14afa805fcac3f` | orig.tar.gz + diff.gz |
+| libxtst 2:1.2.3-1ubuntu0.22.04.1 | `52a2ae40cc68c8c6ba07b352a2d82deddace882a2a6f709b7e2cc67b027a57c9` | orig.tar.gz + patched diff.gz |
+| libappindicator 12.10.1+13.10.20130920-0ubuntu4 | `5a9510dbdc1f643df058686e881b93570dd0e70688c927077a8c0b9f1812cdc9` | orig.tar.gz + diff.gz |
+| gconf 3.2.6-0ubuntu2 | `f82088533828540a3b1ca97f58b87568003eca1cdc3a1f5b1d83b0b91161715e` | orig.tar.xz + debian.tar.gz |
+| libindicator 12.10.2+14.04.20140402-0ubuntu1 | `68d6d1b6a3f9177e8306a1aeb3cb1bcb0d1c86a06ee18c8dcbbaff90140b8866` | orig.tar.gz + diff.gz |
+| libnotify 0.7.6-1ubuntu3 | `75fded2321055566ffda8a045cbd97e078994f70f743f3c266c9916192314607` | orig.tar.xz + debian.tar.gz |
+
+Read-only tar member inspection (no extraction to disk, no script execution) identified seven actual upstream root COPYING texts in the six original tarballs:
+
+| Actual member (root name abbreviated) | Bytes | SHA-256 |
+| --- | ---: | --- |
+| libXScrnSaver-1.2.2/COPYING | 2591 | `5cf3e16f5dd753a4c0853e8227134ab65f5562d9ef89b1a2d7681f5c8ac9feb5` |
+| libXtst-1.2.3/COPYING | 5826 | `940190489c7a0e5ae3d83fc4fcbd79e0cd1b765bf1a4efd408293c1ee0332ceb` |
+| libappindicator-*/COPYING.LGPL.2.1 | 26527 | `a9bdde5616ecdd1e980b44f360600ee8783b1f99b8cc83a2beb163a0a390e861` |
+| libappindicator-*/COPYING (LGPL v3 text) | 7639 | `a853c2ffec17057872340eee242ae4d96cbf2b520ae27d903e1b2fef1a5f9d1c` |
+| GConf-3.2.6/COPYING | 25265 | `94b03f1a60a7fd5007149530626a895a6ef5a8b9342abfd56860c5f3956f5d23` |
+| libindicator-*/COPYING (GPL v3 text) | 35147 | `8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903` |
+| libnotify-0.7.6/COPYING | 26430 | `a190dc9c8043755d90f8b0a75fa66b9e42d4af4c980bf5ddc633f0124db3cee7` |
+
+The report ZIP also contains current runner common-licenses GPL-3, LGPL-2 and LGPL-2.1 texts, independently hash-matched: 35149 bytes / 3972dc9744f6499f0f9b2dbf76696f2ae7ad8af9b23dde66d6af86c9dfb36986; 25381 / 681e386e44a19d7d0674b4320272c90e66b6610b741e7e6305f8219c42e85366; 26530 / dc626520dcd53a22f727af3ee42c770e56c97a64fe3adb063799d8ab032fe551. These are reference texts from the current runner, not historical package-specific identical bytes. Important: libappindicator upstream root COPYING is LGPL v3, while the actual Ubuntu binary copyright states default GPL v3 and enumerates LGPL v2.1 files. A qualified reviewer must reconcile the actual source/patch files, per-file declarations and binary linkage; do not simply choose one label.
+
+**Concrete distribution gap:** rehashed actual current AppImage to c6ed1bba1637d8bf8c599957306c000934678ebd4861b56b2df949f2e9c2d891, parsed its SquashFS, searched the uncompressed bytes of all 91 regular outer files (including app.asar and Chromium notice HTML; 93 nondirectory entries including two symlinks). Of the six exact Ubuntu copyright texts, only libxtst6 matched /resources/THIRD-PARTY-NOTICES/Ubuntu-libXtst.txt. Other five complete byte strings absent. This is exact-byte absence in that scope, not a determination that no equivalent reformatted or differently embedded attribution exists. Existing source/notice obligation gap is therefore concrete, not merely an unavailable source lead.
+
+Next: obtain qualified source/linkage and distribution scope decision, include applicable full notices/licenses and exact source delivery mechanism; if bundled notices or other distribution bytes change, build and verify a new candidate, replace intake hashes and collect candidate-specific real-device evidence. Retain exact recovered source archive sets privately before Actions expiry; do not represent temporary artifacts as a durable source offer or publish unreviewed candidate. No source signature, legal clearance, source-build equivalence, physical test or final approval. The temporary workflow change is removed, no production change retained.
+
+**Provisional readiness 59/100** (20 source convergence, 20 rights/provenance, 19 candidate, 0 physical, 0 final). +1 rights/provenance for actual exact source sets, twelve independently matched members and seven upstream license texts, not closure of the legal gate. Existing candidate 19/20 already reserved for unresolved complete native/wrapper/source-notice reconciliation; do not award that point yet. Engineering 99/100. HOLD. Final documentation CI pending.
