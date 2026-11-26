@@ -32,7 +32,7 @@ Current visual authority: [V3 dictation-first](design/V3-DICTATION-FIRST-UX-2026
 
 Current selected review-only build: [45723704316](https://github.com/kunlong-luo/voxnelo/actions/runs/45723704316), exact binary source `0ccc624ab893396829de40b4ed3b7d84de656e3a`. Public latest v1.0.3; v1.0.4 HOLD. Follow the current checklist at the top of the release freeze, not dated historical checkpoints or docs-only HEAD. All five installer hashes and all four distinct formats' selected inner members independently checked; exact intake pins merged in #320; rights and physical acceptance remain pending.
 
-- Current release decision and checklist: [release freeze](release/V1.0.4-RELEASE-FREEZE.md).
+- Current release decision, owner handoff and ordered checklist: [release freeze](release/V1.0.4-RELEASE-FREEZE.md). Do not add parallel score or status boards; preserve exact private candidate bytes before the artifact expiry.
 - Dated scores, registry reports, convergence and native-library provenance: [registry audit ledger](release/V1.0.4-REGISTRY-AUDIT.md). Do not paste its complete log into other documents.
 - Build-specific inventory: [build license inventory](engineering/BUILD-LICENSE-INVENTORY.md); native-ASR gate: [ASR release gate](engineering/ASR-PUBLIC-RELEASE-GATE.md); actual installer hashes: [artifact handoff](release/V1.0.4-REVIEW-ARTIFACT-HANDOFF-2026-11-24.md); human evidence: [physical ledger](release/V1.0.4-PHYSICAL-DEVICE-EVIDENCE.md).
 - Delete superseded duplicate content after exact comparison and keep unique historical evidence/attribution. Do not create parallel status or score ledgers. Historical evidence can be linked to a specific Git commit rather than duplicated. Changes need maintained-link checks and normal protected-main CI.
@@ -46,7 +46,7 @@ Current selected review-only build: [45723704316](https://github.com/kunlong-luo
 - [Historical Zipformer personal pilot — not the default Moonshine installation](engineering/LOCAL-ASR-PERSONAL-PILOT.md)
 - [Privacy — public v1.0.3 versus unpublished v1.0.4 source](PRIVACY.md)
 - [PRD traceability — 23 IDs with code/test paths and unmet requirements](release/PRD-TRACEABILITY.md)
-- [Release readiness](engineering/STABLE-RELEASE-READINESS.md)
+- [Optional signed/certified release readiness](engineering/STABLE-RELEASE-READINESS.md) — not a replacement for the current unsigned candidate's mandatory rights and physical acceptance gates.
 - [v1.0.4 release freeze and ordered acceptance](release/V1.0.4-RELEASE-FREEZE.md)
 - [Registry audit and evidence-based quality rubric](release/V1.0.4-REGISTRY-AUDIT.md)
 - [v1.0.4 candidate release notes — not published](release-notes/v1.0.4.md)

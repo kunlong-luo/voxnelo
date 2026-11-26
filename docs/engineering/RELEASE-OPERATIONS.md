@@ -8,6 +8,14 @@
 
 **发行范围：** Linux x64 DEB/AppImage、Windows x64 NSIS EXE、macOS ARM64 DMG。**全部未签名，macOS 未公证**；SmartScreen / Smart App Control 或 Gatekeeper 可能阻止运行。Linux Moonshine 需要用户主动单独安装模型，Windows/macOS 不承诺相同离线引擎。F001–F012、模型/内容权利和至少五位初学者独立审核尚无完整公开可核验证据，但维护者确认所需人工操作测试已通过。详见 [v1.0.3 发行说明](../release-notes/v1.0.3.md) 和 [发行者免签名决定](../release/UNSIGNED-V1-OWNER-DECISION.md)。
 
+## v1.0.4 当前候选交付与 Draft 冲突处理（2026-11-26）
+
+- 当前唯一验收候选：[run 45723704316](https://github.com/kunlong-luo/voxnelo/actions/runs/45723704316)，源码 `0ccc624ab893396829de40b4ed3b7d84de656e3a`。#324 已合并并通过 648 项自动化测试；这不是新安装包或实际麦克风证据。按[发布冻结页](../release/V1.0.4-RELEASE-FREEZE.md)集中关闭剩余门禁。
+- 三个平台的 Actions 归档尚未过期，将于 2026-12-09 UTC 失效。现在将已复算的精确安装文件、清单、必要审核报告保存在受控私有存储，不上传原始私人测试数据；[交付手册](../release/V1.0.4-REVIEW-ARTIFACT-HANDOFF-2026-11-24.md)列出文件哈希。不要为了归档有效期而提前发布。
+- 实际读取现役 `release.yml`：只进行候选验证与上传 Actions artifact，权限 contents:read，不会公开 Release。现役 `release-draft.yml` 要求 main、精确版本和 PREPARE_DRAFT_ONLY，构建之前使用 assert-release-tag-vacant 检查同版本 Draft/Release/tag；**已有 v1.0.4 Draft 时不得重跑该流程来覆盖附件**。旧 Draft ID 428750217 仍未公开，八个旧附件不能冒充新候选。历史一次性写权限工作流保持归档。
+- 权利及实机验收都完成后，由维护者另行授权明确的 draft-only 交付操作：先保存旧 Draft 元数据、目标提交与附件哈希及历史记录；审查一个精确选择 run/source/installer hash 的交付方案，核验目标版本、tag、附件完整性和重复版本防护。不能先删除旧 Draft 或提前创建 tag 来绕过检查；不将本地文档 HEAD 当成二进制源码。只使用已验收的精确字节，若构建、签名或补充许可文件改变分发字节，重新评估相关证据。当前没有已授权的附件替换操作，现有工具不提供 Release 写入/发布操作，未执行任何修改。
+- 正式发布需独立批准：核对最终实际附件、清单、源码与标签、未签名/未公证披露、版本说明及权利与实机证据；再由授权维护者执行公开发布。公开后重新检查 Release API 状态及实际下载文件。现阶段仍 HOLD。签名与公证是可选额外信任增强，不表示可以跳过已适用的许可和真实验收门禁。
+
 ## v1.0.4 发布冲刺（2026-11-24）
 
 维护者同意进入发布收尾阶段，保留 HOLD。只处理阻塞项、验收与文档；见 [发布冻结和有序验收清单](../release/V1.0.4-RELEASE-FREEZE.md)。不升级 1.0.5、不创建标签、不替换历史 Draft，也不公开发行，直到全部适用门禁通过并取得明确发布授权。

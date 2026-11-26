@@ -4,6 +4,10 @@
 
 以下 `stable-readiness.yml` 是未来**选择实施受信任签名与公证、并有完整真实审批证据时**额外使用的认证级门禁；不会倒推否认已经真实发布的 unsigned v1.0.0。其自身签名/验收要求继续严格 fail closed，不得伪造任何人工审校结果。
 
+## 当前 v1.0.4 发行路径（2026-11-26）
+
+现行目标为**未签名官方桌面候选**，不是认证级签名发行。历史免签名决定与 Issue [#141](https://github.com/kunlong-luo/voxnelo/issues/141) 不要求为当前候选购买证书；但必须真实披露未签名/未公证、完成适用的权利、实机和最终发行审核。当前 v1.0.4 仍 HOLD，请使用[发布冻结和责任分工](../release/V1.0.4-RELEASE-FREEZE.md)，不要误把以下额外签名门禁作为免签名候选的唯一阻塞项。也不要用历史人工确认代替当前精确安装包的人体麦克风证据。以下认证级门禁保持不变。
+
 ## 两层必须独立满足的条件
 
 1. 人工与许可：依照示例 docs/release/stable-evidence.example.json，在 docs/release/stable-approval/vX.Y.Z.json 为 F001–F012、内容与参考音频版权、麦克风隐私、Linux/Windows/macOS 真机、Moonshine 许可和噪声精度、UI/无障碍、升级数据保留、发布者签名身份分别提供独立审核人、日期和 HTTPS 证据。至少五位不同的英语初学者完成闭环测试。绝不上传私密录音、密钥、个人路径或设备 ID。
