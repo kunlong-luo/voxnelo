@@ -23,7 +23,7 @@ const example = (platform: string) => ({
   installerSha256: platform === 'linux-x64' ? 'f8c9e9f63cd498a8724e21a72de0f70f27d76865a47d2c7a1c9620777f3897d5'
     : platform === 'windows-x64' ? '53b1837afc3180ef6470aed558843acd06dd7d060cb0b996c2e1f596d4c4891e'
     : '726abf91698638a083d4392db731f9dd55a94d8c77dfeee6efbed3f585a5f440',
-  osVersion: 'test-os',
+  osVersion: platform === 'macos-arm64-15plus' ? '15.2.1' : 'test-os',
   microphoneCategory: 'test-physical-microphone',
   sdkVersion: '0.0.65',
   pythonVersion: '3.12.16',
@@ -33,7 +33,7 @@ const example = (platform: string) => ({
   modelHashesEvidenceRef: 'private-model-hashes-test',
   reviewerEvidenceRef: 'private-reviewer-ref-test',
   anonymizedEvidenceRef: 'private-session-ref-test',
-  testDate: '2026-11-23',
+  testDate: '2026-11-25',
   inputMethod: 'direct-human-physical-microphone',
   consentConfirmed: true,
   normalizationRule: 'test-normalizer',
@@ -177,6 +177,35 @@ describe('v1.0.4 physical human microphone evidence intake (NOT release approval
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+
+  it('rejects observations predating the exact candidate build but accepts its local calendar day', () => {
+    const input = filledSyntheticFixture();
+    expect(auditV104PhysicalMicEvidence(input).blockers).toEqual([]);
+    input.platforms['linux-x64']!.testDate = '2026-11-24';
+    expect(auditV104PhysicalMicEvidence(input).blockers.join(' ')).toContain('linux-x64.testDate: predates');
+  });
+
+  it('requires a numeric supported macOS product version', () => {
+    const input = filledSyntheticFixture();
+    for (const version of ['14.7.6', 'test-os', 'macOS 15', '15.invalid', '999999999999999999999']) {
+      input.platforms['macos-arm64-15plus']!.osVersion = version;
+      expect(auditV104PhysicalMicEvidence(input).blockers.join(' ')).toContain('macos-arm64-15plus.osVersion');
+    }
+    for (const version of ['15', '15.2.1', '26.1']) {
+      input.platforms['macos-arm64-15plus']!.osVersion = version;
+      expect(auditV104PhysicalMicEvidence(input).blockers).toEqual([]);
+    }
+  });
+
+  it('rejects impossible distinct corpus counts and unsafe aggregate trial arithmetic', () => {
+    const input = filledSyntheticFixture();
+    input.corpusDistinctSentences = 60;
+    expect(auditV104PhysicalMicEvidence(input).blockers).toEqual([]);
+    input.corpusDistinctSentences = 61;
+    expect(auditV104PhysicalMicEvidence(input).blockers.join(' ')).toContain('corpusDistinctSentences: cannot exceed');
+    input.platforms['linux-x64']!.quiet.trials = Number.MAX_SAFE_INTEGER;
+    expect(auditV104PhysicalMicEvidence(input).blockers.join(' ')).toContain('total trial count missing or exceeds');
   });
 
   it('rejects impossible future human-microphone test dates', () => {
