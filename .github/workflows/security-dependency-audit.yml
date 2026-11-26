@@ -125,3 +125,138 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  # Temporary same-repository source acquisition investigation; remove before merge.
+  distro-corresponding-source-review:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && github.head_ref == 'audit/v104-corresponding-source-20261126'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Recover exact Ubuntu source descriptors and every SHA256-listed source member
+        shell: bash
+        run: |
+          set -euo pipefail
+          export REVIEW_ROOT="$RUNNER_TEMP/voxnelo-source-review"
+          mkdir -p "$REVIEW_ROOT/reports" "$REVIEW_ROOT/sources"
+          python3 - <<'PY'
+          import hashlib, json, os, re, subprocess
+          from pathlib import Path
+          root = Path(os.environ['REVIEW_ROOT'])
+          # Exact Source and Version fields of the six matched DEBs in artifact 15083269073.
+          specs = [
+              ('libxss','libx/libxss','1:1.2.2-1','old-releases.ubuntu.com'),
+              ('libxtst','libx/libxtst','2:1.2.3-1ubuntu0.22.04.1','archive.ubuntu.com'),
+              ('libappindicator','liba/libappindicator','12.10.1+13.10.20130920-0ubuntu4','old-releases.ubuntu.com'),
+              ('gconf','g/gconf','3.2.6-0ubuntu2','archive.ubuntu.com'),
+              ('libindicator','libi/libindicator','12.10.2+14.04.20140402-0ubuntu1','archive.ubuntu.com'),
+              ('libnotify','libn/libnotify','0.7.6-1ubuntu3','old-releases.ubuntu.com'),
+          ]
+          def sha(path):
+              h=hashlib.sha256()
+              with path.open('rb') as stream:
+                  for chunk in iter(lambda:stream.read(1024*1024),b''):
+                      h.update(chunk)
+              return h.hexdigest()
+          def download(host,pool,filename,target,maxsize):
+              assert re.fullmatch(r'[A-Za-z0-9+._~-]+',filename) and filename not in ('.','..')
+              url=f'https://{host}/ubuntu/pool/main/{pool}/{filename}'
+              rc=subprocess.run(['curl','--fail','--silent','--show-error','--proto','=https','--proto-redir','=https','--location','--connect-timeout','8','--max-time','40','--max-filesize',str(maxsize),'--output',str(target),url],check=False).returncode
+              if rc or not target.is_file() or not 0<target.stat().st_size<=maxsize:
+                  target.unlink(missing_ok=True)
+                  return None
+              return url
+          def parse_dsc(path,source,version):
+              # Parse only the cleartext fields. A PGP envelope is not a verified signature.
+              raw=path.read_text(encoding='utf-8',errors='strict')
+              fields={}
+              active=None
+              for line in raw.splitlines():
+                  if line.startswith('-----BEGIN PGP SIGNATURE-----'):
+                      break
+                  if line[:1] in (' ','\t'):
+                      if active:
+                          fields[active].append(line.strip())
+                      continue
+                  m=re.fullmatch(r'([A-Za-z][A-Za-z0-9-]*):\s*(.*)',line)
+                  if m:
+                      active=m[1]
+                      if active in fields:
+                          raise ValueError('duplicate control field')
+                      fields[active]=[m[2]]
+                  else:
+                      active=None
+              if fields.get('Source')!=[source] or fields.get('Version')!=[version]:
+                  raise ValueError('source or full version mismatch')
+              members={}
+              for line in fields.get('Checksums-Sha256',[]):
+                  if not line: continue
+                  m=re.fullmatch(r'([0-9a-f]{64})\s+([1-9][0-9]*)\s+([A-Za-z0-9+._~-]+)',line)
+                  if not m or m[3] in ('.','..') or m[3] in members or not m[3].startswith(source+'_'):
+                      raise ValueError('invalid checksum member')
+                  size=int(m[2])
+                  if size>64*1024*1024: raise ValueError('source member size bound')
+                  members[m[3]]=(size,m[1])
+              if not 1<=len(members)<=8 or sum(v[0] for v in members.values())>96*1024*1024:
+                  raise ValueError('source set bounds')
+              return members,raw.startswith('-----BEGIN PGP SIGNED MESSAGE-----')
+          results=[]
+          for source,pool,version,primary in specs:
+              folder=root/'sources'/source
+              folder.mkdir()
+              filename=f'{source}_{version.split(":")[-1]}.dsc'
+              record={'source':source,'version':version,'descriptor':filename,'status':'missing','members':[]}
+              hosts=list(dict.fromkeys([primary,'archive.ubuntu.com','old-releases.ubuntu.com','security.ubuntu.com']))
+              try:
+                  descriptor=folder/filename
+                  url=None
+                  for host in hosts:
+                      url=download(host,pool,filename,descriptor,256*1024)
+                      if url: break
+                  if not url: raise ValueError('descriptor missing')
+                  members,envelope=parse_dsc(descriptor,source,version)
+                  record.update({'descriptorUrl':url,'descriptorSha256':sha(descriptor),'descriptorBytes':descriptor.stat().st_size,'pgpEnvelopePresent':envelope,'signatureVerified':False})
+                  for name,(size,digest) in members.items():
+                      item={'name':name,'expectedBytes':size,'expectedSha256':digest,'matched':False}
+                      for host in hosts:
+                          target=folder/name
+                          loc=download(host,pool,name,target,size)
+                          if loc and target.stat().st_size==size and sha(target)==digest:
+                              item.update({'matched':True,'url':loc})
+                              break
+                          target.unlink(missing_ok=True)
+                      record['members'].append(item)
+                  record['status']='descriptor-and-members-matched' if all(x['matched'] for x in record['members']) else 'source-members-missing'
+              except Exception as err:
+                  record['status']='inspection-failed'
+                  record['error']=str(err)
+              results.append(record)
+          common=[]
+          for name in ['GPL-3','LGPL-2','LGPL-2.1']:
+              src=Path('/usr/share/common-licenses')/name
+              data=src.read_bytes()
+              target=root/'reports'/(name+'.txt')
+              target.write_bytes(data)
+              common.append({'name':name,'size':len(data),'sha256':sha(target),'origin':'runner common-licenses; not historical package-specific bytes'})
+          report={'candidateRun':45723704316,'candidateSource':'0ccc624ab893396829de40b4ed3b7d84de656e3a','binaryNoticeArtifact':15083269073,'legalApproval':False,'sourceSignaturesVerified':False,'sourceBuildReproduced':False,'packages':results,'commonLicenseTexts':common}
+          (root/'reports'/'source-reconciliation.json').write_text(json.dumps(report,indent=2)+'\n')
+          if not all(x['status']=='descriptor-and-members-matched' for x in results):
+              raise SystemExit(1)
+          PY
+      - name: Preserve source reconciliation and common license texts (not legal approval)
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: current-distro-source-reconciliation-NOT-RELEASE
+          path: ${{ runner.temp }}/voxnelo-source-review/reports/
+          retention-days: 14
+          if-no-files-found: error
+      - name: Preserve exact retrieved source archives for reviewer, no execution
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: current-distro-corresponding-source-NOT-RELEASE
+          path: ${{ runner.temp }}/voxnelo-source-review/sources/
+          retention-days: 14
+          if-no-files-found: warn
