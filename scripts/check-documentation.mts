@@ -185,7 +185,7 @@ export function auditAgentContract(
     if (!source.includes(token)) issues.push({ file, kind: 'task-contract', detail: 'missing ' + token });
   };
   const formPath = '.github/ISSUE_TEMPLATE/agent_task.yml';
-  const blocks = form.split(/^  - type: /m).slice(1);
+  const blocks = form.split(/^ {2}- type: /m).slice(1);
   for (const id of ['goal', 'priority', 'dependencies', 'scope', 'acceptance', 'verification', 'handoff']) {
     const matches = blocks.filter(block => block.split('\n').includes('    id: ' + id));
     if (matches.length !== 1 || !matches[0]?.includes('      required: true')) {
@@ -193,7 +193,7 @@ export function auditAgentContract(
     }
   }
   const priority = blocks.find(block => block.split('\n').includes('    id: priority')) ?? '';
-  const options = [...priority.matchAll(/^        - (.+)$/gm)].map(match => match[1]);
+  const options = [...priority.matchAll(/^ {8}- (.+)$/gm)].map(match => match[1]);
   if (options.join(',') !== 'P0,P1,P2,P3') {
     issues.push({ file: formPath, kind: 'task-contract', detail: 'priority options must be P0,P1,P2,P3' });
   }
