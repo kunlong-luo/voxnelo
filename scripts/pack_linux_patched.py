@@ -5,6 +5,7 @@ Python 3.10+, curl, 7z (p7zip-full), dpkg-deb, unsquashfs. Never install
 the downloaded DEB or alter the shared electron-builder cache.
 """
 import argparse
+from contextlib import ExitStack
 import hashlib
 import json
 import os
@@ -18,6 +19,7 @@ import sys
 import tempfile
 
 from audit_appimage_distro_packages import dpkg_output, selected_members
+from appimage_distro_payload import BUNDLE, expected_members, prepare_bundle
 
 TOOLSET_URL = "https://github.com/electron-userland/electron-builder-binaries/releases/download/appimage-12.0.1/appimage-12.0.1.7z"
 TOOLSET_SHA = "d12ff7eb8f1d1ec4652ca5237a7fbdca33acc0c758045636feca62dc6ecb8ec4"
@@ -120,11 +122,15 @@ def verify(image):
         raise ValueError("Unexpected missing or duplicate Xtst member")
     if listing.splitlines().count("squashfs-root/" + NOTICE_MEMBER) != 1:
         raise ValueError("Missing or duplicate Xtst copyright member")
-    for member, expected in ((ELF_MEMBER, PATCHED_ELF), (NOTICE_MEMBER, NOTICE_SHA)):
+    expected_payload = {ELF_MEMBER: PATCHED_ELF, NOTICE_MEMBER: NOTICE_SHA, **expected_members(digest)}
+    for member, expected in expected_payload.items():
+        if listing.splitlines().count("squashfs-root/" + member) != 1:
+            raise ValueError("Missing or duplicate expected AppImage member: " + member)
         raw = subprocess.check_output(command + ["-cat", str(image), member], timeout=60)
         require_bytes(raw, expected, member)
     return {"schemaVersion": 1, "packageVersion": DEB_VERSION, "patchedElfSha256": PATCHED_ELF,
-            "copyrightSha256": NOTICE_SHA, "squashfsOffset": offset, "legalApproval": False,
+            "copyrightSha256": NOTICE_SHA, "squashfsOffset": offset,
+            "verifiedDistroPayloadMembers": len(expected_payload), "legalApproval": False,
             "physicalAcceptance": False, "publicReleaseApproved": False}
 
 
@@ -143,9 +149,10 @@ def build():
         raise ValueError("electron-builder changed; re-audit native toolset before building")
     image = Path("release") / ("Voxnelo-" + version + ".AppImage")
     notice_path = Path("build/third-party-notices") / NOTICE_NAME
+    bundle_path = notice_path.parent / BUNDLE
     if image.exists() or image.is_symlink():
         raise ValueError("Move existing same-version AppImage out of release/ before rebuilding")
-    if notice_path.exists() or notice_path.is_symlink():
+    if notice_path.exists() or notice_path.is_symlink() or bundle_path.exists() or bundle_path.is_symlink():
         raise ValueError("Refusing to overwrite existing generated notice")
     with tempfile.TemporaryDirectory(prefix="voxnelo-appimage-toolset-") as directory:
         temp = Path(directory)
@@ -156,28 +163,25 @@ def build():
         subprocess.run(["7z", "x", "-y", "-o" + str(toolset), str(archive)],
                        check=True, timeout=120)
         notice = patch_toolset(toolset, deb)
-        # The notice is a build-only input to existing extraResources. Use
-        # exclusive creation; never replace a source-controlled or user file.
-        with notice_path.open("xb") as stream:
-            try:
+        # Use exclusive creation; clean up only inputs created by this build.
+        with ExitStack() as cleanup:
+            bundle_path.mkdir()
+            cleanup.callback(shutil.rmtree, bundle_path)
+            prepare_bundle(bundle_path, temp, toolset, download, read_regular,
+                           require_bytes, dpkg_output, selected_members)
+            with notice_path.open("xb") as stream:
+                cleanup.callback(notice_path.unlink)
                 stream.write(notice)
+            try:
+                env = dict(os.environ, APPIMAGE_TOOLS_PATH=str(toolset),
+                           CSC_IDENTITY_AUTO_DISCOVERY="false")
+                subprocess.run(["pnpm", "exec", "electron-builder", "--linux", "deb",
+                                "AppImage", "--x64", "--config.toolsets.appimage=0.0.0",
+                                "--publish", "never"], env=env, check=True, timeout=1200)
+                print(json.dumps(verify(image), indent=2))
             except BaseException:
-                notice_path.unlink()
+                image.unlink(missing_ok=True)
                 raise
-        try:
-            env = dict(os.environ, APPIMAGE_TOOLS_PATH=str(toolset),
-                       CSC_IDENTITY_AUTO_DISCOVERY="false")
-            subprocess.run(["pnpm", "exec", "electron-builder", "--linux", "deb",
-                            "AppImage", "--x64", "--config.toolsets.appimage=0.0.0",
-                            "--publish", "never"], env=env, check=True, timeout=1200)
-            print(json.dumps(verify(image), indent=2))
-        except BaseException:
-            # Do not leave a failed/unverified same-version AppImage for later
-            # manifest or upload steps. No previous image was overwritten.
-            image.unlink(missing_ok=True)
-            raise
-        finally:
-            notice_path.unlink()
 
 
 def main():
