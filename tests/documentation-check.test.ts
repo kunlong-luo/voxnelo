@@ -4,6 +4,8 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   auditMarkdown,
+  auditAgentContract,
+  auditAgentPullRequest,
   CURRENT_DOCUMENTS,
   checkDocumentation,
   documentedPnpmCommands,
@@ -178,5 +180,57 @@ describe('documentation link and command validation', () => {
       const issues = checkDocumentation(root);
       expect(issues.some(x => x.kind === 'missing-file')).toBe(true);
     });
+  });
+});
+
+
+describe('independent Agent session contract', () => {
+  const read = (file: string): string => readFileSync(path.resolve(file), 'utf8');
+  const form = read('.github/ISSUE_TEMPLATE/agent_task.yml');
+  const agents = read('AGENTS.md');
+  const governance = read('docs/engineering/REPOSITORY-GOVERNANCE.md');
+  const pr = read('.github/PULL_REQUEST_TEMPLATE.md');
+  const validBody = [
+    '<!-- voxnelo-agent-task -->',
+    '- 关联 Issue：#332',
+    '- 基线 SHA：' + 'a'.repeat(40),
+    '- 文档同步：AGENTS.md',
+    '- 验收证据：fixture only',
+    '- 回滚方式：revert',
+    '- 剩余工作与下一步：无',
+  ].join('\n');
+
+  it('keeps the actual task form, AGENTS, DoD and PR template aligned', () => {
+    expect(auditAgentContract(form, agents, governance, pr)).toEqual([]);
+  });
+
+  it('rejects required-field drift, priority drift and missing handoff', () => {
+    const issues = auditAgentContract(
+      form.replace('id: dependencies', 'id: unrelated').replace('- P3', '- P4'),
+      agents.replace('## 6. 独立会话关闭', '## 6. old'),
+      governance, pr.replace('- 回滚方式：', '- other：'),
+    );
+    expect(issues.map(issue => issue.detail)).toEqual(expect.arrayContaining([
+      'expected one required field: dependencies',
+      'priority options must be P0,P1,P2,P3',
+      'missing ## 6. 独立会话关闭',
+      'missing - 回滚方式：',
+    ]));
+  });
+
+  it('accepts a completed structural PR fixture and leaves legacy/automated PRs compatible', () => {
+    expect(auditAgentPullRequest(validBody)).toEqual([]);
+    expect(auditAgentPullRequest('Automated dependency update')).toEqual([]);
+  });
+
+  it('rejects incomplete, duplicated or malformed marked PR fields', () => {
+    const issues = auditAgentPullRequest(validBody
+      .replace('#332', 'TBD')
+      .replace('a'.repeat(40), 'short')
+      .replace('AGENTS.md', '（更新文件路径）') + '\n- 回滚方式：duplicate');
+    expect(issues.map(issue => issue.detail)).toEqual(expect.arrayContaining([
+      'missing or invalid 关联 Issue', 'missing or invalid 基线 SHA',
+      'missing or invalid 文档同步', 'missing or invalid 回滚方式',
+    ]));
   });
 });

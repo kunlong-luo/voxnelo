@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 export type DocumentationIssue = {
   file: string;
-  kind: 'missing-file' | 'outside-repo' | 'unknown-script' | 'invalid-link';
+  kind: 'missing-file' | 'outside-repo' | 'unknown-script' | 'invalid-link' | 'task-contract';
   detail: string;
 };
 
@@ -176,6 +176,59 @@ function allMarkdownFiles(root: string): string[] {
   return results.sort();
 }
 
+
+export function auditAgentContract(
+  form: string, agents: string, governance: string, pr: string,
+): DocumentationIssue[] {
+  const issues: DocumentationIssue[] = [];
+  const requireText = (file: string, source: string, token: string): void => {
+    if (!source.includes(token)) issues.push({ file, kind: 'task-contract', detail: 'missing ' + token });
+  };
+  const formPath = '.github/ISSUE_TEMPLATE/agent_task.yml';
+  const blocks = form.split(/^ {2}- type: /m).slice(1);
+  for (const id of ['goal', 'priority', 'dependencies', 'scope', 'acceptance', 'verification', 'handoff']) {
+    const matches = blocks.filter(block => block.split('\n').includes('    id: ' + id));
+    if (matches.length !== 1 || !matches[0]?.includes('      required: true')) {
+      issues.push({ file: formPath, kind: 'task-contract', detail: 'expected one required field: ' + id });
+    }
+  }
+  const priority = blocks.find(block => block.split('\n').includes('    id: priority')) ?? '';
+  const options = [...priority.matchAll(/^ {8}- (.+)$/gm)].map(match => match[1]);
+  if (options.join(',') !== 'P0,P1,P2,P3') {
+    issues.push({ file: formPath, kind: 'task-contract', detail: 'priority options must be P0,P1,P2,P3' });
+  }
+  requireText('AGENTS.md', agents, '## 2. 独立会话启动');
+  requireText('AGENTS.md', agents, '## 6. 独立会话关闭');
+  requireText('docs/engineering/REPOSITORY-GOVERNANCE.md', governance, '### Definition of Done');
+  requireText('docs/engineering/REPOSITORY-GOVERNANCE.md', governance, '### Fresh-session acceptance');
+  for (const field of ['关联 Issue', '基线 SHA', '文档同步', '验收证据', '回滚方式', '剩余工作与下一步']) {
+    requireText('.github/PULL_REQUEST_TEMPLATE.md', pr, '- ' + field + '：');
+  }
+  requireText('.github/PULL_REQUEST_TEMPLATE.md', pr, '<!-- voxnelo-agent-task -->');
+  return issues;
+}
+
+export function auditAgentPullRequest(body: string): DocumentationIssue[] {
+  if (!body.includes('<!-- voxnelo-agent-task -->')) return [];
+  const issues: DocumentationIssue[] = [];
+  const fields = new Map<string, string[]>();
+  for (const line of body.split(/\r?\n/)) {
+    const match = /^- ([^：]+)：(.*)$/.exec(line);
+    if (match?.[1] && match[2] !== undefined) {
+      fields.set(match[1], [...(fields.get(match[1]) ?? []), match[2].trim()]);
+    }
+  }
+  for (const field of ['关联 Issue', '基线 SHA', '文档同步', '验收证据', '回滚方式', '剩余工作与下一步']) {
+    const values = fields.get(field) ?? [];
+    const value = values[0] ?? '';
+    const valid = values.length === 1 && value.length > 0 && !value.startsWith('（')
+      && (field !== '关联 Issue' || /^#[1-9]\d*$/.test(value))
+      && (field !== '基线 SHA' || /^[a-f0-9]{40}$/.test(value));
+    if (!valid) issues.push({ file: 'PR body', kind: 'task-contract', detail: 'missing or invalid ' + field });
+  }
+  return issues;
+}
+
 export function checkDocumentation(root: string, includeHistorical = false): DocumentationIssue[] {
   const scripts = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8')) as {
     scripts?: Record<string, string>;
@@ -191,6 +244,16 @@ export function checkDocumentation(root: string, includeHistorical = false): Doc
     }
     issues.push(...auditMarkdown(root, file, readFileSync(fullPath, 'utf8'), known));
   }
+  if (!includeHistorical) {
+    const read = (file: string): string => existsSync(path.join(root, file))
+      ? readFileSync(path.join(root, file), 'utf8') : '';
+    issues.push(...auditAgentContract(
+      read('.github/ISSUE_TEMPLATE/agent_task.yml'),
+      read('AGENTS.md'),
+      read('docs/engineering/REPOSITORY-GOVERNANCE.md'),
+      read('.github/PULL_REQUEST_TEMPLATE.md'),
+    ));
+  }
   return issues;
 }
 
@@ -199,6 +262,13 @@ if (executedAsScript) {
   const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
   const all = process.argv.includes('--all');
   const issues = checkDocumentation(root, all);
+  // The Actions event is data, never interpolated into a shell command.
+  if (process.env.GITHUB_EVENT_NAME === 'pull_request' && process.env.GITHUB_EVENT_PATH) {
+    const event = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8')) as {
+      pull_request?: { body?: string | null };
+    };
+    issues.push(...auditAgentPullRequest(event.pull_request?.body ?? ''));
+  }
   for (const issue of issues) {
     console.error(issue.file + ': ' + issue.kind + ': ' + issue.detail);
   }
