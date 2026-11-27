@@ -145,3 +145,7 @@ Temporary scoped audit job 139664175164 in 45746633439 succeeded; downloaded art
 ## Ubuntu source archives and actual AppImage notice gap — 2026-11-26
 
 Source acquisition job 139665494679 succeeded; actual six descriptors and twelve archive members independently matched descriptor Source/Version/Binary and SHA-256 fields. Seven actual upstream COPYING texts and three current runner common-license references reviewed; exact evidence in [native gate](ASR-PUBLIC-RELEASE-GATE.md). Current selected AppImage exact SHA rechecked: only Xtst full distro copyright text found in the uncompressed 91 regular files; five other exact byte strings absent. This is not a complete legal interpretation. Qualified GPL/LGPL linkage, corresponding source/notice delivery and possible packaging correction remain required; no approval. Provisional rights 20/25. HOLD.
+
+## Proposed Linux AppImage notice/source payload — 2026-11-26
+
+New build-only pinned module obtains exact five historical copyright texts, seven upstream COPYING texts and all eighteen source files (six .dsc + twelve archives), retains patched Xtst notice, and independently verifies these plus five additional ELF members in actual AppImage. No source execution; see [native release gate](ASR-PUBLIC-RELEASE-GATE.md). CI and new candidate pending, no legal clearance. Existing final acceptance must be refreshed after integration; HOLD.

@@ -1,5 +1,7 @@
 """Offline regression tests for fail-closed native package checks."""
 import hashlib
+import io
+import tarfile
 import pathlib
 import struct
 import tempfile
@@ -7,6 +9,7 @@ import unittest
 from unittest.mock import patch
 
 import pack_linux_patched as guard
+import appimage_distro_payload as distro
 
 
 def image_prefix():
@@ -55,7 +58,7 @@ class PatchGateTests(unittest.TestCase):
             image.write_bytes(image_prefix())
             listing = "squashfs-root/"+guard.ELF_MEMBER+"\nsquashfs-root/"+guard.NOTICE_MEMBER+"\n"
             elf, notice = b"patched fixture", b"notice fixture"
-            with patch.object(guard, "PATCHED_ELF", guard.digest(elf)), patch.object(guard, "NOTICE_SHA", guard.digest(notice)):
+            with patch.object(guard, "PATCHED_ELF", guard.digest(elf)), patch.object(guard, "NOTICE_SHA", guard.digest(notice)), patch.object(guard, "expected_members", return_value={}):
                 with patch.object(guard.subprocess, "check_output", side_effect=[listing, elf, notice]):
                     self.assertFalse(guard.verify(image)["legalApproval"])
                 for evidence in ([listing, b"old", notice], [listing, elf, b"changed"],
@@ -63,6 +66,50 @@ class PatchGateTests(unittest.TestCase):
                                  ["squashfs-root/"+guard.ELF_MEMBER+"\n"]):
                     with self.subTest(evidence=evidence), patch.object(guard.subprocess, "check_output", side_effect=evidence), self.assertRaises(ValueError):
                         guard.verify(image)
+
+
+    def test_notice_and_source_inventory_pins(self):
+        members = distro.expected_members(guard.digest)
+        self.assertEqual(len(members), 36)
+        self.assertEqual(sum(name.endswith(".dsc") for name in members), 6)
+        self.assertEqual(sum(name.endswith("-copyright.txt") for name in members), 5)
+        self.assertTrue(all(len(value) == 64 for value in members.values()))
+
+    def test_reject_missing_or_changed_distro_payload(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            image = pathlib.Path(tmp) / "test.AppImage"
+            image.write_bytes(image_prefix())
+            member = distro.PREFIX + "sources/example.dsc"
+            raw = b"source fixture"
+            elf, notice = b"elf fixture", b"notice fixture"
+            listing = "\n".join("squashfs-root/" + name for name in
+                                (guard.ELF_MEMBER, guard.NOTICE_MEMBER, member)) + "\n"
+            with patch.object(guard, "PATCHED_ELF", guard.digest(elf)), \
+                    patch.object(guard, "NOTICE_SHA", guard.digest(notice)), \
+                    patch.object(guard, "expected_members", return_value={member: guard.digest(raw)}):
+                with patch.object(guard.subprocess, "check_output", side_effect=[listing, elf, notice, raw]):
+                    self.assertEqual(guard.verify(image)["verifiedDistroPayloadMembers"], 3)
+                for evidence in ([listing, elf, notice, b"changed"],
+                                 [listing.replace("squashfs-root/" + member + "\n", ""), elf, notice],
+                                 [listing + "squashfs-root/" + member + "\n", elf, notice]):
+                    with patch.object(guard.subprocess, "check_output", side_effect=evidence), self.assertRaises(ValueError):
+                        guard.verify(image)
+
+    def test_copying_member_is_regular_unique_and_bounded(self):
+        def archive(kinds):
+            stream = io.BytesIO()
+            with tarfile.open(fileobj=stream, mode="w") as tar:
+                for kind in kinds:
+                    item = tarfile.TarInfo("root/COPYING")
+                    item.type = kind
+                    item.size = 7 if item.isfile() else 0
+                    item.linkname = "elsewhere"
+                    tar.addfile(item, io.BytesIO(b"fixture") if item.isfile() else None)
+            return stream.getvalue()
+        self.assertEqual(distro.read_copying(archive([tarfile.REGTYPE]), "root/COPYING"), b"fixture")
+        for kinds in ([], [tarfile.SYMTYPE], [tarfile.REGTYPE, tarfile.REGTYPE]):
+            with self.assertRaises(ValueError):
+                distro.read_copying(archive(kinds), "root/COPYING")
 
 
 if __name__ == "__main__":
