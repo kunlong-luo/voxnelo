@@ -56,3 +56,37 @@ The other direct external entries already used full commit hashes; local reusabl
 
 
 Maintenance: review upstream release/commit changes explicitly before updating pins, record the new exact SHA and run applicable CI. Do not change live GitHub Rulesets or Actions policy implicitly; no settings mutation was performed. Historical archive byte-identity checks remain intact.
+
+
+## Independent Agent task protocol / 独立会话任务协议
+
+Use [AGENTS.md](../../AGENTS.md) for startup/closure and the [Agent task form](../../.github/ISSUE_TEMPLATE/agent_task.yml) for new independently deliverable work. GitHub Issues own task priority, dependencies, acceptance and progress; PRs own implementation and review evidence. The [PRD matrix](../release/PRD-TRACEABILITY.md) owns product coverage; the [release freeze](../release/V1.0.4-RELEASE-FREEZE.md) alone owns current release gates. Do not duplicate any of these in a new ledger. Engineering task priority is distinct from historical PRD priorities.
+
+### Priority and dependencies
+
+| Priority | Meaning |
+| --- | --- |
+| P0 | Current security, data-loss, core-flow regression or authorized release-blocking incident. |
+| P1 | High-value engineering or product work; required readiness work, without implying release approval. |
+| P2 | Planned quality, usability or maintainability improvement. |
+| P3 | Optional or deferred enhancement. |
+
+Select exactly one priority. Express hard dependencies as same-repository Issue references (one per line) or an explicit external evidence/decision with owner and next action; use 无 when none. Related work is not a hard dependency. No self-dependency or cycles; check upstream evidence, not only closed state. If blocked, do not start dependent implementation or close it; record the unmet condition in the owning Issue. Work eligible for execution is ordered by priority, then dependency order, then oldest ready Issue; a maintainer can explicitly override sequencing, not safety/release gates.
+
+Existing Issues retain their original history; add priority/dependency metadata to the owning Issue when triaging, not a parallel task list. Existing Bug/Feature forms remain intake forms; convert actionable scoped work to the Agent format in the same Issue rather than opening a duplicate.
+
+### Definition of Done
+
+- Scope, target version/PRD ID (or no feature change), priority and dependencies are explicit; acceptance criteria are observable and satisfied.
+- Implementation and relevant positive/negative tests are committed; applicable commands and actual results are recorded. Existing required CI and review gates pass for the exact PR head; unexecuted/manual checks are identified.
+- Update affected maintained documentation (PRD mapping, guides, ADR, or release evidence only when applicable); record exact files or an explicit no-change rationale in the PR. Frozen source documents and private evidence are not overwritten.
+- Record known risks, rollback path, actual validation evidence and remaining work; link the Issue and PR. Confirm squash merge SHA and branch cleanup; keep an Issue open when any criterion remains unmet, including external evidence.
+- A merged engineering task never authorizes publication. v1.0.4 remains HOLD until its independent release freeze criteria and maintainer decision are satisfied.
+
+### Fresh-session acceptance
+
+Choose one small unblocked Issue after the protocol is available on main. Start a separate Agent session with no conversation history; give it only the repository URL and Issue number. It must discover AGENTS.md and the linked authorities, record main SHA, restate scope/priority/dependencies/acceptance, perform the task, run the applicable checks, update affected docs, and leave the PR/Issue evidence required by DoD. Verify the result against the actual PR, CI and merge SHA. Record the session boundary and outcome in the owning Issue. A same-session walkthrough, static fixture or CI checkout is not an independent Agent acceptance.
+
+### Automated contract checks
+
+The existing `pnpm docs:check` validates the Agent form IDs/required fields and priority choices, the startup/closure and DoD anchors, and the PR handoff template. On pull_request events with the Agent task marker, it also checks that the PR contains one linked Issue and nonempty baseline, documentation, evidence, rollback and handoff fields. The marker is part of the manual PR template; remove it only for non-Agent intake (for example automated dependency PRs). Existing legacy PRs without the marker remain compatible. This is a structural guard, not proof that a referenced Issue exists, dependency graphs are acyclic, docs actually reflect behavior or tests/real-device evidence are truthful; review those against GitHub and the repository before merge. No new workflow, token permission or release action is needed.

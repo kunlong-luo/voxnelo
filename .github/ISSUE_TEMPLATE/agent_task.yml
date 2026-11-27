@@ -1,0 +1,62 @@
+name: Agent task / 独立会话任务
+description: 一个可独立验收、交接和关闭的工程任务
+title: "[Agent] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Read AGENTS.md and docs/engineering/REPOSITORY-GOVERNANCE.md.
+        Do not duplicate an existing Issue or alter release gates.
+  - type: textarea
+    id: goal
+    attributes:
+      label: 目标与版本
+      description: 目标版本、PRD ID 或无功能变更、用户价值。
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: 优先级
+      options:
+        - P0
+        - P1
+        - P2
+        - P3
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: 依赖与阻塞
+      description: "无，或每行一个硬依赖 #Issue / 外部证据（责任人及下一步）。"
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: 范围与入口
+      description: "具体文件、现状、非目标与风险。"
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 验收标准
+      description: "可验证的逐项标准；区分自动验证和人工证据。"
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: 验证与文档
+      description: "实际命令、需要更新的权威文档或无影响理由。"
+    validations:
+      required: true
+  - type: textarea
+    id: handoff
+    attributes:
+      label: 交接与证据
+      description: "基线 SHA、PR/CI、回滚、剩余工作；开始时可写待执行。"
+    validations:
+      required: true

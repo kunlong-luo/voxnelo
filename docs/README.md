@@ -37,6 +37,10 @@ Current selected review-only build: [45723704316](https://github.com/kunlong-luo
 - Build-specific inventory: [build license inventory](engineering/BUILD-LICENSE-INVENTORY.md); native-ASR gate: [ASR release gate](engineering/ASR-PUBLIC-RELEASE-GATE.md); actual installer hashes: [artifact handoff](release/V1.0.4-REVIEW-ARTIFACT-HANDOFF-2026-11-24.md); human evidence: [physical ledger](release/V1.0.4-PHYSICAL-DEVICE-EVIDENCE.md).
 - Delete superseded duplicate content after exact comparison and keep unique historical evidence/attribution. Do not create parallel status or score ledgers. Historical evidence can be linked to a specific Git commit rather than duplicated. Changes need maintained-link checks and normal protected-main CI.
 
+## Independent development
+
+Start with [AGENTS.md](../AGENTS.md), the [Agent task Issue form](../.github/ISSUE_TEMPLATE/agent_task.yml) and [repository governance / Definition of Done](engineering/REPOSITORY-GOVERNANCE.md). GitHub Issues and PRs are the task and handoff records; no parallel ledger. The current release freeze remains the sole release-gate authority.
+
 ## Current guides
 
 - [User guide](USER-GUIDE.md)
